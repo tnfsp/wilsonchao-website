@@ -127,9 +127,9 @@ export async function getBlogEntry(slug: string): Promise<BlogEntry | null> {
   return entries.find((entry) => entry.slug === slug) ?? null;
 }
 
-export async function loadProjects() {
+export async function loadProjects(): Promise<Project[]> {
   const projects = await safeReadJSON<Project[]>(PROJECTS_PATH);
-  if (!projects || projects.length === 0) return featuredProjects;
+  if (!projects || projects.length === 0) return featuredProjects as Project[];
 
   const published = projects.filter(
     (project) => !project.status || project.status.toLowerCase() === "published"

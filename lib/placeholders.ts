@@ -52,7 +52,15 @@ export const placeholderBlogs: BlogPost[] = [
   }
 ];
 
-export const featuredProjects = [
+export const featuredProjects: {
+  title: string;
+  description: string;
+  href: string;
+  type?: string;
+  date?: string;
+  status?: string;
+  slug?: string;
+}[] = [
   {
     title: "Valve atlas notes",
     description: "Sketches and micro-essays on the craft of valve repair.",
