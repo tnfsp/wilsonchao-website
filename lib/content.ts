@@ -100,6 +100,13 @@ function normalizeHref(href?: string) {
   return undefined;
 }
 
+function slugFromHref(href?: string) {
+  if (!href) return undefined;
+  const cleaned = href.replace(/\/+$/, "");
+  const parts = cleaned.split("/").filter(Boolean);
+  return parts.at(-1);
+}
+
 export async function loadBlogEntries(): Promise<BlogEntry[]> {
   try {
     const files = await fs.readdir(BLOG_DIR);
@@ -153,6 +160,7 @@ export async function loadProjects(): Promise<Project[]> {
   const cleaned = sorted.map((project) => ({
     ...project,
     href: normalizeHref(project.href),
+    slug: project.slug || slugFromHref(normalizeHref(project.href)),
   }));
 
   return cleaned.length > 0 ? cleaned : published;
@@ -160,7 +168,11 @@ export async function loadProjects(): Promise<Project[]> {
 
 export async function getProject(slug: string): Promise<Project | null> {
   const projects = await loadProjects();
-  return projects.find((project) => project.slug === slug) ?? null;
+  return (
+    projects.find((project) => project.slug === slug) ??
+    projects.find((project) => slugFromHref(project.href) === slug) ??
+    null
+  );
 }
 
 export { aboutPreview, linkItems };

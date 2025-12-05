@@ -25,13 +25,19 @@ export default async function ProjectsPage() {
               <span>{project.date || ""}</span>
             </div>
             <h2 className="text-xl font-semibold text-[var(--foreground)]">
-              {project.href && (project.href.startsWith("/") || project.href.startsWith("http"))
+              {project.slug
                 ? (
-                  <Link href={project.href} className="hover:text-[var(--accent)]">
+                  <Link href={`/projects/${project.slug}`} className="hover:text-[var(--accent)]">
                     {project.title}
                   </Link>
                   )
-                : project.title}
+                : project.href && (project.href.startsWith("/") || project.href.startsWith("http"))
+                  ? (
+                    <Link href={project.href} className="hover:text-[var(--accent)]">
+                      {project.title}
+                    </Link>
+                    )
+                  : project.title}
             </h2>
             <p className="text-sm text-[var(--muted)]">{project.description}</p>
           </div>
