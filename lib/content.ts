@@ -221,7 +221,10 @@ export async function loadMurmurEntries(limit = 3): Promise<MurmurEntry[]> {
     const items = json.items ?? [];
     return items.slice(0, limit).map((item) => {
       const description =
-        item.description || item.content_text || stripHtml(item.content_html) || item.summary;
+        item.description ||
+        item.content_text ||
+        stripHtml((item as { content_html?: string }).content_html) ||
+        item.summary;
       return {
         title: item.title,
         link: item.link,
