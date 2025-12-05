@@ -1,4 +1,3 @@
-import Link from "next/link";
 import { loadSiteCopy, loadBlogEntries } from "@/lib/content";
 
 function escapeHtml(text: string) {

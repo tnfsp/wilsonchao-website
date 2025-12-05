@@ -92,6 +92,14 @@ function sortByDateDesc(entries: BlogEntry[]) {
   });
 }
 
+function normalizeHref(href?: string) {
+  if (!href) return undefined;
+  const trimmed = href.trim();
+  if (trimmed.startsWith("http")) return trimmed;
+  if (trimmed.startsWith("/")) return trimmed;
+  return undefined;
+}
+
 export async function loadBlogEntries(): Promise<BlogEntry[]> {
   try {
     const files = await fs.readdir(BLOG_DIR);
@@ -142,7 +150,12 @@ export async function loadProjects(): Promise<Project[]> {
     return bDate - aDate;
   });
 
-  return sorted.length > 0 ? sorted : published;
+  const cleaned = sorted.map((project) => ({
+    ...project,
+    href: normalizeHref(project.href),
+  }));
+
+  return cleaned.length > 0 ? cleaned : published;
 }
 
 export { aboutPreview, linkItems };

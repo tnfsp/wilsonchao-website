@@ -1,17 +1,20 @@
 [
   {
-    "title": "Valve atlas notes",
-    "description": "Sketches and micro-essays on the craft of valve repair.",
-    "href": "/projects"
+    "title": "Published ",
+    "description": "1",
+    "href": "/projects/1222",
+    "slug": "2",
+    "type": "Medicine",
+    "status": "Published",
+    "date": "2025-12-05"
   },
   {
-    "title": "Night shift letters",
-    "description": "Fragments written between cases — published as a small zine.",
-    "href": "/blog/night-shift-letters"
-  },
-  {
-    "title": "Cardiac care pathways",
-    "description": "Working on clearer patient handoffs and bedside language.",
-    "href": "/projects"
+    "title": "大學回憶肯德基的消失 (1)",
+    "description": "肯德基要倒了",
+    "href": "/projects/123",
+    "slug": "1341",
+    "type": "Medicine",
+    "status": "Published",
+    "date": "2025-06-06"
   }
 ]

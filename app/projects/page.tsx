@@ -25,9 +25,9 @@ export default async function ProjectsPage() {
               <span>{project.date || ""}</span>
             </div>
             <h2 className="text-xl font-semibold text-[var(--foreground)]">
-              {project.href
+              {project.href && (project.href.startsWith("/") || project.href.startsWith("http"))
                 ? (
-                  <Link href={project.href as string} className="hover:text-[var(--accent)]">
+                  <Link href={project.href} className="hover:text-[var(--accent)]">
                     {project.title}
                   </Link>
                   )

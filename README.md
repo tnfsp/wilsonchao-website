@@ -36,6 +36,9 @@ Next.js (App Router) + TypeScript + Tailwind skeleton for Dr. Yi-Hsiang Chao’s
 - Blog detail pages now render Notion-exported HTML (with a plain-text fallback) and show estimated reading time.
 - Automation: `.github/workflows/sync-and-deploy.yml` runs daily (02:30 UTC) or manually; it installs deps, runs `npm run sync:notion` with repo secrets, and then hits a deploy hook. Set one of `VERCEL_DEPLOY_HOOK_URL` or `CF_PAGES_DEPLOY_HOOK_URL`.
 
+## Changelog
+- 2025-12-05: Fixed blog dynamic params for React 19/Next 16, added `.env.local.example`, validated project hrefs (skip invalid links), pulled latest Notion content (blog, site copy, projects), and refreshed homepage copy.
+
 ### Vercel deploy tips
 - Build command: `npm run sync:notion && npm run build` (so Notion data is pulled during build).
 - Set env vars in Vercel: `NOTION_TOKEN`, `NOTION_BLOG_DATABASE_ID`, `NOTION_SITE_CONFIG_DATABASE_ID` (and optionally `NODE_VERSION=20`).

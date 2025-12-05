@@ -49,7 +49,7 @@ export default async function Home() {
               </h3>
               <p className="text-[var(--muted)] leading-relaxed">{post.excerpt}</p>
               <div className="pt-2 text-sm text-[var(--muted)]">
-                {post.readingTime ? `${post.readingTime} read` : "—"}
+                {post.readingTime ? `${post.readingTime} read` : "Read time TBD"}
               </div>
             </article>
           ))}
@@ -80,9 +80,9 @@ export default async function Home() {
               className="rounded-2xl border border-[var(--border)] bg-white/80 px-5 py-4 shadow-[0_6px_22px_rgba(0,0,0,0.02)]"
             >
               <h3 className="text-lg font-semibold text-[var(--foreground)]">
-                {project.href
+                {project.href && (project.href.startsWith("/") || project.href.startsWith("http"))
                   ? (
-                    <Link href={project.href as string} className="hover:text-[var(--accent)]">
+                    <Link href={project.href} className="hover:text-[var(--accent)]">
                       {project.title}
                     </Link>
                     )

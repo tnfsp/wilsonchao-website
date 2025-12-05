@@ -31,7 +31,7 @@ export default async function BlogIndexPage() {
             </h2>
             <p className="text-[var(--muted)] leading-relaxed">{post.excerpt}</p>
             <div className="pt-2 text-sm text-[var(--muted)]">
-              {post.readingTime ? `${post.readingTime} read` : "—"}
+              {post.readingTime ? `${post.readingTime} read` : "Read time TBD"}
             </div>
           </article>
         ))}

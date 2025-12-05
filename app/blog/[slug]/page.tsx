@@ -23,8 +23,13 @@ function fallbackHtmlFromContent(content?: string) {
     .join("");
 }
 
-export default async function BlogPostPage({ params }: { params: { slug: string } }) {
-  const entry = await getBlogEntry(params.slug);
+export default async function BlogPostPage({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}) {
+  const { slug } = await params;
+  const entry = await getBlogEntry(slug);
 
   if (!entry) {
     notFound();
