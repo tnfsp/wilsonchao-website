@@ -29,12 +29,12 @@ export default async function DailyEntryPage({ params }: { params: Promise<{ slu
         <p className="text-sm text-[var(--muted)]">{entry.date}</p>
         <p className="text-base text-[var(--muted)] leading-relaxed">{entry.description}</p>
         {entry.image ? (
-          <div className="pt-2">
-            {/* using img to avoid remote config; recommended to store in public */}
+          <div className="overflow-hidden rounded-lg border border-[var(--border)]">
             <img
               src={entry.image}
               alt={entry.title}
-              className="w-full rounded-lg border border-[var(--border)] object-cover"
+              className="w-full object-cover"
+              loading="lazy"
             />
           </div>
         ) : null}

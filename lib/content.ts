@@ -27,6 +27,7 @@ export type BlogEntry = {
   excerpt?: string;
   readingTime?: string;
   tags?: string[];
+  image?: string;
 };
 
 export type Project = {
@@ -89,6 +90,15 @@ function inferExcerpt(contentHtml?: string, content?: string, existing?: string)
   return plain.slice(0, 180) + (plain.length > 180 ? "..." : "");
 }
 
+function firstImageFromEntry(entry: BlogEntry) {
+  const source = entry.contentHtml || entry.content;
+  if (!source) return undefined;
+  const match = source.match(/<img[^>]*src=["']([^"']+)["']/i);
+  if (match?.[1]) return match[1];
+  const md = source.match(/!\[[^\]]*]\(([\S)]+)(?:\s+"[^"]*")?\)/);
+  return md?.[1];
+}
+
 function inferReadingTime(entry: BlogEntry) {
   if (entry.readingTime) return entry.readingTime;
   const plain = stripMarkup(entry.contentHtml || entry.content);
@@ -137,6 +147,7 @@ export async function loadBlogEntries(): Promise<BlogEntry[]> {
         ...parsed,
         excerpt: inferExcerpt(parsed.contentHtml, parsed.content, parsed.description || parsed.excerpt),
         readingTime: inferReadingTime(parsed),
+        image: parsed.image || firstImageFromEntry(parsed),
       });
     }
 

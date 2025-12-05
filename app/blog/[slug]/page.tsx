@@ -55,6 +55,16 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           {entry.publishedAt}
           {entry.readingTime ? ` · ${entry.readingTime}` : ""}
         </p>
+        {entry.image ? (
+          <div className="overflow-hidden rounded-lg border border-[var(--border)]">
+            <img
+              src={entry.image}
+              alt={entry.title}
+              className="w-full object-cover"
+              loading="lazy"
+            />
+          </div>
+        ) : null}
         {entry.excerpt ? (
           <p className="text-base text-[var(--muted)] leading-relaxed">{entry.excerpt}</p>
         ) : null}

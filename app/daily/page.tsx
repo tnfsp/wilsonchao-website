@@ -61,6 +61,16 @@ export default async function DailyPage({
             key={project.title}
             className="rounded-lg border border-[var(--border)] bg-white/85 px-5 py-4"
           >
+            {project.image ? (
+              <div className="mb-3 overflow-hidden rounded-md border border-[var(--border)]">
+                <img
+                  src={project.image}
+                  alt={project.title}
+                  className="h-36 w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+            ) : null}
             <div className="flex items-center justify-between text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
               <span>{project.type || "Daily"}</span>
               <span>{project.date || ""}</span>

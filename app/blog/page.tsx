@@ -62,6 +62,16 @@ export default async function BlogIndexPage({
             key={post.slug}
             className="rounded-lg border border-[var(--border)] bg-white/85 px-5 py-4"
           >
+            {post.image ? (
+              <div className="mb-3 overflow-hidden rounded-md border border-[var(--border)]">
+                <img
+                  src={post.image}
+                  alt={post.title}
+                  className="h-40 w-full object-cover"
+                  loading="lazy"
+                />
+              </div>
+            ) : null}
             <div className="flex items-center justify-between text-sm text-[var(--muted)]">
               <span>{post.type}</span>
               <span>{post.publishedAt}</span>
