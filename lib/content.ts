@@ -224,7 +224,7 @@ export async function loadMurmurEntries(limit = 3): Promise<MurmurEntry[]> {
         item.description ||
         item.content_text ||
         stripHtml((item as { content_html?: string }).content_html) ||
-        item.summary;
+        (item as { summary?: string }).summary;
       return {
         title: item.title,
         link: item.link,
