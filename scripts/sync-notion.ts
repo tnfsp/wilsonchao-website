@@ -245,7 +245,8 @@ async function fetchBlogEntries(): Promise<BlogEntry[]> {
     const typedPage = page as PageObjectResponse;
     const props = typedPage.properties;
     const title = titleFromProperty(props.Title);
-    const slug = normalizeSlug(richTextFromProperty(props.Slug) || typedPage.id);
+    const rawSlug = richTextFromProperty(props.Slug);
+    const slug = normalizeSlug(rawSlug || title || typedPage.id);
     const type = selectFromProperty(props.Type);
     const status = selectFromProperty(props.Status);
     const publishedAt = dateFromProperty(props.PublishedAt);
