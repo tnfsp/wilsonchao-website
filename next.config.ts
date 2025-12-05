@@ -1,7 +1,12 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    // Ensure JSON content under /content is bundled for server functions (Vercel).
+    outputFileTracingIncludes: {
+      "*": ["./content/**/*"],
+    },
+  },
 };
 
 export default nextConfig;
