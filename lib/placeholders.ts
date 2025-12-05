@@ -14,6 +14,8 @@ export const defaultSiteCopy = {
     "我相信醫療不只是技術，也包含故事與人的重量。這裡紀錄我在手術房與書桌之間的所見所思。",
   heroCTA: "閱讀最新文章 →",
   footerText: "wilsonchao.com — handwritten in small batches.",
+  murmurIntro: "Daily fragments and half sentences live in murmur. It is a lighter, quicker feed.",
+  murmurCTA: "Visit murmur →",
   aboutIntro:
     "I split time between the operating room, writing desk, and long walks with a notebook.",
   aboutBody:

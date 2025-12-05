@@ -59,15 +59,13 @@ export default async function Home() {
       <section className="section-block">
         <span className="section-title">murmur</span>
         <div className="rounded-xl border border-[var(--border)] bg-white/70 px-5 py-6 shadow-[0_4px_30px_rgba(0,0,0,0.02)]">
-          <p className="text-base text-[var(--muted)]">
-            Daily fragments and half sentences live in murmur. It is a lighter, quicker feed.
-          </p>
+          <p className="text-base text-[var(--muted)]">{siteCopy.murmurIntro}</p>
           <div className="pt-4">
             <Link
               href="/murmur"
               className="inline-flex items-center text-sm font-medium text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent)]"
             >
-              Visit murmur →
+              {siteCopy.murmurCTA}
             </Link>
           </div>
         </div>

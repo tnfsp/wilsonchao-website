@@ -27,6 +27,16 @@ export type BlogEntry = {
   readingTime?: string;
 };
 
+type Project = {
+  title: string;
+  description?: string;
+  href?: string;
+  slug?: string;
+  type?: string;
+  status?: string;
+  date?: string;
+};
+
 async function safeReadJSON<T>(filePath: string): Promise<T | null> {
   try {
     const data = await fs.readFile(filePath, "utf-8");
@@ -45,6 +55,8 @@ export async function loadSiteCopy(): Promise<SiteCopy> {
     heroIntro: file?.HomepageIntro || defaultSiteCopy.heroIntro,
     heroCTA: file?.HomepageCTA || defaultSiteCopy.heroCTA,
     footerText: file?.FooterText || defaultSiteCopy.footerText,
+    murmurIntro: file?.HomepageMurmurIntro || defaultSiteCopy.murmurIntro,
+    murmurCTA: file?.HomepageMurmurCTA || defaultSiteCopy.murmurCTA,
     aboutIntro: file?.AboutPageIntro || defaultSiteCopy.aboutIntro,
     aboutBody: file?.AboutPageBody || defaultSiteCopy.aboutBody,
   };
@@ -93,7 +105,7 @@ export async function loadBlogEntries(): Promise<BlogEntry[]> {
 
       entries.push({
         ...parsed,
-        excerpt: inferExcerpt(parsed.contentHtml, parsed.content, parsed.excerpt),
+        excerpt: inferExcerpt(parsed.contentHtml, parsed.content, parsed.description || parsed.excerpt),
         readingTime: inferReadingTime(parsed),
       });
     }
@@ -116,10 +128,20 @@ export async function getBlogEntry(slug: string): Promise<BlogEntry | null> {
 }
 
 export async function loadProjects() {
-  const projects = await safeReadJSON<{ title: string; description: string; href: string }[]>(
-    PROJECTS_PATH
+  const projects = await safeReadJSON<Project[]>(PROJECTS_PATH);
+  if (!projects || projects.length === 0) return featuredProjects;
+
+  const published = projects.filter(
+    (project) => !project.status || project.status.toLowerCase() === "published"
   );
-  return projects && projects.length > 0 ? projects : featuredProjects;
+
+  const sorted = published.sort((a, b) => {
+    const aDate = a.date ? new Date(a.date).getTime() : 0;
+    const bDate = b.date ? new Date(b.date).getTime() : 0;
+    return bDate - aDate;
+  });
+
+  return sorted.length > 0 ? sorted : published;
 }
 
 export { aboutPreview, linkItems };

@@ -1,9 +1,11 @@
 {
-  "HomepageHeroTitle": "TEST",
+  "HomepageHeroTitle": "0",
   "HomepageHeroSubtitle": "1",
   "FooterText": "4",
+  "HomepageMurmurIntro": "7",
   "HomepageIntro": "2",
   "AboutPageBody": "6",
+  "HomepageMurmurCTA": "8",
   "HomepageCTA": "3",
   "AboutPageIntro": "5"
 }

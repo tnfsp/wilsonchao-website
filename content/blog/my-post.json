@@ -5,8 +5,9 @@
   "type": "Medical",
   "status": "Published",
   "publishedAt": "2025-12-05",
-  "content": "TESTTEST",
-  "contentHtml": "<p>TESTTEST</p>",
-  "excerpt": "TESTTEST",
+  "content": "TESTTEST\n\n13412341234",
+  "contentHtml": "<p>TESTTEST</p>\n<p>13412341234</p>\n<p></p>",
+  "description": "123123",
+  "excerpt": "123123",
   "readingTime": "1 min"
 }

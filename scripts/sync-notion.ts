@@ -21,14 +21,26 @@ type BlogEntry = {
   publishedAt?: string;
   content: string;
   contentHtml?: string;
+  description?: string;
   excerpt?: string;
   readingTime?: string;
+};
+
+type ProjectEntry = {
+  title: string;
+  description?: string;
+  href?: string;
+  slug?: string;
+  type?: string;
+  status?: string;
+  date?: string;
 };
 
 type SiteConfig = Record<string, string>;
 
 const BLOG_DIR = path.join(process.cwd(), "content", "blog");
 const SITE_CONFIG_PATH = path.join(process.cwd(), "content", "site", "config.json");
+const PROJECTS_PATH = path.join(process.cwd(), "content", "projects.json");
 
 function getEnv(name: string): string | undefined {
   const value = process.env[name];
@@ -41,6 +53,7 @@ function getEnv(name: string): string | undefined {
 const NOTION_TOKEN = getEnv("NOTION_TOKEN");
 const BLOG_DATABASE_ID = getEnv("NOTION_BLOG_DATABASE_ID");
 const SITE_CONFIG_DATABASE_ID = getEnv("NOTION_SITE_CONFIG_DATABASE_ID");
+const PROJECTS_DATABASE_ID = getEnv("NOTION_PROJECTS_DATABASE_ID");
 
 if (!NOTION_TOKEN || !BLOG_DATABASE_ID || !SITE_CONFIG_DATABASE_ID) {
   console.warn(
@@ -54,6 +67,16 @@ if (!NOTION_TOKEN || !BLOG_DATABASE_ID || !SITE_CONFIG_DATABASE_ID) {
 }
 
 const notion = new Client({ auth: NOTION_TOKEN });
+
+function normalizeSlug(slug: string) {
+  return slug
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/[^a-zA-Z0-9-_]/g, "-")
+    .replace(/-+/g, "-")
+    .replace(/^-|-$/g, "")
+    .toLowerCase();
+}
 
 function isFullBlock(
   block: ListBlockChildrenResponse["results"][number]
@@ -222,10 +245,12 @@ async function fetchBlogEntries(): Promise<BlogEntry[]> {
     const typedPage = page as PageObjectResponse;
     const props = typedPage.properties;
     const title = titleFromProperty(props.Title);
-    const slug = richTextFromProperty(props.Slug) || typedPage.id;
+    const slug = normalizeSlug(richTextFromProperty(props.Slug) || typedPage.id);
     const type = selectFromProperty(props.Type);
     const status = selectFromProperty(props.Status);
     const publishedAt = dateFromProperty(props.PublishedAt);
+    const description =
+      richTextFromProperty(props.Description ?? props.Summary ?? props.Excerpt) || "";
 
     if (!slug) {
       console.warn(`[sync-notion] Skipping page without slug: ${typedPage.id}`);
@@ -248,7 +273,8 @@ async function fetchBlogEntries(): Promise<BlogEntry[]> {
       publishedAt,
       content,
       contentHtml,
-      excerpt,
+      description: description || undefined,
+      excerpt: description || excerpt,
       readingTime,
     });
   }
@@ -294,18 +320,77 @@ async function writeSiteConfig(config: SiteConfig) {
   await writeFile(SITE_CONFIG_PATH, JSON.stringify(config, null, 2), "utf-8");
 }
 
+function urlFromProperty(property: PageObjectResponse["properties"][string]) {
+  if (property.type === "url") return property.url || "";
+  return "";
+}
+
+async function fetchProjects(): Promise<ProjectEntry[]> {
+  if (!PROJECTS_DATABASE_ID) {
+    console.warn("[sync-notion] Missing NOTION_PROJECTS_DATABASE_ID. Skipping projects sync.");
+    return [];
+  }
+
+  const response = await notion.databases.query({
+    database_id: PROJECTS_DATABASE_ID,
+  });
+
+  const projects: ProjectEntry[] = [];
+
+  for (const page of response.results) {
+    if (!("properties" in page)) continue;
+    const typedPage = page as PageObjectResponse;
+    const props = typedPage.properties;
+    const title = titleFromProperty(props.Title);
+    const description = richTextFromProperty(props.Description ?? props.Summary ?? props.Body);
+    const href =
+      richTextFromProperty(props.Link ?? props.URL ?? props.Href) || urlFromProperty(props.Link);
+    const slug = normalizeSlug(richTextFromProperty(props.Slug) || title || typedPage.id);
+    const type = selectFromProperty(props.Type);
+    const status = selectFromProperty(props.Status);
+    const date = dateFromProperty(props.Date);
+
+    if (!title) continue;
+
+    projects.push({
+      title,
+      description,
+      href,
+      slug,
+      type,
+      status,
+      date,
+    });
+  }
+
+  return projects;
+}
+
+async function writeProjects(projects: ProjectEntry[]) {
+  await mkdir(path.dirname(PROJECTS_PATH), { recursive: true });
+  await writeFile(PROJECTS_PATH, JSON.stringify(projects, null, 2), "utf-8");
+}
+
 async function main() {
   console.log("[sync-notion] Starting sync...");
-  const [blogEntries, siteConfig] = await Promise.all([
+  const [blogEntries, siteConfig, projects] = await Promise.all([
     fetchBlogEntries(),
     fetchSiteConfig(),
+    fetchProjects(),
   ]);
 
   await writeBlogEntries(blogEntries);
   await writeSiteConfig(siteConfig);
+  if (projects.length > 0) {
+    await writeProjects(projects);
+  } else {
+    console.log("[sync-notion] No projects synced (missing DB or no rows).");
+  }
 
   console.log(
-    `[sync-notion] Done. Wrote ${blogEntries.length} blog entries and site config to content/.`
+    `[sync-notion] Done. Wrote ${blogEntries.length} blog entries, ${
+      projects.length
+    } projects, and site config to content/.`
   );
 }
 

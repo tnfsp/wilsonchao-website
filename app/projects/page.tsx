@@ -14,12 +14,16 @@ export default async function ProjectsPage() {
         </p>
       </header>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-5 sm:grid-cols-2">
         {projects.map((project) => (
           <div
             key={project.title}
-            className="rounded-xl border border-[var(--border)] bg-white/80 px-4 py-4 shadow-[0_4px_24px_rgba(0,0,0,0.02)]"
+            className="rounded-2xl border border-[var(--border)] bg-white/80 px-5 py-4 shadow-[0_6px_22px_rgba(0,0,0,0.02)]"
           >
+            <div className="flex items-center justify-between text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
+              <span>{project.type || "Project"}</span>
+              <span>{project.date || ""}</span>
+            </div>
             <h2 className="text-xl font-semibold text-[var(--foreground)]">
               <Link href={project.href} className="hover:text-[var(--accent)]">
                 {project.title}

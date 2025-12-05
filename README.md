@@ -40,3 +40,5 @@ Next.js (App Router) + TypeScript + Tailwind skeleton for Dr. Yi-Hsiang Chao’s
 - Build command: `npm run sync:notion && npm run build` (so Notion data is pulled during build).
 - Set env vars in Vercel: `NOTION_TOKEN`, `NOTION_BLOG_DATABASE_ID`, `NOTION_SITE_CONFIG_DATABASE_ID` (and optionally `NODE_VERSION=20`).
 - To auto-refresh from Notion, create a Vercel deploy hook and set `VERCEL_DEPLOY_HOOK_URL` as a GitHub secret; the scheduled workflow will call it nightly.
+- About page can optionally read from a blog entry with `Type=About` (uses Notion contentHtml fallback if present).
+- Projects can sync from Notion if `NOTION_PROJECTS_DATABASE_ID` is provided; otherwise it reads `content/projects.json`.
