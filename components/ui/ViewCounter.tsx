@@ -7,7 +7,7 @@ type ViewCounterProps = {
   label?: string;
 };
 
-export function ViewCounter({ slug, label = "瀏覽人次（本機）" }: ViewCounterProps) {
+export function ViewCounter({ slug, label = "瀏覽人次" }: ViewCounterProps) {
   const [count, setCount] = useState<number | null>(null);
 
   useEffect(() => {
@@ -36,7 +36,7 @@ type ViewStatsProps = {
 };
 
 // Local-only view stats: counts are stored in localStorage per-device.
-export function ViewStats({ storageKey = "home", label = "瀏覽人次（本機）" }: ViewStatsProps) {
+export function ViewStats({ storageKey = "home", label = "瀏覽人次" }: ViewStatsProps) {
   const [today, setToday] = useState<number | null>(null);
   const [total, setTotal] = useState<number | null>(null);
 
