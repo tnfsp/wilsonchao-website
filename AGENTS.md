@@ -265,11 +265,13 @@ npm run sync:notion
 
 # 🟢 Current state (2025-12-06)
 - Routes live: `/`, `/blog`, `/blog/[slug]`, `/daily`, `/daily/[slug]`, `/about`, `/links`, `/now`, `/murmur` (redirect), `/feed.xml`.
-- Navbar uses Home / Blog / Murmur / Daily / About / Links; Daily replaces Projects in nav.
-- Notion sync downloads images for Blog + Projects (Daily) into `public/content/...`; Blog also syncs `tags` (unused) and Type; Projects DB feeds Daily.
-- SiteConfig keys include: HomepageHeroTitle/Subitle/Intro/CTA, HomepageMurmurIntro/CTA, FooterText, AboutPageIntro/Body, AboutImage, BlogPageTitle/Intro, ProjectsPageTitle/Intro.
+- Navbar uses Home / Blog / Murmur / Daily / About / Links; Daily replaces Projects in nav; mobile nav collapses into menu.
+- Homepage shows latest 3 Blog and Daily items with “查看更多” links; pagination on Blog/Daily lists; view counters via `/api/views` (Vercel KV, in-memory fallback if no KV).
+- Notion sync downloads images for Blog + Projects (Daily) into `public/content/...`; Blog also syncs tags and Type; Projects DB feeds Daily; auto-removes deleted posts; unique slug generation if Slug missing.
+- SiteConfig keys include: HomepageHeroTitle/Subtitle/Intro/CTA, HomepageMurmurIntro/CTA, FooterText, AboutPageIntro/Body, AboutImage, BlogPageTitle/Intro, ProjectsPageTitle/Intro.
 - Murmur preview on homepage pulls `MURMUR_FEED_URL` (default rss.json) and shows yellow-highlighted snippets; feed errors are non-blocking.
 - RSS for blog at `/feed.xml`; set `NEXT_PUBLIC_SITE_URL` for correct absolute links.
+- GitHub Action `.github/workflows/sync-notion.yml` runs 00:00/12:00 UTC to sync Notion and push content.
 ```
 
 ---
