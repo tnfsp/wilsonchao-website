@@ -9,13 +9,14 @@ export type BlogPost = {
 
 export const defaultSiteCopy = {
   heroTitle: "Yi-Hsiang Chao, MD",
-  heroSubtitle: "Cardiac surgeon ・ writer ・ slow thinker",
+  heroSubtitle: "Cardiac surgeon · writer · slow thinker",
   heroIntro:
     "Medicine is technique and also story. This site gathers notes from the operating room and the writing desk.",
   heroCTA: "Read the latest →",
   footerText: "wilsonchao.com — handwritten in small batches.",
   murmurIntro: "Daily fragments and half sentences live in murmur. It is a lighter, quicker feed.",
   murmurCTA: "Visit murmur →",
+  aboutName: "Yi-Hsiang Chao, MD",
   aboutIntro:
     "I split time between the operating room, writing desk, and long walks with a notebook.",
   aboutBody:
@@ -24,10 +25,9 @@ export const defaultSiteCopy = {
   blogTitle: "Articles & notes",
   blogIntro: "Long-form writing on medicine, stories from the ward, and how to keep a craft humane.",
   projectsTitle: "Daily notes",
-  projectsIntro: "Short daily entries — fragments, drafts, and small observations."
-  ,
+  projectsIntro: "Short daily entries — fragments, drafts, and small observations.",
   linksTitle: "Hello there",
-  linksIntro: "Quick paths to the places I write and share updates."
+  linksIntro: "Quick paths to the places I write and share updates.",
 };
 
 export const placeholderBlogs: BlogPost[] = [
@@ -38,7 +38,7 @@ export const placeholderBlogs: BlogPost[] = [
     publishedAt: "2024-10-12",
     excerpt:
       "A short reflection on how surgery, writing, and listening can share the same rhythm.",
-    readingTime: "5 min"
+    readingTime: "5 min",
   },
   {
     slug: "quiet-rounds",
@@ -47,7 +47,7 @@ export const placeholderBlogs: BlogPost[] = [
     publishedAt: "2024-09-03",
     excerpt:
       "Walking the ward while the city sleeps, gathering voices that rarely make it to charts.",
-    readingTime: "4 min"
+    readingTime: "4 min",
   },
   {
     slug: "slow-practice",
@@ -56,8 +56,8 @@ export const placeholderBlogs: BlogPost[] = [
     publishedAt: "2024-07-22",
     excerpt:
       "Keeping a craft humane means pacing, resting, and choosing conversations over speed.",
-    readingTime: "6 min"
-  }
+    readingTime: "6 min",
+  },
 ];
 
 export const featuredProjects: {
@@ -72,18 +72,18 @@ export const featuredProjects: {
   {
     title: "Valve atlas notes",
     description: "Sketches and micro-essays on the craft of valve repair.",
-    href: "/projects"
+    href: "/projects",
   },
   {
     title: "Night shift letters",
     description: "Fragments written between cases — published as a small zine.",
-    href: "/blog/night-shift-letters"
+    href: "/blog/night-shift-letters",
   },
   {
     title: "Cardiac care pathways",
     description: "Working on clearer patient handoffs and bedside language.",
-    href: "/projects"
-  }
+    href: "/projects",
+  },
 ];
 
 export const aboutPreview =
@@ -94,5 +94,5 @@ export const linkItems = [
   { label: "Website", href: "/" },
   { label: "Murmur", href: "https://murmur.wilsonchao.com", external: true },
   { label: "Instagram", href: "https://www.instagram.com/momobear_doctor", external: true },
-  { label: "Telegram", href: "https://t.me/doctormomo", external: true }
+  { label: "Telegram", href: "https://t.me/doctormomo", external: true },
 ];

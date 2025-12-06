@@ -72,6 +72,7 @@ export async function loadSiteCopy(): Promise<SiteCopy> {
     footerText: file?.FooterText || defaultSiteCopy.footerText,
     murmurIntro: file?.HomepageMurmurIntro || defaultSiteCopy.murmurIntro,
     murmurCTA: file?.HomepageMurmurCTA || defaultSiteCopy.murmurCTA,
+    aboutName: file?.AboutName || defaultSiteCopy.aboutName,
     aboutIntro: file?.AboutPageIntro || defaultSiteCopy.aboutIntro,
     aboutBody: file?.AboutPageBody || defaultSiteCopy.aboutBody,
     aboutImage: file?.AboutImage || defaultSiteCopy.aboutImage,
