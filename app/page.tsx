@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { loadBlogEntries, loadSiteCopy, loadProjects, loadMurmurEntries } from "@/lib/content";
+import { ViewStats } from "@/components/ui/ViewCounter";
 
 export default async function Home() {
   const [siteCopy, blogEntries, projects, murmur] = await Promise.all([
@@ -39,10 +40,19 @@ export default async function Home() {
             {siteCopy.heroCTA}
           </Link>
         </div>
+        <ViewStats storageKey="home" />
       </header>
 
       <section className="section-block">
-        <span className="section-title">Latest blog</span>
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="section-title">Latest Blog</span>
+          <Link
+            href="/blog"
+            className="text-sm text-[var(--muted)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent)]"
+          >
+            查看更多 →
+          </Link>
+        </div>
         <div className="space-y-5">
           {latest.map((post) => (
             <article
@@ -110,7 +120,15 @@ export default async function Home() {
       </section>
 
       <section className="section-block">
-        <span className="section-title">Daily</span>
+        <div className="flex items-baseline justify-between gap-3">
+          <span className="section-title">Latest Daily</span>
+          <Link
+            href="/daily"
+            className="text-sm text-[var(--muted)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent)]"
+          >
+            查看更多 →
+          </Link>
+        </div>
         <div className="grid gap-5 sm:grid-cols-2">
           {latestDaily.map((project) => (
             <div
