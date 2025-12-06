@@ -3,6 +3,7 @@ import { loadBlogEntries, loadSiteCopy } from "@/lib/content";
 
 type SearchParams = {
   type?: string;
+  page?: string;
 };
 
 export default async function BlogIndexPage({
@@ -14,11 +15,25 @@ export default async function BlogIndexPage({
   const copy = await loadSiteCopy();
   const resolvedSearch = await searchParams;
   const typeParam = resolvedSearch?.type;
+  const pageParam = Number.parseInt(resolvedSearch?.page ?? "1", 10) || 1;
   const availableTypes = Array.from(new Set(posts.map((p) => p.type).filter(Boolean))).sort();
   const filtered =
     typeParam && availableTypes.includes(typeParam)
       ? posts.filter((post) => post.type === typeParam)
       : posts;
+  const PAGE_SIZE = 6;
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(Math.max(pageParam, 1), totalPages);
+  const start = (currentPage - 1) * PAGE_SIZE;
+  const visible = filtered.slice(start, start + PAGE_SIZE);
+
+  const buildHref = (page: number) => {
+    const params = new URLSearchParams();
+    if (typeParam) params.set("type", typeParam);
+    if (page > 1) params.set("page", String(page));
+    const qs = params.toString();
+    return qs ? `/blog?${qs}` : "/blog";
+  };
 
   return (
     <main className="page-shell space-y-8">
@@ -57,7 +72,7 @@ export default async function BlogIndexPage({
       ) : null}
 
       <div className="space-y-5">
-        {filtered.map((post) => (
+        {visible.map((post) => (
           <article
             key={post.slug}
             className="rounded-lg border border-[var(--border)] bg-white/85 px-5 py-4"
@@ -95,6 +110,32 @@ export default async function BlogIndexPage({
           </article>
         ))}
       </div>
+
+      {totalPages > 1 ? (
+        <div className="flex items-center justify-between pt-2 text-sm text-[var(--muted)]">
+          <Link
+            href={buildHref(Math.max(1, currentPage - 1))}
+            aria-disabled={currentPage === 1}
+            className={`underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent)] ${
+              currentPage === 1 ? "pointer-events-none opacity-50" : ""
+            }`}
+          >
+            上一頁
+          </Link>
+          <span>
+            第 {currentPage} / {totalPages} 頁
+          </span>
+          <Link
+            href={buildHref(Math.min(totalPages, currentPage + 1))}
+            aria-disabled={currentPage === totalPages}
+            className={`underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent)] ${
+              currentPage === totalPages ? "pointer-events-none opacity-50" : ""
+            }`}
+          >
+            下一頁
+          </Link>
+        </div>
+      ) : null}
     </main>
   );
 }

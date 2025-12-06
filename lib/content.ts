@@ -39,6 +39,10 @@ export type Project = {
   status?: string;
   date?: string;
   image?: string;
+   content?: string;
+   contentHtml?: string;
+   excerpt?: string;
+   readingTime?: string;
 };
 
 export type MurmurEntry = {
@@ -188,6 +192,8 @@ export async function loadProjects(): Promise<Project[]> {
     ...project,
     href: normalizeHref(project.href),
     slug: project.slug || slugFromHref(normalizeHref(project.href)),
+    excerpt: inferExcerpt(project.contentHtml, project.content, project.excerpt || project.description),
+    readingTime: inferReadingTime(project as unknown as BlogEntry),
   }));
 
   return cleaned.length > 0 ? cleaned : published;

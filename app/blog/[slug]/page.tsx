@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBlogEntry, loadBlogEntries } from "@/lib/content";
+import { ViewCounter } from "@/components/ui/ViewCounter";
 
 export const dynamic = "force-dynamic";
 
@@ -55,6 +56,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           {entry.publishedAt}
           {entry.readingTime ? ` · ${entry.readingTime}` : ""}
         </p>
+        <ViewCounter slug={entry.slug} />
         {entry.image ? (
           <div className="overflow-hidden rounded-lg border border-[var(--border)]">
             <img
@@ -84,7 +86,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <div className="max-w-sm">
             {prev ? (
               <Link href={`/blog/${prev.slug}`} className="hover:text-[var(--accent)]">
-                ← {prev.title}
+                {"<-"} {prev.title}
               </Link>
             ) : (
               <span />
@@ -93,7 +95,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <div className="max-w-sm text-right">
             {next ? (
               <Link href={`/blog/${next.slug}`} className="hover:text-[var(--accent)]">
-                {next.title} →
+                {next.title} {"->"}
               </Link>
             ) : (
               <span />

@@ -1,5 +1,5 @@
 import { config as loadEnv } from "dotenv";
-import { mkdir, stat, writeFile } from "fs/promises";
+import { mkdir, stat, writeFile, readdir, rm, unlink } from "fs/promises";
 import path from "path";
 import { Client } from "@notionhq/client";
 import type {
@@ -36,6 +36,10 @@ type ProjectEntry = {
   status?: string;
   date?: string;
   image?: string;
+  content?: string;
+  contentHtml?: string;
+  excerpt?: string;
+  readingTime?: string;
 };
 
 type SiteConfig = Record<string, string>;
@@ -45,6 +49,8 @@ const SITE_CONFIG_PATH = path.join(process.cwd(), "content", "site", "config.jso
 const PROJECTS_PATH = path.join(process.cwd(), "content", "projects.json");
 const BLOG_ASSET_DIR = path.join(process.cwd(), "public", "content", "blog");
 const PROJECT_ASSET_DIR = path.join(process.cwd(), "public", "content", "projects");
+const BLOG_PUBLIC_BASE = "/content/blog";
+const PROJECT_PUBLIC_BASE = "/content/projects";
 
 function getEnv(name: string): string | undefined {
   const value = process.env[name];
@@ -80,6 +86,23 @@ function normalizeSlug(slug: string) {
     .replace(/-+/g, "-")
     .replace(/^-|-$/g, "")
     .toLowerCase();
+}
+
+function uniqueSlug(
+  rawSlug: string | undefined,
+  title: string,
+  pageId: string,
+  seen: Set<string>
+) {
+  const base = normalizeSlug(rawSlug || title) || normalizeSlug(title) || pageId;
+  let candidate = base;
+  let counter = 1;
+  while (seen.has(candidate)) {
+    counter += 1;
+    candidate = `${base}-${pageId.slice(0, 6)}-${counter}`;
+  }
+  seen.add(candidate);
+  return candidate;
 }
 
 function isFullBlock(
@@ -214,18 +237,20 @@ function safeExtFromUrl(url: string) {
 
 async function downloadImageForBlock(
   block: BlockObjectResponse,
-  slug: string
+  slug: string,
+  assetRoot: string,
+  publicBase: string
 ): Promise<string | undefined> {
   if (block.type !== "image") return undefined;
   const sourceUrl =
     block.image.type === "file" ? block.image.file?.url : block.image.external?.url;
   if (!sourceUrl) return undefined;
 
-  const assetDir = path.join(BLOG_ASSET_DIR, slug);
+  const assetDir = path.join(assetRoot, slug);
   const ext = safeExtFromUrl(sourceUrl);
   const filename = `${block.id}${ext}`;
   const destPath = path.join(assetDir, filename);
-  const publicPath = `/content/blog/${slug}/${filename}`;
+  const publicPath = `${publicBase}/${slug}/${filename}`;
 
   try {
     await stat(destPath);
@@ -285,7 +310,12 @@ async function downloadProjectImage(url: string, slug: string): Promise<string |
   }
 }
 
-async function renderBlocksWithAssets(blocks: BlockObjectResponse[], slug: string) {
+async function renderBlocksWithAssets(
+  blocks: BlockObjectResponse[],
+  slug: string,
+  assetRoot: string,
+  publicBase: string
+) {
   const markdownParts: string[] = [];
   const htmlParts: string[] = [];
   const plainParts: string[] = [];
@@ -293,7 +323,7 @@ async function renderBlocksWithAssets(blocks: BlockObjectResponse[], slug: strin
   for (const block of blocks) {
     if (block.type === "image") {
       const caption = block.image.caption ? textFromRichText(block.image.caption) : "";
-      const downloaded = await downloadImageForBlock(block, slug);
+      const downloaded = await downloadImageForBlock(block, slug, assetRoot, publicBase);
       if (downloaded) {
         markdownParts.push(`![${caption || "image"}](${downloaded})`);
         htmlParts.push(
@@ -353,6 +383,7 @@ async function fetchAllBlocks(blockId: string): Promise<BlockObjectResponse[]> {
 }
 
 async function fetchBlogEntries(): Promise<BlogEntry[]> {
+  const blogSlugs = new Set<string>();
   const response = await notion.databases.query({
     database_id: BLOG_DATABASE_ID!,
     filter: {
@@ -375,7 +406,7 @@ async function fetchBlogEntries(): Promise<BlogEntry[]> {
     const props = typedPage.properties;
     const title = titleFromProperty(props.Title);
     const rawSlug = richTextFromProperty(props.Slug);
-    const slug = normalizeSlug(rawSlug || title || typedPage.id);
+    const slug = uniqueSlug(rawSlug, title, typedPage.id, blogSlugs);
     const type = selectFromProperty(props.Type);
     const status = selectFromProperty(props.Status);
     const publishedAt = dateFromProperty(props.PublishedAt);
@@ -389,7 +420,7 @@ async function fetchBlogEntries(): Promise<BlogEntry[]> {
     }
 
     const blocks = await fetchAllBlocks(typedPage.id);
-    const rendered = await renderBlocksWithAssets(blocks, slug);
+    const rendered = await renderBlocksWithAssets(blocks, slug, BLOG_ASSET_DIR, BLOG_PUBLIC_BASE);
     const content = rendered.markdown;
     const contentHtml = rendered.html;
     const plainText = rendered.plainText;
@@ -415,8 +446,27 @@ async function fetchBlogEntries(): Promise<BlogEntry[]> {
   return entries;
 }
 
-async function writeBlogEntries(entries: BlogEntry[]) {
+async function cleanupBlogFiles(validSlugs: Set<string>) {
   await mkdir(BLOG_DIR, { recursive: true });
+  const existing = await readdir(BLOG_DIR).catch(() => []);
+  await Promise.all(
+    existing
+      .filter((file) => file.endsWith(".json"))
+      .filter((file) => !validSlugs.has(path.basename(file, ".json")))
+      .map((file) => unlink(path.join(BLOG_DIR, file)))
+  );
+
+  const assetDirs = await readdir(BLOG_ASSET_DIR).catch(() => []);
+  await Promise.all(
+    assetDirs
+      .filter((dir) => !validSlugs.has(dir))
+      .map((dir) => rm(path.join(BLOG_ASSET_DIR, dir), { recursive: true, force: true }))
+  );
+}
+
+async function writeBlogEntries(entries: BlogEntry[]) {
+  const validSlugs = new Set(entries.map((entry) => entry.slug));
+  await cleanupBlogFiles(validSlugs);
   await Promise.all(
     entries.map((entry) =>
       writeFile(
@@ -477,6 +527,7 @@ async function fetchProjects(): Promise<ProjectEntry[]> {
   });
 
   const projects: ProjectEntry[] = [];
+  const projectSlugs = new Set<string>();
 
   for (const page of response.results) {
     if (!("properties" in page)) continue;
@@ -486,7 +537,12 @@ async function fetchProjects(): Promise<ProjectEntry[]> {
     const description = richTextFromProperty(props.Description ?? props.Summary ?? props.Body);
     const href =
       richTextFromProperty(props.Link ?? props.URL ?? props.Href) || urlFromProperty(props.Link);
-    const slug = normalizeSlug(richTextFromProperty(props.Slug) || title || typedPage.id);
+    const slug = uniqueSlug(
+      richTextFromProperty(props.Slug),
+      title,
+      typedPage.id,
+      projectSlugs
+    );
     const type = selectFromProperty(props.Type);
     const status = selectFromProperty(props.Status);
     const date = dateFromProperty(props.Date);
@@ -500,17 +556,32 @@ async function fetchProjects(): Promise<ProjectEntry[]> {
     const coverUrl = coverFromFiles || coverFromPage;
     const image = coverUrl && slug ? await downloadProjectImage(coverUrl, slug) : undefined;
 
+    const blocks = await fetchAllBlocks(typedPage.id);
+    const rendered = await renderBlocksWithAssets(
+      blocks,
+      slug,
+      PROJECT_ASSET_DIR,
+      PROJECT_PUBLIC_BASE
+    );
+    const plainText = rendered.plainText;
+    const excerpt = description || buildExcerpt(plainText);
+    const readingTime = estimateReadingTime(plainText);
+
     if (!title) continue;
 
     projects.push({
       title,
-      description,
+      description: description || excerpt,
       href,
       slug,
       type,
       status,
       date,
       image,
+      content: rendered.markdown,
+      contentHtml: rendered.html,
+      excerpt,
+      readingTime,
     });
   }
 

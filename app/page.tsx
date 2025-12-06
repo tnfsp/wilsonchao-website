@@ -9,6 +9,7 @@ export default async function Home() {
     loadMurmurEntries(),
   ]);
   const latest = blogEntries.slice(0, 3);
+  const latestDaily = projects.slice(0, 3);
   const formatMurmurDate = (value?: string) => {
     if (!value) return "";
     const date = new Date(value);
@@ -111,7 +112,7 @@ export default async function Home() {
       <section className="section-block">
         <span className="section-title">Daily</span>
         <div className="grid gap-5 sm:grid-cols-2">
-          {projects.map((project) => (
+          {latestDaily.map((project) => (
             <div
               key={project.title}
               className="rounded-lg border border-[var(--border)] bg-white/85 px-5 py-4"
