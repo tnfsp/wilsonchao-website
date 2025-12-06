@@ -194,6 +194,7 @@ export async function loadProjects(): Promise<Project[]> {
     slug: project.slug || slugFromHref(normalizeHref(project.href)),
     excerpt: inferExcerpt(project.contentHtml, project.content, project.excerpt || project.description),
     readingTime: inferReadingTime(project as unknown as BlogEntry),
+    image: project.image || firstImageFromEntry(project as unknown as BlogEntry),
   }));
 
   return cleaned.length > 0 ? cleaned : published;
