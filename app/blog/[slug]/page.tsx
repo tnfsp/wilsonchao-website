@@ -3,7 +3,6 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBlogEntry, loadBlogEntries } from "@/lib/content";
 import { ViewCounter } from "@/components/ui/ViewCounter";
-import { Comments } from "@/components/ui/Comments";
 
 export const dynamic = "force-dynamic";
 
@@ -87,7 +86,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           )}
         </div>
       </article>
-      <Comments />
       {(prev || next) && (
         <div className="flex justify-between border-t border-[var(--border)] pt-4 text-sm text-[var(--muted)]">
           <div className="max-w-sm">
