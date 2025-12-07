@@ -95,4 +95,5 @@ export const linkItems = [
   { label: "Murmur", href: "https://murmur.wilsonchao.com", external: true },
   { label: "Instagram", href: "https://www.instagram.com/momobear_doctor", external: true },
   { label: "Telegram", href: "https://t.me/doctormomo", external: true },
+  { label: "RSS (Blog)", href: "/feed.xml" },
 ];
