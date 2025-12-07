@@ -90,10 +90,10 @@ export const aboutPreview =
   "I split time between the operating room, writing desk, and long walks with a notebook. This site holds the stories, questions, and unfinished threads.";
 
 export const linkItems = [
-  { label: "About", href: "/about" },
-  { label: "Website", href: "/" },
-  { label: "Murmur", href: "https://murmur.wilsonchao.com", external: true },
-  { label: "Instagram", href: "https://www.instagram.com/momobear_doctor", external: true },
-  { label: "Telegram", href: "https://t.me/doctormomo", external: true },
-  { label: "RSS", href: "/feed.xml" },
+  { label: "About｜認識我", href: "/about" },
+  { label: "Website｜個人網站", href: "/" },
+  { label: "murmur｜碎片日記", href: "https://murmur.wilsonchao.com", external: true },
+  { label: "Instagram｜追蹤生活更新", href: "https://www.instagram.com/momobear_doctor", external: true },
+  { label: "Telegram｜即時通知", href: "https://t.me/doctormomo", external: true },
+  { label: "RSS｜訂閱文章", href: "/feed.xml" },
 ];
