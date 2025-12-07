@@ -11,6 +11,10 @@ export default async function Home() {
   ]);
   const latest = blogEntries.slice(0, 3);
   const latestDaily = projects.slice(0, 3);
+  const heroIntroParagraphs = siteCopy.heroIntro
+    .split(/\n\s*\n/)
+    .map((p) => p.trim())
+    .filter(Boolean);
   const formatMurmurDate = (value?: string) => {
     if (!value) return "";
     const date = new Date(value);
@@ -31,7 +35,11 @@ export default async function Home() {
           {siteCopy.heroTitle}
         </h1>
         <p className="text-lg text-[var(--muted)]">{siteCopy.heroSubtitle}</p>
-        <p className="max-w-3xl text-base text-[var(--muted)]">{siteCopy.heroIntro}</p>
+        <div className="max-w-3xl space-y-3 text-base text-[var(--muted)]">
+          {heroIntroParagraphs.map((paragraph, index) => (
+            <p key={index}>{paragraph}</p>
+          ))}
+        </div>
         <div className="pt-2">
           <Link
             href="/blog"
