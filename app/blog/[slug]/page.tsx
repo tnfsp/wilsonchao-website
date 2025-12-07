@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getBlogEntry, loadBlogEntries } from "@/lib/content";
 import { ViewCounter } from "@/components/ui/ViewCounter";
+import { LikeButton } from "@/components/ui/LikeButton";
 
 export const dynamic = "force-dynamic";
 
@@ -57,7 +58,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           {entry.publishedAt}
           {entry.readingTime ? ` · ${entry.readingTime}` : ""}
         </p>
-        <ViewCounter slug={entry.slug} />
+        <div className="flex flex-wrap items-center gap-3">
+          <ViewCounter slug={entry.slug} />
+          <LikeButton slug={`blog:${entry.slug}`} />
+        </div>
         {entry.image ? (
           <div className="overflow-hidden rounded-lg border border-[var(--border)]">
             <Image

@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProject, loadProjects } from "@/lib/content";
 import { ViewCounter } from "@/components/ui/ViewCounter";
+import { LikeButton } from "@/components/ui/LikeButton";
 
 export default async function DailyEntryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -29,7 +30,10 @@ export default async function DailyEntryPage({ params }: { params: Promise<{ slu
         </p>
         <h1 className="text-3xl font-semibold leading-tight text-[var(--foreground)]">{entry.title}</h1>
         <p className="text-sm text-[var(--muted)]">{entry.date}</p>
-        <ViewCounter slug={entry.slug || entry.title} />
+        <div className="flex flex-wrap items-center gap-3">
+          <ViewCounter slug={entry.slug || entry.title} />
+          <LikeButton slug={`daily:${entry.slug || entry.title}`} />
+        </div>
         {entry.description ? (
           <p className="text-base text-[var(--muted)] leading-relaxed">{entry.description}</p>
         ) : null}
