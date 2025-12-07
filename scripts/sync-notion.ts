@@ -174,31 +174,22 @@ function escapeHtml(value: string) {
     .replace(/'/g, "&#039;");
 }
 
-function convertBlockToHtml(block: BlockObjectResponse): string {
-  const toHtml = (rich: RichTextItemResponse[]) => escapeHtml(textFromRichText(rich));
-
-  switch (block.type) {
-    case "heading_1":
-      return `<h1>${toHtml(block.heading_1.rich_text)}</h1>`;
-    case "heading_2":
-      return `<h2>${toHtml(block.heading_2.rich_text)}</h2>`;
-    case "heading_3":
-      return `<h3>${toHtml(block.heading_3.rich_text)}</h3>`;
-    case "paragraph":
-      return `<p>${toHtml(block.paragraph.rich_text)}</p>`;
-    case "bulleted_list_item":
-      return `<ul><li>${toHtml(block.bulleted_list_item.rich_text)}</li></ul>`;
-    case "numbered_list_item":
-      return `<ol><li>${toHtml(block.numbered_list_item.rich_text)}</li></ol>`;
-    case "quote":
-      return `<blockquote>${toHtml(block.quote.rich_text)}</blockquote>`;
-    case "callout":
-      return `<blockquote>${toHtml(block.callout.rich_text)}</blockquote>`;
-    case "divider":
-      return "<hr />";
-    default:
-      return "";
-  }
+function renderRichText(richText: RichTextItemResponse[]) {
+  return richText
+    .map((item) => {
+      const content = escapeHtml(item.plain_text ?? "");
+      const { bold, italic, underline, strikethrough, code } = item.annotations;
+      const href = item.href;
+      let rendered = content;
+      if (code) rendered = `<code>${rendered}</code>`;
+      if (bold) rendered = `<strong>${rendered}</strong>`;
+      if (italic) rendered = `<em>${rendered}</em>`;
+      if (underline) rendered = `<u>${rendered}</u>`;
+      if (strikethrough) rendered = `<s>${rendered}</s>`;
+      if (href) rendered = `<a href="${escapeHtml(href)}">${rendered}</a>`;
+      return rendered;
+    })
+    .join("");
 }
 
 function plainTextFromBlock(block: BlockObjectResponse): string {
@@ -316,38 +307,166 @@ async function renderBlocksWithAssets(
   assetRoot: string,
   publicBase: string
 ) {
-  const markdownParts: string[] = [];
-  const htmlParts: string[] = [];
-  const plainParts: string[] = [];
+  const renderBlocks = async (items: BlockObjectResponse[]) => {
+    const mdParts: string[] = [];
+    const htmlPartsLocal: string[] = [];
+    const plainPartsLocal: string[] = [];
 
-  for (const block of blocks) {
-    if (block.type === "image") {
-      const caption = block.image.caption ? textFromRichText(block.image.caption) : "";
-      const downloaded = await downloadImageForBlock(block, slug, assetRoot, publicBase);
-      if (downloaded) {
-        markdownParts.push(`![${caption || "image"}](${downloaded})`);
-        htmlParts.push(
-          `<figure><img src="${downloaded}" alt="${escapeHtml(
-            caption || "image"
-          )}" />${caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : ""}</figure>`
-        );
+    for (const block of items) {
+      const childBlocks = block.has_children ? await fetchAllBlocks(block.id) : [];
+      const renderedChildren = childBlocks.length
+        ? await renderBlocks(childBlocks)
+        : { markdown: "", html: "", plain: "" };
+
+      if (block.type === "image") {
+        const caption = block.image.caption ? textFromRichText(block.image.caption) : "";
+        const downloaded = await downloadImageForBlock(block, slug, assetRoot, publicBase);
+        if (downloaded) {
+          mdParts.push(`![${caption || "image"}](${downloaded})`);
+          htmlPartsLocal.push(
+            `<figure><img src="${downloaded}" alt="${escapeHtml(
+              caption || "image"
+            )}" />${caption ? `<figcaption>${escapeHtml(caption)}</figcaption>` : ""}</figure>`
+          );
+        }
+        if (caption) plainPartsLocal.push(caption);
+        continue;
       }
-      if (caption) plainParts.push(caption);
-      continue;
+
+      const toHtml = (rich: RichTextItemResponse[]) => renderRichText(rich);
+      let md = "";
+      let html = "";
+      let plain = plainTextFromBlock(block);
+
+      switch (block.type) {
+        case "heading_1":
+          md = `# ${textFromRichText(block.heading_1.rich_text)}`;
+          html = `<h1>${toHtml(block.heading_1.rich_text)}</h1>`;
+          break;
+        case "heading_2":
+          md = `## ${textFromRichText(block.heading_2.rich_text)}`;
+          html = `<h2>${toHtml(block.heading_2.rich_text)}</h2>`;
+          break;
+        case "heading_3":
+          md = `### ${textFromRichText(block.heading_3.rich_text)}`;
+          html = `<h3>${toHtml(block.heading_3.rich_text)}</h3>`;
+          break;
+        case "paragraph":
+          md = textFromRichText(block.paragraph.rich_text);
+          html = `<p>${toHtml(block.paragraph.rich_text)}${renderedChildren.html}</p>`;
+          plain = `${textFromRichText(block.paragraph.rich_text)} ${renderedChildren.plain}`.trim();
+          break;
+        case "bulleted_list_item": {
+          const childMd = renderedChildren.markdown
+            ? `\n  ${renderedChildren.markdown.replace(/\n/g, "\n  ")}`
+            : "";
+          md = `- ${textFromRichText(block.bulleted_list_item.rich_text)}${childMd}`;
+          html = `<ul><li>${toHtml(block.bulleted_list_item.rich_text)}${renderedChildren.html}</li></ul>`;
+          plain = `${textFromRichText(block.bulleted_list_item.rich_text)} ${renderedChildren.plain}`.trim();
+          break;
+        }
+        case "numbered_list_item": {
+          const childMd = renderedChildren.markdown
+            ? `\n  ${renderedChildren.markdown.replace(/\n/g, "\n  ")}`
+            : "";
+          md = `1. ${textFromRichText(block.numbered_list_item.rich_text)}${childMd}`;
+          html = `<ol><li>${toHtml(block.numbered_list_item.rich_text)}${renderedChildren.html}</li></ol>`;
+          plain = `${textFromRichText(block.numbered_list_item.rich_text)} ${renderedChildren.plain}`.trim();
+          break;
+        }
+        case "quote":
+          md = `> ${textFromRichText(block.quote.rich_text)}`;
+          html = `<blockquote>${toHtml(block.quote.rich_text)}${renderedChildren.html}</blockquote>`;
+          plain = `${textFromRichText(block.quote.rich_text)} ${renderedChildren.plain}`.trim();
+          break;
+        case "callout": {
+          const icon =
+            block.callout.icon?.type === "emoji"
+              ? `${block.callout.icon.emoji} `
+              : block.callout.icon?.type === "external"
+                ? ""
+                : "";
+          md = `> ${icon}${textFromRichText(block.callout.rich_text)}`;
+          html = `<blockquote>${icon || ""}${toHtml(block.callout.rich_text)}${renderedChildren.html}</blockquote>`;
+          plain = `${icon || ""}${textFromRichText(block.callout.rich_text)} ${renderedChildren.plain}`.trim();
+          break;
+        }
+        case "divider":
+          md = "---";
+          html = "<hr />";
+          break;
+        case "to_do": {
+          const checked = block.to_do.checked;
+          md = `${checked ? "[x]" : "[ ]"} ${textFromRichText(block.to_do.rich_text)}`;
+          html = `<div class="notion-todo"><label><input type="checkbox" disabled ${
+            checked ? "checked" : ""
+          } /> <span>${toHtml(block.to_do.rich_text)}</span></label>${renderedChildren.html}</div>`;
+          plain = `${textFromRichText(block.to_do.rich_text)} ${renderedChildren.plain}`.trim();
+          break;
+        }
+        case "toggle":
+          md = `- ${textFromRichText(block.toggle.rich_text)}\n${renderedChildren.markdown}`;
+          html = `<details><summary>${toHtml(block.toggle.rich_text)}</summary>${renderedChildren.html}</details>`;
+          plain = `${textFromRichText(block.toggle.rich_text)} ${renderedChildren.plain}`.trim();
+          break;
+        case "code": {
+          const codeText = textFromRichText(block.code.rich_text);
+          const language = block.code.language || "plain";
+          md = ["```" + language, codeText, "```"].join("\n");
+          html = `<pre><code class="language-${escapeHtml(language)}">${escapeHtml(
+            codeText
+          )}</code></pre>`;
+          break;
+        }
+        case "table": {
+          const rows = childBlocks.filter((c) => c.type === "table_row");
+          const htmlRows = rows
+            .map((row) => {
+              const cells = row.table_row.cells || [];
+              const tds = cells.map((cell) => `<td>${renderRichText(cell)}</td>`).join("");
+              return `<tr>${tds}</tr>`;
+            })
+            .join("");
+          html = `<table>${htmlRows}</table>`;
+          if (rows.length > 0) {
+            const first = rows[0].table_row.cells || [];
+            const header = `| ${first.map((c) => renderRichText(c)).join(" | ")} |`;
+            const separator = `| ${first.map(() => "---").join(" | ")} |`;
+            const body = rows
+              .slice(1)
+              .map((row) => `| ${row.table_row.cells.map((c) => renderRichText(c)).join(" | ")} |`)
+              .join("\n");
+            md = [header, separator, body].filter(Boolean).join("\n");
+          }
+          plain = rows
+            .map((row) => row.table_row.cells.map((c) => textFromRichText(c)).join(" "))
+            .join(" ");
+          break;
+        }
+        default:
+          md = convertBlockToMarkdown(block);
+          html = "";
+          break;
+      }
+
+      if (md) mdParts.push(md);
+      if (html) htmlPartsLocal.push(html);
+      if (plain) plainPartsLocal.push(plain);
     }
 
-    const md = convertBlockToMarkdown(block);
-    const html = convertBlockToHtml(block);
-    const plain = plainTextFromBlock(block);
-    if (md) markdownParts.push(md);
-    if (html) htmlParts.push(html);
-    if (plain) plainParts.push(plain);
-  }
+    return {
+      markdown: mdParts.join("\n\n"),
+      html: htmlPartsLocal.join("\n"),
+      plain: plainPartsLocal.join(" "),
+    };
+  };
+
+  const rendered = await renderBlocks(blocks);
 
   return {
-    markdown: markdownParts.join("\n\n"),
-    html: htmlParts.join("\n"),
-    plainText: plainParts.join(" "),
+    markdown: rendered.markdown,
+    html: rendered.html,
+    plainText: rendered.plain,
   };
 }
 
