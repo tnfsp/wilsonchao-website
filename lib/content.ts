@@ -4,7 +4,7 @@ import {
   aboutPreview,
   defaultSiteCopy,
   featuredProjects,
-  linkItems,
+  linkItems as baseLinkItems,
   placeholderBlogs,
 } from "./placeholders";
 
@@ -263,5 +263,12 @@ export async function loadMurmurEntries(limit = 3): Promise<MurmurEntry[]> {
     return [];
   }
 }
+
+const buttondownLink = process.env.NEXT_PUBLIC_BUTTONDOWN_URL || "https://buttondown.email/";
+
+const linkItems = [
+  ...baseLinkItems,
+  { label: "📧 Buttondown｜Email 訂閱", href: buttondownLink, external: true },
+];
 
 export { aboutPreview, linkItems };

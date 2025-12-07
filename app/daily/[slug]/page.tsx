@@ -3,6 +3,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProject, loadProjects } from "@/lib/content";
 import { ViewCounter } from "@/components/ui/ViewCounter";
+import { Comments } from "@/components/ui/Comments";
 
 export default async function DailyEntryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -58,6 +59,7 @@ export default async function DailyEntryPage({ params }: { params: Promise<{ slu
           </pre>
         ) : null}
       </article>
+      <Comments term={`daily-${entry.slug || entry.title}`} />
 
       {(prev || next) && (
         <div className="flex justify-between border-t border-[var(--border)] pt-4 text-sm text-[var(--muted)]">
