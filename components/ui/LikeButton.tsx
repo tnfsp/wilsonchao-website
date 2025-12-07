@@ -7,7 +7,7 @@ type Props = {
   label?: string;
 };
 
-export function LikeButton({ slug, label = "送出愛心" }: Props) {
+export function LikeButton({ slug, label = "Like" }: Props) {
   const [count, setCount] = useState<number | null>(null);
   const [liked, setLiked] = useState(false);
   const [submitting, setSubmitting] = useState(false);
