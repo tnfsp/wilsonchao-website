@@ -36,6 +36,7 @@ Next.js (App Router) + TypeScript + Tailwind site for Dr. Yi-Hsiang Chao. Visual
 - Blog detail renders Notion HTML (with plain-text fallback) and shows reading time; filtering uses `?type=`.
 - Daily lives under `/daily`; type filter supported; prev/next navigation on entries.
 - Murmur preview pulls `MURMUR_FEED_URL` (default `https://murmur.wilsonchao.com/rss.json`), highlights snippet in yellow; `/murmur` redirects out.
+- Global footer includes an IndieWeb Webring block (`components/layout/IndieWebWebring.tsx`) with `prev`/`hub`/`next` via `https://xn--sr8hvo.ws/`.
 - RSS: combined blog + daily at `/feed.xml` (alias `/feed`); legacy daily-only feed remains at `/daily/feed.xml` (alias `/daily/feed`); set `NEXT_PUBLIC_SITE_URL` for absolute links.
 - Comments: giscus embed (set `NEXT_PUBLIC_GISCUS_*`; renders only when IDs are provided). Defaults: mapping pathname, theme `preferred_color_scheme`, lang `zh-TW`, strict `0`; override via env if needed.
 - Subscribe: Buttondown link added to Links page (`NEXT_PUBLIC_BUTTONDOWN_URL`).
