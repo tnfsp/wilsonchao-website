@@ -49,7 +49,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
       >
         Back to blog
       </Link>
-      <article className="space-y-4">
+      <article className="surface-card space-y-4 px-6 py-5">
         <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">{entry.type}</p>
         <h1 className="text-3xl font-semibold leading-tight text-[var(--foreground)]">
           {entry.title}

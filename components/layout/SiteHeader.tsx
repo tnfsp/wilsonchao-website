@@ -18,47 +18,55 @@ export function SiteHeader() {
 
   return (
     <>
-      <header className="page-shell flex items-center justify-between py-4">
-        <Link href="/" className="flex items-center gap-3" aria-label="Go to homepage">
-          <Image
-            src="/avatar.png"
-            alt="Yi-Hsiang Chao portrait"
-            width={56}
-            height={56}
-            className="h-14 w-14 rounded-full border border-[var(--border)] object-cover shadow-[0_6px_18px_rgba(0,0,0,0.08)]"
-            priority
-          />
-        </Link>
+      <header className="page-shell">
+        <div className="flex items-center justify-between gap-4 rounded-full border border-[var(--border)] bg-[var(--surface)] px-5 py-3 shadow-[0_16px_40px_rgba(0,18,25,0.08)] backdrop-blur">
+          <Link href="/" className="flex items-center gap-3" aria-label="Go to homepage">
+            <Image
+              src="/avatar.png"
+              alt="Yi-Hsiang Chao portrait"
+              width={56}
+              height={56}
+              className="h-14 w-14 rounded-full border border-[var(--border)] object-cover shadow-[0_6px_18px_rgba(0,18,25,0.12)]"
+              priority
+            />
+          </Link>
 
-        <nav className="hidden items-center gap-5 text-sm text-[var(--muted)] md:flex">
-          {links.map((item) => (
-            <Link key={item.href} href={item.href} className="hover:text-[var(--accent)]">
-              {item.label}
-            </Link>
-          ))}
-        </nav>
+          <nav className="hidden items-center gap-5 text-sm text-[var(--muted)] md:flex">
+            {links.map((item) => (
+              <Link
+                key={item.href}
+                href={item.href}
+                className="rounded-full px-2 py-1 transition-colors hover:bg-[var(--highlight)]/60 hover:text-[var(--accent)]"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
 
-        <button
-          type="button"
-          onClick={() => setOpen((prev) => !prev)}
-          className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] px-3 py-1 text-sm text-[var(--foreground)] transition-colors hover:border-[var(--foreground)] md:hidden"
-          aria-expanded={open}
-          aria-label="Toggle navigation"
-        >
-          Menu
-          <span className={`transition-transform ${open ? "rotate-90" : ""}`}>▸</span>
-        </button>
+          <button
+            type="button"
+            onClick={() => setOpen((prev) => !prev)}
+            className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-sm text-[var(--foreground)] transition-colors hover:border-[var(--accent-strong)] md:hidden"
+            aria-expanded={open}
+            aria-label="Toggle navigation"
+          >
+            Menu
+            <span aria-hidden className={`transition-transform ${open ? "rotate-90" : ""}`}>
+              {open ? "x" : "|||"}
+            </span>
+          </button>
+        </div>
       </header>
 
       {open ? (
         <div className="page-shell md:hidden">
-          <div className="mb-3 rounded-lg border border-[var(--border)] bg-white/95 px-4 py-3 shadow-sm">
+          <div className="mb-3 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-3 shadow-[0_14px_34px_rgba(0,18,25,0.08)]">
             <div className="flex flex-col gap-2 text-sm text-[var(--foreground)]">
               {links.map((item) => (
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="block rounded-md px-2 py-1 hover:bg-[rgba(0,0,0,0.03)] hover:text-[var(--accent)]"
+                  className="block rounded-md px-2 py-1 transition-colors hover:bg-[var(--highlight)]/60 hover:text-[var(--accent)]"
                   onClick={() => setOpen(false)}
                 >
                   {item.label}

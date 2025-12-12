@@ -50,8 +50,8 @@ export default async function BlogIndexPage({
             href="/blog"
             className={`rounded-full border px-3 py-1 transition-colors ${
               !typeParam
-                ? "border-[var(--foreground)] text-[var(--foreground)]"
-                : "border-[var(--border)] hover:text-[var(--accent)]"
+                ? "border-[var(--accent-strong)] bg-[var(--highlight)]/60 text-[var(--foreground)]"
+                : "border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
             }`}
           >
             All
@@ -62,8 +62,8 @@ export default async function BlogIndexPage({
               href={`/blog?type=${encodeURIComponent(type ?? "")}`}
               className={`rounded-full border px-3 py-1 transition-colors ${
                 typeParam === type
-                  ? "border-[var(--foreground)] text-[var(--foreground)]"
-                  : "border-[var(--border)] hover:text-[var(--accent)]"
+                  ? "border-[var(--accent-strong)] bg-[var(--highlight)]/60 text-[var(--foreground)]"
+                  : "border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
               }`}
             >
               {type}
@@ -76,7 +76,7 @@ export default async function BlogIndexPage({
         {visible.map((post) => (
           <article
             key={post.slug}
-            className="rounded-lg border border-[var(--border)] bg-white/85 px-5 py-4"
+            className="surface-card px-5 py-4 transition-transform hover:-translate-y-0.5"
           >
             {post.image ? (
               <div className="mb-3 overflow-hidden rounded-md border border-[var(--border)]">

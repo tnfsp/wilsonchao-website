@@ -24,13 +24,13 @@ export default async function ProjectDetailPage({
       >
         Back to projects
       </Link>
-      <article className="space-y-3">
+      <article className="surface-card space-y-3 px-6 py-5">
         <p className="text-xs uppercase tracking-[0.2em] text-[var(--muted)]">
-        {project.type || "Project"}
-      </p>
-      <h1 className="text-3xl font-semibold leading-tight text-[var(--foreground)]">
-        {project.title}
-      </h1>
+          {project.type || "Project"}
+        </p>
+        <h1 className="text-3xl font-semibold leading-tight text-[var(--foreground)]">
+          {project.title}
+        </h1>
         {project.date ? (
           <p className="text-sm text-[var(--muted)]">{project.date}</p>
         ) : null}

@@ -1,11 +1,17 @@
 @import "tailwindcss";
 
 :root {
-  --background: #f4f1ec;
-  --foreground: #111111;
-  --muted: #5c5c54;
-  --accent: #ff4500;
-  --border: rgba(0, 0, 0, 0.08);
+  --background: #f8f4ea;
+  --surface: #fffbf4;
+  --surface-strong: #f1e4c2;
+  --foreground: #001219;
+  --muted: #005f73;
+  --accent: #0a9396;
+  --accent-strong: #ca6702;
+  --accent-contrast: #9b2226;
+  --border: rgba(0, 18, 25, 0.14);
+  --halo: rgba(153, 186, 203, 0.35);
+  --highlight: #e9d8a6;
 }
 
 @theme inline {
@@ -18,7 +24,10 @@
 }
 
 body {
-  background: var(--background);
+  background:
+    radial-gradient(circle at 14% 18%, rgba(233, 216, 166, 0.48), transparent 32%),
+    radial-gradient(circle at 82% 6%, rgba(153, 186, 203, 0.26), transparent 28%),
+    var(--background);
   color: var(--foreground);
   font-family:
     ui-sans-serif,
@@ -46,16 +55,16 @@ a {
 }
 
 a:hover {
-  color: var(--accent);
+  color: var(--accent-strong);
 }
 
 a:focus-visible {
-  outline: 1px dashed var(--accent);
+  outline: 1px dashed var(--accent-contrast);
   outline-offset: 3px;
 }
 
 ::selection {
-  background: #f0e5d6;
+  background: rgba(153, 186, 203, 0.35);
 }
 
 .page-shell {
@@ -70,10 +79,41 @@ a:focus-visible {
 }
 
 .section-title {
-  display: inline-block;
-  margin-bottom: 0.5rem;
-  font-size: 0.9rem;
-  letter-spacing: 0.18em;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
   text-transform: uppercase;
-  color: var(--muted);
+  color: var(--accent-strong);
+  background: rgba(10, 147, 150, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 18, 25, 0.04);
+}
+
+.section-title::before {
+  content: "";
+  height: 8px;
+  width: 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 6px rgba(233, 216, 166, 0.6);
+}
+
+.surface-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 22px 60px rgba(0, 18, 25, 0.08);
+}
+
+.surface-strong {
+  background: linear-gradient(135deg, rgba(233, 216, 166, 0.7), rgba(255, 251, 244, 0.9));
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 26px 70px rgba(0, 18, 25, 0.12);
 }

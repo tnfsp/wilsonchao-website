@@ -68,7 +68,7 @@ export function LikeButton({ slug, label = "Like" }: Props) {
       className={`inline-flex items-center gap-2 rounded-full border px-3 py-1 text-sm transition-colors ${
         liked
           ? "border-[var(--accent)] bg-[var(--accent)]/10 text-[var(--accent)]"
-          : "border-[var(--border)] bg-white/80 text-[var(--foreground)] hover:border-[var(--accent)]"
+          : "border-[var(--border)] bg-[var(--surface)] text-[var(--foreground)] hover:border-[var(--accent)]"
       }`}
     >
       <span aria-hidden="true">{liked ? "♥" : "♡"}</span>

@@ -24,7 +24,7 @@ export default async function DailyEntryPage({ params }: { params: Promise<{ slu
         Back to daily
       </Link>
 
-      <article className="space-y-3">
+      <article className="surface-card space-y-3 px-6 py-5">
         <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">
           {entry.type || "Daily"}
         </p>

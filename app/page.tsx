@@ -30,7 +30,7 @@ export default async function Home() {
 
   return (
     <main className="page-shell space-y-12">
-      <header className="space-y-4">
+      <header className="surface-strong space-y-4 px-6 py-6">
         <h1 className="text-3xl font-semibold leading-tight text-[var(--foreground)] sm:text-4xl">
           {siteCopy.heroTitle}
         </h1>
@@ -43,9 +43,9 @@ export default async function Home() {
         <div className="pt-2">
           <Link
             href="/blog"
-            className="inline-flex items-center gap-2 text-sm font-medium text-[var(--foreground)] underline decoration-[var(--accent)] decoration-2 underline-offset-8 transition-colors hover:text-[var(--accent)]"
+            className="inline-flex items-center gap-2 rounded-full bg-[var(--accent-strong)] px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_35px_rgba(202,103,2,0.28)] transition-colors hover:bg-[var(--accent-contrast)]"
           >
-            {siteCopy.heroCTA}
+            {siteCopy.heroCTA} →
           </Link>
         </div>
       </header>
@@ -55,7 +55,7 @@ export default async function Home() {
           <span className="section-title">Latest Blog</span>
           <Link
             href="/blog"
-            className="text-sm text-[var(--muted)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent)]"
+            className="text-sm text-[var(--muted)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent-strong)]"
           >
             查看更多 →
           </Link>
@@ -64,7 +64,7 @@ export default async function Home() {
           {latest.map((post) => (
             <article
               key={post.slug}
-              className="rounded-lg border border-[var(--border)] bg-white/85 px-5 py-4"
+              className="surface-card px-5 py-4 transition-transform hover:-translate-y-0.5"
             >
               <div className="flex items-center justify-between text-sm text-[var(--muted)]">
                 <span>{post.type}</span>
@@ -86,7 +86,7 @@ export default async function Home() {
 
       <section className="section-block">
         <span className="section-title">murmur</span>
-        <div className="rounded-lg border border-[var(--border)] bg-white/80 px-5 py-6 space-y-4">
+        <div className="surface-card px-5 py-6 space-y-4">
           <p className="text-base text-[var(--muted)]">{siteCopy.murmurIntro}</p>
           {murmur.length > 0 ? (
             <div className="space-y-3">
@@ -94,7 +94,7 @@ export default async function Home() {
                 // Show highlighted text; if description exists, use it instead of repeating title.
                 <div
                   key={item.link || item.title}
-                  className="space-y-1 rounded-md border border-[var(--border)] bg-white/95 px-4 py-3"
+                  className="space-y-1 rounded-md border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-3"
                 >
                   <a
                     href={item.link}
@@ -102,7 +102,7 @@ export default async function Home() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <span className="inline-block rounded-[4px] bg-[#fff2b2] px-1.5 py-[2px] leading-relaxed">
+                    <span className="inline-block rounded-[4px] bg-[var(--highlight)] px-1.5 py-[2px] leading-relaxed">
                       {item.description || item.title}
                     </span>
                   </a>
@@ -118,7 +118,7 @@ export default async function Home() {
           <div className="pt-2">
             <Link
               href="/murmur"
-              className="inline-flex items-center text-sm font-medium text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent)]"
+              className="inline-flex items-center text-sm font-medium text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent-strong)]"
             >
               {murmur.length > 0 ? "更多 murmur →" : siteCopy.murmurCTA}
             </Link>
@@ -131,7 +131,7 @@ export default async function Home() {
           <span className="section-title">Latest Daily</span>
           <Link
             href="/daily"
-            className="text-sm text-[var(--muted)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent)]"
+            className="text-sm text-[var(--muted)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent-strong)]"
           >
             查看更多 →
           </Link>
@@ -140,7 +140,7 @@ export default async function Home() {
           {latestDaily.map((project) => (
             <div
               key={project.title}
-              className="rounded-lg border border-[var(--border)] bg-white/85 px-5 py-4"
+              className="surface-card px-5 py-4 transition-transform hover:-translate-y-0.5"
             >
               <h3 className="text-lg font-semibold text-[var(--foreground)]">
                 {project.slug
@@ -170,18 +170,18 @@ export default async function Home() {
 
       <section className="section-block">
         <span className="section-title">About</span>
-        <div className="space-y-3">
+        <div className="surface-card space-y-3 px-5 py-5">
           <p className="text-base text-[var(--muted)] leading-relaxed">{siteCopy.aboutIntro}</p>
           <Link
             href="/about"
-            className="text-sm font-medium text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent)]"
+            className="text-sm font-medium text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent-strong)]"
           >
             Read the full story →
           </Link>
         </div>
       </section>
 
-      <footer className="pt-6 text-sm text-[var(--muted)]">
+      <footer className="border-t border-[var(--border)] pt-6 text-sm text-[var(--muted)]">
         {siteCopy.footerText}
         <div className="pt-3">
           <ViewStats slug="home" />

@@ -16,7 +16,7 @@ export default async function LinksPage() {
           <Link
             key={item.label}
             href={item.href}
-            className="rounded-full border border-[var(--border)] bg-white/80 px-4 py-3 text-center text-[var(--foreground)] shadow-[0_4px_20px_rgba(0,0,0,0.02)] transition-colors hover:text-[var(--accent)]"
+            className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-center text-[var(--foreground)] shadow-[0_12px_34px_rgba(0,18,25,0.06)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
             target={item.external ? "_blank" : undefined}
             rel={item.external ? "noreferrer" : undefined}
           >
