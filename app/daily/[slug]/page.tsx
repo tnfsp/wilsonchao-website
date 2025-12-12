@@ -18,7 +18,7 @@ export default async function DailyEntryPage({ params }: { params: Promise<{ slu
   const firstBodyImageSrc = bodyHtml
     ? bodyHtml.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1]
     : undefined;
-  const showHeroImage = entry.image && entry.image !== firstBodyImageSrc;
+  const heroImage = entry.image && entry.image !== firstBodyImageSrc ? entry.image : undefined;
 
   return (
     <main className="page-shell space-y-6">
@@ -39,10 +39,10 @@ export default async function DailyEntryPage({ params }: { params: Promise<{ slu
         {entry.description ? (
           <p className="text-base text-[var(--muted)] leading-relaxed">{entry.description}</p>
         ) : null}
-        {showHeroImage ? (
+        {heroImage ? (
           <div className="overflow-hidden rounded-lg border border-[var(--border)]">
             <Image
-              src={entry.image}
+              src={heroImage}
               alt={entry.title}
               width={1200}
               height={630}
