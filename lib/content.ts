@@ -220,6 +220,17 @@ export async function loadMurmurEntries(limit = 3): Promise<MurmurEntry[]> {
     if (!value) return "";
     return value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
   };
+  const cleanMurmurHtml = (value?: string) => {
+    if (!value) return "";
+    // Drop Telegram's link preview blocks and media tags to avoid pulling video previews.
+    const withoutPreview = value.replace(
+      /<a[^>]*class="[^"]*tgme_widget_message_link_preview[^"]*"[^>]*>[\s\S]*?<\/a>/gim,
+      ""
+    );
+    return withoutPreview
+      .replace(/<video[\s\S]*?<\/video>/gim, "")
+      .replace(/<figure[^>]*>[\s\S]*?<\/figure>/gim, "");
+  };
   try {
     const res = await fetch(DEFAULT_MURMUR_FEED, {
       // murmur feed already has caching headers; respect revalidate to avoid hammering
@@ -241,10 +252,13 @@ export async function loadMurmurEntries(limit = 3): Promise<MurmurEntry[]> {
     };
     const items = json.items ?? [];
     return items.slice(0, limit).map((item) => {
+      const rawHtml = (item as { content_html?: string }).content_html;
+      const sanitizedHtml = cleanMurmurHtml(rawHtml);
       const description =
         item.description ||
         item.content_text ||
-        stripHtml((item as { content_html?: string }).content_html) ||
+        stripHtml(sanitizedHtml) ||
+        stripHtml(rawHtml) ||
         (item as { summary?: string }).summary;
       return {
         title: item.title,

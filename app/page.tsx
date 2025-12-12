@@ -102,9 +102,7 @@ export default async function Home() {
                     target="_blank"
                     rel="noreferrer"
                   >
-                    <span className="inline-block rounded-[4px] bg-[var(--highlight)] px-1.5 py-[2px] leading-relaxed">
-                      {item.description || item.title}
-                    </span>
+                    <span className="leading-relaxed">{item.description || item.title}</span>
                   </a>
                   {item.pubDate ? (
                     <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] text-right">
