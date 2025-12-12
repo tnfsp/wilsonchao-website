@@ -177,7 +177,7 @@ function escapeHtml(value: string) {
 function renderRichText(richText: RichTextItemResponse[]) {
   return richText
     .map((item) => {
-      const content = escapeHtml(item.plain_text ?? "");
+      const content = escapeHtml(item.plain_text ?? "").replace(/\n/g, "<br />");
       const { bold, italic, underline, strikethrough, code } = item.annotations;
       const href = item.href;
       let rendered = content;

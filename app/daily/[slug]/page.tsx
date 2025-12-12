@@ -14,6 +14,11 @@ export default async function DailyEntryPage({ params }: { params: Promise<{ slu
   const index = all.findIndex((item) => item.slug === slug);
   const prev = index > 0 ? all[index - 1] : null;
   const next = index >= 0 && index < all.length - 1 ? all[index + 1] : null;
+  const bodyHtml = entry.contentHtml;
+  const firstBodyImageSrc = bodyHtml
+    ? bodyHtml.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1]
+    : undefined;
+  const showHeroImage = entry.image && entry.image !== firstBodyImageSrc;
 
   return (
     <main className="page-shell space-y-6">
@@ -34,7 +39,7 @@ export default async function DailyEntryPage({ params }: { params: Promise<{ slu
         {entry.description ? (
           <p className="text-base text-[var(--muted)] leading-relaxed">{entry.description}</p>
         ) : null}
-        {entry.image ? (
+        {showHeroImage ? (
           <div className="overflow-hidden rounded-lg border border-[var(--border)]">
             <Image
               src={entry.image}
@@ -48,10 +53,10 @@ export default async function DailyEntryPage({ params }: { params: Promise<{ slu
             />
           </div>
         ) : null}
-        {entry.contentHtml ? (
+        {bodyHtml ? (
           <div
             className="prose prose-neutral max-w-none text-[var(--foreground)] prose-a:text-[var(--accent)]"
-            dangerouslySetInnerHTML={{ __html: entry.contentHtml }}
+            dangerouslySetInnerHTML={{ __html: bodyHtml }}
           />
         ) : entry.content ? (
           <pre className="whitespace-pre-wrap text-base leading-relaxed text-[var(--foreground)]">

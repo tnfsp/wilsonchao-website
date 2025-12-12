@@ -40,6 +40,10 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const next = index >= 0 && index < all.length - 1 ? all[index + 1] : null;
 
   const bodyHtml = entry.contentHtml || fallbackHtmlFromContent(entry.content);
+  const firstBodyImageSrc = bodyHtml
+    ? bodyHtml.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1]
+    : undefined;
+  const showHeroImage = entry.image && entry.image !== firstBodyImageSrc;
 
   return (
     <main className="page-shell space-y-8">
@@ -59,7 +63,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           {entry.readingTime ? ` · ${entry.readingTime}` : ""}
         </p>
         <ViewCounter slug={entry.slug} />
-        {entry.image ? (
+        {showHeroImage ? (
           <div className="overflow-hidden rounded-lg border border-[var(--border)]">
             <Image
               src={entry.image}
