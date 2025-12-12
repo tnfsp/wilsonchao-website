@@ -278,11 +278,13 @@ export async function loadMurmurEntries(limit = 3): Promise<MurmurEntry[]> {
   }
 }
 
-const buttondownLink = process.env.NEXT_PUBLIC_BUTTONDOWN_URL || "https://buttondown.email/";
+const buttondownLink = process.env.NEXT_PUBLIC_BUTTONDOWN_URL;
 
 const linkItems = [
   ...baseLinkItems,
-  { label: "📧 Buttondown｜Email 訂閱", href: buttondownLink, external: true },
-];
+  ...(buttondownLink
+    ? [{ label: "📧 Buttondown｜Email 訂閱", href: buttondownLink, external: true }]
+    : []),
+] as typeof baseLinkItems;
 
 export { aboutPreview, linkItems };
