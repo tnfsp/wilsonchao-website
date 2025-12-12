@@ -80,16 +80,17 @@ export default async function BlogIndexPage({
           >
             {post.image ? (
               <div className="mb-3 overflow-hidden rounded-md border border-[var(--border)]">
-                <Image
-                  src={post.image}
-                  alt={post.title}
-                  width={900}
-                  height={400}
-                  className="h-40 w-full object-cover"
-                  sizes="(min-width: 640px) 50vw, 100vw"
-                  unoptimized
-                  priority={false}
-                />
+                <div className="relative w-full" style={{ paddingBottom: "56.25%" }}>
+                  <Image
+                    src={post.image}
+                    alt={post.title}
+                    fill
+                    className="absolute inset-0 h-full w-full object-cover"
+                    sizes="(min-width: 640px) 50vw, 100vw"
+                    unoptimized
+                    priority={false}
+                  />
+                </div>
               </div>
             ) : null}
             <div className="flex items-center justify-between text-sm text-[var(--muted)]">
