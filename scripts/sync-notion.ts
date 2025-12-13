@@ -471,7 +471,12 @@ async function renderBlocksWithAssets(
 }
 
 function estimateReadingTime(text: string) {
-  const words = text.trim().split(/\s+/).filter(Boolean).length;
+  const plain = text.replace(/\s+/g, " ").trim();
+  const asciiWords = plain.split(/\s+/).filter(Boolean).length;
+  const cjkChars =
+    plain.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu)
+      ?.length || 0;
+  const words = asciiWords + cjkChars;
   if (!words) return "";
   const minutes = Math.max(1, Math.ceil(words / 180));
   return `${minutes} min`;

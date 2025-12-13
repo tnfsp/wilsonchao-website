@@ -90,6 +90,14 @@ function stripMarkup(value?: string) {
   return value.replace(/<[^>]+>/g, " ").replace(/[#>*`]/g, " ").replace(/\s+/g, " ").trim();
 }
 
+function countWordsWithCJK(plain: string) {
+  const asciiWords = plain.split(/\s+/).filter(Boolean).length;
+  const cjkChars =
+    plain.match(/[\p{Script=Han}\p{Script=Hiragana}\p{Script=Katakana}\p{Script=Hangul}]/gu)
+      ?.length || 0;
+  return asciiWords + cjkChars;
+}
+
 function inferExcerpt(contentHtml?: string, content?: string, existing?: string) {
   if (existing) return existing;
   const plain = stripMarkup(contentHtml || content);
@@ -109,7 +117,7 @@ function firstImageFromEntry(entry: BlogEntry) {
 function inferReadingTime(entry: BlogEntry): string | undefined {
   const plain = stripMarkup(entry.contentHtml || entry.content);
   if (plain) {
-    const words = plain.split(/\s+/).filter(Boolean).length;
+    const words = countWordsWithCJK(plain);
     const minutes = Math.max(1, Math.ceil(words / 180));
     return `${minutes} min`;
   }
