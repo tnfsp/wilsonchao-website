@@ -420,14 +420,25 @@ async function renderBlocksWithAssets(
         }
         case "table": {
           const rows = childBlocks.filter((c) => c.type === "table_row");
-          const htmlRows = rows
-            .map((row) => {
-              const cells = row.table_row.cells || [];
-              const tds = cells.map((cell) => `<td>${renderRichText(cell)}</td>`).join("");
-              return `<tr>${tds}</tr>`;
-            })
-            .join("");
-          html = `<table>${htmlRows}</table>`;
+          let tableHtml = "";
+          if (rows.length > 0) {
+            // First row as header
+            const headerCells = rows[0].table_row.cells || [];
+            const headerHtml = headerCells
+              .map((cell) => `<th>${renderRichText(cell)}</th>`)
+              .join("");
+            tableHtml += `<thead><tr>${headerHtml}</tr></thead>`;
+            // Remaining rows as body
+            if (rows.length > 1) {
+              const bodyRows = rows.slice(1).map((row) => {
+                const cells = row.table_row.cells || [];
+                const tds = cells.map((cell) => `<td>${renderRichText(cell)}</td>`).join("");
+                return `<tr>${tds}</tr>`;
+              });
+              tableHtml += `<tbody>${bodyRows.join("")}</tbody>`;
+            }
+          }
+          html = `<table>${tableHtml}</table>`;
           if (rows.length > 0) {
             const first = rows[0].table_row.cells || [];
             const header = `| ${first.map((c) => renderRichText(c)).join(" | ")} |`;
@@ -463,9 +474,14 @@ async function renderBlocksWithAssets(
 
   const rendered = await renderBlocks(blocks);
 
+  // Post-process HTML to merge consecutive list items into single ol/ul
+  let mergedHtml = rendered.html;
+  mergedHtml = mergedHtml.replace(/<\/ol>\n<ol>/g, "\n");
+  mergedHtml = mergedHtml.replace(/<\/ul>\n<ul>/g, "\n");
+
   return {
     markdown: rendered.markdown,
-    html: rendered.html,
+    html: mergedHtml,
     plainText: rendered.plain,
   };
 }
