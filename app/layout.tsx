@@ -22,6 +22,10 @@ export const metadata: Metadata = {
       "application/rss+xml": "/feed.xml",
     },
   },
+  icons: {
+    icon: "/avatar.png",
+    apple: "/avatar.png",
+  },
 };
 
 export default function RootLayout({
