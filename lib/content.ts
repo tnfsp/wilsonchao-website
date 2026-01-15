@@ -159,6 +159,10 @@ export async function loadBlogEntries(): Promise<BlogEntry[]> {
       const status = parsed.status || "Published";
       if (status !== "Published") continue;
 
+      // Scheduled publishing: skip entries with publishedAt in the future
+      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+      if (parsed.publishedAt && parsed.publishedAt > today) continue;
+
       entries.push({
         ...parsed,
         excerpt: inferExcerpt(parsed.contentHtml, parsed.content, parsed.description || parsed.excerpt),
@@ -192,7 +196,13 @@ export async function loadProjects(): Promise<Project[]> {
     (project) => !project.status || project.status.toLowerCase() === "published"
   );
 
-  const sorted = published.sort((a, b) => {
+  // Scheduled publishing: filter out projects with date in the future
+  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
+  const scheduledFiltered = published.filter(
+    (project) => !project.date || project.date <= today
+  );
+
+  const sorted = scheduledFiltered.sort((a, b) => {
     const aDate = a.date ? new Date(a.date).getTime() : 0;
     const bDate = b.date ? new Date(b.date).getTime() : 0;
     return bDate - aDate;
@@ -207,7 +217,7 @@ export async function loadProjects(): Promise<Project[]> {
     image: project.image || firstImageFromEntry(project as unknown as BlogEntry),
   }));
 
-  return cleaned.length > 0 ? cleaned : published;
+  return cleaned.length > 0 ? cleaned : scheduledFiltered;
 }
 
 export async function getProject(slug: string): Promise<Project | null> {
