@@ -57,9 +57,9 @@ export function SearchBox() {
 
     const loadPagefind = async () => {
       try {
-        // Dynamic import for ES Module (file exists at runtime in public/)
-        // @ts-expect-error - Pagefind is generated at build time
-        const pagefind: PagefindAPI = await import("/pagefind/pagefind.js");
+        // Use absolute URL for dynamic import (Turbopack doesn't support server-relative paths)
+        const pagefindUrl = `${window.location.origin}/pagefind/pagefind.js`;
+        const pagefind: PagefindAPI = await import(/* webpackIgnore: true */ pagefindUrl);
         await pagefind.init();
         pagefindRef.current = pagefind;
       } catch (err) {
