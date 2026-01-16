@@ -2,23 +2,19 @@
 
 import { useEffect, useRef, useState } from "react";
 
-declare global {
-  interface Window {
-    pagefind?: {
-      init: () => Promise<void>;
-      search: (query: string) => Promise<{
-        results: Array<{
-          id: string;
-          data: () => Promise<{
-            url: string;
-            meta: { title?: string };
-            excerpt: string;
-          }>;
-        }>;
+type PagefindAPI = {
+  init: () => Promise<void>;
+  search: (query: string) => Promise<{
+    results: Array<{
+      id: string;
+      data: () => Promise<{
+        url: string;
+        meta: { title?: string };
+        excerpt: string;
       }>;
-    };
-  }
-}
+    }>;
+  }>;
+};
 
 type SearchResult = {
   id: string;
@@ -33,7 +29,7 @@ export function SearchBox() {
   const [results, setResults] = useState<SearchResult[]>([]);
   const [loading, setLoading] = useState(false);
   const inputRef = useRef<HTMLInputElement>(null);
-  const pagefindLoaded = useRef(false);
+  const pagefindRef = useRef<PagefindAPI | null>(null);
 
   useEffect(() => {
     if (open && inputRef.current) {
@@ -57,38 +53,16 @@ export function SearchBox() {
 
   useEffect(() => {
     if (!open) return;
-    if (pagefindLoaded.current) return;
+    if (pagefindRef.current) return;
 
     const loadPagefind = async () => {
       try {
-        // Check if already loaded
-        if (window.pagefind) {
-          pagefindLoaded.current = true;
-          return;
-        }
-
-        // Check if script already exists
-        const existingScript = document.querySelector('script[src="/pagefind/pagefind.js"]');
-        if (existingScript) return;
-
-        const script = document.createElement("script");
-        script.src = "/pagefind/pagefind.js";
-        script.async = true;
-
-        script.onload = async () => {
-          // Wait a bit for pagefind to initialize
-          await new Promise(resolve => setTimeout(resolve, 100));
-          if (window.pagefind) {
-            await window.pagefind.init();
-            pagefindLoaded.current = true;
-          }
-        };
-
-        script.onerror = () => {
-          console.warn("Failed to load Pagefind");
-        };
-
-        document.head.appendChild(script);
+        // Dynamic import for ES Module
+        const pagefind = await import(
+          /* webpackIgnore: true */ "/pagefind/pagefind.js"
+        ) as PagefindAPI;
+        await pagefind.init();
+        pagefindRef.current = pagefind;
       } catch (err) {
         console.warn("Pagefind not available:", err);
       }
@@ -105,12 +79,12 @@ export function SearchBox() {
     const search = async () => {
       // Wait for pagefind to be ready
       let attempts = 0;
-      while (!window.pagefind && attempts < 20) {
+      while (!pagefindRef.current && attempts < 20) {
         await new Promise(resolve => setTimeout(resolve, 100));
         attempts++;
       }
 
-      if (!window.pagefind) {
+      if (!pagefindRef.current) {
         console.warn("Pagefind not loaded after waiting");
         setLoading(false);
         return;
@@ -118,7 +92,7 @@ export function SearchBox() {
 
       setLoading(true);
       try {
-        const response = await window.pagefind.search(query);
+        const response = await pagefindRef.current.search(query);
         const items = await Promise.all(
           response.results.slice(0, 8).map(async (result) => {
             const data = await result.data();

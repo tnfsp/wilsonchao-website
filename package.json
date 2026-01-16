@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@notionhq/client": "^2.2.14",
+    "@tailwindcss/typography": "^0.5.19",
     "@types/prismjs": "^1.26.5",
     "@vercel/analytics": "^1.6.1",
     "@vercel/kv": "^3.0.0",
