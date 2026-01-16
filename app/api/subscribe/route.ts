@@ -3,7 +3,6 @@ import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
 
 const SUBSCRIBERS_KEY = "subscribers:emails";
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 function isValidEmail(email: string): boolean {
   const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
@@ -11,7 +10,13 @@ function isValidEmail(email: string): boolean {
 }
 
 async function sendWelcomeEmail(email: string) {
+  if (!process.env.RESEND_API_KEY) {
+    console.warn("RESEND_API_KEY not set, skipping welcome email");
+    return false;
+  }
+
   try {
+    const resend = new Resend(process.env.RESEND_API_KEY);
     await resend.emails.send({
       from: "Yi-Hsiang Chao <onboarding@resend.dev>",
       to: email,
