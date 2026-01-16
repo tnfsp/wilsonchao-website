@@ -85,7 +85,7 @@ export function CommentSection({ slug }: CommentSectionProps) {
 
   return (
     <div className="border-t border-[var(--border)] pt-6">
-      <h3 className="mb-4 text-lg font-semibold text-[var(--foreground)]">Comments</h3>
+      <h3 className="mb-4 text-lg font-semibold text-[var(--foreground)]">留言</h3>
 
       {/* Comment Form */}
       <form onSubmit={handleSubmit} className="mb-6 space-y-4">
@@ -94,7 +94,7 @@ export function CommentSection({ slug }: CommentSectionProps) {
             type="text"
             value={name}
             onChange={(e) => setName(e.target.value)}
-            placeholder="Name *"
+            placeholder="暱稱 *"
             required
             maxLength={50}
             className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none"
@@ -103,7 +103,7 @@ export function CommentSection({ slug }: CommentSectionProps) {
             type="email"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
-            placeholder="Email (optional, not public)"
+            placeholder="Email（選填，不公開）"
             maxLength={100}
             className="flex-1 rounded-lg border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--foreground)] placeholder:text-[var(--muted)] focus:border-[var(--accent)] focus:outline-none"
           />
@@ -121,7 +121,7 @@ export function CommentSection({ slug }: CommentSectionProps) {
         <textarea
           value={content}
           onChange={(e) => setContent(e.target.value)}
-          placeholder="Write a comment... *"
+          placeholder="寫下你的想法..."
           required
           maxLength={2000}
           rows={3}
@@ -134,23 +134,23 @@ export function CommentSection({ slug }: CommentSectionProps) {
             disabled={submitting || !name.trim() || !content.trim()}
             className="rounded-lg bg-[var(--accent-strong)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-contrast)] disabled:opacity-50"
           >
-            {submitting ? "Posting..." : "Post Comment"}
+            {submitting ? "送出中..." : "送出留言"}
           </button>
         </div>
         {message && (
           <p
             className={`text-sm ${message.type === "success" ? "text-green-600" : "text-red-500"}`}
           >
-            {message.text}
+            {message.type === "success" ? "留言已送出！" : message.text}
           </p>
         )}
       </form>
 
       {/* Comments List */}
       {loading ? (
-        <p className="text-sm text-[var(--muted)]">Loading comments...</p>
+        <p className="text-sm text-[var(--muted)]">載入留言中...</p>
       ) : comments.length === 0 ? (
-        <p className="text-sm text-[var(--muted)]">No comments yet. Be the first to comment!</p>
+        <p className="text-sm text-[var(--muted)]">還沒有留言，成為第一個留言的人吧！</p>
       ) : (
         <div className="space-y-4">
           {comments.map((comment) => (

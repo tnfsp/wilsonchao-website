@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
+import Script from "next/script";
 import "./globals.css";
 import { SiteHeader } from "@/components/layout/SiteHeader";
 import { IndieWebWebring } from "@/components/layout/IndieWebWebring";
@@ -36,6 +37,14 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="zh-Hant">
+      <head>
+        <Script
+          defer
+          src="https://cloud.umami.is/script.js"
+          data-website-id={process.env.NEXT_PUBLIC_UMAMI_WEBSITE_ID}
+          strategy="afterInteractive"
+        />
+      </head>
       <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
         <SiteHeader />
         {children}

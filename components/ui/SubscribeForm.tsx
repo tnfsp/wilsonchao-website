@@ -45,7 +45,7 @@ export function SubscribeForm({ source = "unknown" }: SubscribeFormProps) {
   if (status === "success" || status === "already") {
     return (
       <div className="rounded-lg border border-[var(--accent)] bg-[var(--highlight)]/60 px-4 py-3 text-sm text-[var(--foreground)]">
-        {message}
+        {status === "success" ? "感謝訂閱！" : "你已經訂閱過了"}
       </div>
     );
   }
@@ -65,7 +65,7 @@ export function SubscribeForm({ source = "unknown" }: SubscribeFormProps) {
         disabled={status === "loading"}
         className="rounded-lg bg-[var(--accent-strong)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-contrast)] disabled:opacity-50"
       >
-        {status === "loading" ? "Subscribing..." : "Subscribe"}
+        {status === "loading" ? "訂閱中..." : "訂閱"}
       </button>
       {status === "error" && (
         <p className="text-sm text-red-500">{message}</p>

@@ -57,17 +57,37 @@ export function SearchBox() {
 
   useEffect(() => {
     if (!open) return;
+    if (pagefindLoaded.current) return;
 
     const loadPagefind = async () => {
-      if (pagefindLoaded.current) return;
       try {
+        // Check if already loaded
+        if (window.pagefind) {
+          pagefindLoaded.current = true;
+          return;
+        }
+
+        // Check if script already exists
+        const existingScript = document.querySelector('script[src="/pagefind/pagefind.js"]');
+        if (existingScript) return;
+
         const script = document.createElement("script");
         script.src = "/pagefind/pagefind.js";
         script.async = true;
+
         script.onload = async () => {
-          await window.pagefind?.init();
-          pagefindLoaded.current = true;
+          // Wait a bit for pagefind to initialize
+          await new Promise(resolve => setTimeout(resolve, 100));
+          if (window.pagefind) {
+            await window.pagefind.init();
+            pagefindLoaded.current = true;
+          }
         };
+
+        script.onerror = () => {
+          console.warn("Failed to load Pagefind");
+        };
+
         document.head.appendChild(script);
       } catch (err) {
         console.warn("Pagefind not available:", err);
@@ -83,7 +103,19 @@ export function SearchBox() {
     }
 
     const search = async () => {
-      if (!window.pagefind) return;
+      // Wait for pagefind to be ready
+      let attempts = 0;
+      while (!window.pagefind && attempts < 20) {
+        await new Promise(resolve => setTimeout(resolve, 100));
+        attempts++;
+      }
+
+      if (!window.pagefind) {
+        console.warn("Pagefind not loaded after waiting");
+        setLoading(false);
+        return;
+      }
+
       setLoading(true);
       try {
         const response = await window.pagefind.search(query);
@@ -107,7 +139,7 @@ export function SearchBox() {
       }
     };
 
-    const debounce = setTimeout(search, 200);
+    const debounce = setTimeout(search, 300);
     return () => clearTimeout(debounce);
   }, [query]);
 

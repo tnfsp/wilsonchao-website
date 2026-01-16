@@ -170,7 +170,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <LikeButton slug={`blog:${entry.slug}`} />
         </div>
         <div className="mt-6 border-t border-[var(--border)] pt-6">
-          <p className="mb-3 text-sm text-[var(--muted)]">Subscribe to get notified about new posts:</p>
+          <p className="mb-3 text-sm text-[var(--muted)]">訂閱以獲得新文章通知：</p>
           <SubscribeForm source={`blog:${entry.slug}`} />
         </div>
         <div className="mt-6">

@@ -100,3 +100,54 @@
 
 ### 狀態
 **四大功能全部實作完成，準備部署**
+
+---
+
+## 2026-01-16 - 進階功能整合
+
+### 完成項目
+
+#### Umami Analytics 整合
+- 整合 Umami Cloud 詳細流量分析
+- 在 layout.tsx 加入 Umami script
+- Website ID: 3789c7a1-8035-4536-ab99-1c22eac26bfc
+
+#### Resend 歡迎信整合
+- 安裝 resend 套件
+- 修改 /api/subscribe 發送歡迎信
+- 新訂閱者自動收到歡迎郵件
+
+#### 統計 API
+- 建立 /api/stats 端點
+- 回傳：總瀏覽次數、訂閱者數、留言數、熱門文章
+
+#### 中文化
+- SubscribeForm 元件中文化
+- CommentSection 元件中文化
+- 文章頁訂閱提示中文化
+
+#### site-stats Skill
+- 建立 `/site-stats` 指令
+- 可快速查看網站統計報告
+
+### 新增檔案
+- `app/api/stats/route.ts`
+- `.claude/settings.json` - site-stats skill 設定
+
+### 修改檔案
+- `app/layout.tsx` - 加入 Umami script
+- `app/api/subscribe/route.ts` - 加入 Resend 歡迎信
+- `components/ui/SubscribeForm.tsx` - 中文化
+- `components/ui/CommentSection.tsx` - 中文化
+- `app/blog/[slug]/page.tsx` - 訂閱提示中文化
+
+### 環境變數
+```
+KV_REST_API_URL
+KV_REST_API_TOKEN
+NEXT_PUBLIC_UMAMI_WEBSITE_ID
+RESEND_API_KEY
+```
+
+### 狀態
+**進階功能整合完成**
