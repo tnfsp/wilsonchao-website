@@ -2,6 +2,21 @@ import Link from "next/link";
 import { loadBlogEntries, loadSiteCopy, loadProjects, loadMurmurEntries } from "@/lib/content";
 import { ViewStats } from "@/components/ui/ViewCounter";
 
+const BASE_URL = "https://wilsonchao.com";
+
+const websiteJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebSite",
+  name: "wilsonchao.com",
+  url: BASE_URL,
+  description: "The home for Yi-Hsiang Chao, MD – surgery, writing, and slow thinking.",
+  author: {
+    "@type": "Person",
+    name: "Yi-Hsiang Chao",
+    url: `${BASE_URL}/about`,
+  },
+};
+
 export default async function Home() {
   const [siteCopy, blogEntries, projects, murmur] = await Promise.all([
     loadSiteCopy(),
@@ -29,6 +44,11 @@ export default async function Home() {
   };
 
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
+      />
     <main className="page-shell space-y-12">
       <header className="surface-strong space-y-4 px-6 py-6">
         <h1 className="text-3xl font-semibold leading-tight text-[var(--foreground)] sm:text-4xl">
@@ -186,5 +206,6 @@ export default async function Home() {
         </div>
       </footer>
     </main>
+    </>
   );
 }

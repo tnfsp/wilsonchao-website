@@ -2,11 +2,31 @@ import Image from "next/image";
 import { marked } from "marked";
 import { loadSiteCopy } from "@/lib/content";
 
+const BASE_URL = "https://wilsonchao.com";
+
 export default async function AboutPage() {
   const copy = await loadSiteCopy();
   const bodyHtml = copy.aboutBody ? marked.parse(copy.aboutBody, { breaks: true }) : "";
 
+  const personJsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Person",
+    name: copy.aboutName || "Yi-Hsiang Chao",
+    url: `${BASE_URL}/about`,
+    image: copy.aboutImage || `${BASE_URL}/avatar.png`,
+    jobTitle: "Physician",
+    description: copy.aboutIntro || "",
+    sameAs: [
+      "https://murmur.wilsonchao.com",
+    ],
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
+      />
     <main className="page-shell space-y-6">
       <header className="space-y-3">
         <span className="section-title">About</span>
@@ -37,5 +57,6 @@ export default async function AboutPage() {
         />
       </div>
     </main>
+    </>
   );
 }

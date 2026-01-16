@@ -3,6 +3,7 @@
 import { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
+import { SearchBox } from "@/components/ui/SearchBox";
 
 const links = [
   { href: "/", label: "Home" },
@@ -41,6 +42,29 @@ export function SiteHeader() {
                 {item.label}
               </Link>
             ))}
+            <SearchBox />
+            <a
+              href="/feed.xml"
+              className="flex items-center rounded-full px-2 py-1 text-[var(--muted)] transition-colors hover:bg-[var(--highlight)]/60 hover:text-[var(--accent)]"
+              title="RSS Feed"
+              aria-label="RSS Feed"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="16"
+                height="16"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4 11a9 9 0 0 1 9 9" />
+                <path d="M4 4a16 16 0 0 1 16 16" />
+                <circle cx="5" cy="19" r="1" />
+              </svg>
+            </a>
           </nav>
 
           <button

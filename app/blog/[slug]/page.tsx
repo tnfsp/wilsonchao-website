@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -5,8 +6,51 @@ import { getBlogEntry, loadBlogEntries } from "@/lib/content";
 import { ViewCounter } from "@/components/ui/ViewCounter";
 import { LikeButton } from "@/components/ui/LikeButton";
 import { CodeHighlight } from "@/components/ui/CodeHighlight";
+import { SubscribeForm } from "@/components/ui/SubscribeForm";
+import { CommentSection } from "@/components/ui/CommentSection";
 
 export const dynamic = "force-dynamic";
+
+const BASE_URL = "https://wilsonchao.com";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ slug: string }>;
+}): Promise<Metadata> {
+  const { slug } = await params;
+  const entry = await getBlogEntry(slug);
+
+  if (!entry) {
+    return { title: "Post Not Found" };
+  }
+
+  const title = `${entry.title} | wilsonchao.com`;
+  const description = entry.excerpt || entry.description || "";
+  const url = `${BASE_URL}/blog/${slug}`;
+  const image = entry.image || `${BASE_URL}/avatar.png`;
+
+  return {
+    title,
+    description,
+    openGraph: {
+      title: entry.title,
+      description,
+      url,
+      siteName: "wilsonchao.com",
+      type: "article",
+      publishedTime: entry.publishedAt,
+      authors: ["Yi-Hsiang Chao"],
+      images: [{ url: image, width: 1200, height: 630, alt: entry.title }],
+    },
+    twitter: {
+      card: "summary_large_image",
+      title: entry.title,
+      description,
+      images: [image],
+    },
+  };
+}
 
 function escapeHtml(text: string) {
   return text
@@ -46,7 +90,35 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     : undefined;
   const heroImage = entry.image && entry.image !== firstBodyImageSrc ? entry.image : undefined;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: entry.title,
+    description: entry.excerpt || entry.description || "",
+    image: entry.image || `${BASE_URL}/avatar.png`,
+    datePublished: entry.publishedAt,
+    author: {
+      "@type": "Person",
+      name: "Yi-Hsiang Chao",
+      url: `${BASE_URL}/about`,
+    },
+    publisher: {
+      "@type": "Person",
+      name: "Yi-Hsiang Chao",
+      url: BASE_URL,
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${BASE_URL}/blog/${slug}`,
+    },
+  };
+
   return (
+    <>
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
     <main className="page-shell space-y-8">
       <Link
         href="/blog"
@@ -97,6 +169,13 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <div className="pt-4">
           <LikeButton slug={`blog:${entry.slug}`} />
         </div>
+        <div className="mt-6 border-t border-[var(--border)] pt-6">
+          <p className="mb-3 text-sm text-[var(--muted)]">Subscribe to get notified about new posts:</p>
+          <SubscribeForm source={`blog:${entry.slug}`} />
+        </div>
+        <div className="mt-6">
+          <CommentSection slug={entry.slug} />
+        </div>
       </article>
       {(prev || next) && (
         <div className="flex justify-between border-t border-[var(--border)] pt-4 text-sm text-[var(--muted)]">
@@ -121,5 +200,6 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </div>
       )}
     </main>
+    </>
   );
 }
