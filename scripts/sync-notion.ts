@@ -479,6 +479,27 @@ async function renderBlocksWithAssets(
   mergedHtml = mergedHtml.replace(/<\/ol>\n<ol>/g, "\n");
   mergedHtml = mergedHtml.replace(/<\/ul>\n<ul>/g, "\n");
 
+  // Convert [URL] patterns to clickable links (with or without https://)
+  mergedHtml = mergedHtml.replace(
+    /\[(https?:\/\/[^\]]+)\]/g,
+    (_, url) => `<a href="${url}" target="_blank" rel="noopener noreferrer">${new URL(url).hostname}</a>`
+  );
+  // Handle [domain.com] format (without protocol)
+  mergedHtml = mergedHtml.replace(
+    /\[([a-zA-Z0-9][-a-zA-Z0-9]*\.[a-zA-Z]{2,}(?:\/[^\]]*)?)\]/g,
+    (_, domain) => `<a href="https://${domain}" target="_blank" rel="noopener noreferrer">${domain.split('/')[0]}</a>`
+  );
+  // Convert **text** to <strong>
+  mergedHtml = mergedHtml.replace(
+    /\*\*([^*]+)\*\*/g,
+    (_, text) => `<strong>${text}</strong>`
+  );
+  // Convert *text* to <em> (but not inside **)
+  mergedHtml = mergedHtml.replace(
+    /(?<!\*)\*([^*]+)\*(?!\*)/g,
+    (_, text) => `<em>${text}</em>`
+  );
+
   return {
     markdown: rendered.markdown,
     html: mergedHtml,

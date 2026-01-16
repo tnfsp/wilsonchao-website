@@ -125,16 +125,20 @@ a:focus-visible {
 }
 
 .prose h2 {
-  margin-top: 2em;
-  margin-bottom: 0.75em;
+  margin-top: 2.5em;
+  margin-bottom: 1em;
   font-size: 1.5em;
   font-weight: 600;
   line-height: 1.3;
 }
 
+.prose h2 + h3 {
+  margin-top: 1.2em;
+}
+
 .prose h3 {
-  margin-top: 1.6em;
-  margin-bottom: 0.6em;
+  margin-top: 2em;
+  margin-bottom: 0.75em;
   font-size: 1.25em;
   font-weight: 600;
   line-height: 1.4;
