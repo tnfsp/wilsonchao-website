@@ -100,7 +100,9 @@ export async function POST(request: NextRequest) {
     });
 
     // Send welcome email (async, don't block response)
-    sendWelcomeEmail(normalizedEmail);
+    sendWelcomeEmail(normalizedEmail).catch((err) => {
+      console.error("Welcome email failed for", normalizedEmail, err);
+    });
 
     return NextResponse.json(
       { message: "Successfully subscribed", success: true },
