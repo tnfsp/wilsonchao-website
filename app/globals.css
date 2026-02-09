@@ -254,6 +254,8 @@ a:focus-visible {
 .prose a {
   color: var(--accent);
   text-decoration: underline;
+  overflow-wrap: break-word;
+  word-break: break-all;
   text-underline-offset: 3px;
 }
 
