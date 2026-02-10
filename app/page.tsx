@@ -118,7 +118,7 @@ export default async function Home() {
                 >
                   <a
                     href={item.link}
-                    className="block text-sm text-[var(--foreground)] hover:text-[var(--accent)]"
+                    className="block text-sm text-[var(--foreground)] hover:text-[var(--accent)] break-words overflow-hidden"
                     target="_blank"
                     rel="noreferrer"
                   >
