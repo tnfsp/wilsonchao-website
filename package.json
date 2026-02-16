@@ -9,7 +9,8 @@
     "postbuild": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/build-search-index.ts",
     "start": "next start",
     "lint": "eslint",
-    "sync:notion": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/sync-notion.ts"
+    "sync:notion": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/sync-notion.ts",
+    "sync:vault": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/sync-vault.ts"
   },
   "dependencies": {
     "@notionhq/client": "^2.2.14",
@@ -18,6 +19,7 @@
     "@vercel/analytics": "^1.6.1",
     "@vercel/kv": "^3.0.0",
     "dotenv": "^17.2.3",
+    "gray-matter": "^4.0.3",
     "marked": "^17.0.1",
     "nanoid": "^5.1.6",
     "next": "16.0.7",
