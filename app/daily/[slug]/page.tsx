@@ -18,7 +18,7 @@ export default async function DailyEntryPage({ params }: { params: Promise<{ slu
   const firstBodyImageSrc = bodyHtml
     ? bodyHtml.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1]
     : undefined;
-  const heroImage = entry.image && entry.image !== firstBodyImageSrc ? entry.image : undefined;
+  const heroImage = entry.image && decodeURIComponent(entry.image) !== decodeURIComponent(firstBodyImageSrc ?? "") ? entry.image : undefined;
 
   return (
     <main className="page-shell space-y-6">
