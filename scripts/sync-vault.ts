@@ -10,10 +10,11 @@ import { readFile, readdir, writeFile, mkdir, stat, copyFile } from "fs/promises
 import path from "path";
 
 // ─── paths ───────────────────────────────────────────────────────────
-const VAULT_BASE = path.join(
+const VAULT_ROOT = path.join(
   process.env.HOME || "/Users/zhaoyixiang",
-  "Library/Mobile Documents/iCloud~md~obsidian/Documents/Wilson/Brand"
+  "Library/Mobile Documents/iCloud~md~obsidian/Documents/Wilson"
 );
+const VAULT_BASE = path.join(VAULT_ROOT, "Brand");
 const VAULT_BLOG = path.join(VAULT_BASE, "Blog");
 const VAULT_DAILY = path.join(VAULT_BASE, "Daily");
 const VAULT_WEEKLY = path.join(VAULT_BASE, "週報");
@@ -139,7 +140,6 @@ async function processImages(
     try {
       await stat(srcPath);
     } catch {
-      console.warn(`[sync-vault] Image not found: ${srcPath}`);
       return undefined;
     }
     await mkdir(destDir, { recursive: true });
@@ -157,10 +157,17 @@ async function processImages(
     // Try _attachments path relative to vault base
     const filename = path.basename(ref);
     const candidates = [
+      // 1. Relative to source file's directory
       path.join(sourceDir, ref),
       path.join(sourceDir, "_attachments", "images", filename),
+      // 2. Relative to Brand/ (VAULT_BASE)
       path.join(VAULT_BASE, ref),
       path.join(VAULT_BASE, "_attachments", "images", filename),
+      // 3. Relative to Vault root (VAULT_ROOT) — images live here
+      path.join(VAULT_ROOT, ref),
+      path.join(VAULT_ROOT, "_attachments", "images", filename),
+      path.join(VAULT_ROOT, "_attachments", "images", "journal", filename),
+      path.join(VAULT_ROOT, "_attachments", "images", "movies", filename),
     ];
     let publicPath: string | undefined;
     for (const candidate of candidates) {
@@ -168,9 +175,11 @@ async function processImages(
       if (publicPath) break;
     }
     if (publicPath) {
+      console.log(`[sync-vault] Image found: ${filename}`);
       result = result.replace(m[0], `![image](${publicPath})`);
       if (!cover) cover = publicPath;
     } else {
+      console.warn(`[sync-vault] Image NOT FOUND (all candidates failed): ${ref}`);
       // Remove broken embed
       result = result.replace(m[0], "");
     }
