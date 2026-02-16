@@ -245,8 +245,18 @@ async function syncBlog(): Promise<BlogEntry[]> {
     const slug = fm.slug || path.basename(file, ".md");
     const title = fm.title || path.basename(file, ".md");
 
+    // Strip leading H1 if it matches frontmatter title (avoid duplicate)
+    let cleanBody = body;
+    const h1Match = cleanBody.match(/^\s*#\s+(.+)\n?/);
+    if (h1Match) {
+      const h1Text = h1Match[1].trim().replace(/\*{1,2}/g, "");
+      if (h1Text === title.trim()) {
+        cleanBody = cleanBody.replace(/^\s*#\s+.+\n?/, "");
+      }
+    }
+
     const { markdown: processedMd, coverImage } = await processImages(
-      body,
+      cleanBody,
       slug,
       VAULT_BLOG,
       "blog",
@@ -306,8 +316,18 @@ async function syncProjects(): Promise<ProjectEntry[]> {
       ? rawDate.toISOString().slice(0, 10)
       : rawDate ? String(rawDate).slice(0, 10) : "";
 
+    // Strip leading H1 if it matches frontmatter title (avoid duplicate)
+    let cleanBody = body;
+    const h1Match = cleanBody.match(/^\s*#\s+(.+)\n?/);
+    if (h1Match) {
+      const h1Text = h1Match[1].trim().replace(/\*{1,2}/g, "");
+      if (h1Text === title.trim()) {
+        cleanBody = cleanBody.replace(/^\s*#\s+.+\n?/, "");
+      }
+    }
+
     const { markdown: processedMd, coverImage } = await processImages(
-      body,
+      cleanBody,
       slug,
       sourceDir,
       "projects",
