@@ -243,6 +243,11 @@ async function syncBlog(): Promise<BlogEntry[]> {
 
     if (fm.published === false) continue;
 
+    // Warn if description missing (controls excerpt length on list page)
+    if (!fm.description) {
+      console.warn(`[sync-vault] ⚠️  Blog "${path.basename(file)}" missing frontmatter 'description' — excerpt will be auto-generated (may be too long)`);
+    }
+
     const slug = fm.slug || path.basename(file, ".md");
     const title = fm.title || path.basename(file, ".md");
 
