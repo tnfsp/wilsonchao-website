@@ -41,6 +41,7 @@ type BlogEntry = {
   excerpt?: string;
   readingTime?: string;
   tags?: string[];
+  image?: string;
 };
 
 type ProjectEntry = {
@@ -270,6 +271,33 @@ async function syncBlog(): Promise<BlogEntry[]> {
     const description = fm.description || "";
     const excerpt = description || buildExcerpt(plainText);
 
+    // Handle cover from frontmatter or first image in body
+    let image: string | undefined;
+    if (fm.cover) {
+      const coverFilename = fm.cover;
+      const candidates = [
+        path.join(VAULT_BLOG, "_assets", slug, coverFilename),
+        path.join(VAULT_BLOG, coverFilename),
+        path.join(VAULT_BASE, "_attachments", "images", coverFilename),
+      ];
+      for (const candidate of candidates) {
+        try {
+          await stat(candidate);
+          const destDir = path.join(BLOG_ASSET_DIR, slug);
+          await mkdir(destDir, { recursive: true });
+          const dest = path.join(destDir, `cover${path.extname(coverFilename)}`);
+          await copyFile(candidate, dest);
+          image = `/content/blog/${slug}/cover${path.extname(coverFilename)}`;
+          break;
+        } catch {
+          // try next
+        }
+      }
+    }
+    if (!image && coverImage) {
+      image = coverImage;
+    }
+
     entries.push({
       id: fm.id || slug,
       slug,
@@ -285,6 +313,7 @@ async function syncBlog(): Promise<BlogEntry[]> {
       excerpt,
       readingTime,
       tags: fm.tags || [],
+      ...(image ? { image } : {}),
     });
   }
 
