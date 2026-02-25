@@ -61,10 +61,14 @@ function escapeHtml(text: string) {
     .replace(/'/g, "&#039;");
 }
 
-function markdownToHtml(content?: string) {
+function fallbackHtmlFromContent(content?: string) {
   if (!content) return "";
-  const { marked } = require("marked");
-  return marked.parse(content, { async: false }) as string;
+  return content
+    .split(/\n{2,}/)
+    .map((paragraph) => escapeHtml(paragraph.trim()))
+    .filter(Boolean)
+    .map((paragraph) => `<p>${paragraph}</p>`)
+    .join("");
 }
 
 export default async function BlogPostPage({ params }: { params: Promise<{ slug: string }> }) {
@@ -80,7 +84,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
   const prev = index > 0 ? all[index - 1] : null;
   const next = index >= 0 && index < all.length - 1 ? all[index + 1] : null;
 
-  const bodyHtml = entry.contentHtml || markdownToHtml(entry.content);
+  const bodyHtml = entry.contentHtml || fallbackHtmlFromContent(entry.content);
   const firstBodyImageSrc = bodyHtml
     ? bodyHtml.match(/<img[^>]+src=["']([^"']+)["']/i)?.[1]
     : undefined;
