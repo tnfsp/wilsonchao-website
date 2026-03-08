@@ -3,13 +3,13 @@ import type { Metadata } from "next";
 const BASE_URL = "https://wilsonchao.com";
 
 export const metadata: Metadata = {
-  title: "趙玴祥醫師｜心臟血管外科門診｜高雄醫學大學附設中和紀念醫院",
+  title: "趙玴祥醫師｜心臟血管外科｜高雄醫學大學附設中和紀念醫院",
   description:
-    "趙玴祥醫師，高雄醫學大學附設中和紀念醫院心臟血管外科主治醫師。專長冠狀動脈繞道手術（CABG）、心臟瓣膜修補及置換手術、主動脈手術。門診時間與預約資訊。",
+    "趙玴祥醫師，高雄醫學大學附設中和紀念醫院心臟血管外科醫師。專長冠狀動脈繞道手術（CABG）、心臟瓣膜修補及置換手術、主動脈手術。門診時間與預約資訊。",
   openGraph: {
     title: "趙玴祥醫師｜心臟血管外科門診",
     description:
-      "高雄醫學大學附設中和紀念醫院心臟血管外科主治醫師。專長冠狀動脈繞道手術、心臟瓣膜手術、主動脈手術。",
+      "高雄醫學大學附設中和紀念醫院心臟血管外科醫師。專長冠狀動脈繞道手術、心臟瓣膜手術、主動脈手術。",
     url: `${BASE_URL}/clinic`,
     type: "website",
   },
@@ -18,18 +18,18 @@ export const metadata: Metadata = {
 const physicianJsonLd = {
   "@context": "https://schema.org",
   "@type": "Physician",
-  "@id": `${BASE_URL}/clinic#physician`,
+  "@id": `${BASE_URL}/#person`,
   name: "趙玴祥",
   alternateName: ["Yi-Hsiang Chao", "Wilson Chao"],
   url: `${BASE_URL}/clinic`,
   // image: `${BASE_URL}/images/dr-chao-portrait.jpg`, // TODO: 放上專業照片後啟用
   description:
-    "高雄醫學大學附設中和紀念醫院心臟血管外科主治醫師，專長冠狀動脈繞道手術、心臟瓣膜手術、主動脈手術。",
+    "高雄醫學大學附設中和紀念醫院心臟血管外科醫師，專長冠狀動脈繞道手術、心臟瓣膜手術、主動脈手術。", // TODO: 八月後加「主治」
   medicalSpecialty: {
     "@type": "MedicalSpecialty",
     name: "Cardiovascular Surgery",
   },
-  jobTitle: "心臟血管外科主治醫師",
+  jobTitle: "心臟血管外科醫師", // TODO: 八月升主治後改為「主治醫師」
   affiliation: {
     "@type": "Hospital",
     "@id": "https://www.kmuh.org.tw",
@@ -80,7 +80,7 @@ const medicalWebPageJsonLd = {
   "@type": "MedicalWebPage",
   name: "趙玴祥醫師 — 心臟血管外科門診",
   url: `${BASE_URL}/clinic`,
-  about: { "@id": `${BASE_URL}/clinic#physician` },
+  about: { "@id": `${BASE_URL}/#person` },
   specialty: "Cardiovascular Surgery",
   lastReviewed: "2026-03-08",
 };
