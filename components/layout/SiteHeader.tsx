@@ -10,6 +10,7 @@ const links = [
   { href: "/blog", label: "Blog" },
   { href: "/murmur", label: "Murmur" },
   { href: "/daily", label: "Daily" },
+  { href: "/clinic", label: "門診" },
   { href: "/about", label: "About" },
   { href: "/links", label: "Links" },
 ];

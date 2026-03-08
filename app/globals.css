@@ -435,6 +435,18 @@ a:focus-visible {
   font-style: italic;
 }
 
+/* ============================================
+   Clinic page — 長輩友善、專業信任感
+   ============================================ */
+
+.clinic-page {
+  margin: 0 auto;
+  max-width: 720px;
+  padding: 2.75rem 1.25rem 3rem;
+  font-size: 1.0625rem;
+  line-height: 1.85;
+}
+
 /* Respect user's motion preferences for accessibility */
 @media (prefers-reduced-motion: reduce) {
   *,
