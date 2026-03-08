@@ -10,13 +10,46 @@ export default async function AboutPage() {
 
   const personJsonLd = {
     "@context": "https://schema.org",
-    "@type": "Person",
-    name: copy.aboutName || "Yi-Hsiang Chao",
+    "@type": ["Person", "Physician"],
+    "@id": `${BASE_URL}/#person`,
+    name: "趙玴祥",
+    alternateName: ["Yi-Hsiang Chao", "Wilson Chao"],
     url: `${BASE_URL}/about`,
     image: copy.aboutImage || `${BASE_URL}/avatar.png`,
-    jobTitle: "Physician",
-    description: copy.aboutIntro || "",
+    jobTitle: "心臟血管外科醫師",
+    description: "高雄醫學大學附設中和紀念醫院心臟血管外科醫師。專長冠狀動脈繞道手術、心臟瓣膜手術、主動脈手術。同時是寫作者與內容創作者。",
+    medicalSpecialty: {
+      "@type": "MedicalSpecialty",
+      name: "Cardiovascular Surgery",
+    },
+    affiliation: {
+      "@type": "Hospital",
+      name: "高雄醫學大學附設中和紀念醫院",
+      alternateName: "Kaohsiung Medical University Chung-Ho Memorial Hospital",
+      url: "https://www.kmuh.org.tw",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "自由一路100號",
+        addressLocality: "高雄市",
+        addressRegion: "三民區",
+        postalCode: "807",
+        addressCountry: "TW",
+      },
+    },
+    alumniOf: {
+      "@type": "CollegeOrUniversity",
+      name: "高雄醫學大學",
+      alternateName: "Kaohsiung Medical University",
+    },
+    knowsAbout: [
+      "Cardiovascular Surgery",
+      "Coronary Artery Bypass Grafting",
+      "Heart Valve Surgery",
+      "Aortic Surgery",
+    ],
+    knowsLanguage: ["zh-TW", "en"],
     sameAs: [
+      "https://www.instagram.com/momobear_doctor",
       "https://murmur.wilsonchao.com",
     ],
   };

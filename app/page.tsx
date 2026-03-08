@@ -9,11 +9,18 @@ const websiteJsonLd = {
   "@type": "WebSite",
   name: "wilsonchao.com",
   url: BASE_URL,
-  description: "The home for Yi-Hsiang Chao, MD – surgery, writing, and slow thinking.",
+  description: "趙玴祥（Yi-Hsiang Chao, MD）— 心臟血管外科醫師、寫作者、思考者的個人網站。",
   author: {
-    "@type": "Person",
-    name: "Yi-Hsiang Chao",
+    "@type": ["Person", "Physician"],
+    "@id": `${BASE_URL}/#person`,
+    name: "趙玴祥",
+    alternateName: ["Yi-Hsiang Chao", "Wilson Chao"],
     url: `${BASE_URL}/about`,
+    jobTitle: "心臟血管外科醫師",
+    affiliation: {
+      "@type": "Hospital",
+      name: "高雄醫學大學附設中和紀念醫院",
+    },
   },
 };
 
