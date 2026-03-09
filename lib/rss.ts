@@ -6,6 +6,7 @@ type RssItem = {
   guid?: string;
   pubDate?: string;
   description?: string;
+  isPermaLink?: boolean;
 };
 
 const escapeXml = (value: string) =>
@@ -16,14 +17,19 @@ const escapeXml = (value: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
 
-const renderItem = (item: RssItem) => `
+const renderItem = (item: RssItem) => {
+  const permaLink = item.isPermaLink === false ? ' isPermaLink="false"' : "";
+  return `
 <item>
   <title>${escapeXml(item.title)}</title>
   <link>${escapeXml(item.link)}</link>
-  <guid>${escapeXml(item.guid || item.link)}</guid>
+  <guid${permaLink}>${escapeXml(item.guid || item.link)}</guid>
   ${item.pubDate ? `<pubDate>${item.pubDate}</pubDate>` : ""}
   ${item.description ? `<description>${escapeXml(item.description)}</description>` : ""}
 </item>`;
+};
+
+const ROOT_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://wilsonchao.com";
 
 export function buildRssResponse({
   title,
@@ -40,7 +46,9 @@ export function buildRssResponse({
   items: RssItem[];
   cacheSeconds?: number;
 }) {
-  const selfLink = feedPath ? `${siteUrl}${feedPath}` : siteUrl;
+  const selfLink = feedPath ? `${ROOT_URL}${feedPath}` : siteUrl;
+  const lastBuildDate =
+    items.find((i) => i.pubDate)?.pubDate || new Date().toUTCString();
   const renderedItems = items.map(renderItem).join("");
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
@@ -49,7 +57,7 @@ export function buildRssResponse({
     <link>${escapeXml(siteUrl)}</link>
     <atom:link href="${escapeXml(selfLink)}" rel="self" type="application/rss+xml"/>
     <language>zh-Hant</language>
-    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <lastBuildDate>${lastBuildDate}</lastBuildDate>
     ${description ? `<description>${escapeXml(description)}</description>` : ""}
     ${renderedItems}
   </channel>
