@@ -24,9 +24,10 @@ export async function GET() {
   });
 
   return buildRssResponse({
-    title: "wilsonchao.com journal",
+    title: "wilsonchao.com — Journal",
     siteUrl: `${SITE_URL}/journal`,
-    description: "Journal — weekly reports, notes, and life entries",
+    description: "週報、生活筆記、人生紀錄",
+    feedPath: "/journal/feed.xml",
     items,
   });
 }

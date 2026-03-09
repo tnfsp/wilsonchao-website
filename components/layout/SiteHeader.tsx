@@ -43,10 +43,10 @@ export function SiteHeader() {
             ))}
             <SearchBox />
             <a
-              href="/feed.xml"
+              href="/feed"
               className="flex items-center rounded-full px-2 py-1 text-[var(--muted)] transition-colors hover:bg-[var(--highlight)]/60 hover:text-[var(--accent)]"
-              title="RSS Feed"
-              aria-label="RSS Feed"
+              title="RSS Feeds"
+              aria-label="RSS Feeds"
             >
               <svg
                 xmlns="http://www.w3.org/2000/svg"
@@ -95,6 +95,13 @@ export function SiteHeader() {
                   {item.label}
                 </Link>
               ))}
+              <Link
+                href="/feed"
+                className="block rounded-md px-3 py-2 transition-colors hover:bg-[var(--highlight)]/60 hover:text-[var(--accent)]"
+                onClick={() => setOpen(false)}
+              >
+                RSS
+              </Link>
             </div>
           </div>
         </div>

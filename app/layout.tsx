@@ -21,7 +21,12 @@ export const metadata: Metadata = {
   description: "The home for Yi-Hsiang Chao, MD – surgery, writing, and slow thinking.",
   alternates: {
     types: {
-      "application/rss+xml": "/feed.xml",
+      "application/rss+xml": [
+        { url: "/feed.xml", title: "wilsonchao.com — All" },
+        { url: "/blog/feed.xml", title: "wilsonchao.com — Blog" },
+        { url: "/journal/feed.xml", title: "wilsonchao.com — Journal" },
+        { url: "/stream/feed.xml", title: "wilsonchao.com — Stream" },
+      ],
     },
   },
   icons: {
