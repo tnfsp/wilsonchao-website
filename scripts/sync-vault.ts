@@ -344,7 +344,7 @@ async function syncProjects(): Promise<ProjectEntry[]> {
     const isWeekly = file.startsWith(VAULT_WEEKLY);
     const slug = fm.slug || path.basename(file, ".md");
     const title = fm.title || path.basename(file, ".md");
-    const type = fm.type || (isWeekly ? "週報" : "");
+    const type = fm.type || (isWeekly ? "週報" : "日記");
     const sourceDir = isWeekly ? VAULT_WEEKLY : VAULT_DAILY;
     // Normalize date — gray-matter may parse bare dates as Date objects
     const rawDate = fm.date;
