@@ -10,7 +10,7 @@ export const metadata = {
 
 export default async function StreamPage() {
   const [entries, copy] = await Promise.all([
-    loadStreamEntries(50),
+    loadStreamEntries(999),
     loadSiteCopy(),
   ]);
 
