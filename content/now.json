@@ -1,0 +1,172 @@
+{
+  "lastUpdated": "2026-03-09T09:10:05.480857+00:00",
+  "sections": [
+    {
+      "id": "clinical",
+      "emoji": "🏥",
+      "title": "臨床",
+      "body": "在高醫心臟血管外科當總醫師，八月升主治。冠狀動脈繞道、瓣膜、主動脈手術。同時準備專科考試。"
+    },
+    {
+      "id": "research",
+      "emoji": "📚",
+      "title": "研究",
+      "body": "剛開了一個 Network Meta-Analysis 專案：比較透析通路 steal syndrome 的不同術式（DRIL vs RUDI vs PAI），目標投 JVS。另外有一篇 Bentall pseudoaneurysm case report 在修。"
+    },
+    {
+      "id": "writing",
+      "emoji": "✍️",
+      "title": "寫作",
+      "body": "試著寫更短、更頻繁的東西。Stream 是每天的碎片，Blog 放長文。想把「寫」變成跟「開刀」一樣的日常練習。"
+    },
+    {
+      "id": "building",
+      "emoji": "🤖",
+      "title": "在蓋的東西",
+      "body": "一個 AI-assisted 的個人系統 — 用 Claude 串起日記、知識庫、研究流程、記帳、甚至這個網站的維護。裡面有個叫 Owl 的 agent 幫我處理日常瑣事和推進專案。不是為了效率，是因為好玩。"
+    },
+    {
+      "id": "other",
+      "emoji": "🎵",
+      "title": "其他",
+      "body": "在學 DJ。偶爾健身。試著每天走久一點。"
+    }
+  ],
+  "dynamic": {
+    "music": [
+      {
+        "streamId": "162",
+        "title": "Don Lou - 誰說春天一定要開花 Blossom (Official Music Video)",
+        "date": "2026-03-03T08:19:24+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=B4J2PqEg2kM",
+        "youtubeId": "B4J2PqEg2kM",
+        "image": "https://img.youtube.com/vi/B4J2PqEg2kM/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/162"
+      },
+      {
+        "streamId": "144",
+        "title": "我並不是真的想死：オムライス - ReoNa〔中日歌詞〕 YouTube 我並不是真的想死：オムライス - ReoNa〔中日歌詞〕 主唱｜ReoNa @ReoNaofficial 詞曲｜傘村トータ @KasamuraTota 音樂｜オムライ",
+        "date": "2026-02-23T14:37:49+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=sfw7qJAhZFs",
+        "youtubeId": "sfw7qJAhZFs",
+        "image": "https://img.youtube.com/vi/sfw7qJAhZFs/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/144"
+      }
+    ],
+    "video": [
+      {
+        "streamId": "169",
+        "title": "幹這根本有病 愛與感情",
+        "date": "2026-03-06T18:38:07+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=0rxm5K71uSo",
+        "youtubeId": "0rxm5K71uSo",
+        "image": "https://img.youtube.com/vi/0rxm5K71uSo/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/169"
+      },
+      {
+        "streamId": "142",
+        "title": "一個讓人能「理解你」的溝通方法",
+        "date": "2026-02-18T01:37:36+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=2Y5dM7MDUk8",
+        "youtubeId": "2Y5dM7MDUk8",
+        "image": "https://img.youtube.com/vi/2Y5dM7MDUk8/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/142"
+      },
+      {
+        "streamId": "140",
+        "title": "如何突破無法持續創作的三分鐘熱度",
+        "date": "2026-02-13T18:37:26+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=GvRr4n20ozw",
+        "youtubeId": "GvRr4n20ozw",
+        "image": "https://img.youtube.com/vi/GvRr4n20ozw/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/140"
+      },
+      {
+        "streamId": "139",
+        "title": "華人vs.黑人炒飯大對決！！這參賽者根本在挑戰大家的理智線",
+        "date": "2026-02-12T09:37:23+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=rdW5R42v7qo",
+        "youtubeId": "rdW5R42v7qo",
+        "image": "https://img.youtube.com/vi/rdW5R42v7qo/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/139"
+      }
+    ],
+    "reading": [
+      {
+        "streamId": "136",
+        "title": "那天是个晴天",
+        "date": "2026-02-08T17:37:15+00:00",
+        "tag": "digest",
+        "url": "https://onojyun.com/2026/02/06/%e9%82%a3%e5%a4%a9%e6%98%af%e4%b8%aa%e6%99%b4%e5%a4%a9/我很喜欢用文字作为铅笔的方式来进行[素描](https://onojyun.com/2022/12/16/%e9%80%9f%e5%86%99/)💡",
+        "youtubeId": null,
+        "image": null,
+        "sourceLink": "https://t.me/doctormomo/136",
+        "description": "蠻有趣的想法，一種磨練寫作能力的方式"
+      }
+    ],
+    "fragments": [
+      {
+        "streamId": "173",
+        "title": "最近在整理以前的對話紀錄，發現學生時代跟朋友動不動就聊到凌晨三四點，什麼都能聊很深。出社會之後這種對話幾乎消失了。是變成用說的了？還是真的沒那個餘裕了？",
+        "date": "2026-03-07T18:11:02+00:00",
+        "tag": "murmur",
+        "url": null,
+        "youtubeId": null,
+        "image": null,
+        "sourceLink": "https://t.me/doctormomo/173"
+      },
+      {
+        "streamId": "172",
+        "title": "朋友說我是個喜形於色的人。我想到以前跟 Jennifer 聊到的——她說她的原則是「真誠」，不管對上對下都表達一致的自己。我覺得蠻有道理的，但也許我只是在合理化自己藏不住情緒這件事😂",
+        "date": "2026-03-07T18:10:58+00:00",
+        "tag": "murmur",
+        "url": null,
+        "youtubeId": null,
+        "image": null,
+        "sourceLink": "https://t.me/doctormomo/172"
+      },
+      {
+        "streamId": "169",
+        "title": "幹這根本有病 愛與感情",
+        "date": "2026-03-06T18:38:07+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=0rxm5K71uSo",
+        "youtubeId": "0rxm5K71uSo",
+        "image": "https://img.youtube.com/vi/0rxm5K71uSo/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/169"
+      },
+      {
+        "streamId": "167",
+        "title": "今天跟學生聊天，跟他們說你們是充滿魔鬼誘惑的一代——做醫美比留在醫院輕鬆，收入又高。學生問我心臟外科薪水多少，我很誠實地說了，他們嚇一跳，以為應該很賺。訓練那麼累、壓力那麼大、被告的風險又高。不成正比。但我為什麼還在這裡呢？",
+        "date": "2026-03-06T17:05:35+00:00",
+        "tag": "murmur",
+        "url": null,
+        "youtubeId": null,
+        "image": null,
+        "sourceLink": "https://t.me/doctormomo/167"
+      },
+      {
+        "streamId": "166",
+        "title": "最近在整理十年前的對話紀錄，發現自己一直以為記憶力很好，結果忘了一大堆細節。幸好那時候愛在臉書上發廢文，今天才能笑的這麼開心😂",
+        "date": "2026-03-03T16:16:10+00:00",
+        "tag": "murmur",
+        "url": null,
+        "youtubeId": null,
+        "image": null,
+        "sourceLink": "https://t.me/doctormomo/166"
+      }
+    ]
+  },
+  "_archive": {
+    "music": [],
+    "video": [],
+    "reading": [],
+    "fragments": []
+  }
+}

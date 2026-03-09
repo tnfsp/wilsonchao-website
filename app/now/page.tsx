@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
+import Link from "next/link";
+import { loadNowData, isStale } from "@/lib/now";
+import { NowDynamicGrid } from "@/components/now/NowDynamicGrid";
 
 const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://wilsonchao.com";
+
+export const revalidate = 3600; // ISR: hourly
 
 export const metadata: Metadata = {
   title: "Now — Wilson Chao",
@@ -8,35 +13,31 @@ export const metadata: Metadata = {
   alternates: { canonical: `${BASE_URL}/now` },
 };
 
-const sections = [
-  {
-    emoji: "🏥",
-    title: "臨床",
-    body: "在高醫心臟血管外科當總醫師，八月升主治。冠狀動脈繞道、瓣膜、主動脈手術。同時準備專科考試。",
-  },
-  {
-    emoji: "📚",
-    title: "研究",
-    body: "剛開了一個 Network Meta-Analysis 專案：比較透析通路 steal syndrome 的不同術式（DRIL vs RUDI vs PAI），目標投 JVS。另外有一篇 Bentall pseudoaneurysm case report 在修。",
-  },
-  {
-    emoji: "✍️",
-    title: "寫作",
-    body: "試著寫更短、更頻繁的東西。Stream 是每天的碎片，Blog 放長文。想把「寫」變成跟「開刀」一樣的日常練習。",
-  },
-  {
-    emoji: "🤖",
-    title: "在蓋的東西",
-    body: "一個 AI-assisted 的個人系統 — 用 Claude 串起日記、知識庫、研究流程、記帳、甚至這個網站的維護。裡面有個叫 Owl 的 agent 幫我處理日常瑣事和推進專案。不是為了效率，是因為好玩。",
-  },
-  {
-    emoji: "🎵",
-    title: "其他",
-    body: "在學 DJ。偶爾健身。試著每天走久一點。",
-  },
+/* Fallback when now.json fails */
+const FALLBACK_SECTIONS = [
+  { id: "clinical", emoji: "🏥", title: "臨床", body: "在高醫心臟血管外科當總醫師，八月升主治。" },
+  { id: "research", emoji: "📚", title: "研究", body: "NMA + Case Report 進行中。" },
+  { id: "writing", emoji: "✍️", title: "寫作", body: "短文、碎片、長文。" },
+  { id: "building", emoji: "🤖", title: "在蓋的東西", body: "AI-assisted 個人系統。" },
+  { id: "other", emoji: "🎵", title: "其他", body: "DJ、健身、走路。" },
 ];
 
-export default function NowPage() {
+function formatLastUpdated(iso: string): string {
+  try {
+    const d = new Date(iso);
+    return d.toLocaleDateString("zh-TW", { year: "numeric", month: "long", day: "numeric" });
+  } catch {
+    return "";
+  }
+}
+
+export default async function NowPage() {
+  const data = await loadNowData();
+  const sections = data?.sections?.length ? data.sections : FALLBACK_SECTIONS;
+  const lastUpdated = data?.lastUpdated || "";
+  const stale = lastUpdated ? isStale(lastUpdated) : false;
+  const hasDynamic = data?.dynamic && Object.values(data.dynamic).some((a) => a.length > 0);
+
   const breadcrumbJsonLd = {
     "@context": "https://schema.org",
     "@type": "BreadcrumbList",
@@ -50,22 +51,31 @@ export default function NowPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/<\/script/gi, "<\\/script") }}
+        dangerouslySetInnerHTML={{
+          __html: JSON.stringify(breadcrumbJsonLd).replace(/<\/script/gi, "<\\/script"),
+        }}
       />
       <main className="page-shell space-y-6">
+        {/* Header */}
         <header className="space-y-2">
           <span className="section-title">Now</span>
           <h1 className="text-3xl font-semibold text-[var(--foreground)]">
             What I&apos;m focusing on
           </h1>
-          <p className="text-sm text-[var(--muted)]">
-            最後更新：<time dateTime="2026-03">2026 年 3 月</time>
-          </p>
+          {lastUpdated && (
+            <p className="text-sm text-[var(--muted)]">
+              最後更新：<time dateTime={lastUpdated}>{formatLastUpdated(lastUpdated)}</time>
+              {stale && (
+                <span className="ml-2 text-xs text-[var(--muted)]/50">· 可能不是最新的</span>
+              )}
+            </p>
+          )}
         </header>
 
+        {/* Static sections */}
         <div className="space-y-5">
           {sections.map((s) => (
-            <section key={s.title} className="space-y-1.5">
+            <section key={s.id} className="space-y-1.5">
               <h2 className="text-lg font-semibold text-[var(--foreground)]">
                 {s.emoji} {s.title}
               </h2>
@@ -74,6 +84,25 @@ export default function NowPage() {
           ))}
         </div>
 
+        {/* Dynamic sections */}
+        {hasDynamic && data?.dynamic && (
+          <>
+            <hr className="border-[var(--border)]" />
+            <NowDynamicGrid dynamic={data.dynamic} />
+          </>
+        )}
+
+        {/* Stream CTA when no dynamic */}
+        {!hasDynamic && (
+          <p className="text-sm text-[var(--muted)]">
+            更多碎片在{" "}
+            <Link href="/stream" className="underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--accent)]">
+              Stream →
+            </Link>
+          </p>
+        )}
+
+        {/* Footer */}
         <footer className="space-y-3 border-t border-[var(--border)] pt-6">
           <p className="text-[var(--muted)]">
             想聊這些？{" "}
