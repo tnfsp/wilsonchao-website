@@ -42,6 +42,7 @@ type BlogEntry = {
   readingTime?: string;
   tags?: string[];
   image?: string;
+  related?: string[];
 };
 
 type ProjectEntry = {
@@ -319,6 +320,7 @@ async function syncBlog(): Promise<BlogEntry[]> {
       readingTime,
       tags: fm.tags || [],
       ...(image ? { image } : {}),
+      ...(fm.related?.length ? { related: fm.related } : {}),
     });
   }
 

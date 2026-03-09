@@ -28,6 +28,7 @@ export type BlogEntry = {
   readingTime?: string;
   tags?: string[];
   image?: string;
+  related?: string[];
 };
 
 export type Project = {

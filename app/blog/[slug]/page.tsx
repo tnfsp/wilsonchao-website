@@ -177,6 +177,32 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <div className="mt-6">
           <CommentSection slug={entry.slug} />
         </div>
+        {(() => {
+          const relatedSlugs = entry.related || [];
+          const relatedPosts = relatedSlugs
+            .map((s: string) => all.find((p) => p.slug === s))
+            .filter(Boolean);
+          if (relatedPosts.length === 0) return null;
+          return (
+            <div className="mt-8 border-t border-[var(--border)] pt-6">
+              <h3 className="text-lg font-semibold text-[var(--foreground)] mb-4">延伸閱讀</h3>
+              <div className="space-y-3">
+                {relatedPosts.map((post) => (
+                  <Link
+                    key={post!.slug}
+                    href={`/blog/${post!.slug}`}
+                    className="block rounded-lg border border-[var(--border)] px-4 py-3 hover:border-[var(--accent)] transition-colors"
+                  >
+                    <p className="text-sm font-medium text-[var(--accent)]">{post!.title}</p>
+                    {post!.excerpt && (
+                      <p className="text-xs text-[var(--muted)] mt-1 line-clamp-1">{post!.excerpt}</p>
+                    )}
+                  </Link>
+                ))}
+              </div>
+            </div>
+          );
+        })()}
       </article>
       {(prev || next) && (
         <div className="flex justify-between border-t border-[var(--border)] pt-4 text-sm text-[var(--muted)]">
