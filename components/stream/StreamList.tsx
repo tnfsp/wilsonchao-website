@@ -19,7 +19,7 @@ const TAG_CONFIG: Record<string, { emoji: string; label: string }> = {
   music: { emoji: "🎵", label: "音樂" },
 };
 
-const PAGE_SIZE = 20;
+const PAGE_SIZE = 10;
 
 function getDateKey(dateStr?: string): string {
   if (!dateStr) return "";
@@ -38,14 +38,6 @@ function formatDateDivider(dateKey: string): string {
   if (dateKey === today) return "Today";
   if (dateKey === yesterday) return "Yesterday";
 
-  const sameYear = d.getFullYear() === now.getFullYear();
-  if (sameYear) {
-    return d.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      timeZone: "Asia/Taipei",
-    });
-  }
   return d.toLocaleDateString("en-US", {
     year: "numeric",
     month: "long",
