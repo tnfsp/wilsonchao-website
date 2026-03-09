@@ -14,9 +14,9 @@ export async function GET() {
     description: entry.excerpt,
   }));
 
-  const dailyItems = projects.flatMap((project) => {
+  const journalItems = projects.flatMap((project) => {
     const link = project.slug
-      ? `${SITE_URL}/daily/${project.slug}`
+      ? `${SITE_URL}/journal/${project.slug}`
       : project.href && project.href.startsWith("http")
         ? project.href
         : undefined;
@@ -32,7 +32,7 @@ export async function GET() {
     ];
   });
 
-  const items = [...blogItems, ...dailyItems].sort((a, b) => {
+  const items = [...blogItems, ...journalItems].sort((a, b) => {
     const aDate = a.pubDate ? new Date(a.pubDate).getTime() : 0;
     const bDate = b.pubDate ? new Date(b.pubDate).getTime() : 0;
     return bDate - aDate;
@@ -41,7 +41,8 @@ export async function GET() {
   return buildRssResponse({
     title: "wilsonchao.com",
     siteUrl: SITE_URL,
-    description: "Articles, daily notes, and updates from Yi-Hsiang Chao, MD",
+    description: "Articles, journal entries, and updates from Yi-Hsiang Chao, MD",
+    feedPath: "/feed.xml",
     items,
   });
 }
