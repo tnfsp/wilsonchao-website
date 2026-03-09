@@ -3,7 +3,7 @@ import Link from "next/link";
 import { loadNowData, isStale } from "@/lib/now";
 import { NowDynamicGrid } from "@/components/now/NowDynamicGrid";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://wilsonchao.com";
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.wilsonchao.com";
 
 export const revalidate = 3600; // ISR: hourly
 

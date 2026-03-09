@@ -9,10 +9,9 @@ import { CodeHighlight } from "@/components/ui/CodeHighlight";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { SubscribeForm } from "@/components/ui/SubscribeForm";
 import { CommentSection } from "@/components/ui/CommentSection";
+import { BASE_URL } from "@/lib/constants";
 
 export const dynamic = "force-dynamic";
-
-const BASE_URL = "https://wilsonchao.com";
 
 export async function generateMetadata({
   params,
@@ -34,6 +33,9 @@ export async function generateMetadata({
   return {
     title,
     description,
+    alternates: {
+      canonical: `/blog/${slug}`,
+    },
     openGraph: {
       title: entry.title,
       description,
@@ -41,7 +43,7 @@ export async function generateMetadata({
       siteName: "wilsonchao.com",
       type: "article",
       publishedTime: entry.publishedAt,
-      authors: ["Yi-Hsiang Chao"],
+      authors: ["趙玴祥"],
       images: [{ url: image, width: 1200, height: 630, alt: entry.title }],
     },
     twitter: {

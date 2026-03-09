@@ -1,7 +1,7 @@
 import { loadProjects } from "@/lib/content";
 import { buildRssResponse } from "@/lib/rss";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://wilsonchao.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.wilsonchao.com";
 
 export async function GET() {
   const projects = await loadProjects();

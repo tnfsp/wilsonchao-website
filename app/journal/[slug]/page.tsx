@@ -6,6 +6,7 @@ import { getProject, loadProjects } from "@/lib/content";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { ViewCounter } from "@/components/ui/ViewCounter";
 import { LikeButton } from "@/components/ui/LikeButton";
+import { BASE_URL } from "@/lib/constants";
 
 export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
   const { slug } = await params;
@@ -14,6 +15,9 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: `${entry.title} — Wilson Chao`,
     description: entry.excerpt || entry.description || "",
+    alternates: {
+      canonical: `/journal/${slug}`,
+    },
     openGraph: {
       title: entry.title,
       description: entry.excerpt || entry.description || "",
@@ -39,7 +43,31 @@ export default async function JournalEntryPage({ params }: { params: Promise<{ s
     : undefined;
   const heroImage = entry.image && decodeURIComponent(entry.image) !== decodeURIComponent(firstBodyImageSrc ?? "") ? entry.image : undefined;
 
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "Article",
+    headline: entry.title,
+    description: entry.excerpt || entry.description || "",
+    image: entry.image || `${BASE_URL}/avatar.png`,
+    datePublished: entry.date,
+    author: {
+      "@type": "Person",
+      name: "趙玴祥",
+      alternateName: "Yi-Hsiang Chao",
+      url: `${BASE_URL}/about`,
+    },
+    mainEntityOfPage: {
+      "@type": "WebPage",
+      "@id": `${BASE_URL}/journal/${slug}`,
+    },
+  };
+
   return (
+    <>
+    <script
+      type="application/ld+json"
+      dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+    />
     <main className="page-shell space-y-6">
       <Link
         href="/journal"
@@ -109,5 +137,6 @@ export default async function JournalEntryPage({ params }: { params: Promise<{ s
         </div>
       )}
     </main>
+    </>
   );
 }

@@ -7,6 +7,6 @@ export default function robots(): MetadataRoute.Robots {
       allow: "/",
       disallow: ["/api/"],
     },
-    sitemap: "https://wilsonchao.com/sitemap.xml",
+    sitemap: "https://www.wilsonchao.com/sitemap.xml",
   };
 }

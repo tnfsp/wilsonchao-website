@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 import { loadBlogEntries, loadProjects } from "@/lib/content";
+import { BASE_URL } from "@/lib/constants";
 
-const BASE_URL = "https://wilsonchao.com";
+const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const blogEntries = await loadBlogEntries();
@@ -60,7 +61,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   }));
 
   const dailyPages: MetadataRoute.Sitemap = projects
-    .filter((project) => project.slug)
+    .filter((project) => project.slug && !UUID_PATTERN.test(project.slug))
     .map((project) => ({
       url: `${BASE_URL}/journal/${project.slug}`,
       lastModified: project.date ? new Date(project.date) : new Date(),

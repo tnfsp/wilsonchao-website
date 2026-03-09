@@ -37,9 +37,9 @@ async function sendWelcomeEmail(email: string) {
             In the meantime, feel free to explore:
           </p>
           <ul style="color: #666; line-height: 1.8;">
-            <li><a href="https://wilsonchao.com/blog" style="color: #ca6702;">Blog</a> - Long-form articles</li>
-            <li><a href="https://wilsonchao.com/daily" style="color: #ca6702;">Daily</a> - Daily notes and thoughts</li>
-            <li><a href="https://wilsonchao.com/about" style="color: #ca6702;">About</a> - Learn more about me</li>
+            <li><a href="https://www.wilsonchao.com/blog" style="color: #ca6702;">Blog</a> - Long-form articles</li>
+            <li><a href="https://www.wilsonchao.com/daily" style="color: #ca6702;">Daily</a> - Daily notes and thoughts</li>
+            <li><a href="https://www.wilsonchao.com/about" style="color: #ca6702;">About</a> - Learn more about me</li>
           </ul>
           <p style="color: #666; line-height: 1.6;">
             Best,<br/>

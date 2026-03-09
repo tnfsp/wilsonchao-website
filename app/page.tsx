@@ -1,8 +1,7 @@
 import Link from "next/link";
 import { loadBlogEntries, loadSiteCopy, loadProjects, loadStreamEntries } from "@/lib/content";
 import { ViewStats } from "@/components/ui/ViewCounter";
-
-const BASE_URL = "https://wilsonchao.com";
+import { BASE_URL } from "@/lib/constants";
 
 const websiteJsonLd = {
   "@context": "https://schema.org",

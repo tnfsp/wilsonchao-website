@@ -17,9 +17,11 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "wilsonchao.com",
-  description: "The home for Yi-Hsiang Chao, MD – surgery, writing, and slow thinking.",
+  metadataBase: new URL("https://www.wilsonchao.com"),
+  title: "趙玴祥 Wilson Chao — 心臟外科醫師・AI 愛好者・寫字的人",
+  description: "高醫心臟外科醫師的個人網站。寫 AI 工具應用、醫師生活反思、手術室裡外的觀察。",
   alternates: {
+    canonical: "/",
     types: {
       "application/rss+xml": [
         { url: "/feed.xml", title: "wilsonchao.com — All" },
@@ -28,6 +30,13 @@ export const metadata: Metadata = {
         { url: "/stream/feed.xml", title: "wilsonchao.com — Stream" },
       ],
     },
+  },
+  openGraph: {
+    title: "趙玴祥 Wilson Chao",
+    description: "心臟外科醫師・AI 愛好者・寫字的人",
+    url: "https://www.wilsonchao.com",
+    siteName: "wilsonchao.com",
+    type: "website",
   },
   icons: {
     icon: "/avatar.png",

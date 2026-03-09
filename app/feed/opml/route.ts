@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://wilsonchao.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.wilsonchao.com";
 
 const feeds = [
   { title: "wilsonchao.com — All", xmlUrl: `${SITE_URL}/feed.xml`, htmlUrl: SITE_URL },

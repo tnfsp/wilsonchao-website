@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-const BASE_URL = "https://wilsonchao.com";
+const BASE_URL = "https://www.wilsonchao.com";
 
 export const metadata: Metadata = {
   title: "趙玴祥醫師｜心臟血管外科｜高雄醫學大學附設中和紀念醫院",

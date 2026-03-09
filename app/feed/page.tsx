@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { CopyButton } from "@/components/ui/CopyButton";
 
-const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://wilsonchao.com";
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.wilsonchao.com";
 
 export const metadata: Metadata = {
   title: "RSS Feeds — Wilson Chao",

@@ -29,7 +29,7 @@ const renderItem = (item: RssItem) => {
 </item>`;
 };
 
-const ROOT_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://wilsonchao.com";
+const ROOT_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.wilsonchao.com";
 
 export function buildRssResponse({
   title,

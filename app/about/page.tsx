@@ -4,7 +4,7 @@ import { marked } from "marked";
 import { loadSiteCopy, linkItems } from "@/lib/content";
 import { sanitizeHtml } from "@/lib/sanitize";
 
-const BASE_URL = "https://wilsonchao.com";
+const BASE_URL = "https://www.wilsonchao.com";
 
 export default async function AboutPage() {
   const copy = await loadSiteCopy();
