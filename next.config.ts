@@ -6,6 +6,7 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      { source: "/blog/fomo-anxiety", destination: "/blog/fomo-anxiety-2026-q1", permanent: true },
       { source: "/daily", destination: "/journal", permanent: false },
       { source: "/daily/:slug*", destination: "/journal/:slug*", permanent: false },
       { source: "/murmur", destination: "/stream", permanent: false },
