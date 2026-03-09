@@ -29,21 +29,27 @@ export function buildRssResponse({
   title,
   siteUrl,
   description,
+  feedPath,
   items,
   cacheSeconds = 900,
 }: {
   title: string;
   siteUrl: string;
   description?: string;
+  feedPath?: string;
   items: RssItem[];
   cacheSeconds?: number;
 }) {
+  const selfLink = feedPath ? `${siteUrl}${feedPath}` : siteUrl;
   const renderedItems = items.map(renderItem).join("");
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
   <channel>
     <title>${escapeXml(title)}</title>
     <link>${escapeXml(siteUrl)}</link>
+    <atom:link href="${escapeXml(selfLink)}" rel="self" type="application/rss+xml"/>
+    <language>zh-Hant</language>
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
     ${description ? `<description>${escapeXml(description)}</description>` : ""}
     ${renderedItems}
   </channel>
