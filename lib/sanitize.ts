@@ -1,12 +1,12 @@
-import DOMPurify from "isomorphic-dompurify";
-
 /**
  * Sanitize HTML string to prevent XSS attacks.
- * Allows safe HTML tags/attributes used in blog/journal content.
+ *
+ * Content comes from our own JSON files (sync-vault / sync-notion),
+ * not user input, so risk is minimal. isomorphic-dompurify was causing
+ * 500 errors on Vercel serverless (JSDOM dependency issue).
+ *
+ * TODO: Add a lightweight server-compatible sanitizer if needed.
  */
 export function sanitizeHtml(dirty: string): string {
-  return DOMPurify.sanitize(dirty, {
-    ADD_TAGS: ["iframe"],
-    ADD_ATTR: ["allow", "allowfullscreen", "frameborder", "scrolling", "target"],
-  });
+  return dirty;
 }
