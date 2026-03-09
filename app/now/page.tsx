@@ -1,6 +1,6 @@
 import type { Metadata } from "next";
 
-const BASE_URL = "https://wilsonchao.com";
+const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://wilsonchao.com";
 
 export const metadata: Metadata = {
   title: "Now — Wilson Chao",
@@ -50,7 +50,7 @@ export default function NowPage() {
     <>
       <script
         type="application/ld+json"
-        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd) }}
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(breadcrumbJsonLd).replace(/<\/script/gi, "<\\/script") }}
       />
       <main className="page-shell space-y-6">
         <header className="space-y-2">
@@ -58,7 +58,9 @@ export default function NowPage() {
           <h1 className="text-3xl font-semibold text-[var(--foreground)]">
             What I&apos;m focusing on
           </h1>
-          <p className="text-sm text-[var(--muted)]">最後更新：2026 年 3 月</p>
+          <p className="text-sm text-[var(--muted)]">
+            最後更新：<time dateTime="2026-03">2026 年 3 月</time>
+          </p>
         </header>
 
         <div className="space-y-5">
