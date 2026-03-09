@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { loadBlogEntries, loadSiteCopy, loadProjects, loadMurmurEntries } from "@/lib/content";
+import { loadBlogEntries, loadSiteCopy, loadProjects, loadMurmurEntries, loadStreamEntries } from "@/lib/content";
 import { ViewStats } from "@/components/ui/ViewCounter";
 
 const BASE_URL = "https://wilsonchao.com";
@@ -84,7 +84,7 @@ export default async function Home() {
             href="/blog"
             className="text-sm text-[var(--muted)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent-strong)]"
           >
-            查看更多 →
+            Read more →
           </Link>
         </div>
         <div className="space-y-5">
@@ -112,13 +112,12 @@ export default async function Home() {
       </section>
 
       <section className="section-block">
-        <span className="section-title">murmur</span>
+        <span className="section-title">Stream</span>
         <div className="surface-card px-5 py-6 space-y-4">
           <p className="text-base text-[var(--muted)]">{siteCopy.murmurIntro}</p>
           {murmur.length > 0 ? (
             <div className="space-y-3">
               {murmur.map((item) => (
-                // Show highlighted text; if description exists, use it instead of repeating title.
                 <div
                   key={item.link || item.title}
                   className="space-y-1 rounded-md border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-3"
@@ -142,10 +141,10 @@ export default async function Home() {
           ) : null}
           <div className="pt-2">
             <Link
-              href="/murmur"
+              href="/stream"
               className="inline-flex items-center text-sm font-medium text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent-strong)]"
             >
-              {murmur.length > 0 ? "更多 murmur →" : siteCopy.murmurCTA}
+              {murmur.length > 0 ? "Read more →" : siteCopy.murmurCTA}
             </Link>
           </div>
         </div>
@@ -153,12 +152,12 @@ export default async function Home() {
 
       <section className="section-block">
         <div className="flex items-baseline justify-between gap-3">
-          <span className="section-title">Latest Daily</span>
+          <span className="section-title">Journal</span>
           <Link
-            href="/daily"
+            href="/journal"
             className="text-sm text-[var(--muted)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent-strong)]"
           >
-            查看更多 →
+            Read more →
           </Link>
         </div>
         <div className="grid gap-5 sm:grid-cols-2">
@@ -170,7 +169,7 @@ export default async function Home() {
               <h3 className="text-lg font-semibold text-[var(--foreground)]">
                 {project.slug
                   ? (
-                    <Link href={`/daily/${project.slug}`} className="hover:text-[var(--accent)]">
+                    <Link href={`/journal/${project.slug}`} className="hover:text-[var(--accent)]">
                       {project.title}
                     </Link>
                     )
