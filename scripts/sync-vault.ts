@@ -550,10 +550,11 @@ async function main() {
       existing = JSON.parse(raw);
     } catch { /* no existing */ }
 
-    // Build slug set from vault entries
+    // Build slug + title sets from vault entries for dedup
     const vaultSlugs = new Set(projects.map(p => p.slug));
-    // Keep existing entries whose slugs are NOT in vault (not yet migrated)
-    const kept = existing.filter(e => !vaultSlugs.has(e.slug));
+    const vaultTitles = new Set(projects.map(p => p.title));
+    // Keep existing entries whose slugs AND titles are NOT in vault
+    const kept = existing.filter(e => !vaultSlugs.has(e.slug) && !vaultTitles.has(e.title));
     const merged = [...projects, ...kept];
     // Sort by date descending
     merged.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
