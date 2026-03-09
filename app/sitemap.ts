@@ -27,22 +27,22 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       priority: 0.9,
     },
     {
-      url: `${BASE_URL}/daily`,
+      url: `${BASE_URL}/journal`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.9,
+    },
+    {
+      url: `${BASE_URL}/stream`,
+      lastModified: new Date(),
+      changeFrequency: "daily",
+      priority: 0.8,
     },
     {
       url: `${BASE_URL}/about`,
       lastModified: new Date(),
       changeFrequency: "monthly",
       priority: 0.8,
-    },
-    {
-      url: `${BASE_URL}/links`,
-      lastModified: new Date(),
-      changeFrequency: "monthly",
-      priority: 0.5,
     },
     {
       url: `${BASE_URL}/now`,
@@ -62,7 +62,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const dailyPages: MetadataRoute.Sitemap = projects
     .filter((project) => project.slug)
     .map((project) => ({
-      url: `${BASE_URL}/daily/${project.slug}`,
+      url: `${BASE_URL}/journal/${project.slug}`,
       lastModified: project.date ? new Date(project.date) : new Date(),
       changeFrequency: "monthly" as const,
       priority: 0.6,

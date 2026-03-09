@@ -1,6 +1,7 @@
 import Image from "next/image";
+import Link from "next/link";
 import { marked } from "marked";
-import { loadSiteCopy } from "@/lib/content";
+import { loadSiteCopy, linkItems } from "@/lib/content";
 
 const BASE_URL = "https://wilsonchao.com";
 
@@ -89,6 +90,23 @@ export default async function AboutPage() {
           dangerouslySetInnerHTML={{ __html: bodyHtml }}
         />
       </div>
+
+      <section className="space-y-3 pt-6 border-t border-[var(--border)]">
+        <h2 className="text-xl font-semibold inline-block bg-[var(--highlight)] px-2 py-0.5 rounded text-[var(--foreground)]">Links</h2>
+        <div className="flex flex-col gap-3 max-w-md">
+          {linkItems.map((item) => (
+            <Link
+              key={item.label}
+              href={item.href}
+              className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-center text-[var(--foreground)] shadow-[0_12px_34px_rgba(0,18,25,0.06)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+              target={item.external ? "_blank" : undefined}
+              rel={item.external ? "noreferrer" : undefined}
+            >
+              {item.label}
+            </Link>
+          ))}
+        </div>
+      </section>
     </main>
     </>
   );

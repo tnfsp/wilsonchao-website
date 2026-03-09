@@ -92,7 +92,7 @@ export const aboutPreview =
 export const linkItems = [
   { label: "👤 About｜認識我", href: "/about" },
   { label: "🏠 Website｜個人網站", href: "/" },
-  { label: "📓 murmur｜碎片日記", href: "https://murmur.wilsonchao.com", external: true },
+  { label: "📓 Stream｜腦內記事", href: "/stream" },
   { label: "📸 Instagram｜追蹤生活更新", href: "https://www.instagram.com/momobear_doctor", external: true },
   { label: "📨 Telegram｜即時通知", href: "https://t.me/doctormomo", external: true },
   { label: "📰 RSS｜訂閱文章", href: "/feed.xml" },
