@@ -37,6 +37,15 @@ const feeds = [
   },
 ];
 
+function subscribeLinks(feedUrl: string) {
+  const encoded = encodeURIComponent(feedUrl);
+  return [
+    { label: "Feedly", href: `https://feedly.com/i/subscription/feed/${encoded}` },
+    { label: "Inoreader", href: `https://www.inoreader.com/feed/${encoded}` },
+    { label: "NewsBlur", href: `https://newsblur.com/?url=${encoded}` },
+  ];
+}
+
 export default function FeedPage() {
   return (
     <main className="page-shell space-y-6">
@@ -48,59 +57,54 @@ export default function FeedPage() {
         </p>
       </header>
 
-      <div className="surface-card flex flex-col items-center gap-3 rounded-xl border border-[var(--border)] px-5 py-5 text-center sm:flex-row sm:text-left">
-        <div className="flex-1 space-y-1">
-          <h2 className="text-lg font-semibold text-[var(--foreground)]">📦 一鍵全部訂閱</h2>
-          <p className="text-sm text-[var(--muted)]">
-            下載 OPML 檔案，匯入你的 RSS reader 即可訂閱全部 feed。
-          </p>
-        </div>
-        <Link
-          href="/feed/opml"
-          className="inline-flex items-center gap-2 rounded-full bg-[var(--foreground)] px-5 py-2.5 text-sm font-medium text-[var(--background)] transition-opacity hover:opacity-80"
-          download="wilsonchao-feeds.opml"
-        >
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-          >
-            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
-            <polyline points="7 10 12 15 17 10" />
-            <line x1="12" y1="15" x2="12" y2="3" />
-          </svg>
-          下載 OPML
-        </Link>
+      <div className="space-y-4">
+        {feeds.map((feed) => {
+          const fullUrl = `${BASE_URL}${feed.path}`;
+          const links = subscribeLinks(fullUrl);
+          return (
+            <div
+              key={feed.name}
+              className="surface-card space-y-3 rounded-xl border border-[var(--border)] px-5 py-4"
+            >
+              <div className="flex items-center gap-2">
+                <span className="text-xl">{feed.emoji}</span>
+                <h2 className="text-lg font-semibold text-[var(--foreground)]">{feed.name}</h2>
+              </div>
+              <p className="text-sm leading-relaxed text-[var(--muted)]">{feed.description}</p>
+
+              {/* Subscribe buttons — stack on mobile, row on desktop */}
+              <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap sm:items-center">
+                {links.map((link) => (
+                  <a
+                    key={link.label}
+                    href={link.href}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center justify-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--foreground)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                  >
+                    用 {link.label} 訂閱
+                  </a>
+                ))}
+                <CopyButton url={fullUrl} />
+              </div>
+            </div>
+          );
+        })}
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        {feeds.map((feed) => (
-          <div
-            key={feed.name}
-            className="surface-card space-y-3 rounded-xl border border-[var(--border)] px-5 py-4"
+      {/* Footer: OPML + RSS explanation */}
+      <div className="space-y-3 border-t border-[var(--border)] pt-6 text-sm text-[var(--muted)]">
+        <p>
+          用其他 reader？{" "}
+          <Link
+            href="/feed/opml"
+            className="underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--accent)]"
+            download="wilsonchao-feeds.opml"
           >
-            <div className="flex items-center gap-2">
-              <span className="text-xl">{feed.emoji}</span>
-              <h2 className="text-lg font-semibold text-[var(--foreground)]">{feed.name}</h2>
-            </div>
-            <p className="text-sm leading-relaxed text-[var(--muted)]">{feed.description}</p>
-            <div className="flex flex-wrap items-center gap-2">
-              <CopyButton url={`${BASE_URL}${feed.path}`} />
-              <code className="text-[10px] text-[var(--muted)]/60 break-all">
-                {BASE_URL}{feed.path}
-              </code>
-            </div>
-          </div>
-        ))}
-      </div>
-
-      <div className="space-y-2 border-t border-[var(--border)] pt-6 text-sm text-[var(--muted)]">
+            下載 OPML
+          </Link>
+          {" "}一次匯入全部 feed。
+        </p>
         <p>
           <strong className="text-[var(--foreground)]">什麼是 RSS？</strong>{" "}
           一種讓你在自己的 reader 裡追蹤網站更新的格式。推薦用{" "}
