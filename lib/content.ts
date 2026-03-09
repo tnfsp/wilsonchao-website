@@ -70,8 +70,8 @@ export async function loadSiteCopy(): Promise<SiteCopy> {
     heroIntro: file?.HomepageIntro || defaultSiteCopy.heroIntro,
     heroCTA: file?.HomepageCTA || defaultSiteCopy.heroCTA,
     footerText: file?.FooterText || defaultSiteCopy.footerText,
-    murmurIntro: file?.HomepageMurmurIntro || defaultSiteCopy.murmurIntro,
-    murmurCTA: file?.HomepageMurmurCTA || defaultSiteCopy.murmurCTA,
+    murmurIntro: file?.HomepageStreamIntro || file?.HomepageMurmurIntro || defaultSiteCopy.murmurIntro,
+    murmurCTA: file?.HomepageStreamCTA || file?.HomepageMurmurCTA || defaultSiteCopy.murmurCTA,
     aboutName: file?.AboutName || defaultSiteCopy.aboutName,
     aboutIntro: file?.AboutPageIntro || defaultSiteCopy.aboutIntro,
     aboutBody: file?.AboutPageBody || defaultSiteCopy.aboutBody,
@@ -232,6 +232,10 @@ export async function getProject(slug: string): Promise<Project | null> {
 const ENABLE_MURMUR_FEED = true;
 const DEFAULT_MURMUR_FEED =
   process.env.MURMUR_FEED_URL || "https://murmur.wilsonchao.com/rss.json";
+
+export async function loadStreamEntries(limit = 20): Promise<MurmurEntry[]> {
+  return loadMurmurEntries(limit);
+}
 
 export async function loadMurmurEntries(limit = 3): Promise<MurmurEntry[]> {
   if (!ENABLE_MURMUR_FEED) return [];
