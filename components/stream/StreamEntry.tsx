@@ -1,6 +1,7 @@
 "use client";
 
 import { useMemo } from "react";
+import DOMPurify from "isomorphic-dompurify";
 
 type Props = {
   title: string;
@@ -73,6 +74,11 @@ function cleanHtml(html: string): string {
   );
   // Clean up trailing <br> tags
   cleaned = cleaned.replace(/(<br\s*\/?>[\s]*)+$/gim, "");
+  // Sanitize with DOMPurify
+  cleaned = DOMPurify.sanitize(cleaned, {
+    ALLOWED_TAGS: ["a", "b", "i", "em", "strong", "br", "p", "span"],
+    ALLOWED_ATTR: ["href", "class", "target", "rel"],
+  });
   // Make external links open in new tab
   cleaned = cleaned.replace(
     /<a\s+href="/g,
@@ -235,12 +241,13 @@ export function StreamEntry({ title, link, contentHtml, description, pubDate, ta
 
       {/* Timestamp */}
       {pubDate ? (
-        <p
-          className="text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] text-right"
+        <time
+          dateTime={pubDate}
+          className="block text-xs tracking-[0.18em] text-[var(--muted)] text-right"
           title={formatFullDate(pubDate)}
         >
           {formatRelativeTime(pubDate)}
-        </p>
+        </time>
       ) : null}
     </div>
   );

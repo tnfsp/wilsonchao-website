@@ -1,9 +1,27 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { getProject, loadProjects } from "@/lib/content";
 import { ViewCounter } from "@/components/ui/ViewCounter";
 import { LikeButton } from "@/components/ui/LikeButton";
+
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const entry = await getProject(slug);
+  if (!entry) return {};
+  return {
+    title: `${entry.title} — Wilson Chao`,
+    description: entry.excerpt || entry.description || "",
+    openGraph: {
+      title: entry.title,
+      description: entry.excerpt || entry.description || "",
+      type: "article",
+      publishedTime: entry.date,
+      images: entry.image ? [{ url: entry.image }] : [],
+    },
+  };
+}
 
 export default async function JournalEntryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
@@ -64,7 +82,7 @@ export default async function JournalEntryPage({ params }: { params: Promise<{ s
           </pre>
         ) : null}
         <div className="pt-4">
-          <LikeButton slug={`journal:${entry.slug || entry.title}`} />
+          <LikeButton slug={`daily:${entry.slug || entry.title}`} />
         </div>
       </article>
       {(prev || next) && (
@@ -72,7 +90,7 @@ export default async function JournalEntryPage({ params }: { params: Promise<{ s
           <div className="max-w-sm">
             {prev ? (
               <Link href={`/journal/${prev.slug}`} className="hover:text-[var(--accent)]">
-                {"<-"} {prev.title}
+                ← {prev.title}
               </Link>
             ) : (
               <span />
@@ -81,7 +99,7 @@ export default async function JournalEntryPage({ params }: { params: Promise<{ s
           <div className="max-w-sm text-right">
             {next ? (
               <Link href={`/journal/${next.slug}`} className="hover:text-[var(--accent)]">
-                {next.title} {"->"}
+                {next.title} →
               </Link>
             ) : (
               <span />

@@ -1,6 +1,17 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { loadProjects, loadSiteCopy } from "@/lib/content";
+
+export const metadata: Metadata = {
+  title: "Journal — Wilson Chao",
+  description: "週報、日記、遊記，生活的痕跡。",
+  openGraph: {
+    title: "Journal — Wilson Chao",
+    description: "週報、日記、遊記，生活的痕跡。",
+    type: "website",
+  },
+};
 
 type SearchParams = {
   type?: string;

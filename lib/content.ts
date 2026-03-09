@@ -268,10 +268,10 @@ export async function loadMurmurEntries(limit = 3): Promise<MurmurEntry[]> {
     };
     const items = json.items ?? [];
 
-    // Dedup by title (keep first occurrence = newest)
+    // Dedup by URL or title (keep first occurrence = newest)
     const seen = new Set<string>();
     const deduped = items.filter((item) => {
-      const key = item.title?.trim();
+      const key = item.url || item.link || item.title?.trim();
       if (!key || seen.has(key)) return false;
       seen.add(key);
       return true;

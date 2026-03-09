@@ -1,6 +1,8 @@
 import { loadStreamEntries, loadSiteCopy } from "@/lib/content";
 import { StreamList } from "@/components/stream/StreamList";
 
+export const revalidate = 60;
+
 export const metadata = {
   title: "Stream — Wilson Chao",
   description: "日常的腦內碎片——想法、電影、音樂，都在這裡流過。",

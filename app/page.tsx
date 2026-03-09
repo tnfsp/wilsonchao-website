@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { loadBlogEntries, loadSiteCopy, loadProjects, loadMurmurEntries, loadStreamEntries } from "@/lib/content";
+import { loadBlogEntries, loadSiteCopy, loadProjects, loadMurmurEntries } from "@/lib/content";
 import { ViewStats } from "@/components/ui/ViewCounter";
 
 const BASE_URL = "https://wilsonchao.com";
@@ -131,7 +131,7 @@ export default async function Home() {
                     <span className="leading-relaxed">{item.description || item.title}</span>
                   </a>
                   {item.pubDate ? (
-                    <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] text-right">
+                    <p className="text-xs tracking-[0.18em] text-[var(--muted)] text-right">
                       {formatMurmurDate(item.pubDate)}
                     </p>
                   ) : null}
@@ -189,19 +189,6 @@ export default async function Home() {
               ) : null}
             </div>
           ))}
-        </div>
-      </section>
-
-      <section className="section-block">
-        <span className="section-title">About</span>
-        <div className="surface-card space-y-3 px-5 py-5">
-          <p className="text-base text-[var(--muted)] leading-relaxed">{siteCopy.aboutIntro}</p>
-          <Link
-            href="/about"
-            className="text-sm font-medium text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent-strong)]"
-          >
-            Read the full story →
-          </Link>
         </div>
       </section>
 
