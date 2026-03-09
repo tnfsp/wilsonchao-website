@@ -1,5 +1,5 @@
-import Link from "next/link";
 import { loadStreamEntries, loadSiteCopy } from "@/lib/content";
+import { StreamList } from "@/components/stream/StreamList";
 
 export const metadata = {
   title: "Stream — Wilson Chao",
@@ -8,22 +8,9 @@ export const metadata = {
 
 export default async function StreamPage() {
   const [entries, copy] = await Promise.all([
-    loadStreamEntries(20),
+    loadStreamEntries(50),
     loadSiteCopy(),
   ]);
-
-  const formatDate = (value?: string) => {
-    if (!value) return "";
-    const date = new Date(value);
-    if (Number.isNaN(date.getTime())) return "";
-    return date.toLocaleString("zh-TW", {
-      timeZone: "Asia/Taipei",
-      month: "2-digit",
-      day: "2-digit",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
-  };
 
   return (
     <main className="page-shell space-y-6">
@@ -33,41 +20,19 @@ export default async function StreamPage() {
         <p className="max-w-2xl text-base text-[var(--muted)]">{copy.murmurIntro}</p>
       </header>
 
-      <div className="space-y-3">
-        {entries.length > 0 ? (
-          entries.map((item) => (
-            <div
-              key={item.link || item.title}
-              className="space-y-1 rounded-md border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-3"
-            >
-              <a
-                href={item.link}
-                className="block text-sm text-[var(--foreground)] hover:text-[var(--accent)] break-words overflow-hidden"
-                target="_blank"
-                rel="noreferrer"
-              >
-                <span className="leading-relaxed">{item.description || item.title}</span>
-              </a>
-              {item.pubDate ? (
-                <p className="text-[10px] uppercase tracking-[0.18em] text-[var(--muted)] text-right">
-                  {formatDate(item.pubDate)}
-                </p>
-              ) : null}
-            </div>
-          ))
-        ) : (
-          <p className="text-sm text-[var(--muted)]">No entries yet.</p>
-        )}
-      </div>
+      <StreamList entries={entries} />
 
-      <div className="pt-2">
+      <div className="surface-card px-5 py-4 text-center space-y-2">
+        <p className="text-sm text-[var(--muted)]">
+          💬 即時版在 Telegram — 想第一時間看到？
+        </p>
         <a
-          href="https://murmur.wilsonchao.com"
+          href="https://t.me/doctormomo"
           className="inline-flex items-center text-sm font-medium text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent-strong)]"
           target="_blank"
-          rel="noreferrer"
+          rel="noopener noreferrer"
         >
-          Read full archive →
+          訂閱頻道 →
         </a>
       </div>
     </main>
