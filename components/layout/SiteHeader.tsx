@@ -6,13 +6,11 @@ import Link from "next/link";
 import { SearchBox } from "@/components/ui/SearchBox";
 
 const links = [
-  { href: "/", label: "Home" },
   { href: "/blog", label: "Blog" },
-  { href: "/murmur", label: "Murmur" },
-  { href: "/daily", label: "Daily" },
-  { href: "/clinic", label: "門診" },
+  { href: "/journal", label: "Journal" },
+  { href: "/stream", label: "Stream" },
+  { href: "/clinic", label: "Clinic" },
   { href: "/about", label: "About" },
-  { href: "/links", label: "Links" },
 ];
 
 export function SiteHeader() {
