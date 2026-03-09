@@ -328,7 +328,7 @@
     "contentHtml": "📚 精選摘要 <a href=\"?q=%23readwise\">#readwise</a><br/>那天是个晴天<br/>作者: ONO<br/>來源: <a href=\"https://onojyun.com/2026/02/06/%e9%82%a3%e5%a4%a9%e6%98%af%e4%b8%aa%e6%99%b4%e5%a4%a9/\" target=\"_blank\" rel=\"noopener\">https://onojyun.com/2026/02/06/%e9%82%a3%e5%a4%a9%e6%98%af%e4%b8%aa%e6%99%b4%e5%a4%a9/</a><br/><br/>我很喜欢用文字作为铅笔的方式来进行[素描](<a href=\"https://onojyun.com/2022/12/16/%e9%80%9f%e5%86%99/\" target=\"_blank\" rel=\"noopener\">https://onojyun.com/2022/12/16/%e9%80%9f%e5%86%99/</a>)<br/><br/>💡 Note: 蠻有趣的想法，一種磨練寫作能力的方式",
     "pubDate": "2026-02-08T17:37:15+00:00",
     "tags": [
-      "readwise"
+      "摘要"
     ],
     "link": "https://t.me/doctormomo/136",
     "linkPreview": "https://onojyun.com/2026/02/06/%e9%82%a3%e5%a4%a9%e6%98%af%e4%b8%aa%e6%99%b4%e5%a4%a9/",
@@ -483,7 +483,7 @@
     "contentHtml": "📚 精選摘要 <a href=\"?q=%23readwise\">#readwise</a><br/>要讓技術取代創作嗎？<br/>作者: leafwind<br/>來源: <a href=\"https://leafwind.substack.com/p/ai-anxiety\" target=\"_blank\" rel=\"noopener\">https://leafwind.substack.com/p/ai-anxiety</a><br/><br/>讓 AI 創作，頗有二十年前那個[讓機器人在 MMORPG 練功](<a href=\"https://leafwind.tw/2023/02/27/compete-grinding-with-ai/\" target=\"_blank\" rel=\"noopener\">https://leafwind.tw/2023/02/27/compete-grinding-with-ai/</a>)的樣子，我們的創作世界正在上演當年 MMORPG 的末路。<br/>它會讓更多真正有堅持的創作者離開這個是非之地，一方面不想要自己的創作被 AI 免費抄襲，一方面則是因為沒辦法跟量產的 AI 競爭，轉而躲到私人空間，或者付費牆後<br/><br/>💡 Note: 有趣的想法，如果寫作、創作也算是一種大型實境遊戲，那麼AI可以說是一種外掛，會破壞這些玩家（創作者）的遊戲體驗",
     "pubDate": "2026-01-17T09:08:31+00:00",
     "tags": [
-      "readwise"
+      "摘要"
     ],
     "link": "https://t.me/doctormomo/120",
     "linkPreview": "https://leafwind.substack.com/p/ai-anxiety",
@@ -497,11 +497,7 @@
     "text": "🛠️ 今日專案啟動：WealthCoach 財務教練AI 驅動的財務教練 CLI 工具，目標 10 年內從財富階梯 3 達到階梯 6✅ 完成內容：• 完成 PRD v0.1 與 TECHSTACK 設計• 撰寫 5 階段 IMPLEMENTATION-PLAN• 完成 Phase 1.1 專案初始化（TypeScript + Node.js）• 建立 CLI 框架與基礎型別定義🔗 https://github.com/tnfsp/wealth-coach#project #finance #cli",
     "contentHtml": "🛠️ 今日專案啟動：WealthCoach 財務教練<br/><br/>AI 驅動的財務教練 CLI 工具，目標 10 年內從財富階梯 3 達到階梯 6<br/><br/>✅ 完成內容：<br/>• 完成 PRD v0.1 與 TECHSTACK 設計<br/>• 撰寫 5 階段 IMPLEMENTATION-PLAN<br/>• 完成 Phase 1.1 專案初始化（TypeScript + Node.js）<br/>• 建立 CLI 框架與基礎型別定義<br/><br/>🔗 <a href=\"https://github.com/tnfsp/wealth-coach\" target=\"_blank\" rel=\"noopener\">https://github.com/tnfsp/wealth-coach</a><br/><br/><a href=\"?q=%23project\">#project</a> <a href=\"?q=%23finance\">#finance</a> <a href=\"?q=%23cli\">#cli</a>",
     "pubDate": "2026-01-16T11:37:09+00:00",
-    "tags": [
-      "project",
-      "finance",
-      "cli"
-    ],
+    "tags": [],
     "link": "https://t.me/doctormomo/118"
   },
   {
@@ -510,10 +506,7 @@
     "text": "🛠️ 今日專案完成：wilsonchao.com 網站功能擴充為個人網站新增搜尋、訂閱、留言、Analytics 等核心功能✅ 完成內容：• 搜尋系統（Pagefind + Ctrl+K）• 訂閱系統（Email 收集 + Resend 歡迎信）• 留言系統（自建 + Honeypot 防 spam）• Analytics（Vercel Analytics + Umami Cloud）• SEO 優化（sitemap、JSON-LD、OG tags）• 統計 API（按讚排行、流量趨勢分析）🔗 https://github.com/tnfsp/wilsonchao-website#project #website",
     "contentHtml": "🛠️ <a href=\"http://%E4%BB%8A%E6%97%A5%E5%B0%88%E6%A1%88%E5%AE%8C%E6%88%90%EF%BC%9Awilsonchao.com/\" target=\"_blank\" rel=\"noopener\">今日專案完成：wilsonchao.com</a> 網站功能擴充<br/><br/>為個人網站新增搜尋、訂閱、留言、Analytics 等核心功能<br/><br/>✅ 完成內容：<br/>• 搜尋系統（Pagefind + Ctrl+K）<br/>• 訂閱系統（Email 收集 + Resend 歡迎信）<br/>• 留言系統（自建 + Honeypot 防 spam）<br/>• Analytics（Vercel Analytics + Umami Cloud）<br/>• SEO 優化（sitemap、JSON-LD、OG tags）<br/>• 統計 API（按讚排行、流量趨勢分析）<br/><br/>🔗 <a href=\"https://github.com/tnfsp/wilsonchao-website\" target=\"_blank\" rel=\"noopener\">https://github.com/tnfsp/wilsonchao-website</a><br/><br/><a href=\"?q=%23project\">#project</a> <a href=\"?q=%23website\">#website</a>",
     "pubDate": "2026-01-16T03:08:22+00:00",
-    "tags": [
-      "project",
-      "website"
-    ],
+    "tags": [],
     "link": "https://t.me/doctormomo/117",
     "linkPreview": "https://github.com/tnfsp/wilsonchao-website",
     "images": [
@@ -526,10 +519,7 @@
     "text": "🛠️ 今日專案完成：優化開發工作流建立 Claude Code command 工具箱，將網路技巧轉化為專案優化建議✅ 完成內容：• /analyze - 貼上技巧文章，分析專案可優化處• /audit - 審查程式碼，產出問題報告• 測試並修復審查發現的問題• 部署到全域 skill，所有專案可用🔗 https://github.com/tnfsp/tool-optimize-dev-workflow#project #claudecode",
     "contentHtml": "🛠️ 今日專案完成：優化開發工作流<br/><br/>建立 Claude Code command 工具箱，將網路技巧轉化為專案優化建議<br/><br/>✅ 完成內容：<br/>• /analyze - 貼上技巧文章，分析專案可優化處<br/>• /audit - 審查程式碼，產出問題報告<br/>• 測試並修復審查發現的問題<br/>• 部署到全域 skill，所有專案可用<br/><br/>🔗 <a href=\"https://github.com/tnfsp/tool-optimize-dev-workflow\" target=\"_blank\" rel=\"noopener\">https://github.com/tnfsp/tool-optimize-dev-workflow</a><br/><br/><a href=\"?q=%23project\">#project</a> <a href=\"?q=%23claudecode\">#claudecode</a>",
     "pubDate": "2026-01-16T03:06:00+00:00",
-    "tags": [
-      "project",
-      "claudecode"
-    ],
+    "tags": [],
     "link": "https://t.me/doctormomo/116"
   },
   {
@@ -538,10 +528,7 @@
     "text": "🛠️ 今日專案完成：Coding 學習系統課綱擴充整合兩堂外部課程（Claude Code in Action + Stanford CS146S），將 Part 3「AI 協作技能」從 5 小節擴充為 12 小節。✅ 完成內容：• 分析並整合 Anthropic 官方 Claude Code in Action 課程• 分析並整合 Stanford CS146S: The Modern Software Developer 課程• 設計新的 3 模組結構（基礎協作 → Claude Code 實戰 → 代理架構）• 更新 curriculum.md、PRD.md、CLAUDE.md💡 核心理念：Human-Agent Engineering, not Vibe Coding#learning #claudecode",
     "contentHtml": "🛠️ 今日專案完成：Coding 學習系統課綱擴充<br/><br/>整合兩堂外部課程（Claude Code in Action + Stanford CS146S），將 Part 3「AI 協作技能」從 5 小節擴充為 12 小節。<br/><br/>✅ 完成內容：<br/>• 分析並整合 Anthropic 官方 Claude Code in Action 課程<br/>• 分析並整合 Stanford CS146S: The Modern Software Developer 課程<br/>• 設計新的 3 模組結構（基礎協作 → Claude Code 實戰 → 代理架構）<br/>• 更新 <a href=\"http://curriculum.md%E3%80%81PRD.md%E3%80%81CLAUDE.md/\" target=\"_blank\" rel=\"noopener\">curriculum.md、PRD.md、CLAUDE.md</a><br/><br/>💡 核心理念：Human-Agent Engineering, not Vibe Coding<br/><br/><a href=\"?q=%23learning\">#learning</a> <a href=\"?q=%23claudecode\">#claudecode</a>",
     "pubDate": "2026-01-15T16:59:41+00:00",
-    "tags": [
-      "learning",
-      "claudecode"
-    ],
+    "tags": [],
     "link": "https://t.me/doctormomo/114"
   },
   {
@@ -550,11 +537,7 @@
     "text": "🛠️ 今日專案完成：截圖知識擷取工作流將 iPhone 截圖自動轉化為 Heptabase 知識卡片的工作流✅ 完成內容：• 建立完整工作流文件（PRD、TECHSTACK、IMPLEMENTATION-PLAN）• 實作 /整理截圖 subagent，整合 Claude Vision + Heptabase MCP• 設定 iCloud 同步 + processed.json 追蹤機制• 建立全域 Skill /screenshot-to-knowledge 供跨專案使用• 處理 5 張截圖，生成 4 張知識卡片🔗 github.com/tnfsp/screenshot-to-knowledge#project #claude-code #heptabase",
     "contentHtml": "🛠️ 今日專案完成：截圖知識擷取工作流<br/><br/>將 iPhone 截圖自動轉化為 Heptabase 知識卡片的工作流<br/><br/>✅ 完成內容：<br/>• 建立完整工作流文件（PRD、TECHSTACK、IMPLEMENTATION-PLAN）<br/>• 實作 /整理截圖 subagent，整合 Claude Vision + Heptabase MCP<br/>• 設定 iCloud 同步 + processed.json 追蹤機制<br/>• 建立全域 Skill /screenshot-to-knowledge 供跨專案使用<br/>• 處理 5 張截圖，生成 4 張知識卡片<br/><br/>🔗 <a href=\"http://github.com/tnfsp/screenshot-to-knowledge\" target=\"_blank\" rel=\"noopener\">github.com/tnfsp/screenshot-to-knowledge</a><br/><br/><a href=\"?q=%23project\">#project</a> <a href=\"?q=%23claude\">#claude</a>-code <a href=\"?q=%23heptabase\">#heptabase</a>",
     "pubDate": "2026-01-15T14:20:50+00:00",
-    "tags": [
-      "project",
-      "claude",
-      "heptabase"
-    ],
+    "tags": [],
     "link": "https://t.me/doctormomo/113"
   },
   {
@@ -563,11 +546,7 @@
     "text": "🛠️ 今日專案完成：Transeptal CentriMag LVAD 論文完成 Technical Note 完整初稿，準備投稿 JTCVS Techniques✅ 完成內容：• 撰寫完整 manuscript（~2,400 words）• 建立 Figure Plan（3 figures + 1 video）• 確認投稿規範並產出 HTML 稿件• 整理文獻引用（9 references）📊 投稿策略：影片優先（期刊重視 multimedia）🔗 https://github.com/tnfsp-research/research-technical-transeptal-lvad-centrimag#research #manuscript #cardiac_surgery",
     "contentHtml": "🛠️ 今日專案完成：Transeptal CentriMag LVAD 論文<br/><br/>完成 Technical Note 完整初稿，準備投稿 JTCVS Techniques<br/><br/>✅ 完成內容：<br/>• 撰寫完整 manuscript（~2,400 words）<br/>• 建立 Figure Plan（3 figures + 1 video）<br/>• 確認投稿規範並產出 HTML 稿件<br/>• 整理文獻引用（9 references）<br/><br/>📊 投稿策略：影片優先（期刊重視 multimedia）<br/><br/>🔗 <a href=\"https://github.com/tnfsp-research/research-technical-transeptal-lvad-centrimag\" target=\"_blank\" rel=\"noopener\">https://github.com/tnfsp-research/research-technical-transeptal-lvad-centrimag</a><br/><br/><a href=\"?q=%23research\">#research</a> <a href=\"?q=%23manuscript\">#manuscript</a> <a href=\"?q=%23cardiac_surgery\">#cardiac_surgery</a>",
     "pubDate": "2026-01-15T14:12:26+00:00",
-    "tags": [
-      "research",
-      "manuscript",
-      "cardiac_surgery"
-    ],
+    "tags": [],
     "link": "https://t.me/doctormomo/112"
   },
   {
@@ -587,10 +566,7 @@
     "text": "🛠️ 今日專案進度：Nous完成 /style 寫作風格系統，讓 AI 寫作更像自己✅ 完成內容：• /style 風格系統：分析 44 篇 Journal + 2 篇 Article 建立個人風格• AI NG 用語黑名單：避免「此外」「總而言之」等 AI 感用語• 整合到 /write 和 /weekly-report• 確認開發方向：PRD v0.4🔗 https://github.com/tnfsp/nous-digital-twin#project #nous",
     "contentHtml": "🛠️ 今日專案進度：Nous<br/><br/>完成 /style 寫作風格系統，讓 AI 寫作更像自己<br/><br/>✅ 完成內容：<br/>• /style 風格系統：分析 44 篇 Journal + 2 篇 Article 建立個人風格<br/>• AI NG 用語黑名單：避免「此外」「總而言之」等 AI 感用語<br/>• 整合到 /write 和 /weekly-report<br/>• 確認開發方向：PRD v0.4<br/><br/>🔗 <a href=\"https://github.com/tnfsp/nous-digital-twin\" target=\"_blank\" rel=\"noopener\">https://github.com/tnfsp/nous-digital-twin</a><br/><br/><a href=\"?q=%23project\">#project</a> <a href=\"?q=%23nous\">#nous</a>",
     "pubDate": "2026-01-14T15:55:15+00:00",
-    "tags": [
-      "project",
-      "nous"
-    ],
+    "tags": [],
     "link": "https://t.me/doctormomo/110"
   },
   {
@@ -599,9 +575,7 @@
     "text": "🛠️ 今日專案完成：Coding 學習教師AI 時代的程式學習系統，用逆向教學法填補 Vibe Coder 的知識空白✅ 完成內容：• 確立「逆向學習法」核心概念• 建立完整課綱（5 Parts，20+ 主題）• 設計 Mentor 系統與進度追蹤• 整合 Anki + Heptabase• 建立 Slash Commands#project",
     "contentHtml": "🛠️ 今日專案完成：Coding 學習教師<br/><br/>AI 時代的程式學習系統，用逆向教學法填補 Vibe Coder 的知識空白<br/><br/>✅ 完成內容：<br/>• 確立「逆向學習法」核心概念<br/>• 建立完整課綱（5 Parts，20+ 主題）<br/>• 設計 Mentor 系統與進度追蹤<br/>• 整合 Anki + Heptabase<br/>• 建立 Slash Commands<br/><br/><a href=\"?q=%23project\">#project</a>",
     "pubDate": "2026-01-14T09:27:54+00:00",
-    "tags": [
-      "project"
-    ],
+    "tags": [],
     "link": "https://t.me/doctormomo/109"
   },
   {
@@ -650,9 +624,7 @@
     "text": "🛠️ 今日專案完成：Nous完成 /principles 原則系統功能 + Git 初始化✅ 完成內容：• /principles 功能（check/report/update/browse）• 原則月報生成 — 健康度 58%• GreatLife 系統重建（91 條原則）• Git 首次 commit（53 files）• Phase 1 進度 85%📊 專案狀態：• Skills: 7 個已完成• 剩餘：Telegram Bot 更新#project",
     "contentHtml": "🛠️ 今日專案完成：Nous<br/><br/>完成 /principles 原則系統功能 + Git 初始化<br/><br/>✅ 完成內容：<br/>• /principles 功能（check/report/update/browse）<br/>• 原則月報生成 — 健康度 58%<br/>• GreatLife 系統重建（91 條原則）<br/>• Git 首次 commit（53 files）<br/>• Phase 1 進度 85%<br/><br/>📊 專案狀態：<br/>• Skills: 7 個已完成<br/>• 剩餘：Telegram Bot 更新<br/><br/><a href=\"?q=%23project\">#project</a>",
     "pubDate": "2026-01-13T16:07:35+00:00",
-    "tags": [
-      "project"
-    ],
+    "tags": [],
     "link": "https://t.me/doctormomo/103"
   },
   {
@@ -661,9 +633,7 @@
     "text": "🛠️ 今日專案完成：Claude Code Template Collection整理個人 Claude Code 專案模板，統一命名和結構。✅ 完成內容：• 重新命名所有 template 為 kebab-case 格式• 統一內部結構（logs, docs, settings）• 加入 Security Guidelines• 新增 LICENSE + CONTRIBUTING.md• 建立 .env.example• 加入 /daily-summary skill#project",
     "contentHtml": "🛠️ 今日專案完成：Claude Code Template Collection<br/><br/>整理個人 Claude Code 專案模板，統一命名和結構。<br/><br/>✅ 完成內容：<br/>• 重新命名所有 template 為 kebab-case 格式<br/>• 統一內部結構（logs, docs, settings）<br/>• 加入 Security Guidelines<br/>• 新增 LICENSE + <a href=\"http://CONTRIBUTING.md/\" target=\"_blank\" rel=\"noopener\">CONTRIBUTING.md</a><br/>• 建立 .env.example<br/>• 加入 /daily-summary skill<br/><br/><a href=\"?q=%23project\">#project</a>",
     "pubDate": "2026-01-13T16:01:11+00:00",
-    "tags": [
-      "project"
-    ],
+    "tags": [],
     "link": "https://t.me/doctormomo/101"
   },
   {
@@ -672,9 +642,7 @@
     "text": "🛠️ 今日專案完成：ClaudeSetup一鍵部署 Claude Code 與 Windows Terminal 設定的同步工具✅ 完成內容：• PowerShell 安裝/匯出腳本• Git 版本控制設定檔• /update subagent 更新設定🔗 https://github.com/tnfsp/ClaudeSetup#project",
     "contentHtml": "🛠️ 今日專案完成：ClaudeSetup<br/><br/>一鍵部署 Claude Code 與 Windows Terminal 設定的同步工具<br/><br/>✅ 完成內容：<br/>• PowerShell 安裝/匯出腳本<br/>• Git 版本控制設定檔<br/>• /update subagent 更新設定<br/><br/>🔗 <a href=\"https://github.com/tnfsp/ClaudeSetup\" target=\"_blank\" rel=\"noopener\">https://github.com/tnfsp/ClaudeSetup</a><br/><br/><a href=\"?q=%23project\">#project</a>",
     "pubDate": "2026-01-13T15:33:29+00:00",
-    "tags": [
-      "project"
-    ],
+    "tags": [],
     "link": "https://t.me/doctormomo/100",
     "linkPreview": "https://github.com/tnfsp/ClaudeSetup",
     "images": [
@@ -719,7 +687,7 @@
     "contentHtml": "📚 精選摘要 <a href=\"?q=%23readwise\">#readwise</a><br/>Doomprompting Is the New Doomscrolling.<br/>作者: Anu<br/>來源: <a href=\"https://www.workingtheorys.com/p/doomprompting\" target=\"_blank\" rel=\"noopener\">https://www.workingtheorys.com/p/doomprompting</a><br/><br/>其一將認知視為商品，追求無摩擦消費的極致優化；其二則守護著那方空白盒子的獨特本質：當人類的好奇心遭遇極限時，那份奮力突破的掙扎，正是其珍貴之處。<br/><br/>💡 Note: 這篇文章的論點也很有趣，我們的行為在AI世代來臨時，從&quot;Doomscrolling&quot; 轉為 &quot;Doomprompting&quot; <br/><br/>意思是，原本無窮無盡的滑短影音的行為，會轉移到無窮無盡的跟chatGPT聊天<br/><br/>雖然表面上看起來，我們不是被動的一直接受多巴胺的刺激，而是似乎要主動提出問題，但這也會衍生新的問題<br/><br/>你提出的問題，究竟是為了方便而希望馬上得到答案，取代你的學習，還是為了真正&quot;學習&quot;本身呢？<a class=\"tgme_widget_message_link_preview\" href=\"https://www.workingtheorys.com/p/doomprompting\">\n  \n  <div class=\"link_preview_site_name accent_color\" dir=\"auto\">Workingtheorys</div>\n  <i class=\"link_preview_image\" style=\"background-image:url('https://cdn4.telesco.pe/file/pFkDBgbl67vJ1PxK3NpPLj68DYKBsewwVKG8oDU-SdC1w60SuNlEELWmilEml2FcdfhhJpRvjctC_G0YN-0UNkWHOxootAr0V_rNuFDjp09ZDCyTJMcQJzW9QfXxS8rAzB--4vxk0xFe7241rW5vOh6hHBhQf9Tpb6GYRAVO-4yQn4aXsfrsTFm9oQT0mcBdd4gbwuaEUHQAr19E1hGVqro_-VsmBbeimMsP-aSZKRmMdBDUd3MjMB7dAEjCgvGJ6qgnHlD-Yobb5_M2ADZYJ0y1FRO3lyslnk5xgfPlk1iPheGCxAMqyxZflUkYvswFCJPrEXWjDA7skffU764xnw.jpg');padding-top:50%\"></i>\n  <div class=\"link_preview_title\" dir=\"auto\">Doomprompting Is the New Doomscrolling.</div>\n  <div class=\"link_preview_description\" dir=\"auto\">The new slot machines of thought — AI’s infinite scroll and the quiet outsourcing of our intention.</div>\n</a>",
     "pubDate": "2026-01-11T15:08:18+00:00",
     "tags": [
-      "readwise"
+      "摘要"
     ],
     "link": "https://t.me/doctormomo/95",
     "linkPreview": "https://www.workingtheorys.com/p/doomprompting",
@@ -734,7 +702,7 @@
     "contentHtml": "📚 精選摘要 <a href=\"?q=%23readwise\">#readwise</a><br/>The Self Is the Platform<br/>作者: Working Theorys<br/>來源: <a href=\"https://www.workingtheorys.com/p/the-self\" target=\"_blank\" rel=\"noopener\">https://www.workingtheorys.com/p/the-self</a><br/><br/>我們每個人都成為「個人平台」：一個核心節點，周圍環繞著增強與擴展的生態系統，使我們在工作、娛樂與自我優化領域中，能夠學習、建構與實踐的事物倍增。自我即是平台。<br/><br/>💡 Note: 好文推推：這段文字揭示了一個深層的時代轉換：科技不再主要透過「組織更多人」來放大力量，而是讓「單一個體」本身成為可無限擴張的系統。<br/><br/>AI 將槓桿從社會協調轉移到個人能力，打破了過去「規模必須靠群體」的假設。<br/><br/>個人不再只是網路中的節點，而是自成平台，能在私密空間中完成原本需要團隊才能做到的事。<br/><br/>於是，公共平台仍在，但真正的能量生成，先發生在一對一的人與 AI 之間。",
     "pubDate": "2026-01-11T15:08:17+00:00",
     "tags": [
-      "readwise"
+      "摘要"
     ],
     "link": "https://t.me/doctormomo/94",
     "linkPreview": "https://www.workingtheorys.com/p/the-self",
@@ -1002,7 +970,7 @@
     "contentHtml": "📚 精選摘要 <a href=\"?q=%23readwise\">#readwise</a><br/>在 Ai 時代，為什麼「卡片盒筆記法」的重要性更甚以往？<br/>作者: 瓦基<br/>來源: <a href=\"https://readingoutpost.com/why-zettelkasten-matters-in-the-ai-age/\" target=\"_blank\" rel=\"noopener\">https://readingoutpost.com/why-zettelkasten-matters-in-the-ai-age/</a><br/><br/>我們把一個知識點從別人的書裡剪下來（舊脈絡），然後接枝到我們自己的生命樹上（新脈絡）。<br/><br/>Note: 卡片盒筆記法的精隨：在別人寫的文章中，看到自己，把舊脈絡的文字加入自己的詮釋",
     "pubDate": "2025-12-10T11:16:50+00:00",
     "tags": [
-      "readwise"
+      "摘要"
     ],
     "link": "https://t.me/doctormomo/70",
     "linkPreview": "https://readingoutpost.com/why-zettelkasten-matters-in-the-ai-age/",
@@ -1017,7 +985,7 @@
     "contentHtml": "📚 精選摘要 <a href=\"?q=%23readwise\">#readwise</a><br/>在 Ai 時代，為什麼「卡片盒筆記法」的重要性更甚以往？<br/>作者: 瓦基<br/>來源: <a href=\"https://readingoutpost.com/why-zettelkasten-matters-in-the-ai-age/\" target=\"_blank\" rel=\"noopener\">https://readingoutpost.com/why-zettelkasten-matters-in-the-ai-age/</a><br/><br/>學習，是為了替那些『你尚未被想過的東西』預留空間。<br/><br/>Note: 讀書有趣的地方是，看到那些你未曾想過的事物！",
     "pubDate": "2025-12-10T11:16:50+00:00",
     "tags": [
-      "readwise"
+      "摘要"
     ],
     "link": "https://t.me/doctormomo/71",
     "linkPreview": "https://readingoutpost.com/why-zettelkasten-matters-in-the-ai-age/",
@@ -1073,7 +1041,7 @@
     "contentHtml": "U0001F4DA 精選摘要 <a href=\"?q=%23readwise\">#readwise</a><br/>关于我和这个博客<br/>作者: Owen Young<br/>來源: <a href=\"https://www.owenyoung.com/about/\" target=\"_blank\" rel=\"noopener\">https://www.owenyoung.com/about/</a><br/><br/>追求注意力自由而不是财富自由。<br/><br/>Note: 目前這個世界建立在「工作」上，有時我也會對閒暇時間感到焦慮，但是這篇文章提醒了我：金錢只是用來換取閒暇的其中一個手段<br/><br/>試著讓需求極簡取代收入最大化，可以用較少的資本換到更長的可支配時間，有更多時間，就有機會可以做自己真正喜歡的事情",
     "pubDate": "2025-12-09T12:02:22+00:00",
     "tags": [
-      "readwise"
+      "摘要"
     ],
     "link": "https://t.me/doctormomo/50",
     "linkPreview": "https://www.owenyoung.com/about/"
@@ -1096,7 +1064,7 @@
     "contentHtml": "📚 精選摘錄 <a href=\"?q=%23readwise\">#readwise</a><br/>【摘錄】<br/>```<br/>「人類把自己訓練成了機器人，所以才輸給了真正的機器人。」<br/>```<br/>💡 Note: 有趣的觀點，跟我長期以來在思考的事情相呼應：人類追求標準答案跟效率，所以在明確有明確與勝負的領域一定贏不了AI<br/><br/>因此，人類之後必將從「有限遊戲」轉為「無限遊戲」，意外與情感無法被取代<br/>🔗 來源：未提供",
     "pubDate": "2025-12-08T12:20:51+00:00",
     "tags": [
-      "readwise"
+      "摘要"
     ],
     "link": "https://t.me/doctormomo/48"
   },
@@ -1143,9 +1111,7 @@
     "text": "Telegram更新：已經串接youtube跟readwise！之後有好看影片、音樂，我讀書做的筆記，都會同步推播！#telegram",
     "contentHtml": "Telegram更新：已經串接youtube跟readwise！<br/><br/>之後有好看影片、音樂，我讀書做的筆記，都會同步推播！<br/><br/><a href=\"?q=%23telegram\">#telegram</a>",
     "pubDate": "2025-12-07T06:15:00+00:00",
-    "tags": [
-      "telegram"
-    ],
+    "tags": [],
     "link": "https://t.me/doctormomo/35"
   },
   {
@@ -1180,9 +1146,7 @@
     "text": "最近聽到的一個說法：過去兩三百年，教育試圖讓人類追求完美，寫作、繪畫、創作亦是  但人工智慧的出現，讓每個人都可以簡單擁有完美、文法毫無錯誤的文字，然後是繪圖、再來是影片  下個一百年，人類該追求什麼呢？  #thought\n\n註：後來覺得「完美」好像有點不夠精準，「正確無誤」比較符合想法才對",
     "contentHtml": "最近聽到的一個說法：過去兩三百年，教育試圖讓人類追求完美，寫作、繪畫、創作亦是  但人工智慧的出現，讓每個人都可以簡單擁有完美、文法毫無錯誤的文字，然後是繪圖、再來是影片  下個一百年，人類該追求什麼呢？  #thought<br/><br/>註：後來覺得「完美」好像有點不夠精準，「正確無誤」比較符合想法才對",
     "pubDate": "2025-12-05T16:53:55+00:00",
-    "tags": [
-      "thought"
-    ],
+    "tags": [],
     "link": "https://t.me/doctormomo/20"
   },
   {
@@ -1191,9 +1155,7 @@
     "text": "最近聽到的一個說法：過去兩三百年，教育試圖讓人類追求完美，寫作、繪畫、創作亦是但人工智慧的出現，讓每個人都可以簡單擁有完美、文法毫無錯誤的文字，然後是繪圖、再來是影片下個一百年，人類該追求什麼呢？#thought",
     "contentHtml": "最近聽到的一個說法：過去兩三百年，教育試圖讓人類追求完美，寫作、繪畫、創作亦是<br/><br/>但人工智慧的出現，讓每個人都可以簡單擁有完美、文法毫無錯誤的文字，然後是繪圖、再來是影片<br/><br/>下個一百年，人類該追求什麼呢？<br/><br/><a href=\"?q=%23thought\">#thought</a>",
     "pubDate": "2025-12-05T16:38:33+00:00",
-    "tags": [
-      "thought"
-    ],
+    "tags": [],
     "link": "https://t.me/doctormomo/19"
   },
   {

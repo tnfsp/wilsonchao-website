@@ -17,6 +17,7 @@ const TAG_CONFIG: Record<string, { emoji: string; label: string }> = {
   blog: { emoji: "📰", label: "文章" },
   video: { emoji: "▶️", label: "影片" },
   music: { emoji: "🎵", label: "音樂" },
+  "摘要": { emoji: "📚", label: "摘要" },
 };
 
 const PAGE_SIZE = 10;
