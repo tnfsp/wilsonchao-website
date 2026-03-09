@@ -164,7 +164,9 @@ def run():
     now["_archive"] = archive
     now["lastUpdated"] = datetime.now(timezone.utc).isoformat()
 
-    NOW_PATH.write_text(json.dumps(now, indent=2, ensure_ascii=False) + "\n")
+    tmp = NOW_PATH.with_suffix(".tmp")
+    tmp.write_text(json.dumps(now, indent=2, ensure_ascii=False) + "\n")
+    tmp.rename(NOW_PATH)  # atomic on POSIX
 
     counts = {k: len(v) for k, v in categorized.items()}
     print(f"[now-sync] Updated: {counts}")
