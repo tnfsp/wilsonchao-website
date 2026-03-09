@@ -91,6 +91,7 @@ export const aboutPreview =
 
 export const linkItems = [
   { label: "👤 About｜認識我", href: "/about" },
+  { label: "⏳ Now｜我現在在忙什麼", href: "/now" },
   { label: "🏠 Website｜個人網站", href: "/" },
   { label: "📓 Stream｜腦內記事", href: "/stream" },
   { label: "📸 Instagram｜追蹤生活更新", href: "https://www.instagram.com/momobear_doctor", external: true },

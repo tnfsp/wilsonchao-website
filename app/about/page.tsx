@@ -96,6 +96,15 @@ export default async function AboutPage() {
         />
       </div>
 
+      <div className="pt-4">
+        <Link
+          href="/now"
+          className="inline-flex items-center gap-1 text-[var(--foreground)] font-medium underline decoration-[var(--border)] underline-offset-4 transition-colors hover:text-[var(--accent)]"
+        >
+          → 看我現在在忙什麼
+        </Link>
+      </div>
+
       <section className="space-y-3 pt-6 border-t border-[var(--border)]">
         <h2 className="text-xl font-semibold inline-block bg-[var(--highlight)] px-2 py-0.5 rounded text-[var(--foreground)]">找到我</h2>
         <div className="flex flex-col gap-3 max-w-md">
