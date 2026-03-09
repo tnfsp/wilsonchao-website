@@ -49,7 +49,7 @@ export default async function JournalEntryPage({ params }: { params: Promise<{ s
     headline: entry.title,
     description: entry.excerpt || entry.description || "",
     image: entry.image || `${BASE_URL}/avatar.png`,
-    datePublished: entry.date,
+    datePublished: entry.date || undefined,
     author: {
       "@type": "Person",
       name: "趙玴祥",
