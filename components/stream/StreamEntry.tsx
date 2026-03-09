@@ -44,8 +44,8 @@ function extractLinkPreview(html: string): {
     /class="[^"]*link_preview_site_name[^"]*"[^>]*>([\s\S]*?)<\//i
   );
   const imgMatch = inner.match(
-    /style="[^"]*background-image:\s*url\('([^']+)'\)/i
-  ) || inner.match(/<img[^>]*src="([^"]+)"/i);
+    /style="[^"]*background-image:\s*url\('(https?:\/\/[^']+)'\)/i
+  ) || inner.match(/<img[^>]*src="(https?:\/\/[^"]+)"/i);
 
   return {
     href,
@@ -196,9 +196,11 @@ export function StreamEntry({ title, link, contentHtml, description, pubDate, ta
           className="block rounded-md border border-[var(--border)] overflow-hidden hover:border-[var(--accent)] transition-colors"
         >
           {linkPreview.image ? (
-            <div
-              className="h-32 w-full bg-cover bg-center"
-              style={{ backgroundImage: `url(${linkPreview.image})` }}
+            <img
+              src={linkPreview.image}
+              alt={linkPreview.title || ""}
+              className="h-32 w-full object-cover"
+              loading="lazy"
             />
           ) : null}
           <div className="px-3 py-2 space-y-0.5">
