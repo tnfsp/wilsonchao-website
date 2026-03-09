@@ -7,7 +7,7 @@ export async function GET() {
   const projects = await loadProjects();
   const items = projects.flatMap((project) => {
     const link = project.slug
-      ? `${SITE_URL}/daily/${project.slug}`
+      ? `${SITE_URL}/journal/${project.slug}`
       : project.href && project.href.startsWith("http")
         ? project.href
         : undefined;
@@ -24,9 +24,9 @@ export async function GET() {
   });
 
   return buildRssResponse({
-    title: "wilsonchao.com daily",
-    siteUrl: `${SITE_URL}/daily`,
-    description: "Daily notes and cases",
+    title: "wilsonchao.com journal",
+    siteUrl: `${SITE_URL}/journal`,
+    description: "Journal — weekly reports, notes, and life entries",
     items,
   });
 }

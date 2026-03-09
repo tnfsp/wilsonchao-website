@@ -1,13 +1,24 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { loadProjects, loadSiteCopy } from "@/lib/content";
+
+export const metadata: Metadata = {
+  title: "Journal — Wilson Chao",
+  description: "週報、日記、遊記，生活的痕跡。",
+  openGraph: {
+    title: "Journal — Wilson Chao",
+    description: "週報、日記、遊記，生活的痕跡。",
+    type: "website",
+  },
+};
 
 type SearchParams = {
   type?: string;
   page?: string;
 };
 
-export default async function DailyPage({
+export default async function JournalPage({
   searchParams,
 }: {
   searchParams: Promise<SearchParams>;
@@ -33,12 +44,12 @@ export default async function DailyPage({
     if (typeParam) params.set("type", typeParam);
     if (page > 1) params.set("page", String(page));
     const qs = params.toString();
-    return qs ? `/daily?${qs}` : "/daily";
+    return qs ? `/journal?${qs}` : "/journal";
   };
   return (
     <main className="page-shell space-y-6">
       <header className="space-y-2">
-        <span className="section-title">Daily</span>
+        <span className="section-title">Journal</span>
         <h1 className="text-3xl font-semibold text-[var(--foreground)]">{copy.projectsTitle}</h1>
         <p className="max-w-2xl text-base text-[var(--muted)]">{copy.projectsIntro}</p>
       </header>
@@ -46,7 +57,7 @@ export default async function DailyPage({
       {availableTypes.length > 0 ? (
         <div className="flex flex-wrap gap-2 text-sm text-[var(--muted)]">
           <Link
-            href="/daily"
+            href="/journal"
             className={`rounded-full border px-3 py-1 transition-colors ${
               !typeParam
                 ? "border-[var(--accent-strong)] bg-[var(--highlight)]/60 text-[var(--foreground)]"
@@ -58,7 +69,7 @@ export default async function DailyPage({
           {availableTypes.map((type) => (
             <Link
               key={type}
-              href={`/daily?type=${encodeURIComponent(type ?? "")}`}
+              href={`/journal?type=${encodeURIComponent(type ?? "")}`}
               className={`rounded-full border px-3 py-1 transition-colors ${
                 typeParam === type
                   ? "border-[var(--accent-strong)] bg-[var(--highlight)]/60 text-[var(--foreground)]"
@@ -92,13 +103,13 @@ export default async function DailyPage({
               </div>
             ) : null}
             <div className="flex items-center justify-between text-xs uppercase tracking-[0.16em] text-[var(--muted)]">
-              <span>{project.type || "Daily"}</span>
+              <span>{project.type || "Journal"}</span>
               <span>{project.date || ""}</span>
             </div>
             <h2 className="text-xl font-semibold text-[var(--foreground)]">
               {project.slug
                 ? (
-                  <Link href={`/daily/${project.slug}`} className="hover:text-[var(--accent)]">
+                  <Link href={`/journal/${project.slug}`} className="hover:text-[var(--accent)]">
                     {project.title}
                   </Link>
                   )
@@ -126,10 +137,10 @@ export default async function DailyPage({
               currentPage === 1 ? "pointer-events-none opacity-50" : ""
             }`}
           >
-            上一頁
+            Older
           </Link>
           <span>
-            第 {currentPage} / {totalPages} 頁
+            Page {currentPage} of {totalPages}
           </span>
           <Link
             href={buildHref(Math.min(totalPages, currentPage + 1))}
@@ -138,7 +149,7 @@ export default async function DailyPage({
               currentPage === totalPages ? "pointer-events-none opacity-50" : ""
             }`}
           >
-            下一頁
+            Newer
           </Link>
         </div>
       ) : null}

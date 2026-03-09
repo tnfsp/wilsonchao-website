@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import Image from "next/image";
 import Link from "next/link";
 import { notFound } from "next/navigation";
@@ -5,7 +6,24 @@ import { getProject, loadProjects } from "@/lib/content";
 import { ViewCounter } from "@/components/ui/ViewCounter";
 import { LikeButton } from "@/components/ui/LikeButton";
 
-export default async function DailyEntryPage({ params }: { params: Promise<{ slug: string }> }) {
+export async function generateMetadata({ params }: { params: Promise<{ slug: string }> }): Promise<Metadata> {
+  const { slug } = await params;
+  const entry = await getProject(slug);
+  if (!entry) return {};
+  return {
+    title: `${entry.title} — Wilson Chao`,
+    description: entry.excerpt || entry.description || "",
+    openGraph: {
+      title: entry.title,
+      description: entry.excerpt || entry.description || "",
+      type: "article",
+      publishedTime: entry.date,
+      images: entry.image ? [{ url: entry.image }] : [],
+    },
+  };
+}
+
+export default async function JournalEntryPage({ params }: { params: Promise<{ slug: string }> }) {
   const { slug } = await params;
   const entry = await getProject(slug);
   if (!entry) notFound();
@@ -23,15 +41,15 @@ export default async function DailyEntryPage({ params }: { params: Promise<{ slu
   return (
     <main className="page-shell space-y-6">
       <Link
-        href="/daily"
+        href="/journal"
         className="text-sm font-medium text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-8 hover:text-[var(--accent)]"
       >
-        Back to daily
+        Back to journal
       </Link>
 
       <article className="surface-card space-y-3 px-6 py-5">
         <p className="text-sm uppercase tracking-[0.2em] text-[var(--muted)]">
-          {entry.type || "Daily"}
+          {entry.type || "Journal"}
         </p>
         <h1 className="text-3xl font-semibold leading-tight text-[var(--foreground)]">{entry.title}</h1>
         <p className="text-sm text-[var(--muted)]">{entry.date}</p>
@@ -71,8 +89,8 @@ export default async function DailyEntryPage({ params }: { params: Promise<{ slu
         <div className="flex justify-between border-t border-[var(--border)] pt-4 text-sm text-[var(--muted)]">
           <div className="max-w-sm">
             {prev ? (
-              <Link href={`/daily/${prev.slug}`} className="hover:text-[var(--accent)]">
-                {"<-"} {prev.title}
+              <Link href={`/journal/${prev.slug}`} className="hover:text-[var(--accent)]">
+                ← {prev.title}
               </Link>
             ) : (
               <span />
@@ -80,8 +98,8 @@ export default async function DailyEntryPage({ params }: { params: Promise<{ slu
           </div>
           <div className="max-w-sm text-right">
             {next ? (
-              <Link href={`/daily/${next.slug}`} className="hover:text-[var(--accent)]">
-                {next.title} {"->"}
+              <Link href={`/journal/${next.slug}`} className="hover:text-[var(--accent)]">
+                {next.title} →
               </Link>
             ) : (
               <span />

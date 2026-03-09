@@ -50,6 +50,8 @@ export type MurmurEntry = {
   link: string;
   description?: string;
   pubDate?: string;
+  tags?: string[];
+  contentHtml?: string;
 };
 
 async function safeReadJSON<T>(filePath: string): Promise<T | null> {
@@ -70,8 +72,8 @@ export async function loadSiteCopy(): Promise<SiteCopy> {
     heroIntro: file?.HomepageIntro || defaultSiteCopy.heroIntro,
     heroCTA: file?.HomepageCTA || defaultSiteCopy.heroCTA,
     footerText: file?.FooterText || defaultSiteCopy.footerText,
-    murmurIntro: file?.HomepageMurmurIntro || defaultSiteCopy.murmurIntro,
-    murmurCTA: file?.HomepageMurmurCTA || defaultSiteCopy.murmurCTA,
+    murmurIntro: file?.HomepageStreamIntro || file?.HomepageMurmurIntro || defaultSiteCopy.murmurIntro,
+    murmurCTA: file?.HomepageStreamCTA || file?.HomepageMurmurCTA || defaultSiteCopy.murmurCTA,
     aboutName: file?.AboutName || defaultSiteCopy.aboutName,
     aboutIntro: file?.AboutPageIntro || defaultSiteCopy.aboutIntro,
     aboutBody: file?.AboutPageBody || defaultSiteCopy.aboutBody,
@@ -233,35 +235,30 @@ const ENABLE_MURMUR_FEED = true;
 const DEFAULT_MURMUR_FEED =
   process.env.MURMUR_FEED_URL || "https://murmur.wilsonchao.com/rss.json";
 
+export async function loadStreamEntries(limit = 50): Promise<MurmurEntry[]> {
+  return loadMurmurEntries(limit);
+}
+
 export async function loadMurmurEntries(limit = 3): Promise<MurmurEntry[]> {
   if (!ENABLE_MURMUR_FEED) return [];
   const stripHtml = (value?: string) => {
     if (!value) return "";
     return value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
   };
-  const cleanMurmurHtml = (value?: string) => {
-    if (!value) return "";
-    // Drop Telegram's link preview blocks and media tags to avoid pulling video previews.
-    const withoutPreview = value.replace(
-      /<a[^>]*class="[^"]*tgme_widget_message_link_preview[^"]*"[^>]*>[\s\S]*?<\/a>/gim,
-      ""
-    );
-    return withoutPreview
-      .replace(/<video[\s\S]*?<\/video>/gim, "")
-      .replace(/<figure[^>]*>[\s\S]*?<\/figure>/gim, "");
-  };
   try {
     const res = await fetch(DEFAULT_MURMUR_FEED, {
-      // murmur feed already has caching headers; respect revalidate to avoid hammering
-      next: { revalidate: 300 },
+      next: { revalidate: 60 },
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const json = (await res.json()) as {
       items?: {
         title: string;
-        link: string;
+        url?: string;
+        link?: string;
         description?: string;
         content_text?: string;
+        content_html?: string;
+        tags?: string[];
         pubDate?: string;
         pub_date?: string;
         date_published?: string;
@@ -270,18 +267,26 @@ export async function loadMurmurEntries(limit = 3): Promise<MurmurEntry[]> {
       }[];
     };
     const items = json.items ?? [];
-    return items.slice(0, limit).map((item) => {
-      const rawHtml = (item as { content_html?: string }).content_html;
-      const sanitizedHtml = cleanMurmurHtml(rawHtml);
+
+    // Dedup by URL or title (keep first occurrence = newest)
+    const seen = new Set<string>();
+    const deduped = items.filter((item) => {
+      const key = item.url || item.link || item.title?.trim();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+
+    return deduped.slice(0, limit).map((item) => {
+      const rawHtml = item.content_html;
       const description =
         item.description ||
         item.content_text ||
-        stripHtml(sanitizedHtml) ||
         stripHtml(rawHtml) ||
         (item as { summary?: string }).summary;
       return {
         title: item.title,
-        link: item.link,
+        link: item.url || item.link || "",
         description,
         pubDate:
           item.pubDate ||
@@ -289,6 +294,8 @@ export async function loadMurmurEntries(limit = 3): Promise<MurmurEntry[]> {
           item.date_published ||
           item.published ||
           item.date,
+        tags: item.tags,
+        contentHtml: rawHtml,
       };
     });
   } catch (error) {
