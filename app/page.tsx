@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { loadBlogEntries, loadSiteCopy, loadProjects, loadMurmurEntries } from "@/lib/content";
+import { loadBlogEntries, loadSiteCopy, loadProjects, loadStreamEntries } from "@/lib/content";
 import { ViewStats } from "@/components/ui/ViewCounter";
 
 const BASE_URL = "https://wilsonchao.com";
@@ -29,7 +29,7 @@ export default async function Home() {
     loadSiteCopy(),
     loadBlogEntries(),
     loadProjects(),
-    loadMurmurEntries(),
+    loadStreamEntries(3),
   ]);
   const latest = blogEntries.slice(0, 3);
   const latestDaily = projects.slice(0, 3);

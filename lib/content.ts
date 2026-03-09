@@ -231,75 +231,36 @@ export async function getProject(slug: string): Promise<Project | null> {
   );
 }
 
-const ENABLE_MURMUR_FEED = true;
-const DEFAULT_MURMUR_FEED =
-  process.env.MURMUR_FEED_URL || "https://murmur.wilsonchao.com/rss.json";
-
 export async function loadStreamEntries(limit = 50): Promise<MurmurEntry[]> {
-  return loadMurmurEntries(limit);
-}
-
-export async function loadMurmurEntries(limit = 3): Promise<MurmurEntry[]> {
-  if (!ENABLE_MURMUR_FEED) return [];
   const stripHtml = (value?: string) => {
     if (!value) return "";
     return value.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
   };
   try {
-    const res = await fetch(DEFAULT_MURMUR_FEED, {
-      next: { revalidate: 60 },
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const json = (await res.json()) as {
-      items?: {
-        title: string;
-        url?: string;
-        link?: string;
-        description?: string;
-        content_text?: string;
-        content_html?: string;
-        tags?: string[];
-        pubDate?: string;
-        pub_date?: string;
-        date_published?: string;
-        published?: string;
-        date?: string;
-      }[];
-    };
-    const items = json.items ?? [];
+    const streamPath = path.join(process.cwd(), "content", "stream.json");
+    const raw = await fs.readFile(streamPath, "utf-8");
+    const items = JSON.parse(raw) as {
+      id: string;
+      title: string;
+      text?: string;
+      contentHtml?: string;
+      pubDate?: string;
+      tags?: string[];
+      link?: string;
+      linkPreview?: string;
+      images?: string[];
+    }[];
 
-    // Dedup by URL or title (keep first occurrence = newest)
-    const seen = new Set<string>();
-    const deduped = items.filter((item) => {
-      const key = item.url || item.link || item.title?.trim();
-      if (!key || seen.has(key)) return false;
-      seen.add(key);
-      return true;
-    });
-
-    return deduped.slice(0, limit).map((item) => {
-      const rawHtml = item.content_html;
-      const description =
-        item.description ||
-        item.content_text ||
-        stripHtml(rawHtml) ||
-        (item as { summary?: string }).summary;
-      return {
-        title: item.title,
-        link: item.url || item.link || "",
-        description,
-        pubDate:
-          item.pubDate ||
-          item.pub_date ||
-          item.date_published ||
-          item.published ||
-          item.date,
-        tags: item.tags,
-        contentHtml: rawHtml,
-      };
-    });
+    return items.slice(0, limit).map((item) => ({
+      title: item.title,
+      link: item.link || "",
+      description: item.text || stripHtml(item.contentHtml),
+      pubDate: item.pubDate,
+      tags: item.tags,
+      contentHtml: item.contentHtml,
+    }));
   } catch (error) {
-    console.warn("[content] Failed to load murmur feed:", (error as Error).message);
+    console.warn("[content] Failed to load stream.json:", (error as Error).message);
     return [];
   }
 }
