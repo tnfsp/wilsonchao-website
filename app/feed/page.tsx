@@ -48,6 +48,37 @@ export default function FeedPage() {
         </p>
       </header>
 
+      <div className="surface-card flex flex-col items-center gap-3 rounded-xl border border-[var(--border)] px-5 py-5 text-center sm:flex-row sm:text-left">
+        <div className="flex-1 space-y-1">
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">📦 一鍵全部訂閱</h2>
+          <p className="text-sm text-[var(--muted)]">
+            下載 OPML 檔案，匯入你的 RSS reader 即可訂閱全部 feed。
+          </p>
+        </div>
+        <Link
+          href="/feed/opml"
+          className="inline-flex items-center gap-2 rounded-full bg-[var(--foreground)] px-5 py-2.5 text-sm font-medium text-[var(--background)] transition-opacity hover:opacity-80"
+          download="wilsonchao-feeds.opml"
+        >
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            width="16"
+            height="16"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          >
+            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+            <polyline points="7 10 12 15 17 10" />
+            <line x1="12" y1="15" x2="12" y2="3" />
+          </svg>
+          下載 OPML
+        </Link>
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         {feeds.map((feed) => (
           <div
@@ -60,30 +91,8 @@ export default function FeedPage() {
             </div>
             <p className="text-sm leading-relaxed text-[var(--muted)]">{feed.description}</p>
             <div className="flex flex-wrap items-center gap-2">
-              <Link
-                href={feed.path}
-                className="inline-flex items-center gap-1.5 rounded-full bg-[var(--foreground)] px-3 py-1.5 text-xs font-medium text-[var(--background)] transition-opacity hover:opacity-80"
-                target="_blank"
-              >
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  width="12"
-                  height="12"
-                  viewBox="0 0 24 24"
-                  fill="none"
-                  stroke="currentColor"
-                  strokeWidth="2"
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                >
-                  <path d="M4 11a9 9 0 0 1 9 9" />
-                  <path d="M4 4a16 16 0 0 1 16 16" />
-                  <circle cx="5" cy="19" r="1" />
-                </svg>
-                Subscribe
-              </Link>
               <CopyButton url={`${BASE_URL}${feed.path}`} />
-              <code className="hidden text-[10px] text-[var(--muted)]/60 sm:inline">
+              <code className="text-[10px] text-[var(--muted)]/60 break-all">
                 {BASE_URL}{feed.path}
               </code>
             </div>
