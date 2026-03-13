@@ -40,9 +40,7 @@ const feeds = [
 function subscribeLinks(feedUrl: string) {
   const encoded = encodeURIComponent(feedUrl);
   return [
-    { label: "Feedly", href: `https://feedly.com/i/subscription/feed/${encoded}` },
-    { label: "Inoreader", href: `https://www.inoreader.com/feed/${encoded}` },
-    { label: "直接開啟 Feed", href: feedUrl },
+    { label: "訂閱", href: feedUrl },
   ];
 }
 
