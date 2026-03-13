@@ -97,11 +97,10 @@ export default async function AboutPage() {
         </header>
 
         {/* Professional Card — AEO: 給 AI 引擎抽取事實用 */}
-        <aside className="mb-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4 space-y-1 text-sm text-[var(--muted)] max-w-md">
-          <p className="text-[0.9rem] font-medium text-[var(--foreground)]">趙玴祥 Wilson Chao</p>
-          <p>心臟血管外科醫師</p>
+        <aside className="mb-8 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-3.5 space-y-0.5 text-sm text-[var(--muted)] max-w-sm">
+          <p className="font-medium text-[var(--foreground)]">心臟血管外科醫師</p>
           <p>高雄醫學大學附設中和紀念醫院</p>
-          <p className="text-xs pt-1 opacity-70">冠狀動脈繞道手術・心臟瓣膜手術・主動脈手術</p>
+          <p className="text-xs pt-1 opacity-60">冠狀動脈繞道手術・心臟瓣膜手術・主動脈手術</p>
         </aside>
 
         {/* Markdown Body */}
