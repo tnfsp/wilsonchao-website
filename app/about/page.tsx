@@ -67,62 +67,143 @@ export default async function AboutPage() {
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
       />
-    <main className="page-shell space-y-6">
-      <header className="space-y-3">
-        <span className="section-title">About</span>
-        <div className="flex flex-col gap-3">
-          <div className="flex items-start gap-4">
+      <main className="page-shell">
+        {/* Hero: Avatar + Name + Intro */}
+        <header className="pb-8">
+          <span className="section-title">About</span>
+          <div className="mt-4 flex items-center gap-5 sm:gap-6">
             {copy.aboutImage ? (
               <Image
                 src={copy.aboutImage}
                 alt="Portrait"
-                width={80}
-                height={80}
-                className="h-20 w-20 rounded-full border border-[var(--border)] object-cover"
+                width={96}
+                height={96}
+                className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-full border border-[var(--border)] object-cover"
                 unoptimized
                 priority={false}
               />
             ) : null}
-            <div className="space-y-1">
-              <h1 className="text-3xl font-semibold text-[var(--foreground)]">{copy.aboutName}</h1>
+            <div className="space-y-1.5">
+              <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--foreground)] leading-tight">
+                {copy.aboutName}
+              </h1>
+              {copy.aboutIntro ? (
+                <p className="text-[0.95rem] leading-relaxed text-[var(--muted)]">
+                  {copy.aboutIntro}
+                </p>
+              ) : null}
             </div>
           </div>
-        </div>
-      </header>
+        </header>
 
-      <div className="space-y-4 text-[var(--muted)]">
-        <div
-          className="[&_p]:my-3 [&_p]:leading-relaxed [&_h1]:text-2xl [&_h1]:font-semibold [&_h1]:text-[var(--foreground)] [&_h2]:text-xl [&_h2]:inline-block [&_h2]:bg-[var(--highlight)] [&_h2]:px-2 [&_h2]:py-0.5 [&_h2]:rounded [&_h3]:text-lg [&_ul]:list-disc [&_ul]:pl-5 [&_ol]:list-decimal [&_ol]:pl-5 [&_blockquote]:border-l-2 [&_blockquote]:border-[var(--border)] [&_blockquote]:pl-3 [&_blockquote]:italic"
+        {/* Professional Card — AEO: 給 AI 引擎抽取事實用 */}
+        <aside className="mb-10 rounded-xl border border-[var(--border)] bg-[var(--surface)] px-5 py-4 space-y-1 text-sm text-[var(--muted)] max-w-md">
+          <p className="text-[0.9rem] font-medium text-[var(--foreground)]">趙玴祥 Wilson Chao</p>
+          <p>心臟血管外科醫師</p>
+          <p>高雄醫學大學附設中和紀念醫院</p>
+          <p className="text-xs pt-1 opacity-70">冠狀動脈繞道手術・心臟瓣膜手術・主動脈手術</p>
+        </aside>
+
+        {/* Markdown Body */}
+        <article
+          className="about-prose text-[var(--foreground)]"
           dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml) }}
         />
-      </div>
 
-      <div className="pt-4">
-        <Link
-          href="/now"
-          className="inline-flex items-center gap-1 text-[var(--foreground)] font-medium underline decoration-[var(--border)] underline-offset-4 transition-colors hover:text-[var(--accent)]"
-        >
-          → 看我現在在忙什麼
-        </Link>
-      </div>
+        {/* 找到我 + Now */}
+        <section className="mt-12 pt-8 border-t border-[var(--border)]">
+          <h2 className="text-xl font-semibold inline-block bg-[var(--highlight)] px-2 py-0.5 rounded text-[var(--foreground)] mb-4">
+            找到我
+          </h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
+            {linkItems
+              .filter((item) => item.href !== "/about")
+              .map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-center text-sm text-[var(--foreground)] shadow-[0_8px_24px_rgba(0,18,25,0.04)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                  target={item.external ? "_blank" : undefined}
+                  rel={item.external ? "noreferrer" : undefined}
+                >
+                  {item.label}
+                </Link>
+              ))}
+          </div>
+          <p className="mt-8 text-sm text-[var(--muted)]">
+            感謝你逛到這裡，交個朋友吧！
+          </p>
+        </section>
+      </main>
 
-      <section className="space-y-3 pt-6 border-t border-[var(--border)]">
-        <h2 className="text-xl font-semibold inline-block bg-[var(--highlight)] px-2 py-0.5 rounded text-[var(--foreground)]">找到我</h2>
-        <div className="flex flex-col gap-3 max-w-md">
-          {linkItems.filter(item => item.href !== '/about').map((item) => (
-            <Link
-              key={item.label}
-              href={item.href}
-              className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-3 text-center text-[var(--foreground)] shadow-[0_12px_34px_rgba(0,18,25,0.06)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
-              target={item.external ? "_blank" : undefined}
-              rel={item.external ? "noreferrer" : undefined}
-            >
-              {item.label}
-            </Link>
-          ))}
-        </div>
-      </section>
-    </main>
+      {/* Scoped prose styles for about body */}
+      <style>{`
+        .about-prose {
+          font-size: 1rem;
+          line-height: 1.8;
+        }
+        .about-prose h2 {
+          font-size: 1.2rem;
+          font-weight: 600;
+          color: var(--foreground);
+          display: inline-block;
+          background: var(--highlight);
+          padding: 0.15rem 0.5rem;
+          border-radius: 0.25rem;
+          margin-top: 2.5rem;
+          margin-bottom: 0.75rem;
+        }
+        .about-prose h3 {
+          font-size: 1.1rem;
+          font-weight: 600;
+          color: var(--foreground);
+          margin-top: 2rem;
+          margin-bottom: 0.5rem;
+        }
+        .about-prose p {
+          margin: 0.75rem 0;
+          color: var(--foreground);
+          opacity: 0.85;
+        }
+        .about-prose ul,
+        .about-prose ol {
+          margin: 0.75rem 0;
+          padding-left: 1.25rem;
+          color: var(--foreground);
+          opacity: 0.85;
+        }
+        .about-prose ul { list-style: disc; }
+        .about-prose ol { list-style: decimal; }
+        .about-prose li {
+          margin: 0.35rem 0;
+          line-height: 1.7;
+        }
+        .about-prose a {
+          color: var(--accent);
+          text-decoration: underline;
+          text-underline-offset: 3px;
+          text-decoration-color: var(--border);
+          transition: color 0.15s;
+        }
+        .about-prose a:hover {
+          color: var(--accent-strong);
+        }
+        .about-prose blockquote {
+          border-left: 2px solid var(--border);
+          padding-left: 0.75rem;
+          font-style: italic;
+          color: var(--muted);
+        }
+        .about-prose hr {
+          border: none;
+          border-top: 1px solid var(--border);
+          margin: 2rem 0;
+        }
+        /* First h2 needs less top margin */
+        .about-prose > h2:first-child {
+          margin-top: 0;
+        }
+      `}</style>
     </>
   );
 }
