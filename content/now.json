@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-03-09T11:29:49.707297+00:00",
+  "lastUpdated": "2026-03-13T10:27:35.241045+00:00",
   "sections": [
     {
       "id": "clinical",
@@ -35,6 +35,46 @@
   "dynamic": {
     "music": [
       {
+        "streamId": "190",
+        "title": "椅子樂團 The Chairs - 不想和你分開 (Prologue)",
+        "date": "2026-03-12T10:23:11+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=dxxYxFGE__Q",
+        "youtubeId": "dxxYxFGE__Q",
+        "image": "https://img.youtube.com/vi/dxxYxFGE__Q/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/190"
+      },
+      {
+        "streamId": "188",
+        "title": "これだけで十分なのに",
+        "date": "2026-03-11T15:53:10+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=sgMYq9-izHc",
+        "youtubeId": "sgMYq9-izHc",
+        "image": "https://img.youtube.com/vi/sgMYq9-izHc/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/188"
+      },
+      {
+        "streamId": "187",
+        "title": "Friday Night Plans - \"Plastic Love\" (Live at Studio Tanta)",
+        "date": "2026-03-11T09:08:10+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=HpN4bdyqHeI",
+        "youtubeId": "HpN4bdyqHeI",
+        "image": "https://img.youtube.com/vi/HpN4bdyqHeI/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/187"
+      },
+      {
+        "streamId": "184",
+        "title": "禪波ZENBØ - I Love Her Again (Remix)",
+        "date": "2026-03-10T13:08:09+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=GmsSA5PVXs4",
+        "youtubeId": "GmsSA5PVXs4",
+        "image": "https://img.youtube.com/vi/GmsSA5PVXs4/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/184"
+      },
+      {
         "streamId": "162",
         "title": "Don Lou - 誰說春天一定要開花 Blossom (Official Music Video)",
         "date": "2026-03-03T08:19:24+00:00",
@@ -43,7 +83,106 @@
         "youtubeId": "B4J2PqEg2kM",
         "image": "https://img.youtube.com/vi/B4J2PqEg2kM/hqdefault.jpg",
         "sourceLink": "https://t.me/doctormomo/162"
+      }
+    ],
+    "video": [
+      {
+        "streamId": "191",
+        "title": "오타니 쇼헤이 (大谷翔平) 'Ditto'",
+        "date": "2026-03-12T15:23:10+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=UIxCtSJg21k",
+        "youtubeId": "UIxCtSJg21k",
+        "image": "https://img.youtube.com/vi/UIxCtSJg21k/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/191"
       },
+      {
+        "streamId": "189",
+        "title": "【跟拍到你家】三年後再訪！養三個孩子的單親媽媽 現在過得怎麼樣？｜緯來日本台",
+        "date": "2026-03-11T16:23:10+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=vGaIS6iEPtc",
+        "youtubeId": "vGaIS6iEPtc",
+        "image": "https://img.youtube.com/vi/vGaIS6iEPtc/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/189"
+      },
+      {
+        "streamId": "183",
+        "title": "我們小時候的可愛故事。｜#菜冠雙TALK #菜冠雙頭 @walk1365",
+        "date": "2026-03-10T12:23:09+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=xtYoZ85C_ZQ",
+        "youtubeId": "xtYoZ85C_ZQ",
+        "image": "https://img.youtube.com/vi/xtYoZ85C_ZQ/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/183"
+      },
+      {
+        "streamId": "169",
+        "title": "幹這根本有病 愛與感情",
+        "date": "2026-03-06T18:38:07+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=0rxm5K71uSo",
+        "youtubeId": "0rxm5K71uSo",
+        "image": "https://img.youtube.com/vi/0rxm5K71uSo/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/169"
+      }
+    ],
+    "reading": [],
+    "fragments": [
+      {
+        "streamId": "192",
+        "title": "總是不斷想起薛西弗斯，覺得自己就像那個推石頭上去的人。不知道山頂在哪裡，也不知道推石頭有什麼意義，但你就是得活著，你就是得不斷地重複這些沒有意義的事情。",
+        "date": "2026-03-12T16:19:01+00:00",
+        "tag": "murmur",
+        "url": null,
+        "youtubeId": null,
+        "image": null,
+        "sourceLink": "https://t.me/doctormomo/192"
+      },
+      {
+        "streamId": "191",
+        "title": "오타니 쇼헤이 (大谷翔平) 'Ditto'",
+        "date": "2026-03-12T15:23:10+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=UIxCtSJg21k",
+        "youtubeId": "UIxCtSJg21k",
+        "image": "https://img.youtube.com/vi/UIxCtSJg21k/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/191"
+      },
+      {
+        "streamId": "190",
+        "title": "椅子樂團 The Chairs - 不想和你分開 (Prologue)",
+        "date": "2026-03-12T10:23:11+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=dxxYxFGE__Q",
+        "youtubeId": "dxxYxFGE__Q",
+        "image": "https://img.youtube.com/vi/dxxYxFGE__Q/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/190"
+      },
+      {
+        "streamId": "189",
+        "title": "【跟拍到你家】三年後再訪！養三個孩子的單親媽媽 現在過得怎麼樣？｜緯來日本台",
+        "date": "2026-03-11T16:23:10+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=vGaIS6iEPtc",
+        "youtubeId": "vGaIS6iEPtc",
+        "image": "https://img.youtube.com/vi/vGaIS6iEPtc/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/189"
+      },
+      {
+        "streamId": "188",
+        "title": "これだけで十分なのに",
+        "date": "2026-03-11T15:53:10+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=sgMYq9-izHc",
+        "youtubeId": "sgMYq9-izHc",
+        "image": "https://img.youtube.com/vi/sgMYq9-izHc/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/188"
+      }
+    ]
+  },
+  "_archive": {
+    "music": [
       {
         "streamId": "144",
         "title": "我並不是真的想死：オムライス - ReoNa〔中日歌詞〕 YouTube 我並不是真的想死：オムライス - ReoNa〔中日歌詞〕 主唱｜ReoNa @ReoNaofficial 詞曲｜傘村トータ @KasamuraTota 音樂｜オムライ",
@@ -56,16 +195,6 @@
       }
     ],
     "video": [
-      {
-        "streamId": "169",
-        "title": "幹這根本有病 愛與感情",
-        "date": "2026-03-06T18:38:07+00:00",
-        "tag": "video",
-        "url": "https://www.youtube.com/watch?v=0rxm5K71uSo",
-        "youtubeId": "0rxm5K71uSo",
-        "image": "https://img.youtube.com/vi/0rxm5K71uSo/hqdefault.jpg",
-        "sourceLink": "https://t.me/doctormomo/169"
-      },
       {
         "streamId": "142",
         "title": "一個讓人能「理解你」的溝通方法",
@@ -162,11 +291,5 @@
         "sourceLink": "https://t.me/doctormomo/166"
       }
     ]
-  },
-  "_archive": {
-    "music": [],
-    "video": [],
-    "reading": [],
-    "fragments": []
   }
 }
