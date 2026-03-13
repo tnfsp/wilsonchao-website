@@ -40,7 +40,7 @@ const feeds = [
 function subscribeLinks(feedUrl: string) {
   const encoded = encodeURIComponent(feedUrl);
   return [
-    { label: "訂閱", href: feedUrl },
+    { label: "RSS", href: feedUrl },
   ];
 }
 
