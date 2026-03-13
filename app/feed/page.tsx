@@ -42,7 +42,6 @@ function subscribeLinks(feedUrl: string) {
   return [
     { label: "Feedly", href: `https://feedly.com/i/subscription/feed/${encoded}` },
     { label: "Inoreader", href: `https://www.inoreader.com/feed/${encoded}` },
-    { label: "Readwise", href: `https://readwise.io/reader/new?url=${encoded}` },
   ];
 }
 
