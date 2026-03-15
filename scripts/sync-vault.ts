@@ -315,15 +315,22 @@ async function syncBlog(): Promise<BlogEntry[]> {
         path.join(VAULT_BLOG, "_assets", slug, coverFilename),
         path.join(VAULT_BLOG, coverFilename),
         path.join(VAULT_BASE, "_attachments", "images", coverFilename),
+        // Check pre-existing covers directory
+        path.join(BLOG_ASSET_DIR, "covers", coverFilename),
       ];
       for (const candidate of candidates) {
         try {
           await stat(candidate);
-          const destDir = path.join(BLOG_ASSET_DIR, slug);
-          await mkdir(destDir, { recursive: true });
-          const dest = path.join(destDir, `cover${path.extname(coverFilename)}`);
-          await copyFile(candidate, dest);
-          image = `/content/blog/${slug}/cover${path.extname(coverFilename)}`;
+          // If already in covers/ dir, use that path directly (no copy needed)
+          if (candidate.includes(path.join("covers", coverFilename))) {
+            image = `/content/blog/covers/${coverFilename}`;
+          } else {
+            const destDir = path.join(BLOG_ASSET_DIR, slug);
+            await mkdir(destDir, { recursive: true });
+            const dest = path.join(destDir, `cover${path.extname(coverFilename)}`);
+            await copyFile(candidate, dest);
+            image = `/content/blog/${slug}/cover${path.extname(coverFilename)}`;
+          }
           break;
         } catch {
           // try next
