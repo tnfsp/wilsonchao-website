@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-03-13T10:27:35.241045+00:00",
+  "lastUpdated": "2026-03-15T10:56:13.166370+00:00",
   "sections": [
     {
       "id": "clinical",
@@ -11,7 +11,7 @@
       "id": "research",
       "emoji": "📚",
       "title": "研究",
-      "body": "剛開了一個 Network Meta-Analysis 專案：比較透析通路 steal syndrome 的不同術式（DRIL vs RUDI vs PAI），目標投 JVS。另外有一篇 Bentall pseudoaneurysm case report 在修。"
+      "body": "剛開了 AVF Monitor 專案——洗腎廔管穿戴式監測裝置，八月去小港開始收數據。另外有一篇 RCA Pseudoaneurysm case report 剛重投 Annals of Medicine and Surgery。NMA 的 steal syndrome 比較研究也在推。"
     },
     {
       "id": "writing",
@@ -23,7 +23,7 @@
       "id": "building",
       "emoji": "🤖",
       "title": "在蓋的東西",
-      "body": "一個 AI-assisted 的個人系統 — 用 Claude 串起日記、知識庫、研究流程、記帳、甚至這個網站的維護。裡面有個叫 Owl 的 agent 幫我處理日常瑣事和推進專案。不是為了效率，是因為好玩。"
+      "body": "wilsonchao.com 做了一輪大翻修：導航重構、Stream 全量遷移、/now 動態頁、RSS 四個 feed、SEO 修復。People Enrichment 完結了——120 個人的跨平台對話分析和 Mirror 反向深讀。Owl 系統繼續在跑，最近把 cron 穩定性修了一輪。"
     },
     {
       "id": "other",
