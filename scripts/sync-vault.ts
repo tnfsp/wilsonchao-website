@@ -170,6 +170,10 @@ async function processImages(
       path.join(VAULT_ROOT, "_attachments", "images", filename),
       path.join(VAULT_ROOT, "_attachments", "images", "journal", filename),
       path.join(VAULT_ROOT, "_attachments", "images", "movies", filename),
+      // 4. Journal attachments & Inbox (for weekly reports referencing journal images)
+      path.join(VAULT_ROOT, "1-Journal", "attachments", filename),
+      path.join(VAULT_ROOT, "1-Journal", ref),
+      path.join(VAULT_ROOT, "0-Inbox", filename),
     ];
     let publicPath: string | undefined;
     for (const candidate of candidates) {
