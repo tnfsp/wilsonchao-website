@@ -408,15 +408,22 @@ async function syncProjects(): Promise<ProjectEntry[]> {
       const candidates = [
         path.join(assetsDir, coverFilename),
         path.join(sourceDir, coverFilename),
+        // Check pre-existing covers directory
+        path.join(PROJECT_ASSET_DIR, "covers", coverFilename),
       ];
       for (const candidate of candidates) {
         try {
           await stat(candidate);
-          const destDir = path.join(PROJECT_ASSET_DIR, slug);
-          await mkdir(destDir, { recursive: true });
-          const dest = path.join(destDir, `cover${path.extname(coverFilename)}`);
-          await copyFile(candidate, dest);
-          image = `/content/projects/${slug}/cover${path.extname(coverFilename)}`;
+          // If already in covers/ dir, use that path directly (no copy needed)
+          if (candidate.includes("/covers/")) {
+            image = `/content/projects/covers/${coverFilename}`;
+          } else {
+            const destDir = path.join(PROJECT_ASSET_DIR, slug);
+            await mkdir(destDir, { recursive: true });
+            const dest = path.join(destDir, `cover${path.extname(coverFilename)}`);
+            await copyFile(candidate, dest);
+            image = `/content/projects/${slug}/cover${path.extname(coverFilename)}`;
+          }
           break;
         } catch {
           // try next
