@@ -217,8 +217,11 @@ async function processImages(
   for (const m of mdMatches) {
     const alt = m[1];
     const ref = m[2];
-    // Skip already-processed absolute web paths
-    if (ref.startsWith("/content/") || ref.startsWith("http")) continue;
+    // Already-processed absolute web paths — still track first as cover
+    if (ref.startsWith("/content/") || ref.startsWith("http")) {
+      if (!cover) cover = ref;
+      continue;
+    }
 
     const filename = path.basename(ref);
     // Look in _assets/{slug}/ first, then relative to source dir
