@@ -201,7 +201,8 @@ async function processImages(
     }
     if (publicPath) {
       console.log(`[sync-vault] Image found: ${filename}`);
-      result = result.replace(m[0], `![image](${publicPath})`);
+      const encodedPath = publicPath.replace(/ /g, "%20");
+      result = result.replace(m[0], `![image](${encodedPath})`);
       if (!cover) cover = publicPath;
     } else {
       console.warn(`[sync-vault] Image NOT FOUND (all candidates failed): ${ref}`);
@@ -238,7 +239,8 @@ async function processImages(
       if (found) publicPath = await copyAsset(found, filename);
     }
     if (publicPath) {
-      result = result.replace(m[0], `![${alt}](${publicPath})`);
+      const encodedPath = publicPath.replace(/ /g, "%20");
+      result = result.replace(m[0], `![${alt}](${encodedPath})`);
       if (!cover) cover = publicPath;
     }
   }
