@@ -150,6 +150,20 @@ async function processImages(
     return `${publicBase}/${slug}/${filename}`;
   }
 
+  // Fallback: recursive search entire Vault for a filename
+  async function findInVault(filename: string): Promise<string | undefined> {
+    const { execSync } = await import("child_process");
+    try {
+      const result = execSync(
+        `find "${VAULT_ROOT}" -name "${filename.replace(/"/g, '\\"')}" -type f 2>/dev/null | head -1`,
+        { encoding: "utf-8", timeout: 10000 }
+      ).trim();
+      return result || undefined;
+    } catch {
+      return undefined;
+    }
+  }
+
   // Process ![[...]] Obsidian embeds
   const obsidianEmbedRe = /!\[\[([^\]]+)\]\]/g;
   let result = markdown;
@@ -179,6 +193,11 @@ async function processImages(
     for (const candidate of candidates) {
       publicPath = await copyAsset(candidate, filename);
       if (publicPath) break;
+    }
+    // Fallback: recursive Vault search
+    if (!publicPath) {
+      const found = await findInVault(filename);
+      if (found) publicPath = await copyAsset(found, filename);
     }
     if (publicPath) {
       console.log(`[sync-vault] Image found: ${filename}`);
@@ -212,6 +231,11 @@ async function processImages(
     for (const candidate of candidates) {
       publicPath = await copyAsset(candidate, filename);
       if (publicPath) break;
+    }
+    // Fallback: recursive Vault search
+    if (!publicPath) {
+      const found = await findInVault(filename);
+      if (found) publicPath = await copyAsset(found, filename);
     }
     if (publicPath) {
       result = result.replace(m[0], `![${alt}](${publicPath})`);
