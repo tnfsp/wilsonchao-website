@@ -144,9 +144,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
             <Image
               src={heroImage}
               alt={entry.title}
-              width={1200}
-              height={630}
-              className="w-full object-cover"
+              width={1024}
+              height={1024}
+              className="w-full h-auto"
               sizes="100vw"
               unoptimized
               priority={false}

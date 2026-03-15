@@ -84,8 +84,8 @@ export default async function BlogIndexPage({
                   src={post.image}
                   alt={post.title}
                   width={900}
-                  height={400}
-                  className="h-40 w-full object-cover"
+                  height={900}
+                  className="aspect-[3/2] w-full object-cover"
                   sizes="(min-width: 640px) 50vw, 100vw"
                   unoptimized
                   priority={false}
