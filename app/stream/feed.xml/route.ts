@@ -1,7 +1,7 @@
 import { loadStreamEntries } from "@/lib/content";
 import { buildRssResponse } from "@/lib/rss";
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.wilsonchao.com";
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://wilsonchao.com";
 
 export async function GET() {
   const entries = await loadStreamEntries(200);

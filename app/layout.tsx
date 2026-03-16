@@ -17,7 +17,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.wilsonchao.com"),
+  metadataBase: new URL("https://wilsonchao.com"),
   title: "趙玴祥 Wilson Chao — 心臟外科醫師・對世界好奇的人",
   description: "高醫心臟外科醫師的個人網站。寫手術室裡外的觀察、醫師生活反思、AI 工具如何改變日常。",
   alternates: {
@@ -34,7 +34,7 @@ export const metadata: Metadata = {
   openGraph: {
     title: "趙玴祥 Wilson Chao",
     description: "心臟外科醫師・對世界好奇的人",
-    url: "https://www.wilsonchao.com",
+    url: "https://wilsonchao.com",
     siteName: "wilsonchao.com",
     type: "website",
   },

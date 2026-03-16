@@ -1,1 +1,1 @@
-export const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://www.wilsonchao.com";
+export const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://wilsonchao.com";
