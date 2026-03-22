@@ -1,0 +1,56 @@
+{
+  "sections": [
+    {
+      "id": "zh",
+      "label": "🇹🇼 繁中",
+      "blogs": [
+        {
+          "name": "Wiwi.Blog",
+          "url": "https://wiwi.blog",
+          "description": "日更 745 篇，用部落格對抗演算法的人"
+        },
+        {
+          "name": "Alex Hsu",
+          "url": "https://alexhsu.com",
+          "description": "用哲學消化生活的新手作家"
+        },
+        {
+          "name": "Pin 起來",
+          "url": "https://pinchlime.com",
+          "description": "PJ Wu，好奇心→想法→文字的循環"
+        },
+        {
+          "name": "So!azy",
+          "url": "https://blog.solazy.me",
+          "description": "日更啟發了我開始寫部落格"
+        },
+        {
+          "name": "mashbean",
+          "url": "https://mashbean.net",
+          "description": "密碼龐克×政策設計，前數位發展部"
+        }
+      ]
+    },
+    {
+      "id": "en",
+      "label": "🌍 英文",
+      "blogs": [
+        {
+          "name": "More To That",
+          "url": "https://moretothat.com",
+          "description": "用插畫講人生哲學"
+        },
+        {
+          "name": "Farnam Street",
+          "url": "https://fs.blog",
+          "description": "心智模型和決策思考"
+        },
+        {
+          "name": "Stratechery",
+          "url": "https://stratechery.com",
+          "description": "一個人靠獨立部落格建起訂閱帝國"
+        }
+      ]
+    }
+  ]
+}
