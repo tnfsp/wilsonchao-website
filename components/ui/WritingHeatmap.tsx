@@ -4,8 +4,8 @@ import { useEffect, useState, useRef } from "react";
 
 type BlogEntry = { date: string; slug: string; title: string };
 
-const CELL = 10;
-const GAP = 2;
+const CELL = 13;
+const GAP = 3;
 const SIZE = CELL + GAP;
 
 const COLORS = {
@@ -22,9 +22,15 @@ function formatDate(d: Date): string {
 
 export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
   const [entries, setEntries] = useState<BlogEntry[] | null>(null);
-  const [tooltip, setTooltip] = useState<{ x: number; y: number; entry: BlogEntry; date: string } | null>(null);
+  const [tooltip, setTooltip] = useState<{
+    x: number;
+    y: number;
+    entry: BlogEntry;
+    date: string;
+    flipDown: boolean;
+  } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
-  const wrapperRef = useRef<HTMLDivElement>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/writing-calendar.json")
@@ -50,14 +56,13 @@ export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
   const startDay = new Date(today);
   startDay.setDate(startDay.getDate() - (weeks * 7 - 1) - startDay.getDay());
 
-  const LABEL_W = 20; // left labels width
-  const LABEL_H = 14; // top month labels height
+  const LABEL_W = 22;
+  const LABEL_H = 16;
 
   const grid: { date: string; col: number; row: number; entries: BlogEntry[] }[] = [];
   const cursor = new Date(startDay);
   let col = 0;
 
-  // Track month boundaries for labels
   const monthLabels: { col: number; label: string }[] = [];
   let lastMonth = -1;
 
@@ -86,10 +91,7 @@ export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
   const svgHeight = LABEL_H + 7 * SIZE;
 
   function handleClick(cellEntries: BlogEntry[]) {
-    if (cellEntries.length === 1) {
-      window.location.href = `/blog/${cellEntries[0].slug}`;
-    } else if (cellEntries.length > 1) {
-      // Go to the first one
+    if (cellEntries.length >= 1) {
       window.location.href = `/blog/${cellEntries[0].slug}`;
     }
   }
@@ -97,24 +99,33 @@ export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
   function handleMouseEnter(e: React.MouseEvent, cellEntries: BlogEntry[], date: string) {
     if (cellEntries.length === 0) return;
     const rect = (e.target as SVGElement).getBoundingClientRect();
-    const outerRect = (e.target as SVGElement).closest(".mt-3")?.getBoundingClientRect();
-    if (!outerRect) return;
+    const containerEl = containerRef.current;
+    if (!containerEl) return;
+    const containerRect = containerEl.getBoundingClientRect();
+
+    const x = rect.left - containerRect.left + CELL / 2;
+    const y = rect.top - containerRect.top;
+
+    // If tooltip would go above container, flip it below the cell
+    const flipDown = y < 40;
+
     setTooltip({
-      x: rect.left - outerRect.left + CELL / 2,
-      y: rect.top - outerRect.top - 4,
+      x,
+      y: flipDown ? y + CELL + 6 : y - 4,
       entry: cellEntries[0],
       date,
+      flipDown,
     });
   }
 
   return (
-    <div className="mt-3" style={{ position: "relative" }}>
+    <div className="mt-3" ref={containerRef} style={{ position: "relative" }}>
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-[11px] text-[var(--muted)]">
           📝 {entries.length} 篇文章的寫作紀錄
         </span>
       </div>
-      <div className="overflow-x-auto" ref={wrapperRef}>
+      <div className="overflow-x-auto">
         <svg
           ref={svgRef}
           width={svgWidth}
@@ -130,8 +141,8 @@ export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
             <text
               key={`m-${i}`}
               x={LABEL_W + ml.col * SIZE}
-              y={10}
-              fontSize={9}
+              y={12}
+              fontSize={10}
               fill="var(--muted)"
             >
               {ml.label}
@@ -145,7 +156,7 @@ export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
                 key={`d-${i}`}
                 x={0}
                 y={LABEL_H + i * SIZE + CELL - 1}
-                fontSize={9}
+                fontSize={10}
                 fill="var(--muted)"
               >
                 {label}
@@ -177,17 +188,18 @@ export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
             </rect>
           ))}
         </svg>
-
       </div>
 
-      {/* Floating tooltip — outside overflow container */}
+      {/* Floating tooltip */}
       {tooltip && (
         <div
-          className="absolute pointer-events-none bg-[var(--foreground)] text-[var(--background)] text-[11px] px-2.5 py-1.5 rounded-md shadow-lg whitespace-nowrap"
+          className="absolute pointer-events-none bg-[var(--foreground)] text-[var(--background)] text-xs px-3 py-2 rounded-md shadow-lg whitespace-nowrap"
           style={{
             left: tooltip.x,
             top: tooltip.y,
-            transform: "translate(-50%, -100%)",
+            transform: tooltip.flipDown
+              ? "translate(-50%, 0)"
+              : "translate(-50%, -100%)",
             zIndex: 10,
           }}
         >
