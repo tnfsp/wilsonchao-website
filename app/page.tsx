@@ -104,10 +104,15 @@ export default async function Home() {
             {heroIntroParagraphs.map((paragraph: string, index: number) => (
               <p key={index} className="text-[var(--muted)]">{paragraph}</p>
             ))}
-            <p className="text-[var(--muted)]">
-              <Link href="/blog" className="inline-link">Blog</Link> 是想好了才寫的長文。
-              <Link href="/stream" className="inline-link"> Stream</Link> 是每天的腦內碎片——手術後的感想、半夜聽到的歌、或就只是廢話。想知道我最近在幹嘛，看 <Link href="/now" className="inline-link">Now</Link>。想知道我在讀什麼，看 <Link href="/blogroll" className="inline-link">Blogroll</Link>。
-            </p>
+            <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-sm text-[var(--muted)]">
+              <Link href="/blog" className="hover:text-[var(--foreground)] transition-colors">Blog</Link>
+              <span className="text-[var(--border)]">·</span>
+              <Link href="/stream" className="hover:text-[var(--foreground)] transition-colors">Stream</Link>
+              <span className="text-[var(--border)]">·</span>
+              <Link href="/now" className="hover:text-[var(--foreground)] transition-colors">Now</Link>
+              <span className="text-[var(--border)]">·</span>
+              <Link href="/blogroll" className="hover:text-[var(--foreground)] transition-colors">Blogroll</Link>
+            </nav>
           </div>
         </header>
 
