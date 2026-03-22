@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { loadBlogEntries, loadSiteCopy, loadProjects, loadStreamEntries } from "@/lib/content";
 import { ViewStats } from "@/components/ui/ViewCounter";
-import { RandomTagline } from "@/components/ui/RandomTagline";
+
 import { BASE_URL } from "@/lib/constants";
 
 const websiteJsonLd = {
@@ -57,60 +57,37 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
       <main className="page-shell space-y-16">
-        {/* Hero — personality-first */}
-        <header className="hero-block relative overflow-hidden rounded-2xl px-6 py-10 sm:px-10 sm:py-14">
-          {/* Decorative accent dot */}
-          <div className="hero-dot absolute -right-6 -top-6 h-32 w-32 rounded-full opacity-20 sm:h-48 sm:w-48" />
-
-          <div className="relative z-10 flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
-            {/* Text side */}
-            <div className="max-w-lg space-y-4">
-              <p className="text-sm font-medium uppercase tracking-widest text-[var(--accent)]">
-                心臟外科醫師 · 寫字的人
-              </p>
-              <h1 className="text-3xl font-bold leading-tight text-[var(--foreground)] sm:text-4xl">
+        {/* Hero — text-first, inline navigation */}
+        <header className="space-y-5">
+          <div className="flex items-center gap-4">
+            <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-full sm:h-20 sm:w-20">
+              <Image
+                src="/hero.jpg"
+                alt="趙玴祥 Wilson Chao"
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">
                 嗨，我是玴祥
               </h1>
-              <div className="space-y-2 text-base leading-relaxed text-[var(--muted)]">
-                {heroIntroParagraphs.map((paragraph: string, index: number) => (
-                  <p key={index}>{paragraph}</p>
-                ))}
-              </div>
-              <RandomTagline />
-              {/* Nav pills */}
-              <nav className="flex flex-wrap gap-2 pt-2">
-                {[
-                  { href: "/blog", label: "Blog" },
-                  { href: "/now", label: "Now" },
-                  { href: "/stream", label: "Stream" },
-                  { href: "/blogroll", label: "Blogroll" },
-                  { href: "/about", label: "About" },
-                ].map((item) => (
-                  <Link
-                    key={item.href}
-                    href={item.href}
-                    className="hero-pill rounded-full border border-[var(--border)] px-4 py-1.5 text-sm text-[var(--foreground)] transition-all hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-white"
-                  >
-                    {item.label}
-                  </Link>
-                ))}
-              </nav>
+              <p className="text-sm text-[var(--muted)]">心臟外科醫師 · 寫字的人</p>
             </div>
+          </div>
 
-            {/* Photo side */}
-            <div className="hero-photo-wrap relative mx-auto flex-shrink-0 sm:mx-0">
-              <div className="hero-photo relative h-36 w-36 overflow-hidden rounded-2xl shadow-lg sm:h-44 sm:w-44">
-                <Image
-                  src="/hero.jpg"
-                  alt="趙玴祥 Wilson Chao"
-                  fill
-                  className="object-cover"
-                  priority
-                />
-              </div>
-              {/* Playful offset border */}
-              <div className="absolute -bottom-2 -right-2 -z-10 h-36 w-36 rounded-2xl border-2 border-dashed border-[var(--accent)] opacity-40 sm:h-44 sm:w-44" />
-            </div>
+          <div className="max-w-2xl space-y-4 text-base leading-relaxed text-[var(--foreground)]">
+            <p className="text-lg font-medium">
+              白天在高醫把心臟打開，晚上把心裡的事寫下來。
+            </p>
+            {heroIntroParagraphs.map((paragraph: string, index: number) => (
+              <p key={index} className="text-[var(--muted)]">{paragraph}</p>
+            ))}
+            <p className="text-[var(--muted)]">
+              <Link href="/blog" className="font-medium text-[var(--accent)] underline decoration-[var(--accent)]/30 underline-offset-4 hover:decoration-[var(--accent)]">Blog</Link> 是想好了才寫的長文。
+              <Link href="/stream" className="font-medium text-[var(--accent)] underline decoration-[var(--accent)]/30 underline-offset-4 hover:decoration-[var(--accent)]"> Stream</Link> 是每天的腦內碎片——手術後的感想、半夜聽到的歌、或就只是廢話。想知道我最近在幹嘛，看 <Link href="/now" className="font-medium text-[var(--accent)] underline decoration-[var(--accent)]/30 underline-offset-4 hover:decoration-[var(--accent)]">Now</Link>。想知道我在讀什麼，看 <Link href="/blogroll" className="font-medium text-[var(--accent)] underline decoration-[var(--accent)]/30 underline-offset-4 hover:decoration-[var(--accent)]">Blogroll</Link>。
+            </p>
           </div>
         </header>
 
