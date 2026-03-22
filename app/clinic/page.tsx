@@ -129,7 +129,7 @@ export default function ClinicPage() {
       <main className="clinic-page">
         {/* Hero */}
         <section className="space-y-4 pb-8 border-b border-[var(--border)]">
-          <div className="flex items-start gap-5">
+          <div className="flex items-center gap-5">
             <Image
               src="/hero.jpg"
               alt="趙玴祥醫師"
@@ -137,7 +137,7 @@ export default function ClinicPage() {
               height={112}
               className="h-20 w-20 sm:h-28 sm:w-28 rounded-xl border border-[var(--border)] flex-shrink-0 object-cover"
             />
-            <div className="space-y-2">
+            <div className="space-y-0.5">
               <h1 className="text-3xl font-bold text-[var(--foreground)]">
                 趙玴祥<span className="text-lg font-normal text-[var(--muted)] ml-2">醫師</span>
               </h1>
