@@ -119,9 +119,13 @@ export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
   }
 
   return (
-    <div className="mt-3" ref={containerRef} style={{ position: "relative" }}>
-      <div className="flex items-center justify-between mb-1.5">
-        <span className="text-[11px] text-[var(--muted)]">
+    <div
+      className="mt-4 border border-[var(--border)] rounded-lg p-4"
+      ref={containerRef}
+      style={{ position: "relative" }}
+    >
+      <div className="flex items-center justify-between mb-2">
+        <span className="text-xs text-[var(--muted)]">
           📝 {entries.length} 篇文章的寫作紀錄
         </span>
       </div>
