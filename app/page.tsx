@@ -33,6 +33,7 @@ export default async function Home() {
     loadStreamEntries(3),
   ]);
   const latest = blogEntries.slice(0, 5);
+  const weeklyEntries = projects.filter((p) => p.type === "週報").slice(0, 3);
   const heroIntroParagraphs = siteCopy.heroIntro
     .split(/\n\s*\n/)
     .map((p: string) => p.trim())
@@ -118,6 +119,36 @@ export default async function Home() {
             ))}
           </ul>
         </section>
+
+        {/* Weekly: 週報 */}
+        {weeklyEntries.length > 0 && (
+          <section className="space-y-4">
+            <div className="flex items-baseline justify-between gap-3">
+              <span className="section-title">週報</span>
+              <Link
+                href="/journal?type=週報"
+                className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--accent-strong)]"
+              >
+                全部週報 →
+              </Link>
+            </div>
+            <ul className="space-y-3">
+              {weeklyEntries.map((entry) => (
+                <li key={entry.slug} className="flex items-baseline justify-between gap-4">
+                  <Link
+                    href={`/journal/${entry.slug}`}
+                    className="text-base text-[var(--foreground)] hover:text-[var(--accent)] transition-colors"
+                  >
+                    {entry.title}
+                  </Link>
+                  <span className="flex-shrink-0 text-sm text-[var(--muted)] tabular-nums">
+                    {entry.date}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
 
         {/* Stream: lightweight fragments */}
         <section className="space-y-4">
