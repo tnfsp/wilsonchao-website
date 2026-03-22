@@ -1,12 +1,9 @@
 import type { MetadataRoute } from "next";
-import { loadBlogEntries, loadProjects } from "@/lib/content";
+import { loadBlogEntries } from "@/lib/content";
 import { BASE_URL } from "@/lib/constants";
-
-const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const blogEntries = await loadBlogEntries();
-  const projects = await loadProjects();
 
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -23,12 +20,6 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     },
     {
       url: `${BASE_URL}/blog`,
-      lastModified: new Date(),
-      changeFrequency: "weekly",
-      priority: 0.9,
-    },
-    {
-      url: `${BASE_URL}/journal`,
       lastModified: new Date(),
       changeFrequency: "weekly",
       priority: 0.9,
@@ -60,14 +51,5 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  const dailyPages: MetadataRoute.Sitemap = projects
-    .filter((project) => project.slug && !UUID_PATTERN.test(project.slug))
-    .map((project) => ({
-      url: `${BASE_URL}/journal/${project.slug}`,
-      lastModified: project.date ? new Date(project.date) : new Date(),
-      changeFrequency: "monthly" as const,
-      priority: 0.6,
-    }));
-
-  return [...staticPages, ...blogPages, ...dailyPages];
+  return [...staticPages, ...blogPages];
 }

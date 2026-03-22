@@ -25,7 +25,6 @@ const BLOG_DIR = path.join(ROOT, "content", "blog");
 const PROJECTS_PATH = path.join(ROOT, "content", "projects.json");
 const SITE_CONFIG_PATH = path.join(ROOT, "content", "site", "config.json");
 const BLOG_ASSET_DIR = path.join(ROOT, "public", "content", "blog");
-const PROJECT_ASSET_DIR = path.join(ROOT, "public", "content", "projects");
 
 // ─── types (match sync-notion output) ────────────────────────────────
 type BlogEntry = {
@@ -45,20 +44,7 @@ type BlogEntry = {
   related?: string[];
 };
 
-type ProjectEntry = {
-  title: string;
-  description?: string;
-  href?: string;
-  slug?: string;
-  type?: string;
-  status?: string;
-  date?: string;
-  image?: string;
-  content?: string;
-  contentHtml?: string;
-  excerpt?: string;
-  readingTime?: string;
-};
+
 
 type SiteConfig = Record<string, string>;
 
@@ -370,10 +356,10 @@ async function syncBlog(): Promise<BlogEntry[]> {
 }
 
 // ─── Daily / 週報 sync ──────────────────────────────────────────────
-async function syncProjects(): Promise<ProjectEntry[]> {
+async function syncProjects(): Promise<BlogEntry[]> {
   const dailyFiles = await listMdFiles(VAULT_DAILY);
   const weeklyFiles = await listMdFiles(VAULT_WEEKLY);
-  const entries: ProjectEntry[] = [];
+  const entries: BlogEntry[] = [];
 
   for (const file of [...dailyFiles, ...weeklyFiles]) {
     const raw = await readFile(file, "utf-8");
@@ -384,7 +370,7 @@ async function syncProjects(): Promise<ProjectEntry[]> {
     const isWeekly = file.startsWith(VAULT_WEEKLY);
     const slug = fm.slug || path.basename(file, ".md");
     const title = fm.title || path.basename(file, ".md");
-    const type = fm.type || (isWeekly ? "週報" : "日記");
+    const type = fm.type || (isWeekly ? "weekly" : "life");
     const sourceDir = isWeekly ? VAULT_WEEKLY : VAULT_DAILY;
     // Normalize date — gray-matter may parse bare dates as Date objects
     const rawDate = fm.date;
@@ -406,35 +392,32 @@ async function syncProjects(): Promise<ProjectEntry[]> {
       cleanBody,
       slug,
       sourceDir,
-      "projects",
-      PROJECT_ASSET_DIR,
-      "/content/projects"
+      "blog",
+      BLOG_ASSET_DIR,
+      "/content/blog"
     );
 
     // Handle cover from frontmatter or first image
     let image: string | undefined;
     if (fm.cover) {
-      // Try to copy cover image
       const coverFilename = fm.cover;
       const assetsDir = path.join(sourceDir, "_assets", slug);
       const candidates = [
         path.join(assetsDir, coverFilename),
         path.join(sourceDir, coverFilename),
-        // Check pre-existing covers directory
-        path.join(PROJECT_ASSET_DIR, "covers", coverFilename),
+        path.join(BLOG_ASSET_DIR, "covers", coverFilename),
       ];
       for (const candidate of candidates) {
         try {
           await stat(candidate);
-          // If already in covers/ dir, use that path directly (no copy needed)
           if (candidate.includes("/covers/")) {
-            image = `/content/projects/covers/${coverFilename}`;
+            image = `/content/blog/covers/${coverFilename}`;
           } else {
-            const destDir = path.join(PROJECT_ASSET_DIR, slug);
+            const destDir = path.join(BLOG_ASSET_DIR, slug);
             await mkdir(destDir, { recursive: true });
             const dest = path.join(destDir, `cover${path.extname(coverFilename)}`);
             await copyFile(candidate, dest);
-            image = `/content/projects/${slug}/cover${path.extname(coverFilename)}`;
+            image = `/content/blog/${slug}/cover${path.extname(coverFilename)}`;
           }
           break;
         } catch {
@@ -453,23 +436,24 @@ async function syncProjects(): Promise<ProjectEntry[]> {
     const excerpt = description || buildExcerpt(plainText);
 
     entries.push({
-      title,
-      description: description || excerpt,
-      href: fm.href || "",
+      id: fm.id || slug,
       slug,
+      title,
       type,
       status: "Published",
-      date: dateStr,
-      image,
+      publishedAt: dateStr,
       content: processedMd.trim(),
       contentHtml,
+      description: description || undefined,
       excerpt,
       readingTime,
+      tags: fm.tags || [],
+      ...(image ? { image } : {}),
     });
   }
 
   // Sort by date descending
-  entries.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
+  entries.sort((a, b) => (b.publishedAt || "").localeCompare(a.publishedAt || ""));
   return entries;
 }
 
@@ -561,9 +545,9 @@ async function writeBlogEntries(entries: BlogEntry[]) {
   }
 }
 
-async function writeProjects(projects: ProjectEntry[]) {
+async function writeProjectsCompat() {
   await mkdir(path.dirname(PROJECTS_PATH), { recursive: true });
-  await writeFile(PROJECTS_PATH, JSON.stringify(projects, null, 2), "utf-8");
+  await writeFile(PROJECTS_PATH, JSON.stringify([], null, 2), "utf-8");
 }
 
 async function writeSiteConfig(config: SiteConfig) {
@@ -582,37 +566,21 @@ async function main() {
     syncConfig(),
   ]);
 
-  // Only write blog if we have entries (don't wipe existing data)
-  if (blogEntries.length > 0) {
-    await writeBlogEntries(blogEntries);
+  // Write all blog entries (blog posts + daily + weekly) to content/blog/
+  const allEntries = [...blogEntries, ...projects];
+  if (allEntries.length > 0) {
+    await writeBlogEntries(allEntries);
   } else {
-    console.log("[sync-vault] No blog entries from vault (keeping existing).");
+    console.log("[sync-vault] No entries from vault (keeping existing).");
   }
 
-  // Merge vault projects with existing (vault entries override by slug)
-  {
-    let existing: ProjectEntry[] = [];
-    try {
-      const raw = await readFile(PROJECTS_PATH, "utf-8");
-      existing = JSON.parse(raw);
-    } catch { /* no existing */ }
-
-    // Build slug + title sets from vault entries for dedup
-    const vaultSlugs = new Set(projects.map(p => p.slug));
-    const vaultTitles = new Set(projects.map(p => p.title));
-    // Keep existing entries whose slugs AND titles are NOT in vault
-    const kept = existing.filter(e => !vaultSlugs.has(e.slug) && !vaultTitles.has(e.title));
-    const merged = [...projects, ...kept];
-    // Sort by date descending
-    merged.sort((a, b) => (b.date || "").localeCompare(a.date || ""));
-    await writeProjects(merged);
-    console.log(`[sync-vault] Projects: ${projects.length} from vault, ${kept.length} kept from existing, ${merged.length} total.`);
-  }
+  // Write empty projects.json for backward compatibility
+  await writeProjectsCompat();
 
   await writeSiteConfig(siteConfig);
 
   console.log(
-    `[sync-vault] Done. Blog: ${blogEntries.length}, Projects: ${projects.length}, Config: updated.`
+    `[sync-vault] Done. Blog: ${blogEntries.length}, Daily+Weekly: ${projects.length}, Total: ${allEntries.length}, Config: updated.`
   );
 }
 

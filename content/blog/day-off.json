@@ -1,0 +1,14 @@
+{
+  "id": "day-off",
+  "slug": "day-off",
+  "title": "請假一天",
+  "type": "hospital",
+  "status": "Published",
+  "publishedAt": "2025-07-03",
+  "content": "今天太累了！請假一天！",
+  "contentHtml": "<p>今天太累了！請假一天！</p>\n",
+  "description": "好累的一天 不想更新",
+  "excerpt": "好累的一天 不想更新",
+  "readingTime": "1 min",
+  "tags": []
+}

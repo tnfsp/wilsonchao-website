@@ -5,7 +5,6 @@ const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://wilsonchao.com";
 const feeds = [
   { title: "wilsonchao.com — All", xmlUrl: `${SITE_URL}/feed.xml`, htmlUrl: SITE_URL },
   { title: "wilsonchao.com — Blog", xmlUrl: `${SITE_URL}/blog/feed.xml`, htmlUrl: `${SITE_URL}/blog` },
-  { title: "wilsonchao.com — Journal", xmlUrl: `${SITE_URL}/journal/feed.xml`, htmlUrl: `${SITE_URL}/journal` },
   { title: "wilsonchao.com — Stream", xmlUrl: `${SITE_URL}/stream/feed.xml`, htmlUrl: `${SITE_URL}/stream` },
 ];
 

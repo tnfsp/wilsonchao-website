@@ -1,6 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
-import { loadBlogEntries, loadSiteCopy, loadProjects, loadStreamEntries } from "@/lib/content";
+import { loadBlogEntries, loadSiteCopy, loadStreamEntries } from "@/lib/content";
 import { ViewStats } from "@/components/ui/ViewCounter";
 import { RandomTagline } from "@/components/ui/RandomTagline";
 import { BASE_URL } from "@/lib/constants";
@@ -26,13 +26,11 @@ const websiteJsonLd = {
 };
 
 export default async function Home() {
-  const [siteCopy, blogEntries, projects, murmur] = await Promise.all([
+  const [siteCopy, blogEntries, murmur] = await Promise.all([
     loadSiteCopy(),
     loadBlogEntries(),
-    loadProjects(),
     loadStreamEntries(6),
   ]);
-  const weeklyEntries = projects.filter((p) => p.type === "週報");
 
   // Filter stream: remove blog promos, strip raw URLs, limit to 3
   const filteredMurmur = murmur
@@ -48,24 +46,24 @@ export default async function Home() {
     }))
     .slice(0, 3);
 
-  // Merge blog + weekly into one "最近寫的" list, sorted by date desc
+  // Tag label mapping
+  const tagLabelMap: Record<string, string> = {
+    essay: "Essay",
+    hospital: "Hospital",
+    life: "Life",
+    weekly: "Weekly",
+  };
+
+  // Build recentItems from all blog entries (blog + daily + weekly)
   type RecentItem = { title: string; href: string; date: string; tag?: string; excerpt?: string };
-  const recentItems: RecentItem[] = [
-    ...blogEntries.map((post) => ({
+  const recentItems: RecentItem[] = blogEntries
+    .map((post) => ({
       title: post.title,
       href: `/blog/${post.slug}`,
       date: post.publishedAt || "",
-      tag: "Blog" as const,
+      tag: tagLabelMap[post.type || ""] || post.type || "",
       excerpt: post.excerpt || "",
-    })),
-    ...weeklyEntries.map((entry) => ({
-      title: entry.title,
-      href: `/journal/${entry.slug}`,
-      date: entry.date || "",
-      tag: "週報" as const,
-      excerpt: entry.excerpt || "",
-    })),
-  ]
+    }))
     .filter((item) => item.date)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
     .slice(0, 7);
@@ -163,11 +161,7 @@ export default async function Home() {
               <li key={item.href}>
                 <div className="flex items-baseline justify-between gap-4">
                   <div className="flex items-baseline gap-2 min-w-0">
-                    <span className={`flex-shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${
-                      item.tag === "週報"
-                        ? "bg-[var(--highlight)] text-[var(--accent)]"
-                        : "bg-[var(--highlight)] text-[var(--muted)]"
-                    }`}>
+                    <span className="flex-shrink-0 rounded px-1.5 py-0.5 text-xs font-medium bg-[var(--highlight)] text-[var(--muted)]">
                       {item.tag}
                     </span>
                     <Link
@@ -235,8 +229,31 @@ export default async function Home() {
         {/* Footer */}
         <footer className="border-t border-[var(--border)] pt-6 text-sm text-[var(--muted)]">
           {siteCopy.footerText}
-          <div className="pt-3">
+          <div className="pt-3 flex items-center gap-4">
             <ViewStats slug="home" />
+            <Link
+              href="/feed"
+              className="flex items-center gap-1 text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
+              title="RSS Feeds"
+              aria-label="RSS Feeds"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                width="14"
+                height="14"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="2"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              >
+                <path d="M4 11a9 9 0 0 1 9 9" />
+                <path d="M4 4a16 16 0 0 1 16 16" />
+                <circle cx="5" cy="19" r="1" />
+              </svg>
+              RSS
+            </Link>
           </div>
         </footer>
       </main>

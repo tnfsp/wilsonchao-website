@@ -26,7 +26,6 @@ export const metadata: Metadata = {
       "application/rss+xml": [
         { url: "/feed.xml", title: "wilsonchao.com — All" },
         { url: "/blog/feed.xml", title: "wilsonchao.com — Blog" },
-        { url: "/journal/feed.xml", title: "wilsonchao.com — Journal" },
         { url: "/stream/feed.xml", title: "wilsonchao.com — Stream" },
       ],
     },

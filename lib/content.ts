@@ -3,14 +3,12 @@ import path from "path";
 import {
   aboutPreview,
   defaultSiteCopy,
-  featuredProjects,
   linkItems as baseLinkItems,
   placeholderBlogs,
 } from "./placeholders";
 
 const BLOG_DIR = path.join(process.cwd(), "content", "blog");
 const SITE_CONFIG_PATH = path.join(process.cwd(), "content", "site", "config.json");
-const PROJECTS_PATH = path.join(process.cwd(), "content", "projects.json");
 
 export type SiteCopy = typeof defaultSiteCopy;
 
@@ -31,20 +29,7 @@ export type BlogEntry = {
   related?: string[];
 };
 
-export type Project = {
-  title: string;
-  description?: string;
-  href?: string;
-  slug?: string;
-  type?: string;
-  status?: string;
-  date?: string;
-  image?: string;
-   content?: string;
-   contentHtml?: string;
-   excerpt?: string;
-   readingTime?: string;
-};
+
 
 export type MurmurEntry = {
   title: string;
@@ -135,21 +120,6 @@ function sortByDateDesc(entries: BlogEntry[]) {
   });
 }
 
-function normalizeHref(href?: string) {
-  if (!href) return undefined;
-  const trimmed = href.trim();
-  if (trimmed.startsWith("http")) return trimmed;
-  if (trimmed.startsWith("/")) return trimmed;
-  return undefined;
-}
-
-function slugFromHref(href?: string) {
-  if (!href) return undefined;
-  const cleaned = href.replace(/\/+$/, "");
-  const parts = cleaned.split("/").filter(Boolean);
-  return parts.at(-1);
-}
-
 export async function loadBlogEntries(): Promise<BlogEntry[]> {
   try {
     const files = await fs.readdir(BLOG_DIR);
@@ -191,46 +161,7 @@ export async function getBlogEntry(slug: string): Promise<BlogEntry | null> {
   return entries.find((entry) => entry.slug === slug) ?? null;
 }
 
-export async function loadProjects(): Promise<Project[]> {
-  const projects = await safeReadJSON<Project[]>(PROJECTS_PATH);
-  if (!projects || projects.length === 0) return featuredProjects as Project[];
 
-  const published = projects.filter(
-    (project) => !project.status || project.status.toLowerCase() === "published"
-  );
-
-  // Scheduled publishing: filter out projects with date in the future
-  const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-  const scheduledFiltered = published.filter(
-    (project) => !project.date || project.date <= today
-  );
-
-  const sorted = scheduledFiltered.sort((a, b) => {
-    const aDate = a.date ? new Date(a.date).getTime() : 0;
-    const bDate = b.date ? new Date(b.date).getTime() : 0;
-    return bDate - aDate;
-  });
-
-  const cleaned = sorted.map((project) => ({
-    ...project,
-    href: normalizeHref(project.href),
-    slug: project.slug || slugFromHref(normalizeHref(project.href)),
-    excerpt: inferExcerpt(project.contentHtml, project.content, project.excerpt || project.description),
-    readingTime: inferReadingTime(project as unknown as BlogEntry),
-    image: project.image || firstImageFromEntry(project as unknown as BlogEntry),
-  }));
-
-  return cleaned.length > 0 ? cleaned : scheduledFiltered;
-}
-
-export async function getProject(slug: string): Promise<Project | null> {
-  const projects = await loadProjects();
-  return (
-    projects.find((project) => project.slug === slug) ??
-    projects.find((project) => slugFromHref(project.href) === slug) ??
-    null
-  );
-}
 
 export async function loadStreamEntries(limit = 50): Promise<MurmurEntry[]> {
   const stripHtml = (value?: string) => {

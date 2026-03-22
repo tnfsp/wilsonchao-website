@@ -6,7 +6,7 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://wilsonchao.com";
 
 export const metadata: Metadata = {
   title: "RSS Feeds — Wilson Chao",
-  description: "訂閱 wilsonchao.com 的 RSS feeds — Blog、Journal、Stream。",
+  description: "訂閱 wilsonchao.com 的 RSS feeds — Blog、Stream。",
   alternates: { canonical: `${BASE_URL}/feed` },
 };
 
@@ -14,7 +14,7 @@ const feeds = [
   {
     name: "All",
     path: "/feed.xml",
-    description: "所有內容：Blog 長文 + Journal 週報，一個 feed 搞定。",
+    description: "所有內容：Essay、Hospital 筆記、Life 隨筆、Weekly 週報，一個 feed 搞定。",
     emoji: "📡",
   },
   {
@@ -22,12 +22,6 @@ const feeds = [
     path: "/blog/feed.xml",
     description: "長文：醫學、故事、思考。不定期更新。",
     emoji: "📝",
-  },
-  {
-    name: "Journal",
-    path: "/journal/feed.xml",
-    description: "週報、生活筆記、人生紀錄。大約每週一篇。",
-    emoji: "📓",
   },
   {
     name: "Stream",

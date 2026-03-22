@@ -18,6 +18,14 @@ export default async function BlogIndexPage({
   const typeParam = resolvedSearch?.type;
   const pageParam = Number.parseInt(resolvedSearch?.page ?? "1", 10) || 1;
   const availableTypes = Array.from(new Set(posts.map((p) => p.type).filter(Boolean))).sort();
+
+  // Type label map for display
+  const typeLabelMap: Record<string, string> = {
+    essay: "Essay",
+    hospital: "Hospital",
+    life: "Life",
+    weekly: "Weekly",
+  };
   const filtered =
     typeParam && availableTypes.includes(typeParam)
       ? posts.filter((post) => post.type === typeParam)
@@ -66,7 +74,7 @@ export default async function BlogIndexPage({
                   : "border-[var(--border)] hover:border-[var(--accent)] hover:text-[var(--accent)]"
               }`}
             >
-              {type}
+              {typeLabelMap[type ?? ""] || type}
             </Link>
           ))}
         </div>
@@ -93,7 +101,7 @@ export default async function BlogIndexPage({
               </div>
             ) : null}
             <div className="flex items-center justify-between text-sm text-[var(--muted)]">
-              <span>{post.type}</span>
+              <span>{typeLabelMap[post.type ?? ""] || post.type}</span>
               <span>{post.publishedAt}</span>
             </div>
             <h2 className="pt-1 text-2xl font-semibold text-[var(--foreground)]">

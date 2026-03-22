@@ -43,28 +43,6 @@ export function SiteHeader() {
               </Link>
             ))}
             <SearchBox />
-            <a
-              href="/feed"
-              className="flex items-center rounded-full px-2 py-1 text-[var(--muted)] transition-colors hover:bg-[var(--highlight)]/60 hover:text-[var(--accent)]"
-              title="RSS Feeds"
-              aria-label="RSS Feeds"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="16"
-                height="16"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M4 11a9 9 0 0 1 9 9" />
-                <path d="M4 4a16 16 0 0 1 16 16" />
-                <circle cx="5" cy="19" r="1" />
-              </svg>
-            </a>
           </nav>
 
           <button
@@ -96,13 +74,6 @@ export function SiteHeader() {
                   {item.label}
                 </Link>
               ))}
-              <Link
-                href="/feed"
-                className="block rounded-md px-3 py-2 transition-colors hover:bg-[var(--highlight)]/60 hover:text-[var(--accent)]"
-                onClick={() => setOpen(false)}
-              >
-                RSS
-              </Link>
               <div className="px-3 py-2">
                 <SearchBox />
               </div>
