@@ -3522,8 +3522,8 @@ export const slides: Record<string, SlideData> = {
     <h3>💬 Case：太晚轉介的後果</h3>
     <p>58M，DM + HTN，eGFR 8，尿毒症狀明顯需要緊急透析</p>
     <ul>
-      <li class="fragment">沒有 AVF → 只能先放 <span class="danger">CVC（中央靜脈導管）</span></li>
-      <li class="fragment">CVC 感染率高、flow 不穩、住院天數↑</li>
+      <li class="fragment">沒有 AVF → 只能先放 <span class="danger">temporary CVC → 再換 Perm-Cath</span></li>
+      <li class="fragment">Perm-Cath 感染率高、flow 不穩、住院天數↑</li>
       <li class="fragment">如果半年前就轉介，AVF 早就成熟可以用了</li>
     </ul>
   </section>
@@ -3539,11 +3539,11 @@ export const slides: Record<string, SlideData> = {
   </section>
 </section>
 
-<!-- Section 2: AVF vs AVG vs CVC -->
+<!-- Section 2: AVF vs AVG vs Perm-Cath -->
 <section>
   <section data-background-color="#001219">
     <h2>⚖️ 三種血管通路比較</h2>
-    <p>AVF vs AVG vs CVC — 怎麼選？</p>
+    <p>AVF vs AVG vs Perm-Cath — 怎麼選？</p>
   </section>
 
   <section data-background-color="#001219">
@@ -3565,18 +3565,19 @@ export const slides: Record<string, SlideData> = {
       <li class="fragment"><span class="success">手術技術上比較容易</span>、適合血管條件差的患者</li>
       <li class="fragment"><span class="danger">Patency 較差</span> — 2年 primary patency ~30-40%</li>
       <li class="fragment"><span class="danger">Stenosis 和 thrombosis 發生率高</span>（尤其是 venous anastomosis）</li>
-      <li class="fragment">感染率比 AVF 高，但比 CVC 低很多</li>
+      <li class="fragment">感染率比 AVF 高，但比 Perm-Cath 低很多</li>
     </ul>
   </section>
 
   <section data-background-color="#001219">
-    <h3>CVC（中央靜脈導管）</h3>
+    <h3>Perm-Cath（Tunneled Cuffed Catheter）</h3>
     <ul>
-      <li><span class="success">馬上可以用</span> — 急診救命用的</li>
+      <li><span class="success">快速建立</span> — AVF 未成熟或無法做 AVF/AVG 時的選擇</li>
       <li class="fragment"><span class="danger">感染率最高</span>（bacteremia 2-5 per 1000 catheter-days）</li>
       <li class="fragment"><span class="danger">Central vein stenosis</span> — 會毀掉未來做 AVF/AVG 的機會</li>
       <li class="fragment"><span class="danger">Mortality 比 AVF 高 2-3 倍</span></li>
       <li class="fragment">只應該是<span class="highlight">過渡方案</span>，不是長期選擇</li>
+      <li class="fragment">⚠️ 跟急診放的 temporary CVC 不同 — Perm-Cath 有 cuff + tunnel，可用數週到數月</li>
     </ul>
   </section>
 
