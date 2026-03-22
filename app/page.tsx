@@ -1,4 +1,5 @@
 import Link from "next/link";
+import Image from "next/image";
 import { loadBlogEntries, loadSiteCopy, loadProjects, loadStreamEntries } from "@/lib/content";
 import { ViewStats } from "@/components/ui/ViewCounter";
 import { BASE_URL } from "@/lib/constants";
@@ -56,25 +57,65 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
     <main className="page-shell space-y-12">
-      <header className="surface-strong space-y-4 px-6 py-6">
-        <h1 className="text-3xl font-semibold leading-tight text-[var(--foreground)] sm:text-4xl">
-          {siteCopy.heroTitle}
-        </h1>
-        <p className="text-lg text-[var(--muted)]">{siteCopy.heroSubtitle}</p>
-        <div className="max-w-3xl space-y-3 text-base text-[var(--muted)]">
-          {heroIntroParagraphs.map((paragraph, index) => (
-            <p key={index}>{paragraph}</p>
-          ))}
-        </div>
-        <div className="pt-2">
-          <Link
-            href="/blog"
-            className="inline-flex items-center gap-2 rounded-full bg-[var(--accent-strong)] px-4 py-2 text-sm font-semibold text-white shadow-[0_14px_35px_rgba(202,103,2,0.28)] transition-colors hover:bg-[var(--accent-contrast)]"
-          >
-            {siteCopy.heroCTA} →
-          </Link>
+      <header className="surface-strong px-6 py-8">
+        <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:gap-8">
+          <div className="relative h-32 w-32 flex-shrink-0 overflow-hidden rounded-2xl sm:h-40 sm:w-40">
+            <Image
+              src="/hero.jpg"
+              alt="趙玴祥 Wilson Chao"
+              fill
+              className="object-cover"
+              priority
+            />
+          </div>
+          <div className="space-y-3 text-center sm:text-left">
+            <h1 className="text-3xl font-semibold leading-tight text-[var(--foreground)] sm:text-4xl">
+              {siteCopy.heroTitle}
+            </h1>
+            <p className="text-lg text-[var(--muted)]">{siteCopy.heroSubtitle}</p>
+            <div className="max-w-2xl space-y-3 text-base leading-relaxed text-[var(--muted)]">
+              {heroIntroParagraphs.map((paragraph, index) => (
+                <p key={index}>{paragraph}</p>
+              ))}
+            </div>
+          </div>
         </div>
       </header>
+
+      <nav className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+        <Link
+          href="/blog"
+          className="surface-card group flex flex-col gap-2 px-5 py-4 transition-transform hover:-translate-y-0.5"
+        >
+          <span className="text-2xl">📝</span>
+          <span className="text-base font-semibold text-[var(--foreground)] group-hover:text-[var(--accent)]">Blog</span>
+          <span className="text-sm leading-snug text-[var(--muted)]">長一點的文章。寫醫院裡看到的、AI 怎麼改變我的日常、還有那些想很久才想通的事。</span>
+        </Link>
+        <Link
+          href="/now"
+          className="surface-card group flex flex-col gap-2 px-5 py-4 transition-transform hover:-translate-y-0.5"
+        >
+          <span className="text-2xl">⏳</span>
+          <span className="text-base font-semibold text-[var(--foreground)] group-hover:text-[var(--accent)]">Now</span>
+          <span className="text-sm leading-snug text-[var(--muted)]">我現在在幹嘛——在哪裡值班、在做什麼研究、最近在聽什麼。會一直更新。</span>
+        </Link>
+        <Link
+          href="/stream"
+          className="surface-card group flex flex-col gap-2 px-5 py-4 transition-transform hover:-translate-y-0.5"
+        >
+          <span className="text-2xl">🌊</span>
+          <span className="text-base font-semibold text-[var(--foreground)] group-hover:text-[var(--accent)]">Stream</span>
+          <span className="text-sm leading-snug text-[var(--muted)]">每天的腦內碎片。有時候是手術後的感想，有時候是半夜聽到一首歌，有時候就只是廢話。</span>
+        </Link>
+        <Link
+          href="/blogroll"
+          className="surface-card group flex flex-col gap-2 px-5 py-4 transition-transform hover:-translate-y-0.5"
+        >
+          <span className="text-2xl">📜</span>
+          <span className="text-base font-semibold text-[var(--foreground)] group-hover:text-[var(--accent)]">Blogroll</span>
+          <span className="text-sm leading-snug text-[var(--muted)]">我在讀的部落格。看看別人怎麼過日子、怎麼想事情。</span>
+        </Link>
+      </nav>
 
       <section className="section-block">
         <div className="flex items-baseline justify-between gap-3">

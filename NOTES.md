@@ -12,3 +12,8 @@
 2) If friendly slugs are desired, fill Slug in Notion DBs; otherwise auto-generated unique slugs stay.
 3) Confirm `old.wilsonchao.com` keeps serving the Notaku backup; main domain now on Vercel.
 4) If moving to Cloudflare KV in future, swap `/api/views` storage accordingly.
+
+## 未來可做（2026-03-22）
+
+- **文章數統計** — 像 wiwi.blog 那樣「N 篇文章，共 X 字」放首頁或 About，等篇數多了再加
+- **/random 隨機文章** — 隨機跳一篇，增加探索感
