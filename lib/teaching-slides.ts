@@ -1075,6 +1075,127 @@ export const slides: Record<string, SlideData> = {
   </section>
 </section>
 
+<!-- Contact -->
+<section data-background-color="#001219">
+  <h2>📞 聯絡方式</h2>
+  <table>
+    <tr><td><strong>趙玴祥醫師（公務機）</strong></td><td style="color:#4ecdc4;font-size:1.2em;">4657096</td></tr>
+    <tr><td><strong>2CI 護理站</strong></td><td>院內分機查詢</td></tr>
+  </table>
+  <p style="margin-top:20px;color:#f4a261;">有問題直接打，不要猶豫。<br/>不確定該不該打 → 打。</p>
+</section>
+
+<!-- Navigation -->
+<section>
+  <section data-background-color="#001219">
+    <h2>🗺️ 地理導航</h2>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>2CI — CVSICU</h3>
+    <ul>
+      <li><strong>C 棟電梯</strong>坐到 <strong>2 樓</strong></li>
+      <li>出電梯 → <strong>往牙科方向走</strong></li>
+      <li>到底就是 2CI（心臟血管外科加護病房）</li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>刀房入口</h3>
+    <ul>
+      <li>刀房在 <strong>2 樓</strong></li>
+      <li>👩 <strong>女生入口</strong> — 2CI 前面</li>
+      <li>👨 <strong>男生入口</strong> — 心導管室旁邊</li>
+    </ul>
+    <p style="margin-top:15px;color:#aaa;">第一天找不到？問護理站，大家都很友善。</p>
+  </section>
+</section>
+
+<!-- How to read OR schedule -->
+<section>
+  <section data-background-color="#001219">
+    <h2>📋 看懂刀表</h2>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>重點欄位</h3>
+    <ul>
+      <li class="fragment"><strong>術式名稱</strong> — CABG、MVR、AVR、Bentall… 先搞懂縮寫</li>
+      <li class="fragment"><strong>主刀醫師</strong> — 知道今天誰開什麼</li>
+      <li class="fragment"><strong>刀房號碼</strong> — 確認去對間</li>
+      <li class="fragment"><strong>預估時間</strong> — 開心手術通常 4-8 小時</li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>策略</h3>
+    <ul>
+      <li class="fragment">每天早上先看刀表 → 決定今天跟哪台</li>
+      <li class="fragment">優先跟 <strong>CABG、Valve</strong> — 最經典的開心手術</li>
+      <li class="fragment">如果主治問「要不要上台？」→ 答案永遠是 <strong>Yes</strong></li>
+    </ul>
+  </section>
+</section>
+
+<!-- Common Mistakes -->
+<section>
+  <section data-background-color="#001219">
+    <h2>⚠️ 常見 Mistakes</h2>
+    <p class="hook">前人踩過的坑，你不用再踩</p>
+  </section>
+
+  <section data-background-color="#001219">
+    <ul>
+      <li class="fragment"><span class="danger">❌ 沒 pre-round 就去晨會</span> → 被問病人狀況答不出來</li>
+      <li class="fragment"><span class="danger">❌ Progress Note 拖到隔天</span> → 越堆越多，品質越差</li>
+      <li class="fragment"><span class="danger">❌ 等老師來找你上課</span> → 核心課程要<strong>你主動約</strong></li>
+      <li class="fragment"><span class="danger">❌ Call 學長前沒看病人</span> → 「他怎樣？」「呃…我還沒去看」💀</li>
+      <li class="fragment"><span class="danger">❌ 兩週都沒進刀房</span> → 來心外不看心臟？</li>
+    </ul>
+  </section>
+</section>
+
+<!-- Checklist -->
+<section>
+  <section data-background-color="#001219">
+    <h2>✅ Checklist</h2>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>📌 第一天</h3>
+    <ul>
+      <li>□ 找趙玴祥醫師報到</li>
+      <li>□ 認識 2CI 護理站、刀房入口</li>
+      <li>□ 拿到分配的病人名單</li>
+      <li>□ 主動聯繫核心課程老師約時間</li>
+      <li>□ 存公務機號碼 4657096</li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>📌 第一週結束前</h3>
+    <ul>
+      <li>□ 至少跟過 1 台開心手術</li>
+      <li>□ 寫過 Admission Note</li>
+      <li>□ 每天 Progress Note 都有交</li>
+      <li>□ 參加過晨會 + 文獻研討</li>
+      <li>□ 會看刀表、知道明天開什麼</li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>📌 離科前</h3>
+    <ul>
+      <li>□ 跟過 2-3 台開心手術</li>
+      <li>□ 報過至少 1 次 case</li>
+      <li>□ 核心課程全部上完</li>
+      <li>□ 教學單張<strong>準時上網填寫</strong></li>
+      <li>□ 上課/開會紀錄填教學管理系統</li>
+      <li>□ 第二週週五 15:00 Feedback</li>
+    </ul>
+  </section>
+</section>
+
 <!-- Teaching Resources -->
 <section data-background-color="#001219">
   <h2>📚 教學資源</h2>
@@ -1087,6 +1208,7 @@ export const slides: Record<string, SlideData> = {
 <section data-background-color="#001219">
   <h2>有問題隨時找我 👋</h2>
   <p style="margin-top:20px;">趙玴祥</p>
+  <p style="font-size:1.1em;color:#4ecdc4;">📱 4657096</p>
   <p style="color:#aaa;">祝你在心臟外科的兩週收穫滿滿！</p>
 </section>
 `,
