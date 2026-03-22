@@ -14,6 +14,7 @@ Wilson 的 clerk teaching 系統已在 wilsonchao.com 上線：
 ## 現有 Simulator 專案
 
 **路徑**：`/Users/zhaoyixiang/Project/_active/claude-icu-simulator/`
+**Website 路徑**：`/Users/zhaoyixiang/Project/_brand/new_website/`
 
 ### 技術棧
 - Next.js + TypeScript + Tailwind CSS + shadcn/ui
@@ -49,13 +50,13 @@ Wilson 的 clerk teaching 系統已在 wilsonchao.com 上線：
 ### 建議步驟
 
 1. **搬元件**
-   - `components/` → `new_website/components/simulator/`
-   - `scenarios/` → `new_website/lib/scenarios/`
-   - API route → `new_website/app/api/simulator/`
+   - `/Users/zhaoyixiang/Project/_active/claude-icu-simulator/components/` → `/Users/zhaoyixiang/Project/_brand/new_website/components/simulator/`
+   - `/Users/zhaoyixiang/Project/_active/claude-icu-simulator/scenarios/` → `/Users/zhaoyixiang/Project/_brand/new_website/lib/scenarios/`
+   - `/Users/zhaoyixiang/Project/_active/claude-icu-simulator/app/api/` → `/Users/zhaoyixiang/Project/_brand/new_website/app/api/simulator/`
 
 2. **建路由**
-   - `/teaching/simulator` — 情境選單（依難度分類）
-   - `/teaching/simulator/[id]` — 實際遊戲畫面
+   - `/Users/zhaoyixiang/Project/_brand/new_website/app/teaching/simulator/page.tsx` — 情境選單
+   - `/Users/zhaoyixiang/Project/_brand/new_website/app/teaching/simulator/[id]/page.tsx` — 遊戲畫面
 
 3. **整合 Teaching 系統**
    - 每個投影片末尾加「🎮 練習這個主題」連結到對應 simulator scenario
@@ -89,8 +90,12 @@ Wilson 的 clerk teaching 系統已在 wilsonchao.com 上線：
 
 | 檔案 | 用途 |
 |------|------|
-| `claude-icu-simulator/CLAUDE.md` | 原始專案說明 |
-| `claude-icu-simulator/.claude/docs/PRD.md` | 完整 PRD |
-| `claude-icu-simulator/.claude/docs/TECHSTACK.md` | 技術棧 |
-| `new_website/lib/teaching-slides.ts` | 現有 11 套投影片 |
-| `new_website/lib/teaching-handouts.ts` | 講義內容 |
+| `/Users/zhaoyixiang/Project/_active/claude-icu-simulator/CLAUDE.md` | 原始專案說明 |
+| `/Users/zhaoyixiang/Project/_active/claude-icu-simulator/.claude/docs/PRD.md` | 完整 PRD |
+| `/Users/zhaoyixiang/Project/_active/claude-icu-simulator/.claude/docs/TECHSTACK.md` | 技術棧 |
+| `/Users/zhaoyixiang/Project/_active/claude-icu-simulator/scenarios/cardiogenic-shock-01/` | 已有情境 JSON |
+| `/Users/zhaoyixiang/Project/_active/claude-icu-simulator/components/` | 遊戲 UI 元件 |
+| `/Users/zhaoyixiang/Project/_active/claude-icu-simulator/app/api/` | API routes |
+| `/Users/zhaoyixiang/Project/_brand/new_website/lib/teaching-slides.ts` | 現有 11 套投影片 |
+| `/Users/zhaoyixiang/Project/_brand/new_website/lib/teaching-handouts.ts` | 講義內容 |
+| `/Users/zhaoyixiang/Project/_brand/new_website/app/teaching/` | Teaching 路由 |
