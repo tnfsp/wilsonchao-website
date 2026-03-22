@@ -97,22 +97,17 @@ export default async function Home() {
             </div>
           </div>
 
-          <div className="max-w-2xl space-y-4 text-base leading-relaxed text-[var(--foreground)]">
-            <p className="text-lg font-medium">
+          <div className="max-w-2xl space-y-4 text-base leading-relaxed text-[var(--muted)]">
+            <p className="text-lg font-medium text-[var(--foreground)]">
               白天在高醫把心臟打開，晚上把心裡的事寫下來。
             </p>
             {heroIntroParagraphs.map((paragraph: string, index: number) => (
               <p key={index} className="text-[var(--muted)]">{paragraph}</p>
             ))}
-            <nav className="flex flex-wrap items-center gap-x-4 gap-y-2 pt-1 text-sm text-[var(--muted)]">
-              <Link href="/blog" className="hover:text-[var(--foreground)] transition-colors">Blog</Link>
-              <span className="text-[var(--border)]">·</span>
-              <Link href="/stream" className="hover:text-[var(--foreground)] transition-colors">Stream</Link>
-              <span className="text-[var(--border)]">·</span>
-              <Link href="/now" className="hover:text-[var(--foreground)] transition-colors">Now</Link>
-              <span className="text-[var(--border)]">·</span>
-              <Link href="/blogroll" className="hover:text-[var(--foreground)] transition-colors">Blogroll</Link>
-            </nav>
+            <p className="text-[var(--muted)]">
+              <Link href="/blog" className="subtle-link">Blog</Link> 是想好了才寫的長文。
+              <Link href="/stream" className="subtle-link"> Stream</Link> 是每天的腦內碎片——手術後的感想、半夜聽到的歌、或就只是廢話。想知道我最近在幹嘛，看 <Link href="/now" className="subtle-link">Now</Link>。想知道我在讀什麼，看 <Link href="/blogroll" className="subtle-link">Blogroll</Link>。
+            </p>
           </div>
         </header>
 

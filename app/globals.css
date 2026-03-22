@@ -145,6 +145,20 @@ a:focus-visible {
   text-decoration-color: var(--accent-strong);
 }
 
+.subtle-link {
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+.subtle-link:hover {
+  color: var(--foreground);
+  text-decoration-color: var(--foreground);
+}
+
 .hero-photo-wrap {
   transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
