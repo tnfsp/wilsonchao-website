@@ -22,6 +22,28 @@ const FALLBACK_SECTIONS = [
   { id: "other", emoji: "🎵", title: "其他", body: "DJ、健身、走路。" },
 ];
 
+/** Parse markdown-style [text](url) into React nodes */
+function renderLinkedText(text: string) {
+  const parts = text.split(/(\[[^\]]+\]\([^)]+\))/g);
+  return parts.map((part, i) => {
+    const match = part.match(/^\[([^\]]+)\]\(([^)]+)\)$/);
+    if (match) {
+      return (
+        <a
+          key={i}
+          href={match[2]}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="underline decoration-[var(--border)] underline-offset-4 transition-colors hover:text-[var(--accent)]"
+        >
+          {match[1]}
+        </a>
+      );
+    }
+    return <span key={i}>{part}</span>;
+  });
+}
+
 function formatLastUpdated(iso: string): string {
   try {
     const d = new Date(iso);
@@ -74,7 +96,7 @@ export default async function NowPage() {
 
         {/* Intro */}
         {data?.intro && (
-          <p className="leading-relaxed text-[var(--muted)]">{data.intro}</p>
+          <p className="leading-relaxed text-[var(--muted)]">{renderLinkedText(data.intro)}</p>
         )}
 
         {/* Static sections */}
@@ -84,7 +106,7 @@ export default async function NowPage() {
               <h2 className="text-lg font-semibold text-[var(--foreground)]">
                 {s.emoji} {s.title}
               </h2>
-              <p className="leading-relaxed text-[var(--muted)]">{s.body}</p>
+              <p className="leading-relaxed text-[var(--muted)]">{renderLinkedText(s.body)}</p>
             </section>
           ))}
         </div>
