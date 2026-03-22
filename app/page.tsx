@@ -2,6 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { loadBlogEntries, loadSiteCopy, loadProjects, loadStreamEntries } from "@/lib/content";
 import { ViewStats } from "@/components/ui/ViewCounter";
+import { RandomTagline } from "@/components/ui/RandomTagline";
 import { BASE_URL } from "@/lib/constants";
 
 const websiteJsonLd = {
@@ -56,38 +57,61 @@ export default async function Home() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(websiteJsonLd) }}
       />
       <main className="page-shell space-y-16">
-        {/* Hero: photo + text side by side */}
-        <header className="space-y-6 pt-4">
-          <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-start sm:gap-8">
-            <div className="relative h-24 w-24 flex-shrink-0 overflow-hidden rounded-full sm:h-28 sm:w-28">
-              <Image
-                src="/hero.jpg"
-                alt="趙玴祥 Wilson Chao"
-                fill
-                className="object-cover"
-                priority
-              />
-            </div>
-            <div className="space-y-3 text-center sm:text-left">
-              <h1 className="text-2xl font-semibold leading-tight text-[var(--foreground)] sm:text-3xl">
-                {siteCopy.heroSubtitle}
+        {/* Hero — personality-first */}
+        <header className="hero-block relative overflow-hidden rounded-2xl px-6 py-10 sm:px-10 sm:py-14">
+          {/* Decorative accent dot */}
+          <div className="hero-dot absolute -right-6 -top-6 h-32 w-32 rounded-full opacity-20 sm:h-48 sm:w-48" />
+
+          <div className="relative z-10 flex flex-col gap-8 sm:flex-row sm:items-end sm:justify-between">
+            {/* Text side */}
+            <div className="max-w-lg space-y-4">
+              <p className="text-sm font-medium uppercase tracking-widest text-[var(--accent)]">
+                心臟外科醫師 · 寫字的人
+              </p>
+              <h1 className="text-3xl font-bold leading-tight text-[var(--foreground)] sm:text-4xl">
+                嗨，我是玴祥
               </h1>
-              <div className="max-w-xl space-y-2 text-base leading-relaxed text-[var(--muted)]">
+              <div className="space-y-2 text-base leading-relaxed text-[var(--muted)]">
                 {heroIntroParagraphs.map((paragraph: string, index: number) => (
                   <p key={index}>{paragraph}</p>
                 ))}
               </div>
+              <RandomTagline />
+              {/* Nav pills */}
+              <nav className="flex flex-wrap gap-2 pt-2">
+                {[
+                  { href: "/blog", label: "Blog" },
+                  { href: "/now", label: "Now" },
+                  { href: "/stream", label: "Stream" },
+                  { href: "/blogroll", label: "Blogroll" },
+                  { href: "/about", label: "About" },
+                ].map((item) => (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    className="hero-pill rounded-full border border-[var(--border)] px-4 py-1.5 text-sm text-[var(--foreground)] transition-all hover:border-[var(--accent)] hover:bg-[var(--accent)] hover:text-white"
+                  >
+                    {item.label}
+                  </Link>
+                ))}
+              </nav>
+            </div>
+
+            {/* Photo side */}
+            <div className="hero-photo-wrap relative mx-auto flex-shrink-0 sm:mx-0">
+              <div className="hero-photo relative h-36 w-36 overflow-hidden rounded-2xl shadow-lg sm:h-44 sm:w-44">
+                <Image
+                  src="/hero.jpg"
+                  alt="趙玴祥 Wilson Chao"
+                  fill
+                  className="object-cover"
+                  priority
+                />
+              </div>
+              {/* Playful offset border */}
+              <div className="absolute -bottom-2 -right-2 -z-10 h-36 w-36 rounded-2xl border-2 border-dashed border-[var(--accent)] opacity-40 sm:h-44 sm:w-44" />
             </div>
           </div>
-
-          {/* Inline nav links */}
-          <nav className="flex flex-wrap items-center justify-center gap-x-6 gap-y-2 text-base sm:justify-start">
-            <Link href="/blog" className="text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-4 transition-colors hover:text-[var(--accent)] hover:decoration-[var(--accent)]">Blog</Link>
-            <Link href="/now" className="text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-4 transition-colors hover:text-[var(--accent)] hover:decoration-[var(--accent)]">Now</Link>
-            <Link href="/stream" className="text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-4 transition-colors hover:text-[var(--accent)] hover:decoration-[var(--accent)]">Stream</Link>
-            <Link href="/blogroll" className="text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-4 transition-colors hover:text-[var(--accent)] hover:decoration-[var(--accent)]">Blogroll</Link>
-            <Link href="/about" className="text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-4 transition-colors hover:text-[var(--accent)] hover:decoration-[var(--accent)]">About</Link>
-          </nav>
         </header>
 
         {/* Blog: title list only */}

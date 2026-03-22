@@ -120,6 +120,46 @@ a:focus-visible {
 }
 
 /* ============================================
+   Hero block — personality-first
+   ============================================ */
+
+.hero-block {
+  background:
+    linear-gradient(145deg, rgba(233, 216, 166, 0.45) 0%, rgba(255, 251, 244, 0.9) 50%, rgba(153, 186, 203, 0.2) 100%);
+  border: 1px solid var(--border);
+}
+
+.hero-dot {
+  background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+}
+
+.hero-photo-wrap {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hero-photo-wrap:hover {
+  transform: rotate(-3deg) scale(1.03);
+}
+
+.hero-photo {
+  transition: box-shadow 0.3s ease;
+}
+
+.hero-photo-wrap:hover .hero-photo {
+  box-shadow: 0 20px 50px rgba(0, 18, 25, 0.18);
+}
+
+.hero-pill {
+  backdrop-filter: blur(4px);
+  background: rgba(255, 251, 244, 0.6);
+}
+
+.tagline-random {
+  border-left: 2px solid var(--accent);
+  padding-left: 0.75rem;
+}
+
+/* ============================================
    Prose typography styles for article content
    ============================================ */
 
