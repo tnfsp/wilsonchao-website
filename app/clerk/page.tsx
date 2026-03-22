@@ -50,6 +50,14 @@ export default function ClerkOrientation() {
           <h1 className="text-4xl font-bold mb-3">Clerk 見習指南</h1>
           <p className="text-lg text-cyan-100 mb-1">高雄醫學大學附設醫院 心臟血管外科</p>
           <p className="text-cyan-200/70 text-sm mt-4">歡迎！接下來兩週，你會看到心臟停下來再跳起來。</p>
+          <div className="mt-6">
+            <Link
+              href="/teaching/clerk-orientation"
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-lg bg-white/10 hover:bg-white/20 text-white font-medium text-sm transition-colors border border-white/20"
+            >
+              <span>▶</span> 開始 Presentation
+            </Link>
+          </div>
         </div>
       </header>
 

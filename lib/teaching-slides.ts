@@ -863,4 +863,232 @@ export const slides: Record<string, SlideData> = {
 </section>
 `,
   },
+
+  "clerk-orientation": {
+    title: "Clerk Orientation",
+    subtitle: "高醫心臟血管外科見習指南",
+    html: `
+<!-- Title -->
+<section data-background-color="#001219">
+  <div class="emoji-big">🫀</div>
+  <h1>Clerk Orientation</h1>
+  <p class="subtitle">高醫心臟血管外科見習指南</p>
+  <p class="author">趙玴祥 — KMUH CVS CR</p>
+</section>
+
+<!-- Welcome -->
+<section data-background-color="#001219">
+  <h2>歡迎來到心臟外科！</h2>
+  <p class="hook">接下來兩週，你會看到心臟停下來再跳起來。</p>
+</section>
+
+<!-- Team -->
+<section>
+  <section data-background-color="#001219">
+    <h2>👥 我們的團隊</h2>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>科主任 & 科導師</h3>
+    <table>
+      <tr><td><strong>科主任</strong></td><td>潘俊彥 主任</td></tr>
+      <tr><td><strong>科導師</strong></td><td>曾政哲 主治醫師</td></tr>
+    </table>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>主治醫師群</h3>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:20px;">
+      <span class="highlight">謝炯昭</span>
+      <span class="highlight">黃建偉</span>
+      <span class="highlight">曾政哲</span>
+      <span class="highlight">吳柏俞</span>
+      <span class="highlight">潘俊彥</span>
+      <span class="highlight">羅時逸</span>
+    </div>
+  </section>
+</section>
+
+<!-- Courses -->
+<section>
+  <section data-background-color="#001219">
+    <h2>📖 課程負責</h2>
+  </section>
+
+  <section data-background-color="#001219">
+    <table>
+      <tr><td><strong>教學住診</strong></td><td>邱肇基 副教授</td><td>主動聯絡報告 case</td></tr>
+      <tr><td><strong>文獻研討</strong></td><td>陳英富 教授</td><td>找 NP 陳秋珍學姊要 paper</td></tr>
+      <tr><td><strong>核心課程<br/><small>（小兒心臟）</small></strong></td><td>羅時逸 醫師</td><td>主動詢問日期時間</td></tr>
+      <tr><td><strong>核心課程<br/><small>（心臟外科導論）</small></strong></td><td>吳柏俞 醫師</td><td>主動詢問日期時間</td></tr>
+    </table>
+  </section>
+</section>
+
+<!-- Priority -->
+<section data-background-color="#001219">
+  <h2>🎯 學習優先順序</h2>
+  <ol>
+    <li class="fragment"><strong>核心課程</strong> — 上課 &gt; 一切</li>
+    <li class="fragment"><strong>門診跟診</strong> — 有門診就去</li>
+    <li class="fragment"><strong>跟刀</strong> — 沒課就進刀房</li>
+  </ol>
+  <p class="fragment" style="margin-top:30px;color:#f4a261;font-weight:bold;">⚠️ 每天必須看 primary care 病人</p>
+</section>
+
+<!-- Goals -->
+<section>
+  <section data-background-color="#001219">
+    <h2>🏆 兩週你要帶走的東西</h2>
+  </section>
+
+  <section data-background-color="#001219">
+    <ul>
+      <li class="fragment">看懂術後 monitor 上的數字 — 哪些要緊、哪些可以等</li>
+      <li class="fragment">至少跟 <strong>2-3 台開心手術</strong>，知道大步驟在幹什麼</li>
+      <li class="fragment">照顧 1-3 個病人，寫得出 Admission Note 和 Progress Note</li>
+      <li class="fragment">報一次完整的 case，讓主治醫師聽得懂</li>
+      <li class="fragment">看懂 Echo / Cath 報告的 surgical indication</li>
+    </ul>
+  </section>
+</section>
+
+<!-- Daily Rhythm -->
+<section>
+  <section data-background-color="#001219">
+    <h2>⏰ 一天的節奏</h2>
+  </section>
+
+  <section data-background-color="#001219">
+    <table>
+      <tr><td><strong>07:00–07:30</strong></td><td>Pre-round：先看你的病人。看不完就提早來。</td></tr>
+      <tr><td><strong>07:30</strong></td><td>晨會<br/><small>週四：心外晨報會 + 文獻研討（10ES 討論室）</small><br/><small>週五：大外科晨會（6F 講堂）</small></td></tr>
+      <tr><td><strong>08:30–</strong></td><td>跟刀 / 上課（依排程）</td></tr>
+      <tr><td><strong>16:00</strong></td><td>週四：心臟內外科聯合討論會</td></tr>
+      <tr><td><strong>下班前</strong></td><td>寫 Progress Note — 當天完成！</td></tr>
+    </table>
+  </section>
+</section>
+
+<!-- Week 1 -->
+<section>
+  <section data-background-color="#001219">
+    <h2>📅 第一週</h2>
+  </section>
+
+  <section data-background-color="#001219">
+    <table style="font-size:0.7em;">
+      <thead>
+        <tr><th>時間</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>07:30</td><td></td><td></td><td></td><td style="color:#4ecdc4;">晨會 + 文獻研討</td><td></td></tr>
+        <tr><td>08:30</td><td style="color:#a8e6cf;">Orientation</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>09:00</td><td></td><td style="color:#dda0dd;">教學住診</td><td></td><td></td><td></td></tr>
+        <tr><td>16:00</td><td></td><td></td><td></td><td style="color:#f4a261;">內外科聯合討論</td><td></td></tr>
+      </tbody>
+    </table>
+    <p style="margin-top:15px;font-size:0.8em;color:#aaa;">核心課程請主動與老師詢問上課日期及時間</p>
+  </section>
+</section>
+
+<!-- Week 2 -->
+<section>
+  <section data-background-color="#001219">
+    <h2>📅 第二週</h2>
+  </section>
+
+  <section data-background-color="#001219">
+    <table style="font-size:0.7em;">
+      <thead>
+        <tr><th>時間</th><th>一</th><th>二</th><th>三</th><th>四</th><th>五</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>07:30</td><td></td><td></td><td></td><td style="color:#4ecdc4;">晨會 + 文獻研討</td><td></td></tr>
+        <tr><td>08:30</td><td style="color:#ff6b6b;">核心課程</td><td></td><td></td><td></td><td></td></tr>
+        <tr><td>09:00</td><td></td><td style="color:#dda0dd;">教學住診 (ICU)</td><td></td><td style="color:#4ecdc4;">文獻研討</td><td></td></tr>
+        <tr><td>15:00</td><td></td><td></td><td></td><td></td><td style="color:#a8e6cf;">Feedback</td></tr>
+      </tbody>
+    </table>
+  </section>
+</section>
+
+<!-- Patient Care -->
+<section>
+  <section data-background-color="#001219">
+    <h2>🩺 病人照護</h2>
+  </section>
+
+  <section data-background-color="#001219">
+    <ul>
+      <li>分配 <strong>1-3 名病人</strong>，出院後重新分配</li>
+      <li class="fragment">每天 pre-round：<strong>Vital signs → 管路 → 傷口 → 病人感受</strong></li>
+      <li class="fragment">Admission Note — 24 小時內完成</li>
+      <li class="fragment">Progress Note — 每天寫，SOAP 格式</li>
+    </ul>
+  </section>
+</section>
+
+<!-- OR -->
+<section data-background-color="#001219">
+  <h2>🔪 跟刀</h2>
+  <ul>
+    <li>兩週至少看 <strong>2-3 台開心手術</strong></li>
+    <li class="fragment">沒課的時候就進刀房</li>
+    <li class="fragment">你跟的主治沒開心手術？→ 去看其他主治的</li>
+    <li class="fragment">刷手前先問：「可以上台嗎？」</li>
+  </ul>
+</section>
+
+<!-- Records -->
+<section data-background-color="#001219">
+  <h2>📝 記錄與回饋</h2>
+  <ul>
+    <li>見習結束 → <strong>準時上網填寫教學單張</strong></li>
+    <li class="fragment">上課、開會紀錄 → 教學管理系統詳填，<strong>隔天交出</strong></li>
+    <li class="fragment">Feedback：第二週週五 15:00-16:00（趙玴祥醫師）</li>
+  </ul>
+</section>
+
+<!-- Pro Tips -->
+<section>
+  <section data-background-color="#001219">
+    <h2>💡 Pro Tips</h2>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>Discipline</h3>
+    <ul>
+      <li class="fragment"><strong>Pre-round</strong> — 每天 7:30 前先看病人</li>
+      <li class="fragment"><strong>Lab Data 背起來</strong> — 被問的時候不要翻手機</li>
+      <li class="fragment"><strong>隨時準備 5 min case report</strong> — 你的病人，你最清楚</li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>態度</h3>
+    <ul>
+      <li class="fragment"><strong>主動聯繫老師</strong> — 不要等人來找你</li>
+      <li class="fragment"><strong>問問題</strong> — 我們喜歡問問題的 clerk</li>
+      <li class="fragment"><strong>準備充分再 call</strong> — 聯繫 senior 前先了解病人狀況</li>
+    </ul>
+  </section>
+</section>
+
+<!-- Teaching Resources -->
+<section data-background-color="#001219">
+  <h2>📚 教學資源</h2>
+  <p style="margin-top:20px;">所有投影片都在：</p>
+  <p><a href="/teaching" style="color:#4ecdc4;font-size:1.3em;font-weight:bold;">wilsonchao.com/teaching</a></p>
+  <p style="margin-top:15px;color:#aaa;">4 個必修 Module + 5 個選修主題</p>
+</section>
+
+<!-- End -->
+<section data-background-color="#001219">
+  <h2>有問題隨時找我 👋</h2>
+  <p style="margin-top:20px;">趙玴祥</p>
+  <p style="color:#aaa;">祝你在心臟外科的兩週收穫滿滿！</p>
+</section>
+`,
+  },
 };
