@@ -101,13 +101,7 @@ export default async function BlogIndexPage({
                 {post.title}
               </Link>
             </h2>
-            {post.type ? (
-              <div className="flex flex-wrap gap-2 pt-1 text-xs text-[var(--muted)]">
-                <span className="rounded-full border border-[var(--border)] px-2 py-1">
-                  {post.type}
-                </span>
-              </div>
-            ) : null}
+
             <p className="text-[var(--muted)] leading-relaxed">{post.excerpt}</p>
             <div className="pt-2 text-sm text-[var(--muted)]">
               {post.readingTime ? `${post.readingTime} read` : "Read time TBD"}
