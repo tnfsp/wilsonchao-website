@@ -86,8 +86,8 @@ export default async function Home() {
               <p key={index} className="text-[var(--muted)]">{paragraph}</p>
             ))}
             <p className="text-[var(--muted)]">
-              <Link href="/blog" className="font-medium text-[var(--accent)] underline decoration-[var(--accent)]/30 underline-offset-4 hover:decoration-[var(--accent)]">Blog</Link> 是想好了才寫的長文。
-              <Link href="/stream" className="font-medium text-[var(--accent)] underline decoration-[var(--accent)]/30 underline-offset-4 hover:decoration-[var(--accent)]"> Stream</Link> 是每天的腦內碎片——手術後的感想、半夜聽到的歌、或就只是廢話。想知道我最近在幹嘛，看 <Link href="/now" className="font-medium text-[var(--accent)] underline decoration-[var(--accent)]/30 underline-offset-4 hover:decoration-[var(--accent)]">Now</Link>。想知道我在讀什麼，看 <Link href="/blogroll" className="font-medium text-[var(--accent)] underline decoration-[var(--accent)]/30 underline-offset-4 hover:decoration-[var(--accent)]">Blogroll</Link>。
+              <Link href="/blog" className="inline-link">Blog</Link> 是想好了才寫的長文。
+              <Link href="/stream" className="inline-link"> Stream</Link> 是每天的腦內碎片——手術後的感想、半夜聽到的歌、或就只是廢話。想知道我最近在幹嘛，看 <Link href="/now" className="inline-link">Now</Link>。想知道我在讀什麼，看 <Link href="/blogroll" className="inline-link">Blogroll</Link>。
             </p>
           </div>
         </header>
