@@ -1,0 +1,78 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 900 500" style="background:#1a1a2e">
+  <defs>
+    <style>
+      text { font-family: 'Segoe UI', Arial, sans-serif; fill: #e0e0e0; font-size: 13px; }
+      .title { font-size: 18px; fill: #ee9b00; font-weight: bold; }
+      .box { rx: 8; ry: 8; stroke-width: 2; }
+      .question { fill: #0d1b2a; stroke: #ee9b00; }
+      .answer-low { fill: #1a0000; stroke: #e63946; }
+      .answer-high { fill: #001a00; stroke: #2a9d8f; }
+      .type { fill: #0a1628; stroke: #4cc9f0; }
+      .arrow { stroke: #666; stroke-width: 1.5; fill: none; marker-end: url(#arrowhead); }
+      .label-yes { fill: #2a9d8f; font-size: 12px; font-weight: bold; }
+      .label-no { fill: #e63946; font-size: 12px; font-weight: bold; }
+    </style>
+    <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="10" refY="3.5" orient="auto">
+      <polygon points="0 0, 10 3.5, 0 7" fill="#666"/>
+    </marker>
+  </defs>
+  <text x="450" y="30" text-anchor="middle" class="title">Shock Classification Flowchart</text>
+  <!-- Q1: CO -->
+  <rect x="320" y="50" width="260" height="50" class="box question"/>
+  <text x="450" y="72" text-anchor="middle" style="fill:#ee9b00; font-weight:bold">① CO (Cardiac Output)?</text>
+  <text x="450" y="88" text-anchor="middle" style="font-size:11px; fill:#888">心臟在打嗎？</text>
+  <!-- CO Low branch -->
+  <path d="M 370,100 L 200,140" class="arrow"/>
+  <text x="270" y="118" class="label-no">CO 低</text>
+  <!-- CO Normal/High branch -->
+  <path d="M 530,100 L 700,140" class="arrow"/>
+  <text x="620" y="118" class="label-yes">CO 正常/高</text>
+  <!-- Q2a: SVR when CO low -->
+  <rect x="80" y="140" width="240" height="50" class="box question"/>
+  <text x="200" y="162" text-anchor="middle" style="fill:#ee9b00; font-weight:bold">② SVR?</text>
+  <text x="200" y="178" text-anchor="middle" style="font-size:11px; fill:#888">血管是緊還是鬆？</text>
+  <!-- SVR High (CO low) -->
+  <path d="M 130,190 L 80,230" class="arrow"/>
+  <text x="85" y="218" class="label-yes" style="font-size:11px">SVR 高</text>
+  <!-- Q3: CVP -->
+  <rect x="10" y="230" width="180" height="50" class="box question"/>
+  <text x="100" y="252" text-anchor="middle" style="fill:#ee9b00; font-weight:bold">③ CVP?</text>
+  <text x="100" y="268" text-anchor="middle" style="font-size:11px; fill:#888">前面有沒有擋住？</text>
+  <!-- CVP Low -->
+  <path d="M 50,280 L 50,320" class="arrow"/>
+  <text x="30" y="305" class="label-no" style="font-size:11px">CVP 低</text>
+  <rect x="5" y="320" width="140" height="60" class="box answer-low"/>
+  <text x="75" y="342" text-anchor="middle" style="fill:#e63946; font-weight:bold; font-size:14px">Hypovolemic</text>
+  <text x="75" y="362" text-anchor="middle" style="font-size:11px">出血/脫水</text>
+  <text x="75" y="374" text-anchor="middle" style="font-size:11px">冷四肢 + 心跳快</text>
+  <!-- CVP High -->
+  <path d="M 140,280 L 200,320" class="arrow"/>
+  <text x="175" y="305" class="label-yes" style="font-size:11px">CVP 高</text>
+  <rect x="155" y="320" width="140" height="60" class="box answer-low"/>
+  <text x="225" y="342" text-anchor="middle" style="fill:#e63946; font-weight:bold; font-size:14px">Obstructive</text>
+  <text x="225" y="362" text-anchor="middle" style="font-size:11px">Tamponade</text>
+  <text x="225" y="374" text-anchor="middle" style="font-size:11px">Tension PTX / PE</text>
+  <!-- SVR Low (CO low) -->
+  <path d="M 270,190 L 340,230" class="arrow"/>
+  <text x="315" y="218" class="label-no" style="font-size:11px">SVR 低</text>
+  <rect x="305" y="230" width="140" height="60" class="box answer-low"/>
+  <text x="375" y="252" text-anchor="middle" style="fill:#e63946; font-weight:bold; font-size:14px">Cardiogenic</text>
+  <text x="375" y="268" text-anchor="middle" style="font-size:11px">+ Vasodilation</text>
+  <text x="375" y="280" text-anchor="middle" style="font-size:11px">（混合型 shock）</text>
+  <!-- Cardiogenic (pure) - from SVR high without high CVP concept -->
+  <path d="M 200,190 L 200,220" class="arrow" style="opacity:0"/>
+  <!-- CO Normal/High → SVR Low -->
+  <rect x="600" y="140" width="240" height="50" class="box question"/>
+  <text x="720" y="162" text-anchor="middle" style="fill:#ee9b00; font-weight:bold">② SVR?</text>
+  <text x="720" y="178" text-anchor="middle" style="font-size:11px; fill:#888">血管是什麼狀態？</text>
+  <path d="M 720,190 L 720,240" class="arrow"/>
+  <text x="735" y="218" class="label-no" style="font-size:11px">SVR 低</text>
+  <rect x="620" y="240" width="200" height="70" class="box answer-high"/>
+  <text x="720" y="262" text-anchor="middle" style="fill:#2a9d8f; font-weight:bold; font-size:14px">Distributive</text>
+  <text x="720" y="282" text-anchor="middle" style="font-size:11px">Sepsis / Vasoplegia</text>
+  <text x="720" y="296" text-anchor="middle" style="font-size:11px">暖四肢 + CO adequate</text>
+  <!-- Physical exam hint -->
+  <rect x="200" y="420" width="500" height="60" rx="8" fill="#0d1b2a" stroke="#333" stroke-width="1"/>
+  <text x="450" y="442" text-anchor="middle" style="fill:#94d2bd; font-weight:bold; font-size:14px">💡 摸四肢就對了一半</text>
+  <text x="450" y="462" text-anchor="middle" style="font-size:12px">冷＋濕 → Cardiogenic/Hypovolemic/Obstructive ｜ 暖 → Distributive</text>
+</svg>

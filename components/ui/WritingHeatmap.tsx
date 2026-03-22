@@ -10,7 +10,7 @@ const SIZE = CELL + GAP;
 
 const COLORS = {
   empty: "var(--border)",
-  filled: "#40c463",
+  filled: "#0a9396",
 };
 
 const MONTHS_ZH = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
@@ -26,7 +26,7 @@ export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
   const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
-    fetch("/api/writing-calendar")
+    fetch("/writing-calendar.json")
       .then((r) => r.json())
       .then((data) => setEntries(data.entries))
       .catch(() => setEntries([]));
@@ -110,7 +110,7 @@ export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
     <div className="mt-3">
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-[11px] text-[var(--muted)]">
-          📝 {entries.length} 篇文章
+          📝 {entries.length} 篇文章的寫作紀錄
         </span>
       </div>
       <div className="overflow-x-auto relative" style={{ position: "relative" }}>
@@ -194,7 +194,7 @@ export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
                 return `${y}年${parseInt(m)}月${parseInt(d)}日`;
               })()}
             </div>
-            <div className="font-medium" style={{ color: "#40c463" }}>
+            <div className="font-medium" style={{ color: "#0a9396" }}>
               {tooltip.entry.title}
             </div>
           </div>

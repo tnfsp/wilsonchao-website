@@ -10,7 +10,9 @@
     "start": "next start",
     "lint": "eslint",
     "sync:notion": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/sync-notion.ts",
-    "sync:vault": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/sync-vault.ts"
+    "sync:vault": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/sync-vault.ts",
+    "prebuild": "node scripts/gen-writing-calendar.js",
+    "predev": "node scripts/gen-writing-calendar.js"
   },
   "dependencies": {
     "@notionhq/client": "^2.2.14",

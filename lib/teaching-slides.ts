@@ -19,7 +19,7 @@ export const slides: Record<string, SlideData> = {
 
 <!-- Hook -->
 <section data-background-color="#001219">
-  <p class="hook">💬 一份 Echo 報告寫 severe AS，AVA 0.8 cm²<br/>另一份也寫 severe AS，但 Vmax 只有 3.2 m/s<br/><br/>兩個都是 severe，但一個可能需要開刀，另一個可能不用。<br/><strong>為什麼？</strong></p>
+  <p class="hook">💬 一份 Echo 報告寫 severe AS，AVA 0.8 cm²<br/>另一份也寫 severe AS，但 Vmax 只有 3.2 m/s（severe AS threshold: &gt;4 m/s）<br/><br/>兩個都是 severe，但一個可能需要開刀，另一個可能不用。<br/><strong>為什麼？</strong></p>
 </section>
 
 <!-- AS: Understanding Flow Physics -->
@@ -148,9 +148,9 @@ export const slides: Record<string, SlideData> = {
     <p>SYNTAX Score 量化的是<strong>冠狀動脈疾病的解剖複雜度</strong>。</p>
     <ul>
       <li class="fragment">考慮：病變位置、分叉、鈣化程度、完全阻塞、血管走向</li>
-      <li class="fragment">SYNTAX ≤22：解剖相對單純 → PCI 能處理得跟 CABG 一樣好</li>
-      <li class="fragment">SYNTAX &gt;22：解剖太複雜 → PCI 放 stent 困難、再狹窄率高 → <span class="highlight">CABG 勝出</span></li>
-      <li class="fragment">SYNTAX &gt;33：高度複雜 → <span class="success">CABG 有明顯 survival benefit</span></li>
+      <li class="fragment">SYNTAX 0-22（low）：解剖相對單純 → PCI 能處理得跟 CABG 一樣好</li>
+      <li class="fragment">SYNTAX 23-32（intermediate）：<span class="highlight">Heart Team 討論</span> → 不是自動 CABG，需綜合 DM、LV function、patient preference</li>
+      <li class="fragment">SYNTAX ≥33（high）：高度複雜 → <span class="success">CABG 有明顯 survival benefit</span></li>
     </ul>
   </section>
 
@@ -235,7 +235,7 @@ export const slides: Record<string, SlideData> = {
     <h3>那為什麼不全部做 TAVI？</h3>
     <ul>
       <li class="fragment"><span class="danger">耐久性</span>：TAVI valve 的長期數據還在累積。SAVR（尤其 mechanical）已經有 30 年以上的追蹤</li>
-      <li class="fragment"><span class="danger">Pacemaker 風險</span>：Self-expanding valve ~15-17% / Balloon-expandable ~6-8% vs SAVR ~3% — TAVI valve 壓到 conduction system</li>
+      <li class="fragment"><span class="danger">Pacemaker 風險</span>：Self-expanding ~10-17% / Balloon-expandable ~4-8%（視 valve generation 而定）vs SAVR ~3% — TAVI valve 壓到 conduction system</li>
       <li class="fragment"><span class="danger">Paravalvular leak</span>：TAVI 比 SAVR 更常見（valve 沒有縫上去，靠壓力固定）</li>
       <li class="fragment"><span class="danger">Bicuspid aortic valve</span>：不對稱的 annulus → TAVI 定位困難</li>
       <li class="fragment">50 歲的病人，TAVI valve 如果只撐 15 年 → 65 歲要再做一次？</li>
@@ -250,6 +250,7 @@ export const slides: Record<string, SlideData> = {
       <li class="fragment"><span class="highlight">&gt;80 歲</span> → <strong>多數傾向 TAVI</strong>（除非解剖不適合）</li>
       <li class="fragment"><span class="danger">High risk / Prohibitive risk</span> → <strong>TAVI</strong></li>
       <li class="fragment">解剖因素：bicuspid, low coronary height, 小 annulus → 影響 TAVI feasibility</li>
+      <li class="fragment">⚠️ 年齡是 proxy — 真正考慮的是<strong>預期壽命是否超過 valve durability</strong></li>
     </ul>
   </section>
 </section>
@@ -353,12 +354,13 @@ export const slides: Record<string, SlideData> = {
     <tr><td rowspan="3">AS</td><td>AVA</td><td>&lt;1.0 cm²</td></tr>
     <tr><td>Mean PG</td><td>&gt;40 mmHg</td></tr>
     <tr><td>Vmax</td><td>&gt;4 m/s</td></tr>
-    <tr><td>AR</td><td>VC / ERO / RegVol / RF</td><td>&gt;6mm / &gt;0.3 cm² / &gt;60 mL / ≥50%<br/><small>+ Holodiastolic flow reversal in descending aorta</small></td></tr>
+    <tr><td>AR</td><td>VC / ERO / RegVol / RF / PHT</td><td>&gt;6mm / &gt;0.3 cm² / &gt;60 mL / ≥50% / &lt;200ms<br/><small>+ Holodiastolic flow reversal in descending aorta</small></td></tr>
     <tr><td>MS</td><td>MVA / Mean PG</td><td>&lt;1.0 cm² / &gt;10 mmHg</td></tr>
     <tr><td>MR (Primary)</td><td>VC / ERO / RegVol</td><td>&gt;7mm / ≥0.4 cm² / ≥60 mL</td></tr>
     <tr><td>MR (Secondary)</td><td>ERO / RegVol</td><td>≥0.2 cm² / ≥30 mL</td></tr>
   </table>
   <p style="font-size:0.8em; color:#aaa;">⚠️ 數字是參考。臨床要整合 flow status、LV function、症狀一起判斷。</p>
+  <p style="font-size:0.75em; color:#aaa;">💡 Secondary MR 的 threshold 比 primary 低（ERO ≥0.2 vs ≥0.4），因為 secondary MR 對 LV 的 deleterious effect 在較低程度就開始產生。</p>
 </section>
 `,
   },
@@ -891,7 +893,7 @@ export const slides: Record<string, SlideData> = {
       <li><strong>Mode</strong>: VC-AC → 因為病人還沒醒，需要完全控制</li>
       <li class="fragment"><strong>TV: 6-8 mL/kg IBW</strong> → 為什麼不多給？因為大 TV → 肺過度膨脹 → VILI（ventilator-induced lung injury）
         <ul>
-          <li>IBW 怎麼算？<strong>Male: 50 + 0.91 × (身高 cm − 152.4)</strong>｜<strong>Female: 45.5 + 0.91 × (身高 cm − 152.4)</strong></li>
+          <li>IBW 怎麼算？<strong>Male: 50 + 0.91 × (身高 cm − 152.4)</strong>｜<strong>Female: 45.5 + 0.91 × (身高 cm − 152.4)</strong><br/><small style="color:#aaa;">（Devine formula 公制轉換）</small></li>
           <li>例：170 cm 男性 → IBW = 50 + 0.91 × 17.6 = <span class="highlight">66 kg</span> → TV = 396-528 mL</li>
         </ul>
       </li>
@@ -919,7 +921,7 @@ export const slides: Record<string, SlideData> = {
         <ul><li>做 inspiratory hold → 氣流停止 → 剩下的壓力反映肺本身 → 目標 &lt; 30 cmH₂O</li></ul>
       </li>
       <li class="fragment"><span class="highlight">Driving Pressure（驅動壓）</span> = Plateau − PEEP → 反映肺泡的真正壓力負擔 → <span class="danger">目標 &lt; 15 cmH₂O</span>
-        <ul><li>最新證據：Driving Pressure 比 TV 更能預測 VILI 和死亡率</li></ul>
+        <ul><li>來自 Amato et al. 2015 NEJM mediation analysis：Driving Pressure 比 TV 更能預測 VILI 和死亡率（尚未有前瞻性 RCT 驗證）</li></ul>
       </li>
     </ul>
   </section>
@@ -989,6 +991,7 @@ export const slides: Record<string, SlideData> = {
           <li>Tension PTX → 氣管偏移 + 單側沒呼吸音 → Needle decompression</li>
           <li>Tamponade → JVP 升高 + BP 掉 + CT output 減少 → Re-explore</li>
           <li>Massive PE → 突然 desaturation + RV failure signs</li>
+          <li>Acute graft failure → 新 ST changes + hemodynamic collapse → 回 OR</li>
         </ul>
       </li>
       <li class="fragment"><span class="highlight">管路問題（20 秒）</span>：
@@ -1048,7 +1051,7 @@ export const slides: Record<string, SlideData> = {
       </li>
       <li class="fragment"><span class="highlight">呼吸功能 OK 嗎？</span>
         <ul>
-          <li>P/F ratio &gt;200（或至少 &gt;150）</li>
+          <li>P/F ratio ≥150 為最低門檻，&gt;200 為理想值</li>
           <li>FiO₂ ≤40%、PEEP ≤5</li>
           <li>沒有嚴重的 respiratory acidosis</li>
         </ul>
@@ -1080,7 +1083,7 @@ export const slides: Record<string, SlideData> = {
   <section data-background-color="#001219">
     <h3>SBT（Spontaneous Breathing Trial）</h3>
     <ul>
-      <li class="fragment">PS 5-8 or T-piece → 讓病人「幾乎靠自己呼吸」30-120 分鐘</li>
+      <li class="fragment">PS ≤8 or T-piece → 讓病人「幾乎靠自己呼吸」30-120 分鐘（ATS/CHEST 2017: PS ≤8 優先於 T-piece）</li>
       <li class="fragment">觀察：RR、SpO₂、HR、BP、病人表情、用力程度</li>
       <li class="fragment">通過 SBT → <span class="success">拔！不要拖</span>。延遲拔管 = 增加 VAP 風險</li>
       <li class="fragment">失敗 → 找原因：心臟？肺？神經肌肉？營養？→ 處理後再試</li>
@@ -1110,7 +1113,7 @@ export const slides: Record<string, SlideData> = {
   <section data-background-color="#001219">
     <h3>Weaning 失敗的心外特有原因</h3>
     <ul>
-      <li class="fragment"><span class="highlight">Phrenic nerve injury</span> — 心臟手術時 phrenic nerve 在 pericardium 上，容易被壓或冰到
+      <li class="fragment"><span class="highlight">Phrenic nerve injury</span> — 心臟手術時 phrenic nerve 在 pericardium 上，容易被壓或冰到；LIMA harvesting 時 electrocautery injury 也是常見原因
         <ul><li>CXR：hemidiaphragm 升高</li>
         <li>影響：FRC 下降 → weaning 困難 → 可能需要 tracheostomy</li></ul>
       </li>
@@ -1181,7 +1184,7 @@ export const slides: Record<string, SlideData> = {
   <table style="font-size:0.75em;">
     <tr><th>Disorder</th><th>Compensation Formula</th></tr>
     <tr><td>Metabolic acidosis</td><td>預期 PCO₂ = 1.5 × [HCO₃] + 8 ± 2 (Winter's)</td></tr>
-    <tr><td>Metabolic alkalosis</td><td>預期 PCO₂ = 0.7 × [HCO₃] + 21 ± 2</td></tr>
+    <tr><td>Metabolic alkalosis</td><td>預期 PCO₂ = 0.7 × [HCO₃] + 21 ± 1.5</td></tr>
     <tr><td>Resp. acidosis (acute)</td><td>每 PCO₂ ↑10 → HCO₃ ↑1</td></tr>
     <tr><td>Resp. acidosis (chronic)</td><td>每 PCO₂ ↑10 → HCO₃ ↑3.5</td></tr>
     <tr><td>Resp. alkalosis (acute)</td><td>每 PCO₂ ↓10 → HCO₃ ↓2</td></tr>
@@ -1330,6 +1333,7 @@ export const slides: Record<string, SlideData> = {
     <ul>
       <li><span class="danger">&gt;400 mL</span> 第一小時</li>
       <li><span class="danger">&gt;200 mL/hr</span> × 連續 2-4 hr</li>
+      <li><span class="danger">&gt;1000 mL / 4-6hr</span>（更早期警戒值）</li>
       <li><span class="danger">&gt;1500 mL</span> 12 hr 總量</li>
       <li>合併 hemodynamic instability</li>
     </ul>
@@ -1371,7 +1375,7 @@ export const slides: Record<string, SlideData> = {
     <ul>
       <li class="fragment">CVP 8 不算高，但更重要的是：</li>
       <li class="fragment">UO 偏低 + Lactate 偏高 + CI 偏低 → 組織灌流不足</li>
-      <li class="fragment">→ 試 fluid challenge（250-500 mL crystalloid over 15-20 min）</li>
+      <li class="fragment">→ 試 fluid challenge（250-500 mL crystalloid over 15-20 min）或先做 Passive Leg Raising (PLR) 作為 non-invasive fluid responsiveness test</li>
       <li class="fragment">→ 看反應：CI 有沒有上來？UO 有沒有改善？</li>
       <li class="fragment">→ 如果 fluid 沒反應 → 不是 preload 的問題 → 考慮 inotrope</li>
     </ul>
@@ -1392,7 +1396,7 @@ export const slides: Record<string, SlideData> = {
 <section>
   <section data-background-color="#001219">
     <h2>💓 術後 AF — 為什麼心臟手術後特別容易？</h2>
-    <p>~30% 發生率，高峰 Day 2-3。不是巧合。</p>
+    <p>~30% 發生率，高峰 Day 2-3。不是巧合。<br/><small style="color:#f4a261;">💡 術後新發 AF 多為暫時性（self-limited 6-8 weeks），抗凝決策需考慮持續時間和出血風險，不完全等同於慢性 AF</small></p>
   </section>
 
   <section data-background-color="#001219">
@@ -1472,7 +1476,7 @@ export const slides: Record<string, SlideData> = {
     <h3>Risk factors & 預防</h3>
     <ul>
       <li class="fragment"><strong>Risk factors</strong>：DM（最重要）、BMI &gt;30、bilateral IMA harvesting、re-operation、CPB time 長</li>
-      <li class="fragment"><strong>血糖控制</strong>：術後 <span class="highlight">140-180 mg/dL</span>（STS guideline）</li>
+      <li class="fragment"><strong>血糖控制</strong>：術後 <span class="highlight">140-180 mg/dL</span>（STS guideline）。避免 &lt;110 mg/dL（NICE-SUGAR trial 證明 tight control 增加低血糖風險且有害）</li>
       <li class="fragment"><strong>Prophylactic antibiotics</strong>：術前 + 術後 48hr</li>
       <li class="fragment"><strong>Sternal precaution</strong>：6-8 週內避免用手撐起身體、提重物</li>
     </ul>
@@ -1528,7 +1532,7 @@ export const slides: Record<string, SlideData> = {
 <section>
   <section data-background-color="#001219">
     <h2>💔 LCOS — Low Cardiac Output Syndrome</h2>
-    <p>心外術後最可怕的併發症之一。<br/><strong>不是等到 shock 才叫 LCOS，早期辨識是關鍵。</strong></p>
+    <p>心外術後最可怕的併發症之一。<br/><strong>不是等到 shock 才叫 LCOS，早期辨識是關鍵。</strong><br/><small style="color:#aaa;">經典定義（Rao et al.）：CI &lt;2.2 L/min/m² + 需要 IABP 或 inotrope support</small></p>
   </section>
 
   <section data-background-color="#001219">
@@ -1674,6 +1678,7 @@ export const slides: Record<string, SlideData> = {
   <section data-background-color="#001219">
     <h2>🩸 Graft 選擇 — 不是背表格，是懂邏輯</h2>
     <p>核心問題：<strong>為什麼 LIMA to LAD 是 gold standard？</strong></p>
+    <img src="/teaching-images/cabg-coronary-arteries-anatomy.png" alt="冠狀動脈解剖圖 — LAD, LCx, RCA" style="max-width:60%;margin:20px auto;display:block;border-radius:8px;" />
   </section>
 
   <section data-background-color="#001219">
@@ -1688,6 +1693,7 @@ export const slides: Record<string, SlideData> = {
 
   <section data-background-color="#001219">
     <h3>為什麼 LIMA 一定接 LAD？</h3>
+    <img src="/teaching-images/cabg-bypass-all-grafts.png" alt="CABG 多條 graft 示意圖 — LIMA-LAD + SVG grafts" style="max-width:55%;margin:10px auto;display:block;border-radius:8px;" />
     <ul>
       <li class="fragment">LAD 灌左心室前壁 — <strong>最大區域、最重要的血管</strong></li>
       <li class="fragment">用最好的 graft 接最重要的 target — 最大化 survival benefit</li>
@@ -1715,6 +1721,7 @@ export const slides: Record<string, SlideData> = {
   <section data-background-color="#001219">
     <h2>🔗 Sequential Graft & Composite Graft</h2>
     <p>不是一條 graft 只能接一個 target</p>
+    <img src="/teaching-images/cabg-sequential-graft.png" alt="Sequential graft 概念圖" style="max-width:55%;margin:10px auto;display:block;border-radius:8px;" />
   </section>
 
   <section data-background-color="#001219">
@@ -1743,6 +1750,7 @@ export const slides: Record<string, SlideData> = {
   <section data-background-color="#001219">
     <h2>⚖️ On-pump vs Off-pump — Trade-off</h2>
     <p>不是哪個比較好，是哪個比較適合</p>
+    <img src="/teaching-images/cabg-surgery-photo.jpg" alt="冠狀動脈繞道手術實景（on-pump CABG）" style="max-width:60%;margin:10px auto;display:block;border-radius:8px;" />
   </section>
 
   <section data-background-color="#001219">
@@ -1811,6 +1819,7 @@ export const slides: Record<string, SlideData> = {
   <section data-background-color="#001219">
     <h2>⚖️ CABG vs PCI — 什麼時候該開刀？</h2>
     <p>不是「塞了幾條」的問題，是<strong>「這個解剖和這個人，誰適合什麼」</strong></p>
+    <img src="/teaching-images/cabg-coronary-arteries.svg" alt="冠狀動脈分支解剖（LAD, LCx, RCA）" style="max-width:55%;margin:10px auto;display:block;border-radius:8px;" />
   </section>
 
   <section data-background-color="#001219">
@@ -2027,7 +2036,7 @@ export const slides: Record<string, SlideData> = {
     <h3>但 SAVR 還有什麼優勢？</h3>
     <ul>
       <li class="fragment"><strong>耐久性</strong>：SAVR（尤其 mechanical）確定長期可用。TAVI 最長追蹤 ~10 年，數據仍在累積</li>
-      <li class="fragment"><strong>Conduction disturbance</strong>：TAVI 有 ~10-20% 需要 pacemaker（壓到 His bundle）</li>
+      <li class="fragment"><strong>Conduction disturbance</strong>：TAVI 有 ~10-17%（self-expanding）/ ~4-8%（balloon-expandable）需要 pacemaker（壓到 His bundle），視 valve generation 而定</li>
       <li class="fragment"><strong>Bicuspid AV</strong>：TAVI 技術上較困難（不對稱 → deploy 困難）</li>
       <li class="fragment"><strong>Concomitant surgery</strong>：如果同時要做 CABG 或修其他 valve → SAVR</li>
     </ul>
@@ -2040,7 +2049,7 @@ export const slides: Record<string, SlideData> = {
       <li class="fragment">預期壽命長（&gt;15-20 yr）+ low risk → 傾向 <span class="highlight">SAVR</span>（耐久性、less pacemaker）</li>
       <li class="fragment">中等預期壽命 + intermediate risk → <span class="highlight">Heart Team 討論</span>（anatomy、comorbidity、patient preference）</li>
       <li class="fragment">預期壽命較短 or high risk → 傾向 <span class="highlight">TAVI</span></li>
-      <li class="fragment">⚠️ 年齡只是參考因子之一 — 80 歲的馬拉松跑者 vs 60 歲的 frail 病人，決策完全不同</li>
+      <li class="fragment">⚠️ 年齡只是 proxy — 真正考慮的是<strong>預期壽命是否超過 valve durability</strong>。80 歲的馬拉松跑者 vs 60 歲的 frail 病人，決策完全不同</li>
       <li class="fragment">⚠️ 共識：AS 的治療已經不是心外的專利 — <strong>Heart Team decision</strong></li>
     </ul>
   </section>

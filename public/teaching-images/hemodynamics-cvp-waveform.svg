@@ -1,0 +1,67 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" style="background:#1a1a2e">
+  <defs>
+    <style>
+      text { font-family: 'Segoe UI', Arial, sans-serif; fill: #e0e0e0; }
+      .label { font-size: 14px; fill: #94d2bd; }
+      .title { font-size: 18px; fill: #ee9b00; font-weight: bold; }
+      .wave-label { font-size: 16px; fill: #e63946; font-weight: bold; }
+      .desc { font-size: 12px; fill: #888; }
+      .dim { fill: #888; font-size: 12px; }
+    </style>
+  </defs>
+  <text x="400" y="30" text-anchor="middle" class="title">CVP / JVP Waveform</text>
+  <!-- Axis -->
+  <line x1="60" y1="50" x2="60" y2="300" stroke="#333" stroke-width="1"/>
+  <line x1="60" y1="300" x2="760" y2="300" stroke="#333" stroke-width="1"/>
+  <text x="25" y="180" text-anchor="middle" transform="rotate(-90,25,180)" class="label">Pressure</text>
+  <!-- ECG reference line -->
+  <text x="80" y="60" class="desc">ECG:</text>
+  <path d="M 110,55 L 130,55 L 135,55 L 140,35 L 145,70 L 150,55 L 165,55 L 175,48 L 185,55 L 200,55 
+           L 260,55 L 265,55 L 270,35 L 275,70 L 280,55 L 295,55 L 305,48 L 315,55 L 330,55
+           L 390,55 L 395,55 L 400,35 L 405,70 L 410,55 L 425,55 L 435,48 L 445,55 L 460,55
+           L 520,55 L 525,55 L 530,35 L 535,70 L 540,55 L 555,55 L 565,48 L 575,55 L 590,55" 
+        stroke="#4cc9f0" stroke-width="1.5" fill="none"/>
+  <!-- ECG Labels -->
+  <text x="137" y="82" class="desc" style="fill:#4cc9f0">P</text>
+  <text x="142" y="82" class="desc" style="fill:#4cc9f0">QRS</text>
+  <text x="178" y="82" class="desc" style="fill:#4cc9f0">T</text>
+  <!-- CVP Waveform - smooth waves -->
+  <path d="M 80,220 
+           Q 100,215 115,180 Q 125,160 135,175 Q 140,182 142,178
+           Q 150,170 155,185 Q 160,195 170,210 
+           Q 180,225 185,215 Q 195,180 205,175
+           Q 210,172 215,195 Q 225,230 240,230
+           Q 260,230 270,220
+           Q 280,215 295,180 Q 305,160 315,175 Q 320,182 322,178
+           Q 330,170 335,185 Q 340,195 350,210
+           Q 360,225 365,215 Q 375,180 385,175
+           Q 390,172 395,195 Q 405,230 420,230
+           Q 440,230 450,220
+           Q 460,215 475,180 Q 485,160 495,175 Q 500,182 502,178
+           Q 510,170 515,185 Q 520,195 530,210
+           Q 540,225 545,215 Q 555,180 565,175
+           Q 570,172 575,195 Q 585,230 600,230" 
+        stroke="#ee9b00" stroke-width="2.5" fill="none"/>
+  <!-- Wave labels -->
+  <text x="115" y="150" class="wave-label">a</text>
+  <line x1="118" y1="155" x2="118" y2="175" stroke="#e63946" stroke-width="1" stroke-dasharray="2"/>
+  <text x="155" y="165" class="wave-label">c</text>
+  <line x1="158" y1="168" x2="158" y2="180" stroke="#e63946" stroke-width="1" stroke-dasharray="2"/>
+  <text x="195" y="168" class="wave-label">v</text>
+  <line x1="198" y1="170" x2="198" y2="178" stroke="#e63946" stroke-width="1" stroke-dasharray="2"/>
+  <!-- x and y descents -->
+  <text x="145" y="205" class="label" style="font-size:13px">x</text>
+  <text x="215" y="210" class="label" style="font-size:13px">y</text>
+  <!-- Legend -->
+  <rect x="80" y="320" width="640" height="70" rx="5" fill="#0d1b2a" stroke="#333"/>
+  <text x="100" y="340" class="wave-label" style="font-size:14px">a</text>
+  <text x="115" y="340" class="desc">= atrial contraction</text>
+  <text x="280" y="340" class="wave-label" style="font-size:14px">c</text>
+  <text x="295" y="340" class="desc">= tricuspid closure (ventricular contraction)</text>
+  <text x="100" y="362" class="wave-label" style="font-size:14px">v</text>
+  <text x="115" y="362" class="desc">= venous filling (atrium fills against closed TV)</text>
+  <text x="100" y="382" class="label" style="font-size:13px">x</text>
+  <text x="115" y="382" class="desc">= atrial relaxation descent</text>
+  <text x="350" y="382" class="label" style="font-size:13px">y</text>
+  <text x="365" y="382" class="desc">= tricuspid opening descent</text>
+</svg>
