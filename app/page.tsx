@@ -126,11 +126,13 @@ export default async function Home() {
             {recentItems.map((item) => (
               <li key={item.href} className="flex items-baseline justify-between gap-4">
                 <div className="flex items-baseline gap-2 min-w-0">
-                  {item.tag === "週報" && (
-                    <span className="flex-shrink-0 rounded bg-[var(--highlight)] px-1.5 py-0.5 text-xs font-medium text-[var(--accent)]">
-                      週報
-                    </span>
-                  )}
+                  <span className={`flex-shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${
+                    item.tag === "週報"
+                      ? "bg-[var(--highlight)] text-[var(--accent)]"
+                      : "bg-[var(--highlight)] text-[var(--muted)]"
+                  }`}>
+                    {item.tag}
+                  </span>
                   <Link
                     href={item.href}
                     className="text-base text-[var(--foreground)] hover:text-[var(--accent)] transition-colors truncate"
