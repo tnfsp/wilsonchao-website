@@ -96,5 +96,6 @@ export const linkItems = [
   { label: "📓 Stream｜腦內記事", href: "/stream" },
   { label: "📸 Instagram｜追蹤生活更新", href: "https://www.instagram.com/momobear_doctor", external: true },
   { label: "📨 Telegram｜即時通知", href: "https://t.me/doctormomo", external: true },
+  { label: "📜 Blogroll｜我在讀的部落格", href: "/blogroll" },
   { label: "📰 RSS｜訂閱文章", href: "/feed" },
 ];

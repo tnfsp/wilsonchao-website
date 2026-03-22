@@ -10,6 +10,7 @@ const links = [
   { href: "/journal", label: "Journal" },
   { href: "/stream", label: "Stream" },
   { href: "/clinic", label: "Clinic" },
+  { href: "/blogroll", label: "Blogroll" },
   { href: "/about", label: "About" },
 ];
 
