@@ -45,18 +45,21 @@ export function SiteHeader() {
             <SearchBox />
           </nav>
 
-          <button
-            type="button"
-            onClick={() => setOpen((prev) => !prev)}
-            className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-sm text-[var(--foreground)] transition-colors hover:border-[var(--accent-strong)] md:hidden"
-            aria-expanded={open}
-            aria-label="Toggle navigation"
-          >
-            Menu
-            <span aria-hidden className={`transition-transform ${open ? "rotate-90" : ""}`}>
-              {open ? "x" : "|||"}
-            </span>
-          </button>
+          <div className="flex items-center gap-2 md:hidden">
+            <SearchBox />
+            <button
+              type="button"
+              onClick={() => setOpen((prev) => !prev)}
+              className="inline-flex items-center gap-2 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1 text-sm text-[var(--foreground)] transition-colors hover:border-[var(--accent-strong)]"
+              aria-expanded={open}
+              aria-label="Toggle navigation"
+            >
+              Menu
+              <span aria-hidden className={`transition-transform ${open ? "rotate-90" : ""}`}>
+                {open ? "x" : "|||"}
+              </span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -74,9 +77,7 @@ export function SiteHeader() {
                   {item.label}
                 </Link>
               ))}
-              <div className="px-3 py-2">
-                <SearchBox />
-              </div>
+              {/* Search is now in the header bar next to Menu */}
             </div>
           </div>
         </div>
