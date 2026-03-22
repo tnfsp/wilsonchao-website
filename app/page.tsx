@@ -49,8 +49,8 @@ export default async function Home() {
   // Tag label mapping
   const tagLabelMap: Record<string, string> = {
     essay: "Essay",
-    diary: "Diary",
     weekly: "Weekly",
+    diary: "Diary",
   };
 
   // Build recentItems from all blog entries (blog + daily + weekly)

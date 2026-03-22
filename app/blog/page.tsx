@@ -17,13 +17,15 @@ export default async function BlogIndexPage({
   const resolvedSearch = await searchParams;
   const typeParam = resolvedSearch?.type;
   const pageParam = Number.parseInt(resolvedSearch?.page ?? "1", 10) || 1;
-  const availableTypes = Array.from(new Set(posts.map((p) => p.type).filter(Boolean))).sort();
+  const typeSet = new Set(posts.map((p) => p.type).filter(Boolean));
+  // Fixed order: Essay → Weekly → Diary
+  const typeOrder = ["essay", "weekly", "diary"];
+  const availableTypes = typeOrder.filter((t) => typeSet.has(t));
 
   // Type label map for display
   const typeLabelMap: Record<string, string> = {
     essay: "Essay",
-    hospital: "Hospital",
-    life: "Life",
+    diary: "Diary",
     weekly: "Weekly",
   };
   const filtered =
