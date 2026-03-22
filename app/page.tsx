@@ -32,8 +32,27 @@ export default async function Home() {
     loadProjects(),
     loadStreamEntries(3),
   ]);
-  const latest = blogEntries.slice(0, 5);
-  const weeklyEntries = projects.filter((p) => p.type === "週報").slice(0, 3);
+  const weeklyEntries = projects.filter((p) => p.type === "週報");
+
+  // Merge blog + weekly into one "最近寫的" list, sorted by date desc
+  type RecentItem = { title: string; href: string; date: string; tag?: string };
+  const recentItems: RecentItem[] = [
+    ...blogEntries.map((post) => ({
+      title: post.title,
+      href: `/blog/${post.slug}`,
+      date: post.publishedAt || "",
+      tag: "Blog" as const,
+    })),
+    ...weeklyEntries.map((entry) => ({
+      title: entry.title,
+      href: `/journal/${entry.slug}`,
+      date: entry.date || "",
+      tag: "週報" as const,
+    })),
+  ]
+    .filter((item) => item.date)
+    .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
+    .slice(0, 7);
   const heroIntroParagraphs = siteCopy.heroIntro
     .split(/\n\s*\n/)
     .map((p: string) => p.trim())
@@ -92,7 +111,7 @@ export default async function Home() {
           </div>
         </header>
 
-        {/* Blog: title list only */}
+        {/* 最近寫的: blog + 週報 merged */}
         <section className="space-y-4">
           <div className="flex items-baseline justify-between gap-3">
             <span className="section-title">最近寫的</span>
@@ -104,51 +123,28 @@ export default async function Home() {
             </Link>
           </div>
           <ul className="space-y-3">
-            {latest.map((post) => (
-              <li key={post.slug} className="flex items-baseline justify-between gap-4">
-                <Link
-                  href={`/blog/${post.slug}`}
-                  className="text-base text-[var(--foreground)] hover:text-[var(--accent)] transition-colors"
-                >
-                  {post.title}
-                </Link>
+            {recentItems.map((item) => (
+              <li key={item.href} className="flex items-baseline justify-between gap-4">
+                <div className="flex items-baseline gap-2 min-w-0">
+                  {item.tag === "週報" && (
+                    <span className="flex-shrink-0 rounded bg-[var(--highlight)] px-1.5 py-0.5 text-xs font-medium text-[var(--accent)]">
+                      週報
+                    </span>
+                  )}
+                  <Link
+                    href={item.href}
+                    className="text-base text-[var(--foreground)] hover:text-[var(--accent)] transition-colors truncate"
+                  >
+                    {item.title}
+                  </Link>
+                </div>
                 <span className="flex-shrink-0 text-sm text-[var(--muted)] tabular-nums">
-                  {post.publishedAt}
+                  {item.date}
                 </span>
               </li>
             ))}
           </ul>
         </section>
-
-        {/* Weekly: 週報 */}
-        {weeklyEntries.length > 0 && (
-          <section className="space-y-4">
-            <div className="flex items-baseline justify-between gap-3">
-              <span className="section-title">週報</span>
-              <Link
-                href="/journal?type=週報"
-                className="text-sm text-[var(--muted)] transition-colors hover:text-[var(--accent-strong)]"
-              >
-                全部週報 →
-              </Link>
-            </div>
-            <ul className="space-y-3">
-              {weeklyEntries.map((entry) => (
-                <li key={entry.slug} className="flex items-baseline justify-between gap-4">
-                  <Link
-                    href={`/journal/${entry.slug}`}
-                    className="text-base text-[var(--foreground)] hover:text-[var(--accent)] transition-colors"
-                  >
-                    {entry.title}
-                  </Link>
-                  <span className="flex-shrink-0 text-sm text-[var(--muted)] tabular-nums">
-                    {entry.date}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </section>
-        )}
 
         {/* Stream: lightweight fragments */}
         <section className="space-y-4">
