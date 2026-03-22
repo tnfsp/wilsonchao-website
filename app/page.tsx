@@ -109,7 +109,7 @@ export default async function Home() {
               <h1 className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">
                 嗨，我是玴祥
               </h1>
-              <p className="text-sm text-[var(--muted)]">心臟外科醫師 · 寫字的人</p>
+              <p className="text-sm text-[var(--muted)]">心臟外科醫師 · 對世界好奇的人</p>
             </div>
           </div>
 

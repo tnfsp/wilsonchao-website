@@ -18,7 +18,7 @@ const geistMono = Geist_Mono({
 
 export const metadata: Metadata = {
   metadataBase: new URL("https://wilsonchao.com"),
-  title: "趙玴祥 Wilson Chao — 心臟外科醫師・寫字的人",
+  title: "趙玴祥 Wilson Chao — 心臟外科醫師・對世界好奇的人",
   description: "高醫心臟外科醫師的個人網站。寫手術室裡外的觀察、醫師生活反思、AI 工具如何改變日常。",
   alternates: {
     canonical: "/",
