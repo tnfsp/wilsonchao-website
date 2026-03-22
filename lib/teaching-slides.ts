@@ -2863,9 +2863,7 @@ export const slides: Record<string, SlideData> = {
 
   <section data-background-color="#001219">
     <h3>各器官 Malperfusion 表現</h3>
-    <div style="display:flex;gap:15px;justify-content:center;margin-bottom:15px;">
-
-</div>
+    
     <table>
       <tr><th>Branch</th><th>器官</th><th>表現</th><th>怎麼查</th></tr>
       <tr><td>Coronary</td><td>心臟</td><td><span class="danger">MI / cardiogenic shock</span></td><td>ECG, Troponin, Echo</td></tr>
@@ -3170,9 +3168,7 @@ export const slides: Record<string, SlideData> = {
 
   <section data-background-color="#001219">
     <h3>C5 — C6：晚期</h3>
-    <div style="display:flex;gap:15px;justify-content:center;margin-bottom:15px;">
-
-</div>
+    
     <ul>
       <li><strong>C5</strong>：<span class="danger">Healed venous ulcer</span>（癒合的潰瘍）</li>
       <li class="fragment"><strong>C6</strong>：<span class="danger">Active venous ulcer</span>（正在潰爛的）</li>
