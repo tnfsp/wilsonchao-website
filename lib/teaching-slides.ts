@@ -3644,7 +3644,7 @@ export const slides: Record<string, SlideData> = {
       <li>ePTFE（Gore-Tex）最常見</li>
       <li class="fragment"><span class="success">2-3 週就可以用</span>（甚至有 early cannulation graft）</li>
       <li class="fragment"><span class="success">手術技術上比較容易</span>、適合血管條件差的患者</li>
-      <li class="fragment"><span class="danger">Patency 較差</span> — 2年 primary patency ~30-40%</li>
+      <li class="fragment"><span class="danger">Patency 較差</span> — 1 年 primary patency ~40-50%</li>
       <li class="fragment"><span class="danger">Stenosis 和 thrombosis 發生率高</span>（尤其是 venous anastomosis）</li>
       <li class="fragment">感染率比 AVF 高，但比 Perm-Cath 低很多</li>
     </ul>
@@ -3722,7 +3722,7 @@ export const slides: Record<string, SlideData> = {
       <li>遠端失敗了，還可以往近端做</li>
       <li class="fragment">反過來不行 — 近端做了會影響遠端灌流</li>
       <li class="fragment">而且近端 AVF（brachiocephalic）→ flow 大 → <span class="danger">steal syndrome 風險高</span></li>
-      <li class="fragment">Brachiobasilic 需要兩次手術（第一次做 fistula、等成熟後第二次做 transposition）→ 比較麻煩</li>
+      <li class="fragment">Brachiobasilic 傳統需兩階段（第一次做 fistula、等成熟後第二次做 transposition），現在也有一階段 transposition</li>
     </ul>
   </section>
 
@@ -3730,11 +3730,11 @@ export const slides: Record<string, SlideData> = {
     <h3>術前評估 — 不是畫個線就開刀</h3>
     <ul>
       <li><span class="highlight">Allen Test</span> — 確認手的 dual supply</li>
-      <li class="fragment">步驟：先讓病人<strong>反覆握拳</strong>至手掌蒼白 → 壓住 radial + ulnar → 放開 ulnar → 看手掌有沒有紅回來</li>
+      <li class="fragment">步驟：壓住 radial + ulnar → 握拳數次 → 張開（手掌蒼白）→ 放開 ulnar → 看手掌有沒有紅回來</li>
       <li class="fragment"><span class="success">&lt;7 秒恢復紅潤 = 正常</span>（ulnar arch 足夠供應）</li>
       <li class="fragment">如果沒有紅回來 → 不能犧牲 radial artery</li>
       <li class="fragment"><span class="highlight">Vessel Mapping（超音波）</span></li>
-      <li class="fragment">Artery diameter &gt;2mm, Vein diameter &gt;2.5mm</li>
+      <li class="fragment">Artery diameter &gt;2mm, Vein diameter &gt;2.5mm（部分中心偏好 vein &gt;3mm 以降低 failure rate）</li>
       <li class="fragment">看 cephalic vein 有沒有通、有沒有之前抽血造成的 stenosis</li>
       <li class="fragment">⚠️ DM 患者血管常有鈣化 → 超音波評估更重要</li>
     </ul>
@@ -3892,7 +3892,7 @@ export const slides: Record<string, SlideData> = {
       <li class="fragment">AVF flow 太大（&gt;1500-2000 mL/min）→ 心臟負擔增加</li>
       <li class="fragment">機轉：preload↑ → CO↑ → 長期 → LV dilatation → HF</li>
       <li class="fragment">特別在 <span class="danger">proximal AVF</span>（brachial-based）容易出現</li>
-      <li class="fragment">線索：AVF flow 很大 + 新發生的 HF 症狀 + 沒有其他原因</li>
+      <li class="fragment">線索：AVF flow 很大 + 新發生的 HF 症狀 + 沒有其他原因（Qa/CO ratio &gt;20-25% 也是重要指標）</li>
       <li class="fragment">確認：<span class="highlight">Nicoladoni-Branham sign</span> — 壓住 AVF → HR 下降、BP 上升</li>
       <li class="fragment">處理：banding（縮小 anastomosis）或 ligation</li>
     </ul>
@@ -4104,7 +4104,7 @@ export const slides: Record<string, SlideData> = {
 <section data-background-color="#001219">
   <h2>📌 Take Home Messages</h2>
   <ul>
-    <li class="fragment"><span class="highlight">提早轉介</span> — eGFR &lt;30 或預計 1 年內需透析就該開始規劃</li>
+    <li class="fragment"><span class="highlight">提早轉介</span> — eGFR &lt;25 或預計 6 個月內需透析就該建立 AVF</li>
     <li class="fragment"><span class="highlight">AVF 優先</span>，但要個人化（Patient Life Plan）</li>
     <li class="fragment"><span class="highlight">Rule of 6s</span> — 成熟標準：6-6-6-6</li>
     <li class="fragment"><span class="highlight">理學檢查是核心技能</span> — 看、摸、聽就能診斷 80% 的問題</li>
