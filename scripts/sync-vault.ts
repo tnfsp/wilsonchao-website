@@ -174,6 +174,8 @@ async function processImages(
       path.join(VAULT_ROOT, "1-Journal", "attachments", filename),
       path.join(VAULT_ROOT, "1-Journal", ref),
       path.join(VAULT_ROOT, "0-Inbox", filename),
+      // 5. Vault _attachments root (non-images subfolder)
+      path.join(VAULT_ROOT, "_attachments", filename),
     ];
     let publicPath: string | undefined;
     for (const candidate of candidates) {
