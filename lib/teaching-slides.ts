@@ -918,7 +918,7 @@ export const slides: Record<string, SlideData> = {
   <section data-background-color="#001219">
     <table>
       <tr><td><strong>教學住診</strong></td><td>邱肇基 副教授</td><td>主動聯絡報告 case</td></tr>
-      <tr><td><strong>文獻研討</strong></td><td>陳英富 教授</td><td>找 NP 陳秋珍學姊要 paper</td></tr>
+      <tr><td><strong>文獻研討</strong></td><td>陳英富 教授</td><td>找科秘要 paper</td></tr>
       <tr><td><strong>核心課程<br/><small>（小兒心臟）</small></strong></td><td>羅時逸 醫師</td><td>主動詢問日期時間</td></tr>
       <tr><td><strong>核心課程<br/><small>（心臟外科導論）</small></strong></td><td>吳柏俞 醫師</td><td>主動詢問日期時間</td></tr>
     </table>
