@@ -65,9 +65,21 @@ def clean_digest_title(text: str) -> tuple[str, str | None]:
     title_match = re.match(r"^(.+?)(?:作者[:：]|來源[:：])", cleaned)
     title = title_match.group(1).strip() if title_match else cleaned[:80]
 
-    # Extract note
+    # Extract note (prefer explicit 💡 Note:, fallback to excerpt after URL)
     note_match = re.search(r"(?:💡\s*)?Note[:：]\s*(.+?)(?:🔗|$)", text, re.DOTALL)
-    note = note_match.group(1).strip()[:120] if note_match else None
+    if note_match:
+        note = note_match.group(1).strip()[:120]
+    else:
+        # Fallback: grab text after the source URL as excerpt
+        # URL pattern stops at CJK characters (they're not part of URLs)
+        url_match = re.search(r"來源[:：]\s*https?://[^\s\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]+", text)
+        if url_match:
+            remainder = text[url_match.end():].strip()
+            # Remove trailing link/emoji cruft
+            remainder = re.sub(r"🔗.*$", "", remainder).strip()
+            note = remainder[:120] if remainder else None
+        else:
+            note = None
 
     return title, note
 

@@ -89,6 +89,9 @@ function ReadingSection({ items }: { items: NowDynamicItem[] }) {
               ) : (
                 <p className="text-sm text-[var(--foreground)]">{item.title}</p>
               )}
+              {item.description && (
+                <p className="mt-1 text-xs text-[var(--muted)]">{item.description}</p>
+              )}
             </div>
             <span className="shrink-0 text-xs text-[var(--muted)]/60">{formatDate(item.date)}</span>
           </div>
