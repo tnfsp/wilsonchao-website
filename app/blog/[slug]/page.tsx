@@ -8,6 +8,7 @@ import { LikeButton } from "@/components/ui/LikeButton";
 import { CodeHighlight } from "@/components/ui/CodeHighlight";
 import { sanitizeHtml } from "@/lib/sanitize";
 import { SubscribeForm } from "@/components/ui/SubscribeForm";
+import { AuthorSignature } from "@/components/ui/AuthorSignature";
 import { CommentSection } from "@/components/ui/CommentSection";
 import { BASE_URL } from "@/lib/constants";
 
@@ -170,13 +171,28 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         <div className="pt-4">
           <LikeButton slug={`blog:${entry.slug}`} />
         </div>
+        <div className="mt-6">
+          <AuthorSignature />
+        </div>
         <div className="mt-6 border-t border-[var(--border)] pt-6">
           <p className="mb-3 text-sm text-[var(--muted)]">訂閱以獲得新文章通知：</p>
           <SubscribeForm source={`blog:${entry.slug}`} />
         </div>
-        <div className="mt-6">
+        <details className="mt-6 border-t border-[var(--border)] pt-6 group">
+          <summary className="flex cursor-pointer list-none items-center gap-2 text-lg font-semibold text-[var(--foreground)] [&::-webkit-details-marker]:hidden">
+            <svg
+              className="h-4 w-4 text-[var(--muted)] transition-transform duration-200 group-open:rotate-90"
+              fill="none"
+              viewBox="0 0 24 24"
+              stroke="currentColor"
+              strokeWidth={2}
+            >
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
+            留言
+          </summary>
           <CommentSection slug={entry.slug} />
-        </div>
+        </details>
         {(() => {
           const relatedSlugs = entry.related || [];
           const relatedPosts = relatedSlugs

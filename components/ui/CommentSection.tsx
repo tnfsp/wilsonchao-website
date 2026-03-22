@@ -84,9 +84,7 @@ export function CommentSection({ slug }: CommentSectionProps) {
   };
 
   return (
-    <div className="border-t border-[var(--border)] pt-6">
-      <h3 className="mb-4 text-lg font-semibold text-[var(--foreground)]">留言</h3>
-
+    <div className="pt-2">
       {/* Comment Form */}
       <form onSubmit={handleSubmit} className="mb-6 space-y-4">
         <div className="flex flex-col gap-4 sm:flex-row">

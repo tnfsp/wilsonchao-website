@@ -60,6 +60,23 @@ export const slides: Record<string, SlideData> = {
   </section>
 
   <section data-background-color="#001219">
+    <h3>⚠️ Paradoxical Low-flow, Low-gradient AS — EF 正常但也是 Low-flow！</h3>
+    <p>LVEF 55%+, AVA 0.8 cm², mean PG 30 mmHg — EF 正常，PG 不到 severe…真的不嚴重嗎？</p>
+    <ul>
+      <li class="fragment">這些病人往往有 <span class="highlight">concentric hypertrophy + 小 LV cavity</span></li>
+      <li class="fragment">EF preserved，但 <span class="danger">SVI（Stroke Volume Index）&lt;35 mL/m²</span> → 實際打出去的血量很少</li>
+      <li class="fragment">典型：年長女性、高血壓、LVH → 「EF 好但 flow 差」的矛盾</li>
+      <li class="fragment"><span class="highlight">輔助判斷</span>：CT Calcium Score（Agatston）
+        <ul>
+          <li>男性 &gt;2000 / 女性 &gt;1200 Agatston units → 支持 True severe AS</li>
+          <li>鈣化越重 → 瓣膜越硬 → 越可能是真的嚴重</li>
+        </ul>
+      </li>
+      <li class="fragment">⚠️ Dobutamine stress echo 在這群病人的幫助有限（EF 本來就好）→ 靠 <strong>SVI + Calcium score</strong> 綜合判斷</li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
     <h3>📋 Echo 報告：三個一定要看的東西</h3>
     <ul>
       <li><span class="highlight">LVEF</span> — 左心收縮功能。但記住：EF 正常不代表心臟沒問題（diastolic dysfunction）</li>
@@ -141,7 +158,8 @@ export const slides: Record<string, SlideData> = {
     <h3>CABG vs PCI 的決策邏輯</h3>
     <p>不是「塞了幾條」的問題，是<strong>「這個解剖 PCI 能不能處理好」</strong>的問題。</p>
     <ul>
-      <li class="fragment"><span class="danger">LM + 3VD + DM</span> → CABG 有 survival benefit（FREEDOM trial）</li>
+      <li class="fragment"><span class="danger">Multivessel CAD + DM</span> → CABG has survival benefit（<strong>FREEDOM trial</strong>）</li>
+      <li class="fragment"><span class="danger">LM disease</span> → CABG vs PCI 長期比較（<strong>EXCEL / NOBLE trials</strong>）→ 長期追蹤傾向 CABG，尤其 LM + 複雜病變</li>
       <li class="fragment">為什麼 DM 特別偏向 CABG？DM 的血管 diffuse disease → stent 容易再塞</li>
       <li class="fragment">CABG 的 bypass graft 接在病變的遠端 → 即使近端繼續惡化，遠端仍有血流</li>
       <li class="fragment">PCI 只處理「那個點」→ 其他地方繼續惡化就沒辦法</li>
@@ -217,7 +235,7 @@ export const slides: Record<string, SlideData> = {
     <h3>那為什麼不全部做 TAVI？</h3>
     <ul>
       <li class="fragment"><span class="danger">耐久性</span>：TAVI valve 的長期數據還在累積。SAVR（尤其 mechanical）已經有 30 年以上的追蹤</li>
-      <li class="fragment"><span class="danger">Pacemaker 風險</span>：TAVI ~10-20% vs SAVR ~3% — 因為 TAVI valve 壓到 conduction system</li>
+      <li class="fragment"><span class="danger">Pacemaker 風險</span>：Self-expanding valve ~15-17% / Balloon-expandable ~6-8% vs SAVR ~3% — TAVI valve 壓到 conduction system</li>
       <li class="fragment"><span class="danger">Paravalvular leak</span>：TAVI 比 SAVR 更常見（valve 沒有縫上去，靠壓力固定）</li>
       <li class="fragment"><span class="danger">Bicuspid aortic valve</span>：不對稱的 annulus → TAVI 定位困難</li>
       <li class="fragment">50 歲的病人，TAVI valve 如果只撐 15 年 → 65 歲要再做一次？</li>
@@ -265,6 +283,31 @@ export const slides: Record<string, SlideData> = {
   </section>
 </section>
 
+<!-- Preop Imaging Roles -->
+<section data-background-color="#001219">
+  <h2>🔍 術前 Imaging — 誰負責看什麼？</h2>
+  <p>不是每個檢查都看一樣的東西。<strong>用對工具問對問題</strong>。</p>
+  <table style="font-size:0.7em;">
+    <tr><th>工具</th><th>看什麼</th><th>優勢</th></tr>
+    <tr>
+      <td><span class="highlight">Echo (TTE/TEE)</span></td>
+      <td>Valve severity、LV/RV function、Wall motion、Pericardial effusion</td>
+      <td>即時、床邊、動態血流 — <strong>第一線工具</strong></td>
+    </tr>
+    <tr>
+      <td><span class="highlight">Cardiac Cath</span></td>
+      <td>冠狀動脈 stenosis、Hemodynamics（直接量壓力）、Shunt evaluation</td>
+      <td>Gold standard for coronary anatomy — <strong>同時可以 PCI</strong></td>
+    </tr>
+    <tr>
+      <td><span class="highlight">Cardiac CT (CTA)</span></td>
+      <td>Aortic annulus sizing (TAVI)、Coronary anatomy、Aorta pathology、Calcium score、Peripheral access</td>
+      <td>3D 解剖 + 鈣化量化 — <strong>TAVI planning 必做</strong></td>
+    </tr>
+  </table>
+  <p class="fragment" style="font-size:0.85em; margin-top:15px;">💡 Echo 告訴你 <em>function</em>、Cath 告訴你 <em>coronary disease</em>、CT 告訴你 <em>anatomy + calcification</em>。三者互補，不能互相取代。</p>
+</section>
+
 <!-- Heart Team -->
 <section data-background-color="#001219">
   <h2>👥 Heart Team — 不是走形式</h2>
@@ -310,9 +353,10 @@ export const slides: Record<string, SlideData> = {
     <tr><td rowspan="3">AS</td><td>AVA</td><td>&lt;1.0 cm²</td></tr>
     <tr><td>Mean PG</td><td>&gt;40 mmHg</td></tr>
     <tr><td>Vmax</td><td>&gt;4 m/s</td></tr>
-    <tr><td>AR</td><td>Vena contracta / ERO</td><td>&gt;6mm / &gt;0.3 cm²</td></tr>
+    <tr><td>AR</td><td>VC / ERO / RegVol / RF</td><td>&gt;6mm / &gt;0.3 cm² / &gt;60 mL / ≥50%<br/><small>+ Holodiastolic flow reversal in descending aorta</small></td></tr>
     <tr><td>MS</td><td>MVA / Mean PG</td><td>&lt;1.0 cm² / &gt;10 mmHg</td></tr>
-    <tr><td>MR</td><td>VC / ERO / RegVol</td><td>&gt;7mm / &gt;0.4 cm² / &gt;60 mL</td></tr>
+    <tr><td>MR (Primary)</td><td>VC / ERO / RegVol</td><td>&gt;7mm / ≥0.4 cm² / ≥60 mL</td></tr>
+    <tr><td>MR (Secondary)</td><td>ERO / RegVol</td><td>≥0.2 cm² / ≥30 mL</td></tr>
   </table>
   <p style="font-size:0.8em; color:#aaa;">⚠️ 數字是參考。臨床要整合 flow status、LV function、症狀一起判斷。</p>
 </section>
@@ -455,6 +499,9 @@ export const slides: Record<string, SlideData> = {
       <li class="fragment"><span class="danger">SvO₂ &lt;60%</span> → 身體在搶氧 → CO 不夠 or 氧消耗太大（發燒、shivering）</li>
       <li class="fragment">SvO₂ &gt;80% → 看起來好？不一定。可能組織無法利用氧（sepsis — cytopathic hypoxia）</li>
     </ul>
+    <p class="fragment" style="margin-top:15px; font-size:0.9em;">
+      💡 <strong>ScvO₂ vs SvO₂</strong>：沒有 PA catheter 時，從 CVC 抽的是 <span class="highlight">ScvO₂</span>（上腔靜脈血氧）。ScvO₂ 通常比 SvO₂ 高 ~5%（因為不包含 coronary sinus 的低氧血）。趨勢一致可互相參考，但<strong>絕對值不能直接互換</strong>。
+    </p>
   </section>
 
   <section data-background-color="#001219">
@@ -467,6 +514,14 @@ export const slides: Record<string, SlideData> = {
         <ul>
           <li>2 → 1.5 → 1.0 → 治療有效 ✅</li>
           <li>2 → 3.5 → 5.0 → 灌流在惡化，你的治療不夠 ❌</li>
+        </ul>
+      </li>
+      <li class="fragment">⚠️ <span class="danger">Type B Lactic Acidosis</span> — Lactate 升高 ≠ 一定是灌流不足！
+        <ul>
+          <li><strong>Epinephrine</strong>：刺激 glycolysis → 即使灌流 OK 也會升 Lactate</li>
+          <li><strong>肝瘀血</strong>：RV failure → hepatic congestion → Lactate 清除變差</li>
+          <li><strong>CPB 後代謝效應</strong>：rewarming + washout → 短暫性 Lactate spike</li>
+          <li>→ Lactate 在升但灌流指標 OK？先想有沒有 Type B 原因</li>
         </ul>
       </li>
     </ul>
@@ -531,6 +586,14 @@ export const slides: Record<string, SlideData> = {
       <li class="fragment"><span class="danger">Chest tube output 突然減少</span> — 不是好事！塞住了 → 血積在 pericardium</li>
       <li class="fragment">Equalization of diastolic pressures：CVP ≈ PCWP ≈ PAd → 都被壓在一起</li>
       <li class="fragment">Echo 可以確認，但如果 hemodynamically unstable → <span class="danger">不要等 echo，直接 re-explore</span></li>
+      <li class="fragment">⚠️ <span class="danger">術後 tamponade 往往 atypical</span> — localized clot 可能只壓 RA 或 RV
+        <ul>
+          <li>Beck's triad 可能不完整（JVP 不一定高、心音不一定小）</li>
+          <li>只壓 RA → isolated RA collapse → CVP 升高但不典型</li>
+          <li>只壓 RV → RV failure pattern → 容易誤判為單純 RV dysfunction</li>
+          <li>→ 術後低血壓 + CT output 驟減 → <strong>高度懷疑就對了</strong></li>
+        </ul>
+      </li>
     </ul>
   </section>
 </section>
@@ -565,7 +628,14 @@ export const slides: Record<string, SlideData> = {
       </li>
       <li class="fragment">2️⃣ 優化 Preload：PCWP 的 sweet spot（通常 12-18）</li>
       <li class="fragment">3️⃣ 選 Inotrope（見下一段）</li>
-      <li class="fragment">4️⃣ 仍不夠 → Mechanical support（IABP → ECMO）</li>
+      <li class="fragment">4️⃣ 仍不夠 → Mechanical support（IABP → Impella → VA-ECMO）
+        <ul>
+          <li>⚠️ IABP：<strong>SHOCK II trial</strong> 顯示在 AMI cardiogenic shock 中 IABP 未改善 30-day mortality → 角色受到質疑</li>
+          <li>但心外術後 Low CO（post-cardiotomy shock）仍有其角色 — 機轉不同於 AMI</li>
+          <li><strong>Impella</strong>：更強的 LV unloading（CP ~3.7 L/min），適合需要更多支持但不到 ECMO 的情境</li>
+          <li><strong>VA-ECMO</strong>：終極支持，快速惡化時可直接上</li>
+        </ul>
+      </li>
     </ul>
   </section>
 </section>
@@ -609,10 +679,10 @@ export const slides: Record<string, SlideData> = {
     <h3>藥物的「個性」</h3>
     <ul>
       <li><span class="highlight">Milrinone</span> — inodilator。強心 + 降後負荷 + 降 PVR。缺點：會降 BP → 低 SVR 的人不適合</li>
-      <li class="fragment"><span class="highlight">Dobutamine</span> — β1 為主。強心 + 些微升 HR。最常用的 first-line inotrope</li>
+      <li class="fragment"><span class="highlight">Dobutamine</span> — β1 + β2。強心 + vasodilation（β2 效果）。⚠️ 可能降低 SVR → <span class="danger">血壓偏低時反而 BP 更掉</span>。最常用的 first-line inotrope</li>
       <li class="fragment"><span class="highlight">Norepinephrine</span> — α 為主。純升壓。不太增加 HR（跟 dopamine 不同）</li>
-      <li class="fragment"><span class="highlight">Vasopressin</span> — V1 receptor。NE 效果不夠時的 second-line vasopressor</li>
-      <li class="fragment"><span class="highlight">Epinephrine</span> — α + β 都強。最後手段。HR 飆升 + arrhythmia risk</li>
+      <li class="fragment"><span class="highlight">Vasopressin</span> — V1 receptor。Post-CPB vasoplegia 時可作為 <strong>first-line</strong>（機制：CPB 後 vasopressin store depletion → 補充式用藥特別合理）。也常作為 NE 的 second-line add-on</li>
+      <li class="fragment"><span class="highlight">Epinephrine</span> — α + β 都強。Post-CPB weaning 困難時有些中心作為 first-line。高劑量：<span class="danger">HR 飆升 + splanchnic vasoconstriction + type B lactic acidosis</span>（不是灌流不足，是藥物代謝效應）</li>
     </ul>
   </section>
 
@@ -653,6 +723,52 @@ export const slides: Record<string, SlideData> = {
       <li class="fragment"><strong>RV function</strong> — TAPSE &lt;16mm → RV dysfunction</li>
       <li class="fragment">IVC collapsibility → volume responsiveness 的快速評估</li>
       <li class="fragment">新的 valvular regurgitation → 術後 valve/graft 問題？</li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>🔍 術後 Bedside TEE — TTE 看不清時的終極武器</h3>
+    <p>心外術後病人常有：敷料、chest tube、皮下氣腫 → TTE 窗口差。<strong>TEE 直接從食道看</strong>。</p>
+    <ul>
+      <li class="fragment"><span class="highlight">LV / RV function</span> — 術後 stunning？New wall motion abnormality？Graft failure？</li>
+      <li class="fragment"><span class="highlight">Pericardial effusion</span> — 尤其 posterior loculated collection，TTE 容易漏</li>
+      <li class="fragment"><span class="highlight">Volume status</span> — LV cavity size、IVC/SVC、mitral inflow pattern</li>
+      <li class="fragment"><span class="highlight">New valvular issue</span> — SAM after MV repair？Paravalvular leak？</li>
+      <li class="fragment">⚠️ 需要鎮靜 + 有 esophageal injury 風險 → 不是常規，但 <strong>hemodynamic instability 原因不明時非常有價值</strong></li>
+    </ul>
+  </section>
+</section>
+
+<!-- Post-CPB Vasoplegia -->
+<section>
+  <section data-background-color="#001219">
+    <h2>🔥 Post-CPB Vasoplegia — 心外術後特有的 Shock</h2>
+    <p>CABG 術後 off CPB，CI 2.8 看起來不差，但 MAP 55、SVR 低到不行、四肢暖暖的。<br/><strong>心臟在打，但血管完全不收縮。</strong></p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>為什麼會 Vasoplegia？</h3>
+    <ul>
+      <li class="fragment"><span class="highlight">Complement activation</span> — 血液接觸 CPB circuit 的異物表面 → C3a/C5a → 全身性發炎</li>
+      <li class="fragment"><span class="highlight">iNOS upregulation</span> — 大量 NO 釋放 → smooth muscle 無法收縮</li>
+      <li class="fragment"><span class="highlight">Vasopressin store depletion</span> — CPB 過程中 vasopressin 大量消耗 → 術後儲備不足</li>
+      <li class="fragment">高風險：長 CPB time、術前 ACEi/ARB、amiodarone、LVEF 差</li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>辨識 + 處理</h3>
+    <ul>
+      <li class="fragment"><strong>表現</strong>：Warm shock — 四肢暖、CO adequate、MAP 低、SVR 極低 → 像 sepsis 但剛下 CPB</li>
+      <li class="fragment"><strong>第一線</strong>：<span class="highlight">Norepinephrine</span>（α1 效果撐 SVR）</li>
+      <li class="fragment"><strong>加上</strong>：<span class="highlight">Vasopressin</span> 0.01-0.04 U/min — 補充被耗盡的 vasopressin stores，機轉上特別合理</li>
+      <li class="fragment"><strong>Rescue</strong>：<span class="danger">Methylene Blue</span> 1.5-2 mg/kg — 抑制 NO/cGMP pathway
+        <ul>
+          <li>NE + Vasopressin 都拉不起來時考慮</li>
+          <li>⚠️ 禁忌：G6PD deficiency、SSRI 併用（serotonin syndrome）</li>
+        </ul>
+      </li>
+      <li class="fragment">記住：Vasoplegia ≠ volume depletion → <span class="danger">不要一直灌 fluid</span></li>
     </ul>
   </section>
 </section>
@@ -773,11 +889,49 @@ export const slides: Record<string, SlideData> = {
     <h3>心外術後的起始設定（為什麼這樣設）</h3>
     <ul>
       <li><strong>Mode</strong>: VC-AC → 因為病人還沒醒，需要完全控制</li>
-      <li class="fragment"><strong>TV: 6-8 mL/kg IBW</strong> → 為什麼不多給？因為大 TV → 肺過度膨脹 → VILI（ventilator-induced lung injury）</li>
+      <li class="fragment"><strong>TV: 6-8 mL/kg IBW</strong> → 為什麼不多給？因為大 TV → 肺過度膨脹 → VILI（ventilator-induced lung injury）
+        <ul>
+          <li>IBW 怎麼算？<strong>Male: 50 + 0.91 × (身高 cm − 152.4)</strong>｜<strong>Female: 45.5 + 0.91 × (身高 cm − 152.4)</strong></li>
+          <li>例：170 cm 男性 → IBW = 50 + 0.91 × 17.6 = <span class="highlight">66 kg</span> → TV = 396-528 mL</li>
+        </ul>
+      </li>
       <li class="fragment"><strong>RR: 12-16</strong> → 正常呼吸速率，調整看 ABG 的 PCO₂</li>
       <li class="fragment"><strong>FiO₂: 100% → 快速調降到 ≤40%</strong> → 高 FiO₂ 有氧毒性 + 會造成 absorption atelectasis</li>
       <li class="fragment"><strong>PEEP: 5 cmH₂O</strong> → 為什麼？往下看</li>
     </ul>
+  </section>
+</section>
+
+<!-- Peak vs Plateau Pressure -->
+<section>
+  <section data-background-color="#001219">
+    <h2>📊 Peak vs Plateau Pressure — 鑑別高壓原因</h2>
+    <p>呼吸器壓力報警了！但壓力高不是一個診斷，要問：<strong>是哪種壓力高？</strong></p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>兩種壓力，兩種意義</h3>
+    <ul>
+      <li class="fragment"><span class="highlight">Peak Pressure（尖峰壓）</span> = Airway Resistance + Lung Compliance + PEEP
+        <ul><li>包含管路阻力 + 肺的彈性 + PEEP → 是「全部加總」</li></ul>
+      </li>
+      <li class="fragment"><span class="highlight">Plateau Pressure（平台壓）</span> = Lung Compliance + PEEP
+        <ul><li>做 inspiratory hold → 氣流停止 → 剩下的壓力反映肺本身 → 目標 &lt; 30 cmH₂O</li></ul>
+      </li>
+      <li class="fragment"><span class="highlight">Driving Pressure（驅動壓）</span> = Plateau − PEEP → 反映肺泡的真正壓力負擔 → <span class="danger">目標 &lt; 15 cmH₂O</span>
+        <ul><li>最新證據：Driving Pressure 比 TV 更能預測 VILI 和死亡率</li></ul>
+      </li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>鑑別：Peak 高了，問題在哪？</h3>
+    <table style="font-size:0.8em;">
+      <tr><th>情境</th><th>Peak</th><th>Plateau</th><th>代表</th><th>原因</th></tr>
+      <tr><td>🔴 Resistance 問題</td><td>↑↑</td><td>正常</td><td>氣道阻力增加</td><td>Mucus plug、Bronchospasm、ET tube kink/biting</td></tr>
+      <tr><td>🔴 Compliance 問題</td><td>↑↑</td><td>↑↑</td><td>肺變硬了</td><td>PTX、Atelectasis、Pulmonary edema、Abdominal distension</td></tr>
+    </table>
+    <p class="fragment" style="font-size:0.85em;">💡 <strong>一句話記法</strong>：Peak 高 + Plateau 正常 → 問題在「管子」；Peak 高 + Plateau 也高 → 問題在「肺」</p>
   </section>
 </section>
 
@@ -1014,7 +1168,7 @@ export const slides: Record<string, SlideData> = {
 <section data-background-color="#001219">
   <h2>❓ What Would You Do?</h2>
   <ol>
-    <li class="fragment">術後 2hr, 還在 AC mode, 突然 peak pressure 從 22 → 38 cmH₂O, SpO₂ 92%<br/><small>→ Peak pressure 升高代表什麼？是 compliance 變差還是 resistance 增加？<br/>鑑別：mucus plug vs bronchospasm vs PTX。你怎麼快速判斷？</small></li>
+    <li class="fragment">術後 2hr, 還在 AC mode, 突然 peak pressure 從 22 → 38 cmH₂O, SpO₂ 92%<br/><small>→ 第一步：做 <strong>inspiratory hold 看 plateau pressure</strong>。<br/>如果 Plateau 正常（&lt;30）→ Resistance 問題 → suction mucus plug？bronchospasm？tube kink？<br/>如果 Plateau 也高（&gt;30）→ Compliance 問題 → PTX？atelectasis？pulmonary edema？<br/>→ 同時算 Driving Pressure（Plateau − PEEP），&gt;15 cmH₂O 要警覺 VILI 風險</small></li>
     <li class="fragment">SBT 30 分鐘後，RR 35, VT 200mL, SpO₂ 91%, BP 從 110 升到 150<br/><small>→ RSBI = 175 → 不能拔。但為什麼 BP 升高？<br/>提示：負壓呼吸 → LV afterload 增加 → 可能是 cardiac weaning failure</small></li>
     <li class="fragment">術後 Day 3，weaning 失敗兩次，CXR 左 hemidiaphragm 升高<br/><small>→ 你在想什麼？<br/>Phrenic nerve injury → 下一步做什麼確認？處理方式？</small></li>
     <li class="fragment">術後 4hr, ABG: pH 7.22, PCO₂ 35, HCO₃ 14, Lactate 6.2, SpO₂ 95%<br/><small>→ SpO₂ 正常但 Lactate 6.2 → 問題不在肺。問題在哪？</small></li>
@@ -1030,6 +1184,8 @@ export const slides: Record<string, SlideData> = {
     <tr><td>Metabolic alkalosis</td><td>預期 PCO₂ = 0.7 × [HCO₃] + 21 ± 2</td></tr>
     <tr><td>Resp. acidosis (acute)</td><td>每 PCO₂ ↑10 → HCO₃ ↑1</td></tr>
     <tr><td>Resp. acidosis (chronic)</td><td>每 PCO₂ ↑10 → HCO₃ ↑3.5</td></tr>
+    <tr><td>Resp. alkalosis (acute)</td><td>每 PCO₂ ↓10 → HCO₃ ↓2</td></tr>
+    <tr><td>Resp. alkalosis (chronic)</td><td>每 PCO₂ ↓10 → HCO₃ ↓5</td></tr>
   </table>
   <p style="font-size:0.8em; color:#aaa;">步驟：pH → PCO₂ → HCO₃ → AG → Compensation 夠不夠？→ 不夠 = mixed disorder</p>
 </section>
@@ -1040,7 +1196,7 @@ export const slides: Record<string, SlideData> = {
   <table style="font-size:0.8em;">
     <tr><th>Setting</th><th>Value</th><th>為什麼</th></tr>
     <tr><td>Mode</td><td>VC-AC</td><td>病人沒醒，完全控制</td></tr>
-    <tr><td>TV</td><td>6-8 mL/kg IBW</td><td>避免 VILI</td></tr>
+    <tr><td>TV</td><td>6-8 mL/kg IBW</td><td>避免 VILI（IBW: M=50+0.91×(Ht-152.4), F=45.5+0.91×(Ht-152.4)）</td></tr>
     <tr><td>RR</td><td>12-16</td><td>看 ABG 的 PCO₂ 調整</td></tr>
     <tr><td>FiO₂</td><td>100% → ≤40%</td><td>避免 O₂ toxicity</td></tr>
     <tr><td>PEEP</td><td>5 cmH₂O</td><td>防 atelectasis，但顧 RV</td></tr>
@@ -1144,6 +1300,18 @@ export const slides: Record<string, SlideData> = {
       <tr><td>對治療的反應</td><td>輸血不會改善</td><td>矯正凝血因子 → 改善</td></tr>
       <tr><td>處理</td><td><span class="danger">Re-explore</span></td><td>Protamine / FFP / Plt / Cryo / TEG-guided</td></tr>
     </table>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>🧪 TEG 快速判讀 — 不用背數字，記邏輯</h3>
+    <p>TEG 把凝血過程畫成一條曲線，每個階段對應一個問題：</p>
+    <table style="font-size:0.75em;">
+      <tr><th>TEG 參數</th><th>反映什麼</th><th>異常時</th><th>治療</th></tr>
+      <tr><td><span class="highlight">R time</span>（反應時間）</td><td>凝血因子啟動速度</td><td>R 延長 → 凝血因子不足</td><td>FFP / Protamine（如果 heparin 殘餘）</td></tr>
+      <tr><td><span class="highlight">MA</span>（最大振幅）</td><td>血小板 + Fibrinogen 的強度</td><td>MA 低 → 血塊太弱</td><td>Platelet（MA 主要靠 Plt）/ Cryoprecipitate（Fibrinogen 低時）</td></tr>
+      <tr><td><span class="highlight">LY30</span>（30 分鐘溶解率）</td><td>纖維蛋白溶解</td><td>LY30 &gt;3% → Fibrinolysis</td><td>TXA（Tranexamic acid）</td></tr>
+    </table>
+    <p class="fragment" style="font-size:0.85em;">💡 <strong>一句話記法</strong>：R = 凝血因子 → FFP｜MA = 血小板強度 → Plt/Cryo｜LY30 = 溶太快 → TXA</p>
   </section>
 
   <section data-background-color="#001219">
@@ -1261,7 +1429,14 @@ export const slides: Record<string, SlideData> = {
           <li>替代 <span class="highlight">β-blocker</span>（如果 LVEF 正常）</li>
         </ul>
       </li>
-      <li class="fragment"><strong>Step 4：Anticoagulation</strong> — AF 持續 &gt;48hr → 評估 stroke risk → 考慮 anticoagulate</li>
+      <li class="fragment"><strong>Step 4：Anticoagulation</strong> — AF 持續 &gt;48hr → 用 <span class="highlight">CHA₂DS₂-VASc</span> 評估 stroke risk
+        <ul>
+          <li>C=CHF, H=HTN, A₂=Age≥75(×2), D=DM, S₂=Stroke/TIA(×2), V=Vascular dz, A=Age 65-74, Sc=Sex(F)</li>
+          <li>Score ≥2（男）或 ≥3（女）→ 建議 anticoagulate</li>
+          <li>⚠️ 但心外術後要<strong>平衡出血風險</strong>：術後 24-48hr 內 anticoagulation 可能增加 re-explore 風險</li>
+          <li>通常 Day 2-3 後，bleeding 風險下降再開始 heparin bridge 或 warfarin</li>
+        </ul>
+      </li>
     </ul>
   </section>
 
@@ -1313,6 +1488,18 @@ export const slides: Record<string, SlideData> = {
       <li class="fragment">→ 立即通知主治，可能需要 CT + surgical intervention</li>
     </ul>
   </section>
+
+  <section data-background-color="#001219">
+    <h3>🌡️ 術後發燒 — 時間就是線索</h3>
+    <p>不是所有發燒都要 antibiotics，先看<strong>什麼時候開始燒</strong>：</p>
+    <table style="font-size:0.8em;">
+      <tr><th>時間</th><th>最可能原因</th><th>處理邏輯</th></tr>
+      <tr><td><span class="highlight">Day 0-2</span></td><td>SIRS / CPB inflammatory response</td><td>正常反應，支持性治療。不用急著加 antibiotics</td></tr>
+      <tr><td><span class="danger">Day 3-5</span></td><td>感染開始（肺炎、UTI、bloodstream）</td><td>抽 blood culture、UA、CXR → 對症下藥</td></tr>
+      <tr><td><span class="danger">Day 5+</span></td><td>Wound infection / Line infection / C. diff</td><td>檢查所有管路 insertion site、wound、考慮拔 line tip culture</td></tr>
+    </table>
+    <p class="fragment" style="font-size:0.85em;">💡 Day 0-2 發燒 + WBC 高但 procalcitonin 低 → 多半是 SIRS，不是感染</p>
+  </section>
 </section>
 
 <!-- Section 6: 術後高血壓 -->
@@ -1337,12 +1524,117 @@ export const slides: Record<string, SlideData> = {
   </ul>
 </section>
 
+<!-- Section 8: LCOS -->
+<section>
+  <section data-background-color="#001219">
+    <h2>💔 LCOS — Low Cardiac Output Syndrome</h2>
+    <p>心外術後最可怕的併發症之一。<br/><strong>不是等到 shock 才叫 LCOS，早期辨識是關鍵。</strong></p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>怎麼認出來？— 五個線索</h3>
+    <ul>
+      <li class="fragment"><span class="danger">CI &lt; 2.2 L/min/m²</span> — 心臟打出去的量不夠</li>
+      <li class="fragment"><span class="danger">SvO₂ &lt; 60%</span> — 組織把氧氣榨乾了（extraction ↑ 因為 delivery ↓）</li>
+      <li class="fragment"><span class="danger">Lactate ↑</span> — 組織缺氧 → 無氧代謝 → 乳酸堆積</li>
+      <li class="fragment"><span class="danger">UO &lt; 0.5 mL/kg/hr</span> — 腎臟灌流不足</li>
+      <li class="fragment"><span class="danger">四肢冰冷、皮膚花斑</span> — 末梢循環關掉了（vasoconstriction 代償）</li>
+    </ul>
+    <p class="fragment">💡 不是五個都要到。<strong>趨勢比絕對值重要</strong> — Lactate 從 2 → 4、UO 從 40 → 15 → 在惡化！</p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>Inotrope 選擇邏輯 — 不是背藥名，是看場景</h3>
+    <table style="font-size:0.75em;">
+      <tr><th>藥物</th><th>機轉</th><th>什麼時候用</th><th>注意</th></tr>
+      <tr><td><span class="highlight">Dobutamine</span></td><td>β1 為主 → ↑ contractility</td><td><strong>首選</strong>：單純 LV failure</td><td>可能降 SVR → BP 稍降</td></tr>
+      <tr><td><span class="highlight">Milrinone</span></td><td>PDE3 inhibitor → ↑ contractility + 降肺血管阻力</td><td><strong>RV failure / PHT</strong>：降 PVR 救 RV</td><td>降 SVR 更明顯 → 可能需要合併 vasopressor</td></tr>
+      <tr><td><span class="highlight">Epinephrine</span></td><td>β1 + β2 + α → 最強 inotrope</td><td><strong>最後武器</strong>：上面兩個不夠時</td><td>↑ HR、↑ MVO₂、arrhythmia、lactate 假升高</td></tr>
+    </table>
+    <p class="fragment" style="font-size:0.85em;">💡 <strong>思路</strong>：Dobutamine 不夠 → 加 Milrinone（尤其有 PHT）→ 還不夠 → Epinephrine → 還不夠 → 想 mechanical support</p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>Mechanical Support Escalation — 藥物撐不住時</h3>
+    <ul>
+      <li class="fragment"><span class="highlight">IABP</span>（Intra-Aortic Balloon Pump）
+        <ul><li>最容易放、最快啟動。降 LV afterload + 增加 diastolic coronary perfusion</li>
+        <li>CI 提升有限（~0.5 L/min），適合 borderline LCOS</li></ul>
+      </li>
+      <li class="fragment"><span class="highlight">Impella</span>
+        <ul><li>Axial flow pump 放在 LV → 直接把血打到 aorta</li>
+        <li>支持力比 IABP 強（Impella CP ~3.7 L/min），但更侵入性</li></ul>
+      </li>
+      <li class="fragment"><span class="danger">ECMO（VA-ECMO）</span>
+        <ul><li>終極武器：完全取代心肺功能</li>
+        <li>適應症：refractory cardiogenic shock、無法脫離 CPB</li>
+        <li>代價：出血、limb ischemia、感染、LV distension（可能需要 vent）</li></ul>
+      </li>
+    </ul>
+    <p class="fragment">→ Escalation 不是照順序走，是看<strong>惡化速度</strong>。快速惡化 → 直接上 ECMO</p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>💬 Case：LCOS 你怎麼處理？</h3>
+    <p>68M, AVR + CABG ×2, CPB time 140 min。術後 3hr：</p>
+    <p>CI 1.8, SvO₂ 52%, Lactate 5.5, UO 10 mL/hr, MAP 58, 四肢冰冷</p>
+    <ul>
+      <li class="fragment">已經在 Dobutamine 10 mcg/kg/min + Norepinephrine 0.1 mcg/kg/min</li>
+      <li class="fragment">Echo：LVEF 25%（術前 45%），no tamponade</li>
+      <li class="fragment">→ 你的下一步？</li>
+      <li class="fragment">思路：加 Milrinone？直接上 IABP？還是跳到 ECMO？</li>
+      <li class="fragment">💡 CPB 140 min + LVEF 從 45→25% → stunned myocardium，有機會恢復 → IABP 先 bridge</li>
+      <li class="fragment">如果 2-4hr 後 Lactate 繼續升、CI 沒改善 → escalate to ECMO</li>
+    </ul>
+  </section>
+</section>
+
+<!-- Section 9: AKI -->
+<section>
+  <section data-background-color="#001219">
+    <h2>🫘 術後 AKI — 不只是 Cr 升高</h2>
+    <p>心外術後 AKI 發生率 ~30%，需要 RRT ~2-5%。<br/><strong>早期辨識 + 避免二次傷害是關鍵。</strong></p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>KDIGO Staging — 嚴重度分級</h3>
+    <table style="font-size:0.8em;">
+      <tr><th>Stage</th><th>Cr 標準</th><th>UO 標準</th></tr>
+      <tr><td>Stage 1</td><td>Cr ↑ 1.5-1.9× baseline 或 ↑ ≥0.3 mg/dL</td><td>&lt;0.5 mL/kg/hr × 6-12hr</td></tr>
+      <tr><td>Stage 2</td><td>Cr ↑ 2.0-2.9× baseline</td><td>&lt;0.5 mL/kg/hr × ≥12hr</td></tr>
+      <tr><td>Stage 3</td><td>Cr ↑ ≥3× baseline 或 Cr ≥4.0 或需要 RRT</td><td>&lt;0.3 mL/kg/hr × ≥24hr 或 anuria ≥12hr</td></tr>
+    </table>
+    <p class="fragment">💡 術後 <strong>UO 比 Cr 更即時</strong> — Cr 要 24-48hr 才反映，UO 幾小時就能看出趨勢</p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>術後 Oliguric Phase 管理</h3>
+    <ul>
+      <li class="fragment"><strong>先排除 prerenal</strong>：Volume 夠不夠？CO 夠不夠？→ Fluid challenge / optimize CI</li>
+      <li class="fragment"><strong>停腎毒性藥物</strong>：NSAIDs、aminoglycosides、contrast（術後避免不必要的 CT with contrast）</li>
+      <li class="fragment"><strong>維持灌流壓</strong>：MAP &gt;65 mmHg（CKD baseline 可能需要更高）</li>
+      <li class="fragment"><strong>利尿劑的角色</strong>：Furosemide 可以增加 UO，但<strong>不改變 AKI 進程</strong>
+        <ul><li>用途：控制 volume overload，不是「治療」AKI</li></ul>
+      </li>
+      <li class="fragment"><strong>什麼時候考慮 RRT？</strong>
+        <ul>
+          <li>Refractory hyperkalemia（K⁺ &gt;6.5 + ECG changes）</li>
+          <li>Refractory metabolic acidosis（pH &lt;7.15）</li>
+          <li>Refractory volume overload（利尿劑無效 + 肺水腫）</li>
+          <li>Uremic symptoms（encephalopathy, pericarditis）</li>
+        </ul>
+      </li>
+    </ul>
+    <p class="fragment">⚠️ <strong>不要等到全部 criteria 都到才 consult 腎臟科</strong> — 趨勢在惡化就該早討論</p>
+  </section>
+</section>
+
 <!-- Red Flags -->
 <section data-background-color="#001219">
   <h2>🚩 Red Flags 總整理</h2>
   <table>
     <tr><th>Red Flag</th><th>想到什麼</th><th>為什麼</th></tr>
-    <tr><td>CT output↓ + BP↓ + JVP↑</td><td><span class="danger">Tamponade</span></td><td>drain 塞住，血壓心臟</td></tr>
+    <tr><td>CT output↓ + BP↓ + JVP↑</td><td><span class="danger">Tamponade</span></td><td>drain 塞住，血壓迫心臟</td></tr>
     <tr><td>CT output &gt;200/hr × 3hr</td><td><span class="danger">Surgical bleeding / Coagulopathy</span></td><td>先鑑別再處理</td></tr>
     <tr><td>單側肢體無力</td><td><span class="danger">Stroke</span></td><td>CPB air embolism / thrombosis</td></tr>
     <tr><td>腳變白變冷</td><td><span class="danger">Limb ischemia</span></td><td>IABP / cannula site</td></tr>
@@ -1390,7 +1682,7 @@ export const slides: Record<string, SlideData> = {
       <li class="fragment"><strong>IMA 是動脈 graft</strong> — 有完整的 endothelium，會分泌 NO</li>
       <li class="fragment">NO → 抑制血小板黏附 + 抑制平滑肌增生 → <strong>不容易長 atherosclerosis</strong></li>
       <li class="fragment">SVG 是靜脈 → 放在動脈壓力下 → intimal hyperplasia → 10 年 ~40% 塞住</li>
-      <li class="fragment">LIMA 10 年 patency <span class="success">~95%</span> vs SVG <span class="danger">~60%</span></li>
+      <li class="fragment">LIMA 10 年 patency <span class="success">~95%</span> vs SVG <span class="danger">~50-65%</span>（依研究不同）</li>
     </ul>
   </section>
 
@@ -1412,7 +1704,7 @@ export const slides: Record<string, SlideData> = {
       <tr><td><span class="highlight">LIMA</span></td><td>~95%</td><td>Gold standard → LAD 專用</td></tr>
       <tr><td>RIMA</td><td>~90%</td><td>Bilateral IMA → sternal wound risk↑（尤其 DM）</td></tr>
       <tr><td>Radial artery</td><td>~80%</td><td>動脈 graft，但需 Allen test；target 要 ≥70% stenosis</td></tr>
-      <tr><td>SVG</td><td>~60%</td><td>最常用、取得方便，但長期 patency 差</td></tr>
+      <tr><td>SVG</td><td>~50-65%</td><td>最常用、取得方便，但長期 patency 差（依研究不同）</td></tr>
     </table>
     <p class="fragment">💡 Radial 為什麼要 target 夠塞？<br/>→ 如果 native artery 只塞 50%，competitive flow → graft 容易萎縮關掉。</p>
   </section>
@@ -1472,6 +1764,7 @@ export const slides: Record<string, SlideData> = {
       <li class="fragment">Severe CKD（想避免 CPB 腎損傷）</li>
       <li class="fragment">高齡 + frail（想減少 SIRS）</li>
       <li class="fragment">⚠️ ROOBY、CORONARY trial：大型 RCT 沒有顯示 OPCAB 有明顯 outcome 優勢</li>
+      <li class="fragment"><strong>GOPCABE trial</strong>（elderly ≥75 歲）：OPCAB vs On-pump 在高齡族群也沒有顯著 outcome 差異 → 年紀大不等於一定要 off-pump</li>
       <li class="fragment">→ 目前共識：取決於<strong>外科醫師的專長和病人特性</strong></li>
     </ul>
   </section>
@@ -1505,11 +1798,65 @@ export const slides: Record<string, SlideData> = {
   <section data-background-color="#001219">
     <h3>長期維護</h3>
     <ul>
-      <li class="fragment">DAPT or Aspirin（lifelong）— 保持 graft 通暢</li>
+      <li class="fragment">Aspirin（lifelong）+ DAPT 6-12 個月（ACS presentation 時）— 保持 graft 通暢</li>
       <li class="fragment">Statin — 降低 SVG atherosclerosis（有 RCT 支持）</li>
       <li class="fragment">Risk factor control — DM、HTN、smoking cessation</li>
       <li class="fragment">追蹤：symptoms → stress test → Cath（不常規做 Cath 追蹤）</li>
     </ul>
+  </section>
+</section>
+
+<!-- CABG vs PCI: Indication -->
+<section>
+  <section data-background-color="#001219">
+    <h2>⚖️ CABG vs PCI — 什麼時候該開刀？</h2>
+    <p>不是「塞了幾條」的問題，是<strong>「這個解剖和這個人，誰適合什麼」</strong></p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>SYNTAX Score 決策門檻</h3>
+    <ul>
+      <li class="fragment"><span class="highlight">SYNTAX ≤22</span>：解剖單純 → PCI 和 CABG 結果相當 → 可以選 PCI</li>
+      <li class="fragment"><span class="highlight">SYNTAX 23-32</span>：中等複雜 → Heart Team 討論，需考慮其他因素（DM、LV function）</li>
+      <li class="fragment"><span class="danger">SYNTAX &gt;33</span>：高度複雜 → <strong>CABG 有明顯 survival benefit</strong></li>
+      <li class="fragment">SYNTAX Score 量化的是解剖複雜度：病變位置、分叉、鈣化、CTO、血管走向</li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>Left Main Disease</h3>
+    <ul>
+      <li class="fragment">LM 供應 <strong>2/3 心肌</strong> → 處理策略影響深遠</li>
+      <li class="fragment"><strong>EXCEL trial</strong>（5-year）：CABG 在 all-cause death + MI 優於 PCI</li>
+      <li class="fragment"><strong>NOBLE trial</strong>：CABG 在長期追蹤優於 PCI（MACCE 更低）</li>
+      <li class="fragment">LM + 低 SYNTAX（≤22）→ PCI 是 reasonable alternative</li>
+      <li class="fragment">LM + 高 SYNTAX 或合併其他複雜病變 → <span class="highlight">CABG 首選</span></li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>Multivessel CAD + Diabetes</h3>
+    <ul>
+      <li class="fragment"><strong>FREEDOM trial</strong>：Multivessel CAD + DM → CABG 有 <span class="success">survival benefit</span>（vs PCI with DES）</li>
+      <li class="fragment">為什麼 DM 偏向 CABG？</li>
+      <li class="fragment">1. DM 的血管是 <span class="danger">diffuse disease</span> → stent 只處理「那個點」，其他地方繼續惡化</li>
+      <li class="fragment">2. DM + DES → in-stent restenosis 和 neoatherosclerosis 風險更高</li>
+      <li class="fragment">3. CABG 的 bypass 接在病變遠端 → 即使近端繼續惡化，遠端仍有血流供應</li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>📋 Decision Summary</h3>
+    <table style="font-size:0.75em;">
+      <tr><th>情境</th><th>建議</th><th>Evidence</th></tr>
+      <tr><td>1-2 VD, SYNTAX ≤22, no DM</td><td>PCI reasonable</td><td>SYNTAX trial</td></tr>
+      <tr><td>3VD, SYNTAX &gt;22</td><td><span class="highlight">CABG preferred</span></td><td>SYNTAX trial</td></tr>
+      <tr><td>LM, low SYNTAX</td><td>Either（Heart Team）</td><td>EXCEL/NOBLE</td></tr>
+      <tr><td>LM, high SYNTAX</td><td><span class="highlight">CABG</span></td><td>EXCEL/NOBLE</td></tr>
+      <tr><td>Multivessel + DM</td><td><span class="highlight">CABG</span></td><td>FREEDOM trial</td></tr>
+      <tr><td>LVEF &lt;35% + extensive CAD</td><td><span class="highlight">CABG</span></td><td>STICH trial</td></tr>
+    </table>
+    <p style="font-size:0.8em; color:#aaa;">⚠️ 所有複雜決策都應經 Heart Team 討論。數字是指引，不是教條。</p>
   </section>
 </section>
 
@@ -1557,11 +1904,13 @@ export const slides: Record<string, SlideData> = {
           <li>免 anticoagulation、低 reoperation rate</li>
         </ul>
       </li>
-      <li class="fragment"><strong>Functional MR</strong>（心臟擴大拉扯瓣膜）→ <span class="danger">Repair 效果差</span>
+      <li class="fragment"><strong>Functional MR</strong>（心臟擴大拉扯瓣膜）→ <span class="danger">手術 Repair 效果差</span>
         <ul>
           <li>瓣膜本身沒壞，是心臟太大</li>
           <li>修了 → 心臟繼續擴大 → MR 復發</li>
           <li>根本問題要處理心衰，不是瓣膜</li>
+          <li class="fragment">💡 <strong>COAPT trial</strong>：Disproportionate MR + GDMT-optimized HFrEF → <span class="success">TEER（MitraClip）有 mortality benefit</span></li>
+          <li class="fragment">關鍵：要 GDMT 最佳化後仍有 significant MR，且 LV 不能太大（LVESD ≤70mm）</li>
         </ul>
       </li>
     </ul>
@@ -1687,11 +2036,74 @@ export const slides: Record<string, SlideData> = {
   <section data-background-color="#001219">
     <h3>現代決策：不是「能不能開」，是「怎麼開」</h3>
     <ul>
-      <li class="fragment">年輕（&lt;65）+ low risk → 傾向 <span class="highlight">SAVR</span>（耐久性、less pacemaker）</li>
-      <li class="fragment">65-80 + intermediate risk → <span class="highlight">Heart Team 討論</span>（anatomy、comorbidity）</li>
-      <li class="fragment">&gt;80 or high risk → 傾向 <span class="highlight">TAVI</span></li>
+      <li class="fragment">核心考量：<strong>Life expectancy + Surgical risk</strong> 優先於年齡數字</li>
+      <li class="fragment">預期壽命長（&gt;15-20 yr）+ low risk → 傾向 <span class="highlight">SAVR</span>（耐久性、less pacemaker）</li>
+      <li class="fragment">中等預期壽命 + intermediate risk → <span class="highlight">Heart Team 討論</span>（anatomy、comorbidity、patient preference）</li>
+      <li class="fragment">預期壽命較短 or high risk → 傾向 <span class="highlight">TAVI</span></li>
+      <li class="fragment">⚠️ 年齡只是參考因子之一 — 80 歲的馬拉松跑者 vs 60 歲的 frail 病人，決策完全不同</li>
       <li class="fragment">⚠️ 共識：AS 的治療已經不是心外的專利 — <strong>Heart Team decision</strong></li>
     </ul>
+  </section>
+</section>
+
+<!-- Intervention Timing -->
+<section>
+  <section data-background-color="#001219">
+    <h2>⏰ Intervention Timing — Class I Indications</h2>
+    <p>什麼時候「一定要開」？不是靠感覺，是有明確 guideline</p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>Aortic Stenosis — Class I Indications for Intervention</h3>
+    <ul>
+      <li class="fragment"><span class="danger">Symptomatic severe AS</span>（syncope, angina, HF）→ <strong>必須介入</strong></li>
+      <li class="fragment">Severe AS + <span class="danger">LVEF &lt;50%</span>（即使 asymptomatic）→ <strong>介入</strong></li>
+      <li class="fragment">Severe AS + 需要其他心臟手術（CABG, aortic surgery）→ <strong>同時介入</strong></li>
+      <li class="fragment">Severe AS + exercise test 有症狀 → <strong>介入</strong></li>
+    </ul>
+    <p class="fragment" style="color:#f4a261;">⚠️ Very severe AS（Vmax &gt;5 m/s）即使 asymptomatic 也要密切追蹤、傾向早期介入</p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>Mitral Regurgitation — Class I Indications for Surgery</h3>
+    <ul>
+      <li class="fragment"><span class="danger">Symptomatic severe primary MR</span>（NYHA II-IV）→ <strong>手術</strong></li>
+      <li class="fragment">Severe primary MR + <span class="danger">LVEF ≤60%</span> → <strong>手術</strong>（MR 時 EF 60% 其實已經偏低！）</li>
+      <li class="fragment">Severe primary MR + <span class="danger">LVESD ≥40mm</span> → <strong>手術</strong></li>
+      <li class="fragment">Severe primary MR + 需要其他心臟手術 → <strong>同時修/換</strong></li>
+      <li class="fragment">Severe primary MR + <span class="highlight">repair likelihood &gt;95%</span> at experienced center → 可考慮早期手術（Class IIa）</li>
+    </ul>
+    <p class="fragment" style="color:#f4a261;">💡 MR 的 LVEF cutoff 是 60% 不是 50%！因為 MR 有 volume unloading 效果，真實的 LV function 比 EF 數字看起來更差</p>
+  </section>
+</section>
+
+<!-- Tricuspid Valve -->
+<section>
+  <section data-background-color="#001219">
+    <h2>🔺 Tricuspid Valve — 被遺忘的瓣膜</h2>
+    <p>Tricuspid regurgitation（TR）是心臟手術最常被「下次再說」的問題</p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>Functional TR — 為什麼重要？</h3>
+    <ul>
+      <li class="fragment">多數 TR 是 <strong>functional</strong>（瓣膜本身沒壞）→ RV 擴大 + annulus dilatation</li>
+      <li class="fragment">常見原因：left-sided valve disease → PHT → RV 擴大 → TR annulus 被拉開</li>
+      <li class="fragment">長期 significant TR → RV failure → <span class="danger">肝鬱血、腹水、peripheral edema</span></li>
+      <li class="fragment">TR 一旦惡化，RV remodeling 難以逆轉 → <span class="danger">錯過時機就回不去了</span></li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>Concomitant TV Annuloplasty — 何時順便做？</h3>
+    <ul>
+      <li class="fragment"><span class="highlight">做左側 valve surgery 時</span>，如果有以下情況 → 同時做 TV annuloplasty：</li>
+      <li class="fragment">1. Severe TR → <strong>一定要做</strong></li>
+      <li class="fragment">2. Moderate TR → <strong>建議做</strong>（不做的話術後可能惡化）</li>
+      <li class="fragment">3. Mild TR 但 <span class="danger">annulus ≥40mm（或 &gt;21mm/m²）</span> → <strong>考慮做</strong>（預防性）</li>
+      <li class="fragment">邏輯：TV annuloplasty 增加的手術時間和風險很小，但不做 → 術後 TR 惡化 → 再次手術風險很大</li>
+    </ul>
+    <p class="fragment" style="color:#f4a261;">💡 「第一次手術時順便做 TV annuloplasty」遠比「之後單獨為 TR 再開一次刀」好</p>
   </section>
 </section>
 
@@ -1792,7 +2204,7 @@ export const slides: Record<string, SlideData> = {
       <li class="fragment">⚠️ Protamine 副作用：
         <ul>
           <li><span class="danger">低血壓</span>（histamine release）</li>
-          <li><span class="danger">Anaphylaxis</span>（尤其 NPH insulin 使用者、魚過敏者）</li>
+          <li><span class="danger">Anaphylaxis</span>（尤其 NPH insulin 使用者；傳統上認為魚過敏者風險較高，但實際關聯性有限）</li>
           <li><span class="danger">Pulmonary hypertension</span>（complement activation）</li>
         </ul>
       </li>
@@ -1879,6 +2291,28 @@ export const slides: Record<string, SlideData> = {
     </table>
     <p class="fragment">原理：<strong>每降 10°C → 代謝率降一半</strong><br/>DHCA 18°C → 腦代謝率降到 ~10-15% → 可以安全停循環 30-40 分鐘</p>
   </section>
+
+  <section data-background-color="#001219">
+    <h3>Cerebral Perfusion — 延長安全時間</h3>
+    <ul>
+      <li class="fragment"><strong>ACP（Antegrade Cerebral Perfusion）</strong>：
+        <ul>
+          <li>直接從 innominate/carotid 灌腦部</li>
+          <li>持續提供腦部氧氣和營養</li>
+          <li>可延長安全時間到 <span class="success">60+ 分鐘</span></li>
+          <li>是目前最常用的腦保護策略</li>
+        </ul>
+      </li>
+      <li class="fragment"><strong>RCP（Retrograde Cerebral Perfusion）</strong>：
+        <ul>
+          <li>從 SVC 逆行灌注腦部</li>
+          <li>額外提供代謝物沖洗和降溫效果</li>
+          <li>但實際腦灌流效果有爭議（多數血液走 shunt 掉了）</li>
+        </ul>
+      </li>
+      <li class="fragment">🔥 <strong>現在趨勢</strong>：Moderate HCA（24-28°C）+ ACP → 減少深低溫的 coagulopathy，同時 ACP 保護腦部</li>
+    </ul>
+  </section>
 </section>
 
 <!-- Section 5: Weaning CPB Troubleshooting -->
@@ -1924,7 +2358,8 @@ export const slides: Record<string, SlideData> = {
     <h3>下機困難的 Escalation</h3>
     <ol>
       <li class="fragment">Optimize：preload、inotrope、rate/rhythm</li>
-      <li class="fragment">IABP — 降 afterload，增加 coronary perfusion</li>
+      <li class="fragment">IABP — 降 afterload，增加 coronary perfusion（⚠️ SHOCK II trial 後，IABP 在 AMI cardiogenic shock 的角色下降，但在 perioperative support 仍常用）</li>
+      <li class="fragment">Impella — 直接從 LV 抽血到 aorta，比 IABP 提供更強的 hemodynamic support</li>
       <li class="fragment">VA-ECMO — 如果仍無法維持循環</li>
     </ol>
     <p class="fragment">⚠️ 知道什麼時候放棄嘗試、上 mechanical support = <strong>救命的判斷</strong></p>
@@ -1941,6 +2376,46 @@ export const slides: Record<string, SlideData> = {
     <li class="fragment"><span class="highlight">End-organ injury</span> — AKI (20-30%)、CNS injury (1-5%)、gut ischemia</li>
     <li class="fragment"><span class="highlight">Capillary leak</span> → 術後腫一圈 → Day 2-3 開始利尿回來</li>
   </ul>
+</section>
+
+<!-- TEG -->
+<section>
+  <section data-background-color="#001219">
+    <h2>🧪 TEG 基本判讀 — 指引輸血決策</h2>
+    <p>CPB 後 coagulopathy 很複雜 — Lab 太慢，TEG 讓你<strong>即時知道問題在哪</strong></p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>TEG 的核心概念</h3>
+    <p>TEG（Thromboelastography）測量的是<strong>血塊從形成到溶解的全過程</strong></p>
+    <ul>
+      <li class="fragment">不像傳統 lab（PT/aPTT）只看部分凝血路徑</li>
+      <li class="fragment">TEG 看全貌：凝血因子 → 血小板 → fibrinogen → 纖溶</li>
+      <li class="fragment">心外術後出血時，TEG 幫你在 10-15 分鐘內決定要輸什麼</li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>三個關鍵參數 → 三個治療方向</h3>
+    <table>
+      <tr><th>TEG 參數</th><th>代表什麼</th><th>異常時怎麼辦</th></tr>
+      <tr><td><span class="highlight">R time</span>（Reaction time）</td><td>凝血因子啟動速度</td><td>R 延長 → <span class="danger">FFP</span>（補凝血因子）</td></tr>
+      <tr><td><span class="highlight">MA</span>（Maximum Amplitude）</td><td>血塊最大強度<br/><small>（80% 血小板 + 20% fibrinogen）</small></td><td>MA 降低 → <span class="danger">Platelet ± Cryoprecipitate</span></td></tr>
+      <tr><td><span class="highlight">LY30</span>（Lysis at 30 min）</td><td>血塊溶解速度</td><td>LY30 &gt;3% → <span class="danger">TXA（Tranexamic acid）</span></td></tr>
+    </table>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>💬 TEG-Guided 輸血實戰</h3>
+    <p>CABG 術後出血 250 mL/hr，TEG 結果：R 12 min（正常 5-10）, MA 42 mm（正常 50-70）, LY30 8%</p>
+    <ul>
+      <li class="fragment">R 延長 → 凝血因子不足 → <span class="highlight">給 FFP</span></li>
+      <li class="fragment">MA 低 → 血塊強度差（血小板 + fibrinogen）→ <span class="highlight">給 Platelet ± Cryo</span></li>
+      <li class="fragment">LY30 高 → 纖溶亢進 → <span class="highlight">給 TXA</span></li>
+      <li class="fragment">→ 三管齊下！比盲目輸一堆血品更精準、更有效</li>
+    </ul>
+    <p class="fragment" style="color:#f4a261;">💡 TEG-guided transfusion 可減少約 30% 不必要的血品使用</p>
+  </section>
 </section>
 
 <!-- What Would You Do -->
@@ -2026,7 +2501,7 @@ export const slides: Record<string, SlideData> = {
     <table>
       <tr><th></th><th>VA-ECMO</th><th>VV-ECMO</th></tr>
       <tr><td>解決什麼</td><td><span class="highlight">心臟衰竭</span>（± 肺）</td><td><span class="highlight">肺衰竭</span>（心臟 OK）</td></tr>
-      <tr><td>血流路徑</td><td>Femoral vein → Oxygenator → Femoral artery</td><td>Femoral vein → Oxygenator → IJV（回右心）</td></tr>
+      <tr><td>血流路徑</td><td>Femoral vein (drainage) → Oxygenator → Femoral artery (return)</td><td>Femoral/IJ vein (drainage) → Oxygenator → IJ vein (return to RA)<br/><small>或 Dual-lumen cannula via IJ（Avalon）</small></td></tr>
       <tr><td>提供</td><td>Hemodynamic support + Gas exchange</td><td>Gas exchange only</td></tr>
       <tr><td>適應症</td><td>Cardiogenic shock、cardiac arrest、post-cardiotomy</td><td>Severe ARDS、bridge to lung transplant</td></tr>
     </table>
@@ -2064,6 +2539,100 @@ export const slides: Record<string, SlideData> = {
   </section>
 </section>
 
+<!-- Section 2.5: ECMO 併發症 -->
+<section>
+  <section data-background-color="#001219">
+    <h2>⚠️ ECMO 併發症 — 不只是出血和血栓</h2>
+    <p>ECMO 是救命工具，但它本身也會帶來問題</p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>VA-ECMO 特有併發症</h3>
+    <ul>
+      <li class="fragment"><strong>Limb ischemia</strong>（femoral artery cannulation → 下游缺血）
+        <ul>
+          <li>解法：<span class="highlight">Distal perfusion cannula (DPC)</span> — 從 ECMO circuit 分一條小管到 SFA 遠端</li>
+          <li>放 VA-ECMO 時<strong>常規放 DPC</strong>，不要等到缺血才處理</li>
+        </ul>
+      </li>
+      <li class="fragment"><strong>Differential hypoxemia / Harlequin syndrome</strong>
+        <ul>
+          <li>心臟恢復一點、開始射血 → 但肺還沒好 → 左心射出 deoxygenated blood</li>
+          <li>ECMO 從 femoral artery 打上去的是 oxygenated blood → 兩股血在 aorta 交會</li>
+          <li>結果：<span class="danger">上半身（冠狀動脈、腦）缺氧，下半身正常</span></li>
+          <li>監測：<span class="highlight">右手 SpO₂</span>（代表 native cardiac output 的氧合）</li>
+          <li>處理：加 VV-ECMO 或改 central cannulation</li>
+        </ul>
+      </li>
+      <li class="fragment"><strong>Hemolysis</strong>
+        <ul>
+          <li>血球通過 pump → 機械性破壞 → pfHb↑、LDH↑、haptoglobin↓</li>
+          <li>嚴重時 → AKI（free hemoglobin 傷腎）</li>
+          <li>處理：降低 pump speed、換 oxygenator、檢查有無 clot</li>
+        </ul>
+      </li>
+    </ul>
+  </section>
+</section>
+
+<!-- Section 2.7: Impella -->
+<section>
+  <section data-background-color="#001219">
+    <h2>🔧 Impella — 直接 Unload LV</h2>
+    <p>如果 IABP 不夠力，但還不需要 ECMO 的全面支持呢？</p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>Impella 原理</h3>
+    <ul>
+      <li class="fragment">Axial flow pump — 像一個<strong>阿基米德螺旋</strong>（Archimedes screw）</li>
+      <li class="fragment">經 femoral artery → retrograde 跨過 aortic valve → pump 頭在 LV 裡面</li>
+      <li class="fragment">直接從 LV 抽血 → 打到 ascending aorta → <span class="highlight">真正的 LV unloading</span></li>
+      <li class="fragment">效果：降低 LVEDP、降低 wall stress、增加 coronary perfusion pressure</li>
+      <li class="fragment">跟 IABP 比：<strong>不依賴心臟自己的收縮力</strong> — 心臟不跳也能支持</li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>Impella 型號</h3>
+    <table>
+      <tr><th>型號</th><th>置入方式</th><th>Flow</th><th>適用情境</th></tr>
+      <tr><td><span class="highlight">Impella CP</span></td><td>Percutaneous（femoral artery）</td><td>~3.5 L/min</td><td>Cath lab 直接放、AMI shock</td></tr>
+      <tr><td><span class="highlight">Impella 5.0 / 5.5</span></td><td>Surgical（axillary artery cut-down）</td><td>~5.0-5.5 L/min</td><td>需要更強 support、post-cardiotomy</td></tr>
+      <tr><td>Impella RP</td><td>Percutaneous（femoral vein）</td><td>~4 L/min</td><td>RV failure support</td></tr>
+    </table>
+    <p class="fragment">💬 <strong>ECpella = Impella + VA-ECMO</strong> — ECMO 維持全身灌流，Impella 負責 LV unloading → 目前被認為最好的 LV venting 策略</p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>MCS 比較：IABP vs Impella vs VA-ECMO</h3>
+    <table>
+      <tr><th></th><th>IABP</th><th>Impella</th><th>VA-ECMO</th></tr>
+      <tr><td>Hemodynamic support</td><td>~0.5 L/min</td><td>3.5-5.5 L/min</td><td>4-6 L/min（full support）</td></tr>
+      <tr><td>LV unloading</td><td>Modest（降 afterload）</td><td><span class="highlight">Direct unloading</span></td><td><span class="danger">增加 afterload</span></td></tr>
+      <tr><td>需要心臟跳動</td><td>是（需要 trigger）</td><td>否</td><td>否</td></tr>
+      <tr><td>Oxygenation support</td><td>無</td><td>無</td><td><span class="highlight">有</span></td></tr>
+      <tr><td>置入難度</td><td>最簡單</td><td>中等</td><td>中等（但需外科 backup）</td></tr>
+      <tr><td>適用 shock 程度</td><td>SCAI B-C</td><td>SCAI C-D</td><td>SCAI D-E</td></tr>
+    </table>
+  </section>
+</section>
+
+<!-- Section 2.8: SCAI Shock Classification -->
+<section data-background-color="#001219">
+  <h2>📊 SCAI Shock Classification</h2>
+  <p>Cardiogenic shock 不是只有「有」或「沒有」— 有分級，才知道用什麼武器</p>
+  <table>
+    <tr><th>Stage</th><th>名稱</th><th>描述</th><th>MCS 考量</th></tr>
+    <tr><td><strong>A</strong></td><td>At Risk</td><td>有大面積 MI/HF，但 hemodynamics 還穩</td><td>觀察、optimize meds</td></tr>
+    <tr><td><strong>B</strong></td><td>Beginning</td><td>HR↑、BP 偏低、Lactate 正常或稍高</td><td>考慮 IABP</td></tr>
+    <tr><td><strong>C</strong></td><td>Classic</td><td>CI &lt;2.2, SBP &lt;90 or vasopressor, Lactate↑</td><td>IABP / Impella</td></tr>
+    <tr><td><strong>D</strong></td><td>Deteriorating</td><td>Max inotrope/vasopressor 仍惡化</td><td><span class="highlight">Impella / VA-ECMO</span></td></tr>
+    <tr><td><strong>E</strong></td><td>Extremis</td><td>Cardiac arrest / refractory PEA / VT storm</td><td><span class="danger">VA-ECMO（eCPR）</span></td></tr>
+  </table>
+  <p class="fragment">💬 記法：<strong>ABCDE</strong> = At risk → Beginning → Classic → Deteriorating → Extremis<br/>越往下越嚴重，MCS 越強</p>
+</section>
+
 <!-- Section 3: LVAD -->
 <section>
   <section data-background-color="#001219">
@@ -2083,6 +2652,19 @@ export const slides: Record<string, SlideData> = {
         </ul>
       </li>
     </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>INTERMACS Profile — 誰該裝 LVAD？</h3>
+    <p>不是所有 end-stage HF 都直接裝 LVAD — 太早浪費、太晚風險爆增</p>
+    <table>
+      <tr><th>Profile</th><th>描述</th><th>策略</th></tr>
+      <tr><td><strong>1</strong></td><td>Critical cardiogenic shock（crash &amp; burn）</td><td><span class="danger">先 ECMO bridge → 穩定後再評估 LVAD</span></td></tr>
+      <tr><td><strong>2</strong></td><td>Progressive decline on inotropes</td><td><span class="highlight">LVAD implant（最佳時機）</span></td></tr>
+      <tr><td><strong>3</strong></td><td>Stable but inotrope-dependent</td><td>LVAD implant</td></tr>
+      <tr><td><strong>4</strong></td><td>Resting symptoms（frequent HF admission）</td><td>考慮 LVAD（尤其 DT）</td></tr>
+    </table>
+    <p class="fragment">💬 為什麼 Profile 1 不直接裝 LVAD？<br/>→ 太 sick → 手術死亡率高 + 常合併 MOF → 先用 ECMO 穩住 end-organ，確認 neurologically intact，再決定 LVAD or transplant</p>
   </section>
 
   <section data-background-color="#001219">
@@ -2139,7 +2721,7 @@ export const slides: Record<string, SlideData> = {
   <h2>💊 MCS Anticoagulation</h2>
   <ul>
     <li class="fragment">所有 MCS 都需要 anticoagulation — 血碰到人工表面就會凝</li>
-    <li class="fragment">ECMO：Heparin drip, aPTT 60-80 sec</li>
+    <li class="fragment">ECMO：Heparin drip, aPTT target 1.5-2× baseline（各院 protocol 不同，約 50-80 sec）</li>
     <li class="fragment"><span class="danger">永恆的拉鋸</span>：anticoagulate 太多 → 出血 | 太少 → blood clot</li>
     <li class="fragment">每天監測：ACT/aPTT + Plt + Fibrinogen + Hemolysis markers (LDH, pfHb)</li>
     <li class="fragment">⚠️ ECMO 上太久 → HIT (Heparin-Induced Thrombocytopenia) → 改 Bivalirudin</li>
@@ -2221,6 +2803,20 @@ export const slides: Record<string, SlideData> = {
   </section>
 </section>
 
+<!-- Section 1.5: Acute Aortic Syndrome -->
+<section data-background-color="#001219">
+  <h2>🩸 Acute Aortic Syndrome — 三兄弟</h2>
+  <p>Dissection 不是唯一的急性主動脈事件 — 還有兩個「兄弟」，臨床表現幾乎一樣</p>
+  <table>
+    <tr><th></th><th>Aortic Dissection</th><th>Intramural Hematoma (IMH)</th><th>Penetrating Aortic Ulcer (PAU)</th></tr>
+    <tr><td>病理</td><td>Intimal tear → false lumen 形成</td><td>Vasa vasorum 破裂 → 壁內出血<br/><small>（沒有 intimal tear、沒有 flow in false lumen）</small></td><td>Atherosclerotic ulcer 穿透 intima → 侵入 media</td></tr>
+    <tr><td>CT 特徵</td><td>Intimal flap + dual lumen</td><td>Crescent-shaped wall thickening（&gt;5mm）<br/>無 intimal flap</td><td>Focal outpouching + 周圍 wall thickening</td></tr>
+    <tr><td>好發</td><td>相對年輕、Marfan/CTD</td><td>老年人、高血壓</td><td>老年人、severe atherosclerosis</td></tr>
+    <tr><td>治療</td><td>Type A → 手術 / Type B → 視 complicated</td><td>類似 dissection 原則（Type A → 手術）</td><td>多數 TEVAR 或 medical（視位置和深度）</td></tr>
+  </table>
+  <p class="fragment">💬 三者都叫 Acute Aortic Syndrome (AAS) — CT 鑑別是關鍵。IMH 可以進展成 dissection，PAU 可以破裂。</p>
+</section>
+
 <!-- Section 2: Malperfusion -->
 <section>
   <section data-background-color="#001219">
@@ -2282,7 +2878,14 @@ export const slides: Record<string, SlideData> = {
       </li>
       <li class="fragment"><strong>Bentall procedure</strong>（Root + Valve replacement）
         <ul><li>Root 擴大（如 Marfan）、severe AR from root dilatation</li>
-        <li>Composite graft + mechanical valve + reimplant coronaries</li></ul>
+        <li>Composite graft + mechanical valve + reimplant coronaries</li>
+        <li>代價：<span class="danger">終身 anticoagulation</span>（mechanical valve）</li></ul>
+      </li>
+      <li class="fragment"><strong>David procedure</strong>（Valve-sparing root replacement）
+        <ul><li>Root 擴大 + AR，但 <span class="highlight">valve leaflets 本身正常</span></li>
+        <li>年輕患者 / Marfan → 保留自己的 valve → <strong>不用終身 anticoagulation</strong></li>
+        <li>技術：把 native valve reimplant 進 graft 裡面（reimplantation technique）</li>
+        <li>適用條件：leaflet 沒有退化、沒有嚴重 calcification</li></ul>
       </li>
       <li class="fragment"><strong>Hemiarch</strong>
         <ul><li>Tear 延伸到 arch 底部</li>
@@ -2295,6 +2898,11 @@ export const slides: Record<string, SlideData> = {
         <li>需要 DHCA + selective cerebral perfusion</li>
         <li>手術時間長、風險最高</li></ul>
       </li>
+      <li class="fragment"><strong>Frozen Elephant Trunk (FET)</strong>
+        <ul><li>Total arch replacement + 一段 stent graft 延伸進 descending aorta</li>
+        <li>適應症：<span class="highlight">DeBakey Type I dissection 延伸到 descending</span> — 一次手術同時處理 arch + 近端 descending</li>
+        <li>優勢：避免二次 descending 手術、促進 false lumen thrombosis</li></ul>
+      </li>
     </ul>
   </section>
 
@@ -2302,10 +2910,24 @@ export const slides: Record<string, SlideData> = {
     <h3>DHCA — Deep Hypothermic Circulatory Arrest</h3>
     <ul>
       <li class="fragment">Arch surgery 需要停止全身循環 → 怎麼保護腦？</li>
-      <li class="fragment"><strong>降溫到 18-20°C</strong> → 腦代謝率降到 10-15%</li>
+      <li class="fragment"><strong>降溫到 18-20°C（Deep HCA）</strong> → 腦代謝率降到 10-15%</li>
       <li class="fragment">安全時間：DHCA alone ~30 min</li>
-      <li class="fragment"><strong>Selective cerebral perfusion</strong>：接 cannula 到 carotid/innominate → 手術中持續灌腦</li>
-      <li class="fragment">→ 安全時間延長到 60+ min → 允許更複雜的 arch repair</li>
+      <li class="fragment"><strong>趨勢：Moderate HCA (24-28°C) + ACP</strong> — 不用降那麼低，搭配腦灌流一樣安全，且 coagulopathy 較輕</li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>Cerebral Perfusion 策略：ACP vs RCP</h3>
+    <table>
+      <tr><th></th><th>ACP（Antegrade Cerebral Perfusion）</th><th>RCP（Retrograde Cerebral Perfusion）</th></tr>
+      <tr><td>路徑</td><td>Innominate / R. axillary artery → 順行灌腦</td><td>SVC → 逆行從靜脈端灌</td></tr>
+      <tr><td>腦保護效果</td><td><span class="highlight">較好</span>（生理方向）</td><td>較差（逆行，實際灌流量有限）</td></tr>
+      <tr><td>安全操作時間</td><td>60-90+ min</td><td>~30 min（額外多撐一些）</td></tr>
+      <tr><td>額外好處</td><td>—</td><td>Flush out air &amp; debris</td></tr>
+      <tr><td>技術難度</td><td>較高（需 cannulate arch branches）</td><td>較簡單</td></tr>
+    </table>
+    <p class="fragment">💬 目前趨勢：<span class="highlight">Moderate HCA + ACP</span> 成為主流 — 腦保護更好、rewarming 更快、coagulopathy 更輕</p>
+    <ul>
       <li class="fragment">代價：嚴重 coagulopathy（需要大量血品）、prolonged rewarming</li>
     </ul>
   </section>
@@ -2322,7 +2944,7 @@ export const slides: Record<string, SlideData> = {
     <h3>Uncomplicated Type B</h3>
     <ul>
       <li class="fragment">Medical management：<strong>控制 BP + HR</strong></li>
-      <li class="fragment">目標：SBP 100-120, HR &lt;60-80</li>
+      <li class="fragment">目標：SBP 100-120, HR &lt;60 bpm</li>
       <li class="fragment">首選 <span class="highlight">IV β-blocker</span>（Esmolol / Labetalol）→ 降 HR 先（降低 dP/dt → 降低 shear stress）</li>
       <li class="fragment">不夠再加 NTG 或 Nicardipine</li>
     </ul>
@@ -2360,12 +2982,13 @@ export const slides: Record<string, SlideData> = {
   <h2>📋 Suspected Aortic Dissection — ER Protocol</h2>
   <ul>
     <li>□ 兩條 large bore IV</li>
-    <li>□ Type & Screen + 備血（至少 6U PRBC）</li>
+    <li>□ Type & Screen + 備血（至少 10U PRBC + FFP + Plt + Cryo — 大主動脈手術必備 massive transfusion protocol）</li>
     <li>□ ECG（排除 STEMI — 但 dissection 可以造成 STEMI！）</li>
     <li>□ 兩手量 BP + 四肢脈搏</li>
     <li>□ Bedside Echo（pericardial effusion? AR?）</li>
     <li>□ <span class="danger">CT Angiography — STAT</span></li>
     <li>□ Type A → <span class="danger">立即 call OR + 心外團隊</span></li>
+    <li>□ 詢問 <strong>Marfan / CTD family history</strong>（家族有無猝死、主動脈手術、身材高瘦、關節過度活動）</li>
     <li>□ BP control：<strong>先降 HR（β-blocker）再降 BP</strong></li>
     <li>□ 為什麼先降 HR？ → 降低 dP/dt → 降低主動脈壁 shear stress → 減緩 dissection propagation</li>
   </ul>
@@ -2375,7 +2998,7 @@ export const slides: Record<string, SlideData> = {
 <section data-background-color="#001219">
   <h2>❓ What Would You Do?</h2>
   <ol>
-    <li class="fragment">CT：Type A dissection，aortic root 擴大到 55mm，severe AR，coronary 沒被 involve<br/><small>→ 需要什麼手術？（提示：root 擴大 + AR → 什麼 procedure？）</small></li>
+    <li class="fragment">CT：Type A dissection，aortic root 擴大到 55mm，severe AR，coronary 沒被 involve<br/><small>→ 需要什麼手術？（提示：root 擴大 + AR → Bentall？但如果 valve leaflet 正常 → 能不能 David？考慮年紀和 anticoagulation 需求）</small></li>
     <li class="fragment">45M, Marfan, Type A。CT 顯示 tear from ascending 延伸到 arch，arch branches 都有 flap<br/><small>→ Ascending replacement 夠嗎？你的手術策略？</small></li>
     <li class="fragment">60M, Type B dissection, 腹痛劇烈, Lactate 8, 右腎功能惡化, 右腳脈搏弱<br/><small>→ Uncomplicated or Complicated？哪些器官 malperfusion？下一步？</small></li>
   </ol>
@@ -2424,7 +3047,7 @@ export const slides: Record<string, SlideData> = {
       <li>起點：foot medial marginal vein</li>
       <li>走向：<span class="highlight">medial malleolus → medial leg → medial thigh</span></li>
       <li class="fragment">終點：<span class="highlight">Saphenofemoral Junction (SFJ)</span> — 匯入 common femoral vein</li>
-      <li class="fragment">SFJ 位置：inguinal crease 下方約 3-4 cm</li>
+      <li class="fragment">SFJ 位置：<span class="highlight">inguinal ligament 下方約 3-4 cm</span>（約 inguinal crease 高度）</li>
       <li class="fragment">⚠️ 最常見的靜脈曲張來源（~80%）</li>
     </ul>
   </section>
@@ -2523,6 +3146,8 @@ export const slides: Record<string, SlideData> = {
       <li class="fragment"><strong>C6</strong>：<span class="danger">Active venous ulcer</span>（正在潰爛的）</li>
       <li class="fragment">典型位置：<span class="highlight">medial malleolus 上方</span>（gaiter area）</li>
       <li class="fragment">為什麼在那裡？→ Cockett perforators 最多、靜水壓最高</li>
+      <li class="fragment"><span class="highlight">Compression therapy（multi-layer bandage）是 venous ulcer 癒合的關鍵</span> — 不壓就不會好</li>
+      <li class="fragment">先控制 venous hypertension → 再處理 reflux source</li>
     </ul>
   </section>
 
@@ -2534,6 +3159,18 @@ export const slides: Record<string, SlideData> = {
       <li class="fragment"><strong>P（Pathophysiology）</strong>：Pr（reflux）、Po（obstruction）、Pr+o</li>
       <li class="fragment">完整寫法範例：<span class="highlight">C4a,s, Ep, As,p, Pr</span></li>
       <li class="fragment">日常溝通：通常只講 C 分級就夠了</li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>VCSS — Venous Clinical Severity Score</h3>
+    <p>CEAP 是分類，VCSS 是<span class="highlight">量化嚴重度 + 追蹤治療效果</span>的工具</p>
+    <ul>
+      <li class="fragment">10 個項目，每項 0-3 分（總分 0-30）</li>
+      <li class="fragment">項目：疼痛、varicose veins、水腫、色素沉澱、發炎、induration、潰瘍數量/大小/持續時間、壓力襪使用</li>
+      <li class="fragment">用途：<span class="highlight">治療前後比較</span> — 數字下降 = 有效</li>
+      <li class="fragment">比 CEAP 更適合追蹤（CEAP 是分類系統，不是計分系統）</li>
+      <li class="fragment">臨床研究常用 VCSS 作為 primary outcome</li>
     </ul>
   </section>
 </section>
@@ -2633,7 +3270,7 @@ export const slides: Record<string, SlideData> = {
     <ul>
       <li>不能治癒 — 只是症狀控制</li>
       <li class="fragment">順從性差（熱、不舒服、老人家穿不上去）</li>
-      <li class="fragment"><span class="danger">禁忌</span>：嚴重 PAD（ABI &lt; 0.6）→ 壓力會讓缺血更嚴重！</li>
+      <li class="fragment"><span class="danger">禁忌</span>：ABI &lt;0.5 <strong>絕對禁忌</strong>；ABI 0.5-0.8 <strong>相對禁忌</strong>，需醫師監督下使用</li>
       <li class="fragment">什麼時候用？C2-C3 症狀輕微 / 不想手術 / 等手術期間</li>
     </ul>
   </section>
@@ -2657,7 +3294,7 @@ export const slides: Record<string, SlideData> = {
       <li class="fragment">需要全身 / 脊椎麻醉</li>
       <li class="fragment">傷口較大、術後瘀青多</li>
       <li class="fragment">Saphenous nerve injury risk（below knee stripping 時）</li>
-      <li class="fragment"><span class="highlight">復發率 ~20-30% at 5 years</span>（neovascularization at SFJ）</li>
+      <li class="fragment"><span class="highlight">復發率 ~20-30% at 5 years</span> — 主因 <span class="danger">neovascularization</span>（SFJ 附近長出新血管）和 <strong>technical failure</strong>（殘留 tributaries、結紮不完全）</li>
       <li class="fragment">現在已逐漸被微創取代，但仍有角色（如 GSV 非常扭曲時）</li>
     </ul>
   </section>
@@ -2687,7 +3324,7 @@ export const slides: Record<string, SlideData> = {
       <tr><td>麻醉</td><td>GA / spinal</td><td>Local + tumescent</td><td>Local + tumescent</td></tr>
       <tr><td>術後疼痛</td><td>較多</td><td><span class="success">較少</span></td><td>中等</td></tr>
       <tr><td>恢復時間</td><td>1-2 週</td><td><span class="success">1-3 天</span></td><td><span class="success">1-3 天</span></td></tr>
-      <tr><td>5年閉合率</td><td>—</td><td>~92%</td><td>~95%</td></tr>
+      <tr><td>5年閉合率</td><td>—</td><td colspan="2">&gt;90%（兩者相當，文獻 range 88-97%）</td></tr>
       <tr><td>瘀青</td><td>多</td><td>少</td><td>中</td></tr>
     </table>
     <p class="fragment"><span class="highlight">現代 guideline 推薦微創 > stripping</span>（NICE, SVS, ESVS）</p>
@@ -2876,7 +3513,7 @@ export const slides: Record<string, SlideData> = {
     <ul>
       <li>CKD Stage 4（eGFR 15-29）→ <span class="highlight">開始規劃 vascular access</span></li>
       <li class="fragment">CKD Stage 5（eGFR &lt;15）→ 準備透析</li>
-      <li class="fragment">NKF-KDOQI：<span class="highlight">eGFR &lt;25 時就該轉介外科評估</span></li>
+      <li class="fragment">KDOQI 2019：<span class="highlight">eGFR &lt;30 或預計 1 年內需透析</span>時就該轉介外科評估</li>
       <li class="fragment">為什麼這麼早？因為 AVF 需要時間成熟</li>
     </ul>
   </section>
@@ -3010,8 +3647,9 @@ export const slides: Record<string, SlideData> = {
     <h3>術前評估 — 不是畫個線就開刀</h3>
     <ul>
       <li><span class="highlight">Allen Test</span> — 確認手的 dual supply</li>
-      <li class="fragment">壓住 radial + ulnar → 放開 ulnar → 看手掌有沒有紅回來</li>
-      <li class="fragment">如果沒有 → 不能犧牲 radial artery</li>
+      <li class="fragment">步驟：先讓病人<strong>反覆握拳</strong>至手掌蒼白 → 壓住 radial + ulnar → 放開 ulnar → 看手掌有沒有紅回來</li>
+      <li class="fragment"><span class="success">&lt;7 秒恢復紅潤 = 正常</span>（ulnar arch 足夠供應）</li>
+      <li class="fragment">如果沒有紅回來 → 不能犧牲 radial artery</li>
       <li class="fragment"><span class="highlight">Vessel Mapping（超音波）</span></li>
       <li class="fragment">Artery diameter &gt;2mm, Vein diameter &gt;2.5mm</li>
       <li class="fragment">看 cephalic vein 有沒有通、有沒有之前抽血造成的 stenosis</li>
@@ -3133,7 +3771,7 @@ export const slides: Record<string, SlideData> = {
       <li>AVF 的 low resistance circuit 把血「偷」走了</li>
       <li class="fragment">正常：AVF 只分流一部分，遠端還有足夠灌流</li>
       <li class="fragment"><span class="danger">Risk factors</span>：proximal AVF（brachial）、DM、PVD、老人</li>
-      <li class="fragment">分級：Grade 1（冷）→ 2（透析時痛）→ 3（持續痛）→ 4（組織壞死）</li>
+      <li class="fragment">分級：Grade 1（冷）→ 2（透析時痛）→ 3（持續痛）→ 4（組織壞死）<br/><small>（⚠️ 此為臨床嚴重度分級，非正式 guideline classification，但臨床很實用）</small></li>
     </ul>
   </section>
 
@@ -3143,8 +3781,8 @@ export const slides: Record<string, SlideData> = {
       <li>Grade 1-2：觀察、保暖、透析時監測</li>
       <li class="fragment">Grade 3-4：手術介入</li>
       <li class="fragment"><span class="highlight">DRIL（Distal Revascularization Interval Ligation）</span></li>
-      <li class="fragment">概念：結紮 AVF 近端的 artery，再用 bypass 繞過去供應遠端</li>
-      <li class="fragment">保住 AVF 功能，同時恢復遠端灌流</li>
+      <li class="fragment">步驟：在 AVF <strong>遠端</strong>結紮 native artery（阻斷逆流），再從 AVF <strong>近端</strong>的 artery 做 bypass 到遠端 artery，恢復順行灌流</li>
+      <li class="fragment">結果：保住 AVF 功能，同時恢復遠端手部灌流</li>
       <li class="fragment">最嚴重時 → <span class="danger">ligation（關掉 AVF）</span>，保命要緊</li>
     </ul>
   </section>
@@ -3173,6 +3811,102 @@ export const slides: Record<string, SlideData> = {
       <li class="fragment">確認：<span class="highlight">Nicoladoni-Branham sign</span> — 壓住 AVF → HR 下降、BP 上升</li>
       <li class="fragment">處理：banding（縮小 anastomosis）或 ligation</li>
     </ul>
+  </section>
+</section>
+
+<!-- Section 5.5: Infection -->
+<section>
+  <section data-background-color="#001219">
+    <h2>🦠 感染 — Access Infection</h2>
+    <p>透析通路感染是常見但可致命的併發症</p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>AVF vs AVG 感染差異</h3>
+    <ul>
+      <li><strong>AVF 感染率很低</strong>（~2-5%）— 自體組織，抵抗力好</li>
+      <li class="fragment"><strong>AVG 感染率較高</strong>（~10-20%）— 人工材料是細菌的溫床</li>
+      <li class="fragment">AVG 感染往往更嚴重：biofilm 形成 → <span class="danger">難以根除</span></li>
+      <li class="fragment">常見菌種：<span class="highlight">S. aureus</span>（最常見）、coagulase-negative staph、GNB</li>
+      <li class="fragment">DM、免疫低下、衛生條件差 → 感染風險更高</li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>感染處理原則</h3>
+    <ul>
+      <li><strong>經驗性抗生素</strong>：<span class="highlight">Vancomycin</span>（cover MRSA）+ <span class="highlight">Gram-negative coverage</span>（如 ceftazidime 或 gentamicin）</li>
+      <li class="fragment">血液培養 × 2 sets（一組從 AVF/AVG 抽）→ 再根據結果調整</li>
+      <li class="fragment"><strong>什麼時候需要手術？</strong></li>
+      <li class="fragment">→ <span class="danger">Abscess 形成</span>（局部膿瘍需切開引流）</li>
+      <li class="fragment">→ <span class="danger">Graft exposure</span>（人工血管外露 → 幾乎一定要移除）</li>
+      <li class="fragment">→ <span class="danger">Septic emboli</span>（感染性栓塞 → 全身性感染）</li>
+      <li class="fragment">→ 抗生素治療 48-72h 無改善</li>
+    </ul>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>感染預防 — 無菌穿刺技術</h3>
+    <ul>
+      <li><span class="success">每次穿刺前</span>：手部消毒 + 穿刺部位充分消毒（chlorhexidine 或 povidone-iodine）</li>
+      <li class="fragment">避免在同一位置反覆穿刺（<span class="highlight">rope-ladder technique</span>）</li>
+      <li class="fragment">穿刺後妥善覆蓋，保持乾燥</li>
+      <li class="fragment">教育病人：透析前洗手 + 清潔 access 部位</li>
+      <li class="fragment">有紅腫熱痛 → 立即回診，不要等</li>
+    </ul>
+  </section>
+</section>
+
+<!-- Section 5.6: Maturation Failure -->
+<section>
+  <section data-background-color="#001219">
+    <h2>🔍 Maturation Failure</h2>
+    <p>AVF 做了，但它不長大 — 怎麼辦？</p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>什麼時候該擔心？</h3>
+    <ul>
+      <li><span class="highlight">6 週後</span>未達 Rule of 6s → 需要 <span class="highlight">duplex ultrasound 評估</span></li>
+      <li class="fragment">Maturation failure rate：RC-AVF 高達 <span class="danger">20-60%</span>（尤其老人、DM）</li>
+    </ul>
+    <h4 class="fragment">常見原因</h4>
+    <ul>
+      <li class="fragment"><span class="danger">Junctional stenosis</span> — anastomosis 附近狹窄（最常見）</li>
+      <li class="fragment"><span class="danger">Accessory vein</span> — 分支靜脈「偷走」flow，主幹長不大</li>
+      <li class="fragment">動脈 inflow 不足（小 artery、鈣化）</li>
+      <li class="fragment">Central vein stenosis（之前 CVC 造成的）</li>
+    </ul>
+    <h4 class="fragment">處理</h4>
+    <ul>
+      <li class="fragment"><span class="highlight">Balloon angioplasty</span> — junctional stenosis 的首選</li>
+      <li class="fragment"><span class="highlight">Accessory vein ligation</span> — 結紮分支，逼 flow 走主幹</li>
+      <li class="fragment">Superficialization — 太深的 AVF 翻淺</li>
+      <li class="fragment">以上都失敗 → 放棄此 AVF，往近端做新的</li>
+    </ul>
+  </section>
+</section>
+
+<!-- Section 5.7: Patient Life Plan -->
+<section>
+  <section data-background-color="#001219">
+    <h2>🗺️ Patient Life Plan — 長期規劃</h2>
+    <p>不是只做一次 AVF 就好 — 要想這個病人未來 10-20 年的通路</p>
+  </section>
+
+  <section data-background-color="#001219">
+    <h3>通路的長期序列</h3>
+    <p>每失敗一個，就往下一步走：</p>
+    <ol>
+      <li class="fragment"><span class="success">RC-AVF</span>（Radiocephalic）— 手腕，第一選擇</li>
+      <li class="fragment"><span class="success">BC-AVF</span>（Brachiocephalic）— 肘部</li>
+      <li class="fragment"><span class="highlight">BB-AVF</span>（Brachiobasilic）— 需 transposition</li>
+      <li class="fragment"><span class="highlight">AVG</span>（upper arm loop → forearm loop）</li>
+      <li class="fragment"><span class="danger">Lower extremity AVF/AVG</span> — 大腿</li>
+      <li class="fragment"><span class="danger">PD（腹膜透析）</span> — 如果血管通路都用完了</li>
+    </ol>
+    <p class="fragment">⚠️ 這就是為什麼要<strong>從遠端開始</strong> + <strong>保護血管</strong></p>
+    <p class="fragment">每一個 CVC、每一次不必要的靜脈穿刺，都在消耗病人未來的選項</p>
   </section>
 </section>
 
@@ -3285,7 +4019,7 @@ export const slides: Record<string, SlideData> = {
 <section data-background-color="#001219">
   <h2>📌 Take Home Messages</h2>
   <ul>
-    <li class="fragment"><span class="highlight">提早轉介</span> — eGFR &lt;25 就該開始規劃</li>
+    <li class="fragment"><span class="highlight">提早轉介</span> — eGFR &lt;30 或預計 1 年內需透析就該開始規劃</li>
     <li class="fragment"><span class="highlight">AVF 優先</span>，但要個人化（Patient Life Plan）</li>
     <li class="fragment"><span class="highlight">Rule of 6s</span> — 成熟標準：6-6-6-6</li>
     <li class="fragment"><span class="highlight">理學檢查是核心技能</span> — 看、摸、聽就能診斷 80% 的問題</li>
