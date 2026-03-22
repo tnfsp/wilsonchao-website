@@ -2,7 +2,7 @@
   "id": "BLOG-WORKFLOW",
   "slug": "BLOG-WORKFLOW",
   "title": "BLOG-WORKFLOW",
-  "type": "工作流",
+  "type": "workflow",
   "status": "Published",
   "publishedAt": "",
   "content": "# Blog 零摩擦工作流\n\n> Wilson 不需要「坐下來寫」。他只需要活著、說話、然後看一眼。\n> 完整規格：`BLOG-WORKFLOW-SPEC.md`\n\n---\n\n## 核心原則\n\n1. 沒經過 Wilson 腦袋的東西，不會變成文章\n2. 不發明新系統，嫁接現有流程\n3. Owl 的角色：標記 → 收割 → 組稿 → 後勤。聲音觀點不外包\n4. 月 1-2 篇\n\n---\n\n## 流程總覽\n\n```\nJournal Talk Phase 2.7 / Wilson TG「blog:⋯」\n         ↓ 素材標記\n   Brand/ideas/{topic}.md\n         ↓ 三門檻全滿\n   Brand/Blog/{slug}.md (published: false)\n         ↓ Wilson 確認\n   published: true → sync-vault → wilsonchao.com\n```\n\n---\n\n## 素材捕捉\n\n| 觸發點 | 說明 |\n|--------|------|\n| Journal Talk Phase 2.7 | Entity 審查後、Knowledge Atomizer 前，≤ 2 分鐘 |\n| Wilson 主動投稿 | TG 說「blog:」或「這個可以寫」→ 立即標記 |\n\n跨 session 意識：L2 有提醒 + `ls Brand/ideas/`\n\n---\n\n## 素材組織\n\n每主題一個檔：`Brand/ideas/{topic-slug}.md`\n模板：`Brand/ideas/_template.md`\n\n每條素材必須帶：日期 + Wilson 原話 + 一行語境，≤ 200 字\n\n---\n\n## Ready 門檻（三個全滿）\n\n1. sources ≥ 3\n2. core_insight 不為空\n3. 最早最晚素材間隔 ≥ 14 天\n\n查詢：`bash scripts/blog-material-query.sh --ready`\n\n---\n\n## 組稿\n\n1. Ready → TG 通知 Wilson：3 句摘要 + 1 核心問題\n2. 確認素材是否過期（> 2 個月的素材問 Wilson）\n3. Wilson 同意 → 讀 voice reference → 場景堆疊組稿\n4. Wilson 原話 blockquote，Owl 過渡普通段落\n5. 來源 HTML comment `<!-- source: ... -->`\n6. 草稿放 `Brand/Blog/{slug}.md`，`published: false`\n\n---\n\n## 審閱\n\n- 手術空檔：TG 摘要 + 語音回覆\n- 晚上：Obsidian 改 or 跟 Owl 說\n- 退回 → status 改回 collecting\n\n---\n\n## 發布\n\nWilson 確認 → blog-publish skill 全包",
