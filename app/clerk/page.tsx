@@ -78,7 +78,7 @@ export default function ClerkOrientation() {
           </div>
           <Card className="mt-4">
             <p className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">課程負責</p>
-            <div className="grid sm:grid-cols-3 gap-3">
+            <div className="grid sm:grid-cols-2 gap-3">
               <div className="text-center p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
                 <div className="text-sm text-gray-500 dark:text-gray-400">教學住診</div>
                 <div className="font-semibold text-gray-900 dark:text-white">邱肇基 副教授</div>
@@ -90,6 +90,10 @@ export default function ClerkOrientation() {
               <div className="text-center p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
                 <div className="text-sm text-gray-500 dark:text-gray-400">核心課程（小兒心臟）</div>
                 <div className="font-semibold text-gray-900 dark:text-white">羅時逸 醫師</div>
+              </div>
+              <div className="text-center p-3 rounded-lg bg-gray-50 dark:bg-gray-700/50">
+                <div className="text-sm text-gray-500 dark:text-gray-400">核心課程（心臟外科導論）</div>
+                <div className="font-semibold text-gray-900 dark:text-white">吳柏俞 醫師</div>
               </div>
             </div>
           </Card>
