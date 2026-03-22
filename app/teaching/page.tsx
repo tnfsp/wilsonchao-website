@@ -57,6 +57,19 @@ export default function TeachingIndex() {
           </div>
         </section>
 
+        <section className="mt-12">
+          <Link
+            href="/teaching/feedback"
+            className="group block rounded-xl border-2 border-dashed border-cyan-700 p-6 text-center hover:border-cyan-400 hover:bg-white/5 transition-all"
+          >
+            <div className="text-3xl mb-2">📮</div>
+            <div className="font-semibold text-lg text-white group-hover:text-cyan-400 transition-colors">
+              Clerk Feedback
+            </div>
+            <p className="text-sm text-gray-400 mt-1">匿名回饋，幫助我們讓見習變更好</p>
+          </Link>
+        </section>
+
         <footer className="mt-16 text-center text-gray-600 text-sm">
           <p>← → 翻頁 · F 全螢幕 · ESC 總覽</p>
         </footer>
