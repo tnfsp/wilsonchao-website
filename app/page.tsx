@@ -2,7 +2,7 @@ import Link from "next/link";
 import Image from "next/image";
 import { loadBlogEntries, loadSiteCopy, loadProjects, loadStreamEntries } from "@/lib/content";
 import { ViewStats } from "@/components/ui/ViewCounter";
-
+import { RandomTagline } from "@/components/ui/RandomTagline";
 import { BASE_URL } from "@/lib/constants";
 
 const websiteJsonLd = {
@@ -104,9 +104,7 @@ export default async function Home() {
             {heroIntroParagraphs.map((paragraph: string, index: number) => (
               <p key={index}>{paragraph}</p>
             ))}
-            <p className="italic text-[var(--muted)]">
-              「手術室裡放著 Lo-Fi，沒人覺得奇怪。」
-            </p>
+            <RandomTagline />
           </div>
 
           {/* Navigation pills */}
