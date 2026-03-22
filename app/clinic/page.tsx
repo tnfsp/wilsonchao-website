@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 
 const BASE_URL = "https://wilsonchao.com";
 
@@ -129,8 +130,13 @@ export default function ClinicPage() {
         {/* Hero */}
         <section className="space-y-4 pb-8 border-b border-[var(--border)]">
           <div className="flex items-start gap-5">
-            {/* TODO: 換成專業照片 */}
-            <div className="hidden sm:block h-28 w-28 rounded-xl bg-[var(--surface-strong)] border border-[var(--border)] flex-shrink-0" />
+            <Image
+              src="/hero.jpg"
+              alt="趙玴祥醫師"
+              width={112}
+              height={112}
+              className="hidden sm:block h-28 w-28 rounded-xl border border-[var(--border)] flex-shrink-0 object-cover"
+            />
             <div className="space-y-2">
               <h1 className="text-3xl font-bold text-[var(--foreground)]">
                 趙玴祥<span className="text-lg font-normal text-[var(--muted)] ml-2">醫師</span>
