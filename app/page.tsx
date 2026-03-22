@@ -102,12 +102,30 @@ export default async function Home() {
               白天在高醫把心臟打開，晚上把心裡的事寫下來。
             </p>
             {heroIntroParagraphs.map((paragraph: string, index: number) => (
-              <p key={index} className="text-[var(--muted)]">{paragraph}</p>
+              <p key={index}>{paragraph}</p>
             ))}
-            <p className="text-[var(--muted)]">
-              <Link href="/blog" className="subtle-link">Blog</Link> 是想好了才寫的長文。
-              <Link href="/stream" className="subtle-link"> Stream</Link> 是每天的腦內碎片——手術後的感想、半夜聽到的歌、或就只是廢話。想知道我最近在幹嘛，看 <Link href="/now" className="subtle-link">Now</Link>。想知道我在讀什麼，看 <Link href="/blogroll" className="subtle-link">Blogroll</Link>。
+            <p className="italic text-[var(--muted)]">
+              「手術室裡放著 Lo-Fi，沒人覺得奇怪。」
             </p>
+          </div>
+
+          {/* Navigation pills */}
+          <div className="flex flex-wrap gap-2">
+            {[
+              { label: "Blog", href: "/blog" },
+              { label: "Now", href: "/now" },
+              { label: "Stream", href: "/stream" },
+              { label: "Blogroll", href: "/blogroll" },
+              { label: "About", href: "/about" },
+            ].map((nav) => (
+              <Link
+                key={nav.href}
+                href={nav.href}
+                className="rounded-full border border-[var(--border)] px-4 py-1.5 text-sm font-medium text-[var(--foreground)] transition-colors hover:bg-[var(--highlight)] hover:text-[var(--accent)]"
+              >
+                {nav.label}
+              </Link>
+            ))}
           </div>
         </header>
 
