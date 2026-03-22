@@ -135,7 +135,7 @@ export default function ClinicPage() {
               alt="趙玴祥醫師"
               width={112}
               height={112}
-              className="hidden sm:block h-28 w-28 rounded-xl border border-[var(--border)] flex-shrink-0 object-cover"
+              className="h-20 w-20 sm:h-28 sm:w-28 rounded-xl border border-[var(--border)] flex-shrink-0 object-cover"
             />
             <div className="space-y-2">
               <h1 className="text-3xl font-bold text-[var(--foreground)]">
