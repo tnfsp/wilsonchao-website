@@ -6,6 +6,8 @@ const modules = {
     { slug: "hemodynamics", title: "Module 2：Hemodynamic Monitoring", subtitle: "「三秒鐘看一眼 monitor，你看什麼？」", emoji: "📊" },
     { slug: "ventilator", title: "Module 3：呼吸器", subtitle: "「術後 4 小時，病人 fighting vent」", emoji: "🌬️" },
     { slug: "icu-care", title: "Module 4：ICU Care", subtitle: "「CABG 術後 Day 0，然後呢？」", emoji: "🏥" },
+    { slug: "varicose-vein", title: "Module 5：Varicose Vein", subtitle: "「靜脈曲張不只是美容問題」", emoji: "🦵" },
+    { slug: "avf-avg", title: "Module 6：AVF/AVG 評估", subtitle: "「沒 thrill 了，然後呢？」", emoji: "💉" },
   ],
   elective: [
     { slug: "cabg", title: "選修 A：CABG 全攻略", subtitle: "從 Cath 到 Close — Case-based", emoji: "🔧" },
