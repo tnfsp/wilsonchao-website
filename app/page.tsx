@@ -139,10 +139,12 @@ export default async function Home() {
             ))}
           </div>
 
-          <p className="max-w-2xl text-sm leading-relaxed text-[var(--muted)]">
-            <Link href="/blog" className="subtle-link">Blog</Link> 是想好了才寫的長文。
-            <Link href="/stream" className="subtle-link"> Stream</Link> 是每天的腦內碎片。想知道我最近在幹嘛，看 <Link href="/now" className="subtle-link">Now</Link>。想知道我在讀什麼，看 <Link href="/blogroll" className="subtle-link">Blogroll</Link>。
-          </p>
+          <nav className="max-w-md space-y-1 text-sm text-[var(--muted)]">
+            <div><Link href="/blog" className="subtle-link">Blog</Link> — 想好了才寫的長文</div>
+            <div><Link href="/stream" className="subtle-link">Stream</Link> — 每天的腦內碎片</div>
+            <div><Link href="/now" className="subtle-link">Now</Link> — 我最近在幹嘛</div>
+            <div><Link href="/blogroll" className="subtle-link">Blogroll</Link> — 我在讀什麼</div>
+          </nav>
         </header>
 
         {/* 最近寫的: blog + 週報 merged */}
