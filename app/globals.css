@@ -25,10 +25,7 @@
 }
 
 body {
-  background:
-    radial-gradient(circle at 14% 18%, rgba(233, 216, 166, 0.48), transparent 32%),
-    radial-gradient(circle at 82% 6%, rgba(153, 186, 203, 0.26), transparent 28%),
-    var(--background);
+  background: var(--background);
   color: var(--foreground);
   font-family:
     ui-sans-serif,
