@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 
 interface RevealSlidesProps {
   slidesHtml: string;
@@ -9,6 +9,17 @@ interface RevealSlidesProps {
 export default function RevealSlides({ slidesHtml }: RevealSlidesProps) {
   const deckRef = useRef<HTMLDivElement>(null);
   const revealRef = useRef<any>(null);
+  const containerRef = useRef<HTMLDivElement>(null);
+
+  const toggleFullscreen = useCallback(() => {
+    const el = containerRef.current;
+    if (!el) return;
+    if (!document.fullscreenElement) {
+      el.requestFullscreen().catch(() => {});
+    } else {
+      document.exitFullscreen().catch(() => {});
+    }
+  }, []);
 
   useEffect(() => {
     async function initReveal() {
@@ -21,6 +32,8 @@ export default function RevealSlides({ slidesHtml }: RevealSlidesProps) {
           controls: true,
           progress: true,
           center: true,
+          keyboard: true,
+          overview: true,
           transition: "slide",
           backgroundTransition: "fade",
           width: 1280,
@@ -29,6 +42,15 @@ export default function RevealSlides({ slidesHtml }: RevealSlidesProps) {
         });
         await deck.initialize();
         revealRef.current = deck;
+
+        // Register F key for fullscreen
+        deck.addKeyBinding({ keyCode: 70, key: "F", description: "Toggle fullscreen" }, () => {
+          if (!document.fullscreenElement) {
+            containerRef.current?.requestFullscreen().catch(() => {});
+          } else {
+            document.exitFullscreen().catch(() => {});
+          }
+        });
       }
     }
 
@@ -43,7 +65,7 @@ export default function RevealSlides({ slidesHtml }: RevealSlidesProps) {
   }, []);
 
   return (
-    <>
+    <div ref={containerRef} style={{ width: "100%", height: "100vh", background: "#001219" }}>
       <link
         rel="stylesheet"
         href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css"
@@ -76,17 +98,21 @@ export default function RevealSlides({ slidesHtml }: RevealSlidesProps) {
         .reveal .author { color: #666; font-size: 0.7em; margin-top: 1em; }
         .reveal .fragment.custom-fade { opacity: 0; transition: opacity 0.3s; }
         .reveal .fragment.custom-fade.visible { opacity: 1; }
-        .reveal section[data-background-color="#001219"] { }
         .back-link { position: fixed; top: 16px; left: 16px; z-index: 100; color: #94d2bd; text-decoration: none; font-size: 14px; opacity: 0.6; transition: opacity 0.2s; }
         .back-link:hover { opacity: 1; }
+        .fullscreen-btn { position: fixed; bottom: 16px; right: 16px; z-index: 100; background: rgba(10,147,150,0.8); color: white; border: none; border-radius: 8px; padding: 8px 16px; font-size: 14px; cursor: pointer; opacity: 0.7; transition: opacity 0.2s; }
+        .fullscreen-btn:hover { opacity: 1; }
+        :fullscreen .fullscreen-btn { display: none; }
+        :fullscreen .back-link { display: none; }
       `}</style>
       <a href="/teaching" className="back-link">← 目錄</a>
+      <button className="fullscreen-btn" onClick={toggleFullscreen}>⛶ 全螢幕</button>
       <div className="reveal" ref={deckRef}>
         <div
           className="slides"
           dangerouslySetInnerHTML={{ __html: slidesHtml }}
         />
       </div>
-    </>
+    </div>
   );
 }
