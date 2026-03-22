@@ -98,9 +98,9 @@ export default async function Home() {
           </div>
 
           <div className="max-w-2xl space-y-4 text-base leading-relaxed text-[var(--muted)]">
-            <p className="text-lg font-medium text-[var(--foreground)]">
+            <blockquote className="border-l-2 border-[var(--accent)] pl-4 text-lg italic text-[var(--muted)]">
               白天在高醫把心臟打開，晚上把心裡的事寫下來。
-            </p>
+            </blockquote>
             {heroIntroParagraphs.map((paragraph: string, index: number) => (
               <p key={index}>{paragraph}</p>
             ))}
