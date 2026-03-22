@@ -30,24 +30,40 @@ export default async function Home() {
     loadSiteCopy(),
     loadBlogEntries(),
     loadProjects(),
-    loadStreamEntries(3),
+    loadStreamEntries(6),
   ]);
   const weeklyEntries = projects.filter((p) => p.type === "週報");
 
+  // Filter stream: remove blog promos, strip raw URLs, limit to 3
+  const filteredMurmur = murmur
+    .filter((item) => {
+      const text = (item.description || item.title || "").toLowerCase();
+      return !text.includes("#blog") && !text.startsWith("📰");
+    })
+    .map((item) => ({
+      ...item,
+      description: (item.description || item.title || "")
+        .replace(/https?:\/\/[^\s]+/g, "")
+        .trim(),
+    }))
+    .slice(0, 3);
+
   // Merge blog + weekly into one "最近寫的" list, sorted by date desc
-  type RecentItem = { title: string; href: string; date: string; tag?: string };
+  type RecentItem = { title: string; href: string; date: string; tag?: string; excerpt?: string };
   const recentItems: RecentItem[] = [
     ...blogEntries.map((post) => ({
       title: post.title,
       href: `/blog/${post.slug}`,
       date: post.publishedAt || "",
       tag: "Blog" as const,
+      excerpt: post.excerpt || "",
     })),
     ...weeklyEntries.map((entry) => ({
       title: entry.title,
       href: `/journal/${entry.slug}`,
       date: entry.date || "",
       tag: "週報" as const,
+      excerpt: entry.excerpt || "",
     })),
   ]
     .filter((item) => item.date)
@@ -142,25 +158,32 @@ export default async function Home() {
           </div>
           <ul className="space-y-3">
             {recentItems.map((item) => (
-              <li key={item.href} className="flex items-baseline justify-between gap-4">
-                <div className="flex items-baseline gap-2 min-w-0">
-                  <span className={`flex-shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${
-                    item.tag === "週報"
-                      ? "bg-[var(--highlight)] text-[var(--accent)]"
-                      : "bg-[var(--highlight)] text-[var(--muted)]"
-                  }`}>
-                    {item.tag}
+              <li key={item.href}>
+                <div className="flex items-baseline justify-between gap-4">
+                  <div className="flex items-baseline gap-2 min-w-0">
+                    <span className={`flex-shrink-0 rounded px-1.5 py-0.5 text-xs font-medium ${
+                      item.tag === "週報"
+                        ? "bg-[var(--highlight)] text-[var(--accent)]"
+                        : "bg-[var(--highlight)] text-[var(--muted)]"
+                    }`}>
+                      {item.tag}
+                    </span>
+                    <Link
+                      href={item.href}
+                      className="text-base text-[var(--foreground)] hover:text-[var(--accent)] transition-colors truncate"
+                    >
+                      {item.title}
+                    </Link>
+                  </div>
+                  <span className="flex-shrink-0 text-sm text-[var(--muted)] tabular-nums">
+                    {item.date}
                   </span>
-                  <Link
-                    href={item.href}
-                    className="text-base text-[var(--foreground)] hover:text-[var(--accent)] transition-colors truncate"
-                  >
-                    {item.title}
-                  </Link>
                 </div>
-                <span className="flex-shrink-0 text-sm text-[var(--muted)] tabular-nums">
-                  {item.date}
-                </span>
+                {item.excerpt ? (
+                  <p className="mt-1 ml-[calc(1.5rem+0.5rem)] text-sm text-[var(--muted)] line-clamp-1">
+                    {item.excerpt}
+                  </p>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -177,21 +200,19 @@ export default async function Home() {
               更多 →
             </Link>
           </div>
-          {murmur.length > 0 ? (
+          {filteredMurmur.length > 0 ? (
             <div className="space-y-4">
-              {murmur.map((item) => (
+              {filteredMurmur.map((item) => (
                 <div
                   key={item.link || item.title}
                   className="border-l-2 border-[var(--border)] pl-4"
                 >
-                  <a
-                    href={item.link}
+                  <Link
+                    href="/stream"
                     className="block text-sm leading-relaxed text-[var(--foreground)] hover:text-[var(--accent)] break-words"
-                    target="_blank"
-                    rel="noreferrer"
                   >
                     {item.description || item.title}
-                  </a>
+                  </Link>
                   {item.pubDate ? (
                     <p className="mt-1 text-xs text-[var(--muted)]">
                       {formatMurmurDate(item.pubDate)}

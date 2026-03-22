@@ -9,6 +9,7 @@ const links = [
   { href: "/blog", label: "Blog" },
   { href: "/journal", label: "Journal" },
   { href: "/stream", label: "Stream" },
+  { href: "/now", label: "Now" },
   { href: "/clinic", label: "Clinic" },
   { href: "/blogroll", label: "Blogroll" },
   { href: "/about", label: "About" },
