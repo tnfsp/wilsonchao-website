@@ -7,7 +7,6 @@ import { SearchBox } from "@/components/ui/SearchBox";
 
 const links = [
   { href: "/blog", label: "Blog" },
-  { href: "/journal", label: "Journal" },
   { href: "/stream", label: "Stream" },
   { href: "/now", label: "Now" },
   { href: "/clinic", label: "Clinic" },
@@ -104,6 +103,9 @@ export function SiteHeader() {
               >
                 RSS
               </Link>
+              <div className="px-3 py-2">
+                <SearchBox />
+              </div>
             </div>
           </div>
         </div>
