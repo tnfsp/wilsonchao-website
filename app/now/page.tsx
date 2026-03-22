@@ -34,7 +34,7 @@ function renderLinkedText(text: string) {
           href={match[2]}
           target="_blank"
           rel="noopener noreferrer"
-          className="underline decoration-[var(--border)] underline-offset-4 transition-colors hover:text-[var(--accent)]"
+          className="text-[var(--accent)] underline decoration-[var(--accent)]/30 underline-offset-4 transition-colors hover:decoration-[var(--accent)]"
         >
           {match[1]}
         </a>
