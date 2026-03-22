@@ -1,0 +1,51 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 750 380" style="background:#1a1a2e">
+  <defs>
+    <style>
+      text { font-family: 'Segoe UI', Arial, sans-serif; fill: #e0e0e0; }
+      .title { font-size: 16px; fill: #ee9b00; font-weight: bold; }
+      .box { rx: 8; ry: 8; }
+      .dim { fill: #888; font-size: 11px; }
+      .step { font-size: 13px; font-weight: bold; }
+    </style>
+    <marker id="arr" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+      <polygon points="0 0, 8 3, 0 6" fill="#666"/>
+    </marker>
+  </defs>
+  <text x="375" y="25" text-anchor="middle" class="title">Fighting Vent — 60 秒決策樹</text>
+  <!-- Step 0: Disconnect -->
+  <rect x="250" y="40" width="250" height="50" class="box" fill="#1a0000" stroke="#e63946" stroke-width="2"/>
+  <text x="375" y="62" text-anchor="middle" class="step" style="fill:#e63946; font-size:14px">🔴 先 Disconnect + 手動 Bagging</text>
+  <text x="375" y="78" text-anchor="middle" class="dim">100% O₂ + 聽診</text>
+  <!-- Arrow down -->
+  <line x1="375" y1="90" x2="375" y2="115" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- Step 1: Lethal first -->
+  <rect x="200" y="115" width="350" height="45" class="box" fill="#0d1b2a" stroke="#e63946" stroke-width="1.5"/>
+  <text x="375" y="135" text-anchor="middle" class="step" style="fill:#e63946">① 致命的先排除（10 秒）</text>
+  <text x="375" y="150" text-anchor="middle" class="dim">Tension PTX → Tamponade → Massive PE</text>
+  <!-- Arrow -->
+  <line x1="375" y1="160" x2="375" y2="180" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <!-- Step 2: Bagging response -->
+  <rect x="150" y="180" width="450" height="40" class="box" fill="#0d1b2a" stroke="#ee9b00" stroke-width="1.5"/>
+  <text x="375" y="202" text-anchor="middle" class="step" style="fill:#ee9b00">② Bagging 容易嗎？SpO₂ 回來嗎？</text>
+  <!-- Branch: Easy -->
+  <line x1="250" y1="220" x2="150" y2="250" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="175" y="242" class="dim" style="fill:#2a9d8f">容易 + SpO₂↑</text>
+  <rect x="30" y="250" width="240" height="50" class="box" fill="#001a00" stroke="#2a9d8f" stroke-width="1.5"/>
+  <text x="150" y="270" text-anchor="middle" style="fill:#2a9d8f; font-size:13px; font-weight:bold">Vent 設定問題</text>
+  <text x="150" y="290" text-anchor="middle" class="dim">Flow rate、Trigger、Auto-PEEP</text>
+  <!-- Branch: Difficult -->
+  <line x1="375" y1="220" x2="375" y2="250" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="395" y="242" class="dim" style="fill:#e63946">困難</text>
+  <rect x="280" y="250" width="190" height="50" class="box" fill="#1a0000" stroke="#e63946" stroke-width="1.5"/>
+  <text x="375" y="270" text-anchor="middle" style="fill:#e63946; font-size:13px; font-weight:bold">管路/肺問題</text>
+  <text x="375" y="290" text-anchor="middle" class="dim">PTX、Mucus plug、ETT 問題</text>
+  <!-- Branch: OK but SpO2 low -->
+  <line x1="500" y1="220" x2="600" y2="250" stroke="#666" stroke-width="1.5" marker-end="url(#arr)"/>
+  <text x="570" y="242" class="dim" style="fill:#ee9b00">OK 但 SpO₂↓</text>
+  <rect x="500" y="250" width="230" height="50" class="box" fill="#0d1b2a" stroke="#ee9b00" stroke-width="1.5"/>
+  <text x="615" y="270" text-anchor="middle" style="fill:#ee9b00; font-size:13px; font-weight:bold">Intrapulmonary shunt</text>
+  <text x="615" y="290" text-anchor="middle" class="dim">Atelectasis、Pulmonary edema</text>
+  <!-- Patient factors -->
+  <rect x="150" y="320" width="450" height="40" class="box" fill="#0d1b2a" stroke="#94d2bd" stroke-width="1"/>
+  <text x="375" y="342" text-anchor="middle" style="fill:#94d2bd; font-size:13px">③ 別忘了病人因素：疼痛、膀胱脹、焦慮、缺氧、高碳酸血症</text>
+</svg>

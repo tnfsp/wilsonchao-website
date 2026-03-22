@@ -24,6 +24,7 @@ export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
   const [entries, setEntries] = useState<BlogEntry[] | null>(null);
   const [tooltip, setTooltip] = useState<{ x: number; y: number; entry: BlogEntry; date: string } | null>(null);
   const svgRef = useRef<SVGSVGElement>(null);
+  const wrapperRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     fetch("/writing-calendar.json")
@@ -96,24 +97,24 @@ export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
   function handleMouseEnter(e: React.MouseEvent, cellEntries: BlogEntry[], date: string) {
     if (cellEntries.length === 0) return;
     const rect = (e.target as SVGElement).getBoundingClientRect();
-    const svgRect = svgRef.current?.getBoundingClientRect();
-    if (!svgRect) return;
+    const outerRect = (e.target as SVGElement).closest(".mt-3")?.getBoundingClientRect();
+    if (!outerRect) return;
     setTooltip({
-      x: rect.left - svgRect.left + CELL / 2,
-      y: rect.top - svgRect.top - 4,
+      x: rect.left - outerRect.left + CELL / 2,
+      y: rect.top - outerRect.top - 4,
       entry: cellEntries[0],
       date,
     });
   }
 
   return (
-    <div className="mt-3">
+    <div className="mt-3" style={{ position: "relative" }}>
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-[11px] text-[var(--muted)]">
           📝 {entries.length} 篇文章的寫作紀錄
         </span>
       </div>
-      <div className="overflow-x-auto relative" style={{ position: "relative" }}>
+      <div className="overflow-x-auto" ref={wrapperRef}>
         <svg
           ref={svgRef}
           width={svgWidth}
@@ -177,29 +178,30 @@ export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
           ))}
         </svg>
 
-        {/* Floating tooltip */}
-        {tooltip && (
-          <div
-            className="absolute pointer-events-none bg-[var(--foreground)] text-[var(--background)] text-[11px] px-2.5 py-1.5 rounded-md shadow-lg whitespace-nowrap"
-            style={{
-              left: tooltip.x,
-              top: tooltip.y,
-              transform: "translate(-50%, -100%)",
-              zIndex: 10,
-            }}
-          >
-            <div className="opacity-70 text-[10px]">
-              {(() => {
-                const [y, m, d] = tooltip.date.split("-");
-                return `${y}年${parseInt(m)}月${parseInt(d)}日`;
-              })()}
-            </div>
-            <div className="font-medium" style={{ color: "#0a9396" }}>
-              {tooltip.entry.title}
-            </div>
-          </div>
-        )}
       </div>
+
+      {/* Floating tooltip — outside overflow container */}
+      {tooltip && (
+        <div
+          className="absolute pointer-events-none bg-[var(--foreground)] text-[var(--background)] text-[11px] px-2.5 py-1.5 rounded-md shadow-lg whitespace-nowrap"
+          style={{
+            left: tooltip.x,
+            top: tooltip.y,
+            transform: "translate(-50%, -100%)",
+            zIndex: 10,
+          }}
+        >
+          <div className="opacity-70 text-[10px]">
+            {(() => {
+              const [y, m, d] = tooltip.date.split("-");
+              return `${y}年${parseInt(m)}月${parseInt(d)}日`;
+            })()}
+          </div>
+          <div className="font-medium" style={{ color: "#0a9396" }}>
+            {tooltip.entry.title}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

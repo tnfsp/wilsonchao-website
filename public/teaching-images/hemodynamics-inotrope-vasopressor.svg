@@ -1,0 +1,65 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 400" style="background:#1a1a2e">
+  <defs>
+    <style>
+      text { font-family: 'Segoe UI', Arial, sans-serif; fill: #e0e0e0; }
+      .title { font-size: 18px; fill: #ee9b00; font-weight: bold; }
+      .drug { font-size: 15px; font-weight: bold; }
+      .dim { fill: #888; font-size: 11px; }
+      .effect { font-size: 12px; }
+    </style>
+  </defs>
+  <text x="400" y="30" text-anchor="middle" class="title">Inotrope / Vasopressor 選擇邏輯</text>
+  <!-- Milrinone -->
+  <rect x="30" y="55" width="220" height="120" rx="10" fill="#0d1b2a" stroke="#2a9d8f" stroke-width="2"/>
+  <text x="140" y="78" text-anchor="middle" class="drug" style="fill:#2a9d8f">Milrinone</text>
+  <text x="140" y="95" text-anchor="middle" class="dim">PDE3 inhibitor</text>
+  <line x1="40" y1="102" x2="240" y2="102" stroke="#333"/>
+  <text x="50" y="120" class="effect">💪 ↑ Contractility</text>
+  <text x="50" y="138" class="effect">🩸 ↓ SVR (vasodilation)</text>
+  <text x="50" y="156" class="effect">🫁 ↓ PVR (降肺壓)</text>
+  <text x="50" y="172" class="dim" style="fill:#e63946">⚠️ 會降 BP → 低 SVR 不適合</text>
+  <!-- Dobutamine -->
+  <rect x="290" y="55" width="220" height="120" rx="10" fill="#0d1b2a" stroke="#4cc9f0" stroke-width="2"/>
+  <text x="400" y="78" text-anchor="middle" class="drug" style="fill:#4cc9f0">Dobutamine</text>
+  <text x="400" y="95" text-anchor="middle" class="dim">β1 + β2 agonist</text>
+  <line x1="300" y1="102" x2="500" y2="102" stroke="#333"/>
+  <text x="310" y="120" class="effect">💪 ↑ Contractility (β1)</text>
+  <text x="310" y="138" class="effect">🩸 ↓ SVR (β2)</text>
+  <text x="310" y="156" class="effect">❤️ ↑ HR (moderate)</text>
+  <text x="310" y="172" class="dim" style="fill:#e63946">⚠️ First-line inotrope</text>
+  <!-- Norepinephrine -->
+  <rect x="550" y="55" width="220" height="120" rx="10" fill="#0d1b2a" stroke="#e63946" stroke-width="2"/>
+  <text x="660" y="78" text-anchor="middle" class="drug" style="fill:#e63946">Norepinephrine</text>
+  <text x="660" y="95" text-anchor="middle" class="dim">α1 為主 + β1</text>
+  <line x1="560" y1="102" x2="760" y2="102" stroke="#333"/>
+  <text x="570" y="120" class="effect">🩸 ↑↑ SVR (α1)</text>
+  <text x="570" y="138" class="effect">💪 ↑ Contractility (β1, 弱)</text>
+  <text x="570" y="156" class="effect">📈 ↑ MAP</text>
+  <text x="570" y="172" class="dim" style="fill:#2a9d8f">✅ 純升壓，不太加 HR</text>
+  <!-- Vasopressin -->
+  <rect x="30" y="210" width="220" height="110" rx="10" fill="#0d1b2a" stroke="#ee9b00" stroke-width="2"/>
+  <text x="140" y="233" text-anchor="middle" class="drug" style="fill:#ee9b00">Vasopressin</text>
+  <text x="140" y="250" text-anchor="middle" class="dim">V1 receptor agonist</text>
+  <line x1="40" y1="257" x2="240" y2="257" stroke="#333"/>
+  <text x="50" y="275" class="effect">🩸 ↑ SVR (V1)</text>
+  <text x="50" y="293" class="effect">🧠 Post-CPB vasoplegia 首選</text>
+  <text x="50" y="311" class="dim" style="fill:#2a9d8f">補充被 CPB 耗盡的 stores</text>
+  <!-- Epinephrine -->
+  <rect x="290" y="210" width="220" height="110" rx="10" fill="#0d1b2a" stroke="#d62828" stroke-width="2"/>
+  <text x="400" y="233" text-anchor="middle" class="drug" style="fill:#d62828">Epinephrine</text>
+  <text x="400" y="250" text-anchor="middle" class="dim">α + β 全開</text>
+  <line x1="300" y1="257" x2="500" y2="257" stroke="#333"/>
+  <text x="310" y="275" class="effect">💪 ↑↑ Contractility</text>
+  <text x="310" y="293" class="effect">🩸 ↑ SVR + ❤️ ↑↑ HR</text>
+  <text x="310" y="311" class="dim" style="fill:#e63946">⚠️ Lactate 假升高（Type B）</text>
+  <!-- Decision box -->
+  <rect x="550" y="210" width="220" height="110" rx="10" fill="#0d1b2a" stroke="#94d2bd" stroke-width="2"/>
+  <text x="660" y="233" text-anchor="middle" class="drug" style="fill:#94d2bd">選藥邏輯</text>
+  <line x1="560" y1="240" x2="760" y2="240" stroke="#333"/>
+  <text x="570" y="260" class="effect">CI↓ SVR↑ → Milrinone</text>
+  <text x="570" y="280" class="effect">CI↓ SVR↓ → Dobu + NE</text>
+  <text x="570" y="300" class="effect">CI OK SVR↓ → NE ± Vaso</text>
+  <text x="570" y="316" class="dim">RV failure → Milrinone ± iNO</text>
+  <!-- Footer -->
+  <text x="400" y="380" text-anchor="middle" class="dim" style="font-size:12px">CI = Cardiac Index | SVR = Systemic Vascular Resistance | NE = Norepinephrine</text>
+</svg>
