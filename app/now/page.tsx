@@ -34,7 +34,7 @@ function renderLinkedText(text: string) {
           href={match[2]}
           target="_blank"
           rel="noopener noreferrer"
-          className="text-[var(--accent)] underline decoration-[var(--accent)]/30 underline-offset-4 transition-colors hover:decoration-[var(--accent)]"
+          className="inline-link"
         >
           {match[1]}
         </a>
@@ -123,7 +123,7 @@ export default async function NowPage() {
         {!hasDynamic && (
           <p className="text-sm text-[var(--muted)]">
             更多碎片在{" "}
-            <Link href="/stream" className="text-[var(--accent)] underline decoration-[var(--accent)]/30 underline-offset-4 transition-colors hover:decoration-[var(--accent)]">
+            <Link href="/stream" className="inline-link">
               Stream →
             </Link>
           </p>
@@ -135,7 +135,7 @@ export default async function NowPage() {
             想聊這些？{" "}
             <a
               href="mailto:momobear.doctor@gmail.com"
-              className="text-[var(--accent)] underline decoration-[var(--accent)]/30 underline-offset-4 transition-colors hover:decoration-[var(--accent)]"
+              className="inline-link"
             >
               寫信給我
             </a>{" "}
@@ -144,7 +144,7 @@ export default async function NowPage() {
               href="https://instagram.com/momobear_doctor"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[var(--accent)] underline decoration-[var(--accent)]/30 underline-offset-4 transition-colors hover:decoration-[var(--accent)]"
+              className="inline-link"
             >
               IG @momobear_doctor
             </a>
@@ -155,7 +155,7 @@ export default async function NowPage() {
               href="https://nownownow.com"
               target="_blank"
               rel="noopener noreferrer"
-              className="text-[var(--accent)] underline decoration-[var(--accent)]/30 underline-offset-4 transition-colors hover:decoration-[var(--accent)]"
+              className="inline-link"
             >
               nownownow.com
             </a>

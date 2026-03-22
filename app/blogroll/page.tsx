@@ -76,7 +76,7 @@ export default async function BlogrollPage() {
             href="https://blogblog.club"
             target="_blank"
             rel="noreferrer"
-            className="text-[var(--accent)] underline underline-offset-2 decoration-[var(--border)] hover:decoration-[var(--accent)]"
+            className="inline-link"
           >
             BlogBlog Club
           </Link>{" "}

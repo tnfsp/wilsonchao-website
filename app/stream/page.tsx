@@ -30,7 +30,7 @@ export default async function StreamPage() {
         </p>
         <a
           href="https://t.me/doctormomo"
-          className="inline-flex items-center text-sm font-medium text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-8 transition-colors hover:text-[var(--accent-strong)]"
+          className="inline-flex items-center text-sm font-medium inline-link"
           target="_blank"
           rel="noopener noreferrer"
         >

@@ -218,7 +218,7 @@ export default async function Home() {
             </div>
           ) : (
             <p className="text-sm text-[var(--muted)]">
-              <Link href="/stream" className="underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--accent)]">
+              <Link href="/stream" className="inline-link">
                 {siteCopy.murmurCTA}
               </Link>
             </p>

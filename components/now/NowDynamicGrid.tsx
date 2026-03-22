@@ -82,7 +82,7 @@ function ReadingSection({ items }: { items: NowDynamicItem[] }) {
                   href={item.url}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-sm text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--accent)]"
+                  className="text-sm inline-link"
                 >
                   {item.title}
                 </a>

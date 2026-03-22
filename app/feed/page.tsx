@@ -90,7 +90,7 @@ export default function FeedPage() {
           用其他 reader？{" "}
           <Link
             href="/feed/opml"
-            className="underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--accent)]"
+            className="inline-link"
             download="wilsonchao-feeds.opml"
           >
             下載 OPML
@@ -104,7 +104,7 @@ export default function FeedPage() {
             href="https://readwise.io/read"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--accent)]"
+            className="inline-link"
           >
             Readwise Reader
           </a>
@@ -113,7 +113,7 @@ export default function FeedPage() {
             href="https://netnewswire.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--accent)]"
+            className="inline-link"
           >
             NetNewsWire
           </a>{" "}
@@ -122,7 +122,7 @@ export default function FeedPage() {
             href="https://feedly.com"
             target="_blank"
             rel="noopener noreferrer"
-            className="underline decoration-[var(--border)] underline-offset-4 hover:text-[var(--accent)]"
+            className="inline-link"
           >
             Feedly
           </a>

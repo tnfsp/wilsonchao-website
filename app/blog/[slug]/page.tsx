@@ -125,7 +125,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
     <main className="page-shell space-y-8">
       <Link
         href="/blog"
-        className="text-sm font-medium text-[var(--foreground)] underline decoration-[var(--border)] underline-offset-8 hover:text-[var(--accent)]"
+        className="text-sm font-medium subtle-link"
       >
         Back to blog
       </Link>
