@@ -1,139 +1,205 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
-type Props = {
-  /** Number of weeks to display (default 52) */
-  weeks?: number;
-};
+type BlogEntry = { date: string; slug: string; title: string };
 
 const CELL = 10;
 const GAP = 2;
 const SIZE = CELL + GAP;
 
-// Green shades matching GitHub style but using site accent
 const COLORS = {
   empty: "var(--border)",
-  low: "#9be9a8",
-  med: "#40c463",
-  high: "#30a14e",
-  max: "#216e39",
+  filled: "#40c463",
 };
 
-function getColor(count: number): string {
-  if (count === 0) return COLORS.empty;
-  if (count === 1) return COLORS.low;
-  if (count <= 2) return COLORS.med;
-  if (count <= 3) return COLORS.high;
-  return COLORS.max;
-}
+const MONTHS_ZH = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
+const DAYS_ZH = ["", "一", "", "三", "", "五", ""];
 
 function formatDate(d: Date): string {
   return d.toISOString().slice(0, 10);
 }
 
-export function WritingHeatmap({ weeks = 52 }: Props) {
-  const [dateSet, setDateSet] = useState<Set<string> | null>(null);
-  const [hoveredDate, setHoveredDate] = useState<string | null>(null);
+export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
+  const [entries, setEntries] = useState<BlogEntry[] | null>(null);
+  const [tooltip, setTooltip] = useState<{ x: number; y: number; entry: BlogEntry; date: string } | null>(null);
+  const svgRef = useRef<SVGSVGElement>(null);
 
   useEffect(() => {
     fetch("/api/writing-calendar")
       .then((r) => r.json())
-      .then((data) => setDateSet(new Set(data.dates)))
-      .catch(() => setDateSet(new Set()));
+      .then((data) => setEntries(data.entries))
+      .catch(() => setEntries([]));
   }, []);
 
-  if (!dateSet) return null; // Loading — render nothing, no layout shift
+  if (!entries) return null;
 
-  // Build grid: weeks × 7 days, ending today
+  // Build date → entries map
+  const dateMap = new Map<string, BlogEntry[]>();
+  for (const e of entries) {
+    const arr = dateMap.get(e.date) || [];
+    arr.push(e);
+    dateMap.set(e.date, arr);
+  }
+
+  // Build grid
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  // Find the start: go back `weeks` weeks from end of this week
-  const endDay = new Date(today);
   const startDay = new Date(today);
   startDay.setDate(startDay.getDate() - (weeks * 7 - 1) - startDay.getDay());
 
-  // Build week columns
-  const grid: { date: string; count: number; col: number; row: number }[] = [];
+  const LABEL_W = 20; // left labels width
+  const LABEL_H = 14; // top month labels height
+
+  const grid: { date: string; col: number; row: number; entries: BlogEntry[] }[] = [];
   const cursor = new Date(startDay);
   let col = 0;
 
-  while (cursor <= endDay) {
-    const row = cursor.getDay(); // 0=Sun
+  // Track month boundaries for labels
+  const monthLabels: { col: number; label: string }[] = [];
+  let lastMonth = -1;
+
+  while (cursor <= today) {
+    const row = cursor.getDay();
     if (row === 0 && grid.length > 0) col++;
+
     const ds = formatDate(cursor);
+    const m = cursor.getMonth();
+    if (m !== lastMonth) {
+      monthLabels.push({ col, label: MONTHS_ZH[m] });
+      lastMonth = m;
+    }
+
     grid.push({
       date: ds,
-      count: dateSet.has(ds) ? 1 : 0,
       col,
       row,
+      entries: dateMap.get(ds) || [],
     });
     cursor.setDate(cursor.getDate() + 1);
   }
 
   const totalCols = col + 1;
-  const svgWidth = totalCols * SIZE;
-  const svgHeight = 7 * SIZE;
+  const svgWidth = LABEL_W + totalCols * SIZE;
+  const svgHeight = LABEL_H + 7 * SIZE;
 
-  // Count streak
-  let streak = 0;
-  const checkDate = new Date(today);
-  while (dateSet.has(formatDate(checkDate))) {
-    streak++;
-    checkDate.setDate(checkDate.getDate() - 1);
+  function handleClick(cellEntries: BlogEntry[]) {
+    if (cellEntries.length === 1) {
+      window.location.href = `/blog/${cellEntries[0].slug}`;
+    } else if (cellEntries.length > 1) {
+      // Go to the first one
+      window.location.href = `/blog/${cellEntries[0].slug}`;
+    }
   }
 
-  const totalDays = dateSet.size;
+  function handleMouseEnter(e: React.MouseEvent, cellEntries: BlogEntry[], date: string) {
+    if (cellEntries.length === 0) return;
+    const rect = (e.target as SVGElement).getBoundingClientRect();
+    const svgRect = svgRef.current?.getBoundingClientRect();
+    if (!svgRect) return;
+    setTooltip({
+      x: rect.left - svgRect.left + CELL / 2,
+      y: rect.top - svgRect.top - 4,
+      entry: cellEntries[0],
+      date,
+    });
+  }
 
   return (
     <div className="mt-3">
       <div className="flex items-center justify-between mb-1.5">
         <span className="text-[11px] text-[var(--muted)]">
-          {totalDays.toLocaleString()} 天寫作紀錄
+          📝 {entries.length} 篇文章
         </span>
-        {streak > 0 && (
-          <span className="text-[11px] text-[var(--muted)]">
-            🔥 連續 {streak} 天
-          </span>
-        )}
       </div>
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto relative" style={{ position: "relative" }}>
         <svg
+          ref={svgRef}
           width={svgWidth}
           height={svgHeight}
           viewBox={`0 0 ${svgWidth} ${svgHeight}`}
           className="block"
           role="img"
-          aria-label="寫作日曆熱力圖"
+          aria-label="寫作日曆"
+          onMouseLeave={() => setTooltip(null)}
         >
+          {/* Month labels */}
+          {monthLabels.map((ml, i) => (
+            <text
+              key={`m-${i}`}
+              x={LABEL_W + ml.col * SIZE}
+              y={10}
+              fontSize={9}
+              fill="var(--muted)"
+            >
+              {ml.label}
+            </text>
+          ))}
+
+          {/* Day labels */}
+          {DAYS_ZH.map((label, i) =>
+            label ? (
+              <text
+                key={`d-${i}`}
+                x={0}
+                y={LABEL_H + i * SIZE + CELL - 1}
+                fontSize={9}
+                fill="var(--muted)"
+              >
+                {label}
+              </text>
+            ) : null
+          )}
+
+          {/* Cells */}
           {grid.map((cell) => (
             <rect
               key={cell.date}
-              x={cell.col * SIZE}
-              y={cell.row * SIZE}
+              x={LABEL_W + cell.col * SIZE}
+              y={LABEL_H + cell.row * SIZE}
               width={CELL}
               height={CELL}
               rx={2}
-              fill={getColor(cell.count)}
-              className="transition-opacity"
-              opacity={hoveredDate && hoveredDate !== cell.date ? 0.4 : 1}
-              onMouseEnter={() => setHoveredDate(cell.date)}
-              onMouseLeave={() => setHoveredDate(null)}
+              fill={cell.entries.length > 0 ? COLORS.filled : COLORS.empty}
+              style={{ cursor: cell.entries.length > 0 ? "pointer" : "default" }}
+              onClick={() => handleClick(cell.entries)}
+              onMouseEnter={(e) => handleMouseEnter(e, cell.entries, cell.date)}
+              onMouseLeave={() => setTooltip(null)}
             >
               <title>
                 {cell.date}
-                {cell.count > 0 ? " ✓ 有寫" : ""}
+                {cell.entries.length > 0
+                  ? ` — ${cell.entries.map((e) => e.title).join(", ")}`
+                  : ""}
               </title>
             </rect>
           ))}
         </svg>
+
+        {/* Floating tooltip */}
+        {tooltip && (
+          <div
+            className="absolute pointer-events-none bg-[var(--foreground)] text-[var(--background)] text-[11px] px-2.5 py-1.5 rounded-md shadow-lg whitespace-nowrap"
+            style={{
+              left: tooltip.x,
+              top: tooltip.y,
+              transform: "translate(-50%, -100%)",
+              zIndex: 10,
+            }}
+          >
+            <div className="opacity-70 text-[10px]">
+              {(() => {
+                const [y, m, d] = tooltip.date.split("-");
+                return `${y}年${parseInt(m)}月${parseInt(d)}日`;
+              })()}
+            </div>
+            <div className="font-medium" style={{ color: "#40c463" }}>
+              {tooltip.entry.title}
+            </div>
+          </div>
+        )}
       </div>
-      {hoveredDate && (
-        <p className="text-[10px] text-[var(--muted)] mt-1 h-3">
-          {hoveredDate} {dateSet.has(hoveredDate) ? "✓" : "—"}
-        </p>
-      )}
     </div>
   );
 }
