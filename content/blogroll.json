@@ -49,6 +49,11 @@
           "name": "Stratechery",
           "url": "https://stratechery.com",
           "description": "一個人靠獨立部落格建起訂閱帝國"
+        },
+        {
+          "name": "Paul Graham",
+          "url": "https://paulgraham.com",
+          "description": "YC 創辦人，寫創業、思考、寫作的經典散文"
         }
       ]
     }
