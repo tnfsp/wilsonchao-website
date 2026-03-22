@@ -37,8 +37,9 @@ def extract_youtube_id(text: str) -> str | None:
 
 
 def extract_url(text: str) -> str | None:
-    m = re.search(r"https?://\S+", text)
-    return m.group(0).rstrip(").,;") if m else None
+    # Stop at CJK characters, common Chinese punctuation, and non-URL chars
+    m = re.search(r"https?://[^\s\u4e00-\u9fff\u3000-\u303f\uff00-\uffef]+", text)
+    return m.group(0).rstrip(").,;:") if m else None
 
 
 def clean_title(text: str) -> str:
@@ -139,8 +140,8 @@ def run():
                     categorized[cat].append(item)
                     seen_ids[cat].add(entry["id"])
 
-        # Fragments: any recent entry (excluding blog)
-        if "blog" not in tags and entry["id"] not in seen_ids["fragments"]:
+        # Fragments: only murmur entries
+        if "murmur" in tags and entry["id"] not in seen_ids["fragments"]:
             cutoff = datetime.now(timezone.utc) - timedelta(days=EXPIRY_DAYS["fragments"])
             if pub.astimezone(timezone.utc) >= cutoff:
                 item = stream_to_item(entry, category="fragments")
