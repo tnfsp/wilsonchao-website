@@ -2,7 +2,7 @@
   "id": "day-off",
   "slug": "day-off",
   "title": "請假一天",
-  "type": "hospital",
+  "type": "diary",
   "status": "Published",
   "publishedAt": "2025-07-03",
   "content": "今天太累了！請假一天！",

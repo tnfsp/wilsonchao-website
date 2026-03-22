@@ -49,8 +49,7 @@ export default async function Home() {
   // Tag label mapping
   const tagLabelMap: Record<string, string> = {
     essay: "Essay",
-    hospital: "Hospital",
-    life: "Life",
+    diary: "Diary",
     weekly: "Weekly",
   };
 
