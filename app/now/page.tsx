@@ -72,6 +72,11 @@ export default async function NowPage() {
           )}
         </header>
 
+        {/* Intro */}
+        {data?.intro && (
+          <p className="leading-relaxed text-[var(--muted)]">{data.intro}</p>
+        )}
+
         {/* Static sections */}
         <div className="space-y-5">
           {sections.map((s) => (

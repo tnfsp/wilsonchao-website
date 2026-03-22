@@ -1,35 +1,35 @@
 {
-  "lastUpdated": "2026-03-22T10:08:35.717307+00:00",
+  "lastUpdated": "2026-03-22T10:23:03.435539+00:00",
   "sections": [
     {
       "id": "clinical",
       "emoji": "🏥",
       "title": "臨床",
-      "body": "在高醫心臟血管外科當總醫師，八月升主治。冠狀動脈繞道、瓣膜、主動脈手術。同時準備專科考試。"
+      "body": "高醫心臟血管外科，總醫師最後幾個月。上禮拜帶學弟做他第一次 sternotomy，看他拿鋸的手在抖，突然想到幾年前的自己也是這樣。快九百台了，繞道、瓣膜、主動脈都在開，不過八月升主治之前還有專科考試這一關。開刀的手感越來越穩，念書的進度就不好說了。"
     },
     {
       "id": "research",
       "emoji": "📚",
       "title": "研究",
-      "body": "剛開了 AVF Monitor 專案——洗腎廔管穿戴式監測裝置，八月去小港開始收數據。另外有一篇 RCA Pseudoaneurysm case report 剛重投 Annals of Medicine and Surgery。NMA 的 steal syndrome 比較研究也在推。"
+      "body": "ECPR-PCI 的 systematic review 投了 JCM，在等 first decision。下半年重心是 AVF Monitor——穿戴式裝置量洗腎廔管壓差，八月去小港收數據，不過老實說設備都還沒搞定。"
     },
     {
       "id": "writing",
       "emoji": "✍️",
       "title": "寫作",
-      "body": "試著寫更短、更頻繁的東西。Stream 是每天的碎片，Blog 放長文。想把「寫」變成跟「開刀」一樣的日常練習。"
+      "body": "加入了 BlogBlog.Club，試著寫更多短的東西。長文放 Blog，碎片丟 Stream。"
     },
     {
       "id": "building",
       "emoji": "🤖",
       "title": "在蓋的東西",
-      "body": "wilsonchao.com 做了一輪大翻修：導航重構、Stream 全量遷移、/now 動態頁、RSS 四個 feed、SEO 修復。People Enrichment 完結了——120 個人的跨平台對話分析和 Mirror 反向深讀。Owl 系統繼續在跑，最近把 cron 穩定性修了一輪。"
+      "body": "跟 AI 搭了一套系統，日記、筆記、研究、記帳、這個網站的更新都串在一起跑。最近把 wilsonchao.com 整個翻修了一輪——首頁、Blog 架構、Now 頁、Blogroll。這隻貓頭鷹偶爾會自己跑去做事情。"
     },
     {
       "id": "other",
       "emoji": "🎵",
       "title": "其他",
-      "body": "在學 DJ。偶爾健身。試著每天走久一點。"
+      "body": "在學 DJ，放歌的時候不用怕搞砸什麼，那種感覺很少有。四月曼谷潑水節，然後跟媽媽走白沙屯媽祖。"
     }
   ],
   "dynamic": {
@@ -392,5 +392,6 @@
         "sourceLink": "https://t.me/doctormomo/166"
       }
     ]
-  }
+  },
+  "intro": "如果我們一年沒見面，你問我最近在幹嘛，這頁大概就是我會跟你講的東西。靈感來自 Derek Sivers 的 /now 運動——nownownow.com。每週自動更新。"
 }

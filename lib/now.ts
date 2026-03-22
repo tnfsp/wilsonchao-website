@@ -22,6 +22,7 @@ export interface NowSection {
 
 export interface NowData {
   lastUpdated: string;
+  intro?: string;
   sections: NowSection[];
   dynamic: {
     music: NowDynamicItem[];
@@ -56,6 +57,7 @@ export async function loadNowData(): Promise<NowData | null> {
 
     return {
       lastUpdated: data.lastUpdated,
+      intro: data.intro,
       sections: data.sections?.length ? data.sections : FALLBACK_SECTIONS,
       dynamic: {
         music: filterByDays(data.dynamic?.music || [], 30),
