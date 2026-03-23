@@ -1,17 +1,19 @@
-"use client";
+import { notFound } from "next/navigation";
+import { scenarios } from "@/lib/simulator/scenarios";
+import CasePlayer from "@/components/simulator/CasePlayer";
 
-import dynamic from "next/dynamic";
-import { useParams } from "next/navigation";
+export function generateStaticParams() {
+  return Object.keys(scenarios).map((id) => ({ id }));
+}
 
-const GameLayout = dynamic(
-  () =>
-    import("@/components/simulator/GameLayout").then((mod) => mod.GameLayout),
-  { ssr: false }
-);
+export default async function SimulatorCasePage({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}) {
+  const { id } = await params;
+  const scenario = scenarios[id];
+  if (!scenario) notFound();
 
-export default function SimulatorPage() {
-  const params = useParams();
-  const id = params.id as string;
-
-  return <GameLayout scenarioId={id} />;
+  return <CasePlayer scenario={scenario} />;
 }

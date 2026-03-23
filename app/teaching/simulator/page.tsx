@@ -1,62 +1,76 @@
+import { scenarioList } from "@/lib/simulator/scenarios";
 import Link from "next/link";
 
-const scenarios = [
-  {
-    id: "cardiogenic-shock-01",
-    title: "Cardiogenic Shock Mimicking Sepsis",
-    subtitle: "68M STEMI s/p PCI，術後 ICU Day 1 — 真的是 sepsis 嗎？",
-    difficulty: "中等",
-    emoji: "💔",
-  },
-];
+const difficultyColors = {
+  beginner: "bg-green-500/10 text-green-400 border-green-500/20",
+  intermediate: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
+  advanced: "bg-red-500/10 text-red-400 border-red-500/20",
+};
 
-export default function SimulatorIndex() {
+const difficultyLabels = {
+  beginner: "入門",
+  intermediate: "進階",
+  advanced: "挑戰",
+};
+
+export default function SimulatorPage() {
   return (
     <div className="min-h-screen bg-[#001219] text-white">
-      <div className="max-w-4xl mx-auto px-6 py-16">
-        <header className="mb-12 text-center">
-          <h1 className="text-4xl font-bold mb-2">🎮 ICU Simulator</h1>
-          <p className="text-gray-400 text-lg">
-            模擬情境練習 — 在安全環境中練習臨床決策
+      <div className="max-w-4xl mx-auto px-4 py-12">
+        <div className="text-center mb-12">
+          <div className="text-5xl mb-4">🎮</div>
+          <h1 className="text-3xl font-bold">ICU Case Simulator</h1>
+          <p className="text-gray-400 mt-2 max-w-lg mx-auto">
+            互動式教案播放器 — 投影出來，帶 clerk 一起跑情境。
+            <br />
+            你控制節奏，clerk 做決策，病人會反應。
           </p>
-          <p className="text-gray-500 text-sm mt-2">
-            AI 學長會根據你的決策給即時回饋
-          </p>
-        </header>
+        </div>
 
-        <div className="grid gap-4 sm:grid-cols-2">
-          {scenarios.map((s) => (
+        <div className="grid gap-4">
+          {scenarioList.map((s) => (
             <Link
               key={s.id}
               href={`/teaching/simulator/${s.id}`}
-              className="group block rounded-xl border border-white/10 bg-white/5 p-6 transition-all hover:bg-white/10 hover:border-white/20 hover:scale-[1.02]"
+              className="group block bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-cyan-500/20 rounded-xl p-6 transition-all"
             >
-              <div className="flex items-start justify-between mb-3">
-                <div className="text-4xl">{s.emoji}</div>
-                <span className="text-xs px-2 py-1 rounded bg-yellow-500/20 text-yellow-400">
-                  {s.difficulty}
+              <div className="flex items-start justify-between">
+                <div>
+                  <h2 className="text-xl font-bold text-white group-hover:text-cyan-300 transition">
+                    {s.title}
+                  </h2>
+                  <p className="text-gray-400 mt-1">{s.subtitle}</p>
+                  <div className="flex flex-wrap gap-2 mt-3">
+                    <span
+                      className={`text-xs px-2 py-0.5 rounded-full border ${difficultyColors[s.difficulty]}`}
+                    >
+                      {difficultyLabels[s.difficulty]}
+                    </span>
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-400">
+                      ⏱ {s.duration}
+                    </span>
+                    {s.tags.map((t) => (
+                      <span
+                        key={t}
+                        className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-500"
+                      >
+                        {t}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+                <span className="text-gray-600 group-hover:text-cyan-400 text-xl transition">
+                  →
                 </span>
               </div>
-              <h3 className="text-lg font-semibold text-white group-hover:text-cyan-400 transition-colors">
-                {s.title}
-              </h3>
-              <p className="text-sm text-gray-400 mt-1">{s.subtitle}</p>
             </Link>
           ))}
-
-          {/* Placeholder for future scenarios */}
-          <div className="rounded-xl border-2 border-dashed border-white/10 p-6 flex items-center justify-center text-gray-600">
-            <div className="text-center">
-              <div className="text-3xl mb-2">🔜</div>
-              <p className="text-sm">更多情境開發中</p>
-            </div>
-          </div>
         </div>
 
-        <div className="mt-8 text-center">
+        <div className="text-center mt-12">
           <Link
             href="/teaching"
-            className="text-cyan-400 hover:text-cyan-300 text-sm"
+            className="text-gray-500 hover:text-white transition"
           >
             ← 回到教學首頁
           </Link>
