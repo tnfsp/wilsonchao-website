@@ -16,11 +16,11 @@ import MessageInput from "@/components/simulator/pro/MessageInput";
 // Modals
 import OrderModal from "@/components/simulator/pro/OrderModal";
 import LabOrderModal from "@/components/simulator/pro/LabOrderModal";
-import PEModal from "@/components/simulator/pro/PEModal";
-import POCUSModal from "@/components/simulator/pro/POCUSModal";
-import ImagingModal from "@/components/simulator/pro/ImagingModal";
-import ConsultModal from "@/components/simulator/pro/ConsultModal";
-import PauseThinkModal from "@/components/simulator/pro/PauseThinkModal";
+import { PEModal } from "@/components/simulator/pro/PEModal";
+import { POCUSModal } from "@/components/simulator/pro/POCUSModal";
+import { ImagingModal } from "@/components/simulator/pro/ImagingModal";
+import { ConsultModal } from "@/components/simulator/pro/ConsultModal";
+import { PauseThinkModal } from "@/components/simulator/pro/PauseThinkModal";
 
 // ─── Difficulty badge ─────────────────────────────────────────────────────────
 
