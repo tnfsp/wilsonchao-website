@@ -330,18 +330,14 @@ export default function ProPageClient({ id }: ProPageClientProps) {
     return <DebriefPanel />;
   }
 
-  if (phase === "sbar") {
-    // sbar phase: show game layout + SBAR modal overlay
+  if (phase === "sbar" || phase === "playing") {
+    // Both playing and sbar: show game layout + SBAR modal (controlled by activeModal)
     return (
       <>
         <GameScreen />
         <SBARModal />
       </>
     );
-  }
-
-  if (phase === "playing") {
-    return <GameScreen />;
   }
 
   // ── not_started ──
