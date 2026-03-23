@@ -1,4 +1,4 @@
-import { Scenario } from "../types";
+import { Scenario } from "../types-legacy";
 import { bleedingVsTamponade } from "./bleeding-vs-tamponade";
 
 export const scenarios: Record<string, Scenario> = {

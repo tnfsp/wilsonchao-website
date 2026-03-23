@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import { Scenario, VitalSigns } from "@/lib/simulator/types";
+import { Scenario, VitalSigns } from "@/lib/simulator/types-legacy";
 import VitalsPanel from "./VitalsPanel";
 
 interface Message {

@@ -1,13 +1,13 @@
 import { scenarioList } from "@/lib/simulator/scenarios";
 import Link from "next/link";
 
-const difficultyColors = {
+const difficultyColors: Record<string, string> = {
   beginner: "bg-green-500/10 text-green-400 border-green-500/20",
   intermediate: "bg-yellow-500/10 text-yellow-400 border-yellow-500/20",
   advanced: "bg-red-500/10 text-red-400 border-red-500/20",
 };
 
-const difficultyLabels = {
+const difficultyLabels: Record<string, string> = {
   beginner: "入門",
   intermediate: "進階",
   advanced: "挑戰",
@@ -49,7 +49,7 @@ export default function SimulatorPage() {
                     <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-400">
                       ⏱ {s.duration}
                     </span>
-                    {s.tags.map((t) => (
+                    {s.tags.map((t: string) => (
                       <span
                         key={t}
                         className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-500"

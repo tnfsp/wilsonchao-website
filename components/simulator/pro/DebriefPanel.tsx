@@ -1,0 +1,535 @@
+"use client";
+
+import { useState } from "react";
+import { useProGameStore } from "@/lib/simulator/store";
+import type { TimelineEntry, CriticalAction, WhatIfBranch } from "@/lib/simulator/types";
+import type { GameScore } from "@/lib/simulator/types";
+
+// ─── Section toggle header ─────────────────────────────────────────────────────
+
+function SectionHeader({
+  emoji,
+  title,
+  subtitle,
+}: {
+  emoji: string;
+  title: string;
+  subtitle?: string;
+}) {
+  return (
+    <div className="flex items-center gap-3 mb-4">
+      <span className="text-2xl">{emoji}</span>
+      <div>
+        <h3 className="text-white font-bold text-base tracking-tight">{title}</h3>
+        {subtitle && <p className="text-gray-500 text-xs mt-0.5">{subtitle}</p>}
+      </div>
+    </div>
+  );
+}
+
+// ─── Section 1: Overall Score ─────────────────────────────────────────────────
+
+function OverallScoreSection({ score }: { score: GameScore }) {
+  const config = {
+    excellent: {
+      emoji: "🏆",
+      label: "Excellent",
+      sublabel: "表現優秀，關鍵決策都做到了",
+      color: "text-yellow-400",
+      border: "border-yellow-500/30",
+      bg: "bg-yellow-900/10",
+    },
+    good: {
+      emoji: "✅",
+      label: "Good",
+      sublabel: "整體良好，有幾個可以加強的地方",
+      color: "text-teal-400",
+      border: "border-teal-500/30",
+      bg: "bg-teal-900/10",
+    },
+    needs_improvement: {
+      emoji: "📚",
+      label: "Needs Improvement",
+      sublabel: "有幾個關鍵動作還需要加強",
+      color: "text-orange-400",
+      border: "border-orange-500/30",
+      bg: "bg-orange-900/10",
+    },
+  } as const;
+
+  const cfg = config[score.overall];
+
+  return (
+    <div className={`rounded-xl border ${cfg.border} ${cfg.bg} p-6 text-center`}>
+      <div className="text-6xl mb-3">{cfg.emoji}</div>
+      <div className={`text-2xl font-bold ${cfg.color} mb-1`}>{cfg.label}</div>
+      <div className="text-gray-400 text-sm">{cfg.sublabel}</div>
+
+      {/* Quick stats row */}
+      <div className="mt-5 grid grid-cols-3 gap-3">
+        <StatPill
+          label="關鍵動作"
+          value={`${score.criticalActions.filter((ca) => ca.critical && ca.met).length}/${score.criticalActions.filter((ca) => ca.critical).length}`}
+          ok={score.criticalActions.filter((ca) => ca.critical && !ca.met).length === 0}
+        />
+        <StatPill
+          label="Escalation"
+          value={
+            score.escalationTiming === "appropriate"
+              ? "適時"
+              : score.escalationTiming === "early"
+              ? "稍早"
+              : score.escalationTiming === "late"
+              ? "偏晚"
+              : "未呼叫"
+          }
+          ok={score.escalationTiming === "appropriate"}
+        />
+        <StatPill
+          label="Hints 使用"
+          value={`${score.hintsUsed} 次`}
+          ok={score.hintsUsed === 0}
+        />
+      </div>
+    </div>
+  );
+}
+
+function StatPill({
+  label,
+  value,
+  ok,
+}: {
+  label: string;
+  value: string;
+  ok: boolean;
+}) {
+  return (
+    <div className="bg-black/30 rounded-lg p-2.5">
+      <div className={`text-sm font-bold ${ok ? "text-teal-400" : "text-orange-400"}`}>
+        {value}
+      </div>
+      <div className="text-gray-500 text-xs mt-0.5">{label}</div>
+    </div>
+  );
+}
+
+// ─── Section 2: Timeline ──────────────────────────────────────────────────────
+
+function TimelineSection({ timeline }: { timeline: TimelineEntry[] }) {
+  function entryIcon(entry: TimelineEntry) {
+    if (entry.type === "nurse_message")  return "💬";
+    if (entry.type === "player_action")  return "▶";
+    if (entry.type === "order_placed")   return "📋";
+    if (entry.type === "lab_result")     return "🔬";
+    if (entry.type === "system_event")   return "⏰";
+    if (entry.type === "hint")           return "💡";
+    if (entry.type === "player_message") return "🗣";
+    return "·";
+  }
+
+  function entryColor(entry: TimelineEntry) {
+    if (entry.sender === "nurse")  return "text-teal-300";
+    if (entry.sender === "player") return "text-white";
+    if (entry.sender === "system") return "text-gray-500";
+    if (entry.sender === "senior") return "text-amber-300";
+    return "text-gray-400";
+  }
+
+  function evalMark(entry: TimelineEntry): "✅" | "❌" | "⚠️" | null {
+    if (entry.type === "hint")         return "⚠️";
+    if (entry.type === "order_placed") return "✅";
+    if (entry.isImportant && entry.sender === "system") return "⚠️";
+    return null;
+  }
+
+  const formatTime = (mins: number) => {
+    const h = Math.floor(mins / 60);
+    const m = mins % 60;
+    return `${String(h).padStart(2, "0")}:${String(m).padStart(2, "0")}`;
+  };
+
+  return (
+    <div className="space-y-1 max-h-72 overflow-y-auto pr-1">
+      {timeline.map((entry) => {
+        const mark = evalMark(entry);
+        return (
+          <div
+            key={entry.id}
+            className={`flex gap-3 text-xs py-1.5 border-b border-white/5 last:border-0 ${
+              entry.isImportant ? "bg-white/3 rounded px-2" : "px-2"
+            }`}
+          >
+            {/* Time */}
+            <span className="text-gray-600 shrink-0 w-8 font-mono">
+              {formatTime(entry.gameTime)}
+            </span>
+            {/* Icon */}
+            <span className="shrink-0 w-4 text-center">{entryIcon(entry)}</span>
+            {/* Content */}
+            <span className={`flex-1 leading-relaxed ${entryColor(entry)}`}>
+              {entry.content}
+            </span>
+            {/* Mark */}
+            {mark && <span className="shrink-0">{mark}</span>}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Section 3: Critical Actions ─────────────────────────────────────────────
+
+function CriticalActionsTable({ actions }: { actions: CriticalAction[] }) {
+  return (
+    <div className="overflow-x-auto rounded-xl border border-white/10">
+      <table className="w-full text-xs">
+        <thead>
+          <tr className="border-b border-white/10 text-gray-500">
+            <th className="text-left px-3 py-2.5 font-medium">動作</th>
+            <th className="text-center px-3 py-2.5 font-medium w-16">完成</th>
+            <th className="text-center px-3 py-2.5 font-medium w-20">時間</th>
+            <th className="text-center px-3 py-2.5 font-medium w-16">重要性</th>
+          </tr>
+        </thead>
+        <tbody>
+          {actions.map((ca) => (
+            <tr
+              key={ca.id}
+              className="border-b border-white/5 last:border-0 hover:bg-white/3 transition-colors"
+            >
+              <td className="px-3 py-2.5 text-gray-300">{ca.description}</td>
+              <td className="px-3 py-2.5 text-center">
+                {ca.met ? (
+                  <span className="text-green-400 font-bold">✅</span>
+                ) : (
+                  <span className="text-red-400 font-bold">❌</span>
+                )}
+              </td>
+              <td className="px-3 py-2.5 text-center text-gray-500 font-mono">
+                {ca.timeToComplete !== null ? `${ca.timeToComplete}m` : "—"}
+              </td>
+              <td className="px-3 py-2.5 text-center">
+                {ca.critical ? (
+                  <span className="bg-red-900/40 text-red-400 px-1.5 py-0.5 rounded text-xs">必做</span>
+                ) : (
+                  <span className="bg-blue-900/30 text-blue-400 px-1.5 py-0.5 rounded text-xs">加分</span>
+                )}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  );
+}
+
+// ─── Section 4: SBAR Score ────────────────────────────────────────────────────
+
+function SBARScoreSection({ sbar }: { sbar: GameScore["sbar"] }) {
+  const bars = [
+    {
+      label: "Completeness",
+      sublabel: "各區塊有沒有涵蓋到",
+      value: sbar.completeness,
+      color: "bg-teal-500",
+    },
+    {
+      label: "Prioritization",
+      sublabel: "重要的事放在前面",
+      value: sbar.prioritization,
+      color: "bg-violet-500",
+    },
+  ];
+
+  const badges = [
+    {
+      label: "Quantitative",
+      sublabel: "有具體數字（cc/hr、mg/dL）",
+      met: sbar.quantitative,
+    },
+    {
+      label: "Anticipatory",
+      sublabel: "說「我已經...」",
+      met: sbar.anticipatory,
+    },
+  ];
+
+  return (
+    <div className="space-y-4">
+      {bars.map((b) => (
+        <div key={b.label}>
+          <div className="flex justify-between text-xs mb-1">
+            <div>
+              <span className="text-gray-300 font-medium">{b.label}</span>
+              <span className="text-gray-600 ml-2">{b.sublabel}</span>
+            </div>
+            <span className="text-gray-400 font-mono">{b.value}/100</span>
+          </div>
+          <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+            <div
+              className={`h-full ${b.color} rounded-full transition-all`}
+              style={{ width: `${b.value}%` }}
+            />
+          </div>
+        </div>
+      ))}
+
+      <div className="grid grid-cols-2 gap-3 mt-2">
+        {badges.map((b) => (
+          <div
+            key={b.label}
+            className={`rounded-lg border p-3 ${
+              b.met
+                ? "border-green-500/30 bg-green-900/10"
+                : "border-white/10 bg-white/5"
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <span>{b.met ? "✅" : "❌"}</span>
+              <span className={`text-sm font-medium ${b.met ? "text-green-400" : "text-gray-500"}`}>
+                {b.label}
+              </span>
+            </div>
+            <p className="text-gray-600 text-xs mt-1">{b.sublabel}</p>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Section 5: What-If Cards ─────────────────────────────────────────────────
+
+function WhatIfCards({ whatIf }: { whatIf: WhatIfBranch[] }) {
+  const [openIdx, setOpenIdx] = useState<number | null>(0);
+
+  return (
+    <div className="space-y-2">
+      {whatIf.map((branch, i) => {
+        const isOpen = openIdx === i;
+        return (
+          <div
+            key={i}
+            className="rounded-xl border border-white/10 overflow-hidden"
+          >
+            <button
+              onClick={() => setOpenIdx(isOpen ? null : i)}
+              className="w-full flex items-center justify-between px-4 py-3 hover:bg-white/5 transition-colors text-left"
+            >
+              <span className="text-sm text-gray-300 font-medium">
+                💭 {branch.scenario}
+              </span>
+              <span className="text-gray-500 text-xs shrink-0 ml-3">
+                {isOpen ? "▲" : "▼"}
+              </span>
+            </button>
+            {isOpen && (
+              <div className="px-4 pb-4 space-y-3 border-t border-white/10 pt-3">
+                <div>
+                  <p className="text-gray-500 text-xs font-medium uppercase tracking-wide mb-1">
+                    結果
+                  </p>
+                  <p className="text-gray-300 text-sm leading-relaxed">
+                    {branch.outcome}
+                  </p>
+                </div>
+                <div className="bg-amber-900/15 border border-amber-500/20 rounded-lg px-3 py-2">
+                  <p className="text-amber-400 text-xs font-medium mb-0.5">💡 Teaching Point</p>
+                  <p className="text-gray-300 text-sm leading-relaxed">{branch.lesson}</p>
+                </div>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Section 6: Key Lessons ───────────────────────────────────────────────────
+
+function KeyLessonsSection({ lessons }: { lessons: string[] }) {
+  return (
+    <ol className="space-y-3">
+      {lessons.map((lesson, i) => (
+        <li key={i} className="flex gap-3 text-sm text-gray-300 leading-relaxed">
+          <span className="shrink-0 w-6 h-6 rounded-full bg-white/10 flex items-center justify-center text-xs font-bold text-gray-400">
+            {i + 1}
+          </span>
+          <span>{lesson}</span>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+// ─── Section 7: Guidelines ────────────────────────────────────────────────────
+
+function GuidelinesSection({ guidelines }: { guidelines: string[] }) {
+  return (
+    <ul className="space-y-2">
+      {guidelines.map((g, i) => (
+        <li key={i} className="flex gap-2 text-xs text-gray-400 leading-relaxed">
+          <span className="text-teal-500 shrink-0 mt-0.5">▸</span>
+          <span>{g}</span>
+        </li>
+      ))}
+    </ul>
+  );
+}
+
+// ─── Main DebriefPanel ────────────────────────────────────────────────────────
+
+export default function DebriefPanel() {
+  const { score, scenario, timeline, resetGame } = useProGameStore();
+
+  if (!score || !scenario) {
+    return (
+      <div className="flex items-center justify-center min-h-screen" style={{ background: "#001219" }}>
+        <div className="text-gray-500 text-sm">計算分數中...</div>
+      </div>
+    );
+  }
+
+  const whatIf = scenario.debrief.whatIf ?? [];
+  const guidelines = scenario.debrief.guidelines ?? [];
+
+  return (
+    <div
+      className="min-h-screen overflow-y-auto"
+      style={{ background: "#001219" }}
+    >
+      <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
+
+        {/* ── Title ── */}
+        <div className="text-center">
+          <h1 className="text-white text-2xl font-bold tracking-tight">Debrief</h1>
+          <p className="text-gray-500 text-sm mt-1">
+            {scenario.title} — {scenario.patient.bed} · {scenario.patient.age}M
+          </p>
+        </div>
+
+        {/* ── Section 1: Overall Score ── */}
+        <section>
+          <SectionHeader emoji="🏆" title="整體表現" />
+          <OverallScoreSection score={score} />
+        </section>
+
+        <div className="border-t border-white/8" />
+
+        {/* ── Section 2: Timeline ── */}
+        <section>
+          <SectionHeader
+            emoji="🕐"
+            title="Timeline 回顧"
+            subtitle="你的每一步動作"
+          />
+          <TimelineSection timeline={timeline} />
+        </section>
+
+        <div className="border-t border-white/8" />
+
+        {/* ── Section 3: Critical Actions ── */}
+        <section>
+          <SectionHeader
+            emoji="⚡"
+            title="關鍵動作"
+            subtitle="必做項目與加分項目"
+          />
+          <CriticalActionsTable actions={score.criticalActions} />
+
+          {score.harmfulOrders.length > 0 && (
+            <div className="mt-3 rounded-xl border border-red-500/30 bg-red-900/10 p-4">
+              <p className="text-red-400 text-sm font-medium mb-2">🚫 有害醫囑</p>
+              <ul className="space-y-1">
+                {score.harmfulOrders.map((h, i) => (
+                  <li key={i} className="text-gray-400 text-xs flex gap-2">
+                    <span className="text-red-500">❌</span>
+                    {h}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          )}
+        </section>
+
+        <div className="border-t border-white/8" />
+
+        {/* ── Section 4: SBAR Score ── */}
+        <section>
+          <SectionHeader
+            emoji="📝"
+            title="SBAR 交班評分"
+            subtitle="你的交班品質分析"
+          />
+          <SBARScoreSection sbar={score.sbar} />
+        </section>
+
+        <div className="border-t border-white/8" />
+
+        {/* ── Section 5: What-If ── */}
+        {whatIf.length > 0 && (
+          <>
+            <section>
+              <SectionHeader
+                emoji="🔀"
+                title="如果你當時..."
+                subtitle="不同決策路徑的結果"
+              />
+              <WhatIfCards whatIf={whatIf} />
+            </section>
+            <div className="border-t border-white/8" />
+          </>
+        )}
+
+        {/* ── Section 6: Key Lessons ── */}
+        {score.keyLessons.length > 0 && (
+          <>
+            <section>
+              <SectionHeader
+                emoji="💡"
+                title="本次教學重點"
+                subtitle={`${score.keyLessons.length} 條個人化建議`}
+              />
+              <KeyLessonsSection lessons={score.keyLessons} />
+            </section>
+            <div className="border-t border-white/8" />
+          </>
+        )}
+
+        {/* ── Section 7: Guidelines ── */}
+        {guidelines.length > 0 && (
+          <>
+            <section>
+              <SectionHeader
+                emoji="📖"
+                title="參考 Guidelines"
+                subtitle="相關指引與標準"
+              />
+              <GuidelinesSection guidelines={guidelines} />
+            </section>
+            <div className="border-t border-white/8" />
+          </>
+        )}
+
+        {/* ── Footer buttons ── */}
+        <div className="flex gap-3 justify-center pb-8">
+          <button
+            onClick={resetGame}
+            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-700 hover:bg-teal-600 text-white font-semibold text-sm transition-colors shadow-lg shadow-teal-900/40"
+          >
+            🔄 再玩一次
+          </button>
+          <a
+            href="/teaching/simulator"
+            className="flex items-center gap-2 px-6 py-3 rounded-xl border border-white/15 hover:bg-white/5 text-gray-300 font-semibold text-sm transition-colors"
+          >
+            ← 返回情境列表
+          </a>
+        </div>
+      </div>
+    </div>
+  );
+}

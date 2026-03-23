@@ -1,4 +1,4 @@
-import { Scenario } from "../types";
+import { Scenario } from "../types-legacy";
 
 export const bleedingVsTamponade: Scenario = {
   id: "bleeding-vs-tamponade",

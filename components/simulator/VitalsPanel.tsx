@@ -1,6 +1,6 @@
 "use client";
 
-import { VitalSigns } from "@/lib/simulator/types";
+import { VitalSigns } from "@/lib/simulator/types-legacy";
 
 function VitalItem({
   label,
@@ -56,15 +56,15 @@ export default function VitalsPanel({
         ? "text-yellow-400"
         : "text-green-400";
   const ctColor =
-    vitals.chestTube > 200
+    (vitals.chestTube ?? 0) > 200
       ? "text-red-400"
-      : vitals.chestTube > 150
+      : (vitals.chestTube ?? 0) > 150
         ? "text-yellow-400"
         : "text-green-400";
   const uoColor =
-    vitals.uo < 15
+    (vitals.uo ?? 0) < 15
       ? "text-red-400"
-      : vitals.uo < 30
+      : (vitals.uo ?? 0) < 30
         ? "text-yellow-400"
         : "text-green-400";
 
@@ -112,17 +112,17 @@ export default function VitalsPanel({
         />
         <VitalItem
           label="Chest Tube"
-          value={`${vitals.chestTube}${arrow(vitals.chestTube, prevVitals?.chestTube)}`}
+          value={`${vitals.chestTube ?? 0}${arrow(vitals.chestTube ?? 0, prevVitals?.chestTube ?? 0)}`}
           unit="cc/hr"
           color={ctColor}
-          alert={vitals.chestTube > 200}
+          alert={(vitals.chestTube ?? 0) > 200}
         />
         <VitalItem
           label="UO"
-          value={`${vitals.uo}${arrow(vitals.uo, prevVitals?.uo)}`}
+          value={`${vitals.uo ?? 0}${arrow(vitals.uo ?? 0, prevVitals?.uo ?? 0)}`}
           unit="cc/hr"
           color={uoColor}
-          alert={vitals.uo < 15}
+          alert={(vitals.uo ?? 0) < 15}
         />
         <VitalItem
           label="Temp"

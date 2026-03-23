@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Scenario } from "@/lib/simulator/types";
+import { Scenario } from "@/lib/simulator/types-legacy";
 import CasePlayer from "@/components/simulator/CasePlayer";
 import SelfStudyPlayer from "@/components/simulator/SelfStudyPlayer";
 

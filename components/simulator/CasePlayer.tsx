@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useCallback, useEffect, useRef } from "react";
-import { Scenario, VitalSigns, ScenarioNode, DebriefItem } from "@/lib/simulator/types";
+import { Scenario, VitalSigns, ScenarioNode, DebriefItem } from "@/lib/simulator/types-legacy";
 import VitalsPanel from "./VitalsPanel";
 
 function mergeVitals(
@@ -69,7 +69,7 @@ function DebriefCard({ item }: { item: DebriefItem }) {
       title: "text-purple-400",
     },
   };
-  const s = styles[item.type];
+  const s = styles[item.type as keyof typeof styles] || styles["key-point"];
   return (
     <div className={`${s.bg} ${s.border} border rounded-lg p-4`}>
       <div className={`${s.title} font-medium text-sm mb-2`}>
@@ -271,7 +271,7 @@ export default function CasePlayer({ scenario }: { scenario: Scenario }) {
                 {node.choices.map((choice) => (
                   <button
                     key={choice.id}
-                    onClick={() => handleChoice(choice.id, choice.nextNode)}
+                    onClick={() => handleChoice(choice.id || choice.text || "", choice.nextNode || choice.next || "")}
                     className="group text-left bg-white/[0.03] hover:bg-white/[0.08] border border-white/10 hover:border-cyan-500/30 rounded-xl p-4 transition-all"
                   >
                     <div className="flex items-center gap-3">
