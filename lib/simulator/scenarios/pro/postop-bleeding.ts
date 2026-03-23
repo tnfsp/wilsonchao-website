@@ -390,6 +390,14 @@ const availableLabs: Record<string, LabPanel> = {
       ica: { value: 1.05, unit: "mmol/L", normal: "1.12-1.32", flag: "L" },
     },
   },
+  lactate: {
+    id: "lactate",
+    name: "Lactate",
+    turnaroundTime: 8,
+    results: {
+      lactate: { value: 3.1, unit: "mmol/L", normal: "0.5-1.6", flag: "critical" },
+    },
+  },
   act: {
     id: "act",
     name: "Activated Clotting Time (ACT)",
@@ -435,6 +443,19 @@ const availableLabs: Record<string, LabPanel> = {
       ma:      { value: 52,   unit: "mm",  normal: "51-69" },
       ly30:    { value: 4.2,  unit: "%",   normal: "< 8" },
       ci:      { value: -0.5, unit: "",    normal: "-3 to +3" },
+    },
+  },
+  rotem: {
+    id: "rotem",
+    name: "ROTEM (Rotational Thromboelastometry)",
+    turnaroundTime: 10,
+    results: {
+      ct_extem:  { value: 72,  unit: "sec", normal: "38-79" },
+      cft_extem: { value: 95,  unit: "sec", normal: "34-159" },
+      a10_extem: { value: 48,  unit: "mm",  normal: "43-65" },
+      ct_intem:  { value: 185, unit: "sec", normal: "100-240" },
+      ct_fibtem: { value: 68,  unit: "sec", normal: "43-69" },
+      a10_fibtem:{ value: 10,  unit: "mm",  normal: "7-23" },
     },
   },
   type_screen: {

@@ -57,14 +57,18 @@ export function computeSeverityDelta(
   lethalTriad: LethalTriadState,
   minutesPassed: number = 1
 ): number {
+  // Rate = severity points per game-minute when untreated.
+  // With event-driven time (~30 game-min scenario over ~10 real-min),
+  // we want severity to rise from 30→70 in ~25 min without treatment.
+  // Target: ~1.6 pts/min → use 0.4 for surgical bleeding (was 1.2).
   const baseRates: Record<Pathology, number> = {
-    surgical_bleeding: 1.2,
-    coagulopathy: 0.8,
-    tamponade: 1.5,
-    lcos: 0.6,
-    vasoplegia: 0.7,
-    tension_pneumothorax: 2.0,
-    postop_af: 0.3,
+    surgical_bleeding: 0.4,
+    coagulopathy: 0.3,
+    tamponade: 0.6,
+    lcos: 0.25,
+    vasoplegia: 0.3,
+    tension_pneumothorax: 0.8,
+    postop_af: 0.1,
   };
 
   const untreatedRate = baseRates[pathology] ?? 1.0;

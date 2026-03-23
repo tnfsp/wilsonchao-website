@@ -613,10 +613,18 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         const order = placedOrders.find((o) => o.id === ev.data.orderId);
         if (order && scenario) {
           // Find matching lab panel in scenario
+          // Match lab panel: try exact id match first, then name match
+          const orderName = order.definition.name.toLowerCase();
+          const orderId = (order.definition as unknown as Record<string, unknown>).id as string | undefined;
           const labKey = Object.keys(scenario.availableLabs).find((k) => {
             const panel = scenario.availableLabs[k];
-            return panel.name === order.definition.name || 
-                   order.definition.name.toLowerCase().includes(panel.id);
+            // Exact id match (most reliable)
+            if (orderId && panel.id === orderId) return true;
+            // Exact name match
+            if (panel.name === order.definition.name) return true;
+            // Exact id-in-name match (panel.id must equal a word boundary, not substring)
+            if (panel.id === orderName) return true;
+            return false;
           });
           const labPanel = labKey ? scenario.availableLabs[labKey] : null;
           
