@@ -26,13 +26,12 @@ const PE_AREAS: PEArea[] = [
 
 export function PEModal() {
   const activeModal = useProGameStore((s) => s.activeModal);
-  if (activeModal !== "pe") return null;
   const { scenario, clock, closeModal, addTimelineEntry } = useProGameStore();
   const [selected, setSelected]   = useState<string | null>(null);
   const [examined, setExamined]   = useState<Set<string>>(new Set());
   const [showFinding, setShowFinding] = useState(false);
 
-  if (!scenario) return null;
+  if (activeModal !== "pe" || !scenario) return null;
 
   const physicalExam = scenario.physicalExam as Record<string, PEFinding>;
 

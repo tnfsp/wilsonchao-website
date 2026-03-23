@@ -50,7 +50,6 @@ const IMAGING_KEY_MAP: Record<ImagingType, string> = {
 
 export function ImagingModal() {
   const activeModal = useProGameStore((s) => s.activeModal);
-  if (activeModal !== "imaging") return null;
   const { scenario, clock, closeModal, addTimelineEntry, addPendingEvent, advanceTime } =
     useProGameStore();
 
@@ -60,7 +59,7 @@ export function ImagingModal() {
   const [pendingCXR, setPendingCXR] = useState(false);
   const [cxrReady, setCxrReady]   = useState(false);
 
-  if (!scenario) return null;
+  if (activeModal !== "imaging" || !scenario) return null;
 
   const availableImaging = scenario.availableImaging as Record<string, string>;
   const nurseName = scenario.nurseProfile.name ?? "護理師";

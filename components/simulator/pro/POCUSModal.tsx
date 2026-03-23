@@ -44,13 +44,12 @@ const POCUS_OPTIONS: POCUSOption[] = [
 
 export function POCUSModal() {
   const activeModal = useProGameStore((s) => s.activeModal);
-  if (activeModal !== "pocus") return null;
   const { scenario, clock, closeModal, addTimelineEntry } = useProGameStore();
   const [selected, setSelected] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
   const [scanned, setScanned]   = useState<Set<string>>(new Set());
 
-  if (!scenario) return null;
+  if (activeModal !== "pocus" || !scenario) return null;
 
   const availablePOCUS = scenario.availablePOCUS as Record<string, POCUSView>;
 

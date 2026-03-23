@@ -47,7 +47,6 @@ const CONSULT_OPTIONS: ConsultOption[] = [
 
 export function ConsultModal() {
   const activeModal = useProGameStore((s) => s.activeModal);
-  if (activeModal !== "consult") return null;
   const { scenario, clock, closeModal, addTimelineEntry, advanceTime, addPendingEvent } =
     useProGameStore();
 
@@ -57,7 +56,7 @@ export function ConsultModal() {
   const [submitted, setSubmitted]       = useState(false);
   const [confirming, setConfirming]     = useState<ConsultType | null>(null);
 
-  if (!scenario) return null;
+  if (activeModal !== "consult" || !scenario) return null;
 
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const safeScenario = scenario!;

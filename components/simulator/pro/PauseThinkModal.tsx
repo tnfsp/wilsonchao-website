@@ -40,7 +40,6 @@ const THINK_PROMPTS: ThinkPrompt[] = [
 
 export function PauseThinkModal() {
   const activeModal = useProGameStore((s) => s.activeModal);
-  if (activeModal !== "pause_think") return null;
   const { clock, closeModal, usePauseThink, addTimelineEntry } = useProGameStore();
 
   const [answers, setAnswers] = useState<Record<string, string>>({
@@ -49,6 +48,8 @@ export function PauseThinkModal() {
     rationale: "",
   });
   const [submitted, setSubmitted] = useState(false);
+
+  if (activeModal !== "pause_think") return null;
 
   function handleChange(id: string, value: string) {
     setAnswers((prev) => ({ ...prev, [id]: value }));
