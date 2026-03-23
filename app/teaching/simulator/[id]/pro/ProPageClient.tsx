@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useCallback } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { SimScenario } from "@/lib/simulator/types";
+import { updatePatientState } from "@/lib/simulator/engine/patient-engine";
 
 // Pro components
 import SBARModal from "@/components/simulator/pro/SBARModal";
@@ -177,6 +178,18 @@ function useGameTick() {
   const activeModal = useProGameStore((s) => s.activeModal);
   const advanceTime = useProGameStore((s) => s.advanceTime);
 
+  const tickPatient = useCallback(() => {
+    const state = useProGameStore.getState();
+    if (!state.patient || state.phase !== "playing") return;
+    
+    const newPatient = updatePatientState(state.patient, {
+      minutesPassed: 1,
+      currentGameMinutes: state.clock.currentTime + 1,
+    });
+    
+    useProGameStore.setState({ patient: newPatient });
+  }, []);
+
   useEffect(() => {
     if (phase !== "playing") return;
     // Pause auto-tick when a modal is open (player is thinking/acting)
@@ -184,10 +197,11 @@ function useGameTick() {
 
     const interval = setInterval(() => {
       advanceTime(1);
+      tickPatient();
     }, 5000); // 1 game-minute every 5 real-seconds
 
     return () => clearInterval(interval);
-  }, [phase, activeModal, advanceTime]);
+  }, [phase, activeModal, advanceTime, tickPatient]);
 }
 
 // ─── Game layout wrapper ──────────────────────────────────────────────────────

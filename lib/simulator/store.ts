@@ -659,11 +659,9 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       }
     }
 
-    // Only add "time passed" entry at 5-minute intervals or when events fire
+    // Only add time marker when events actually fire (lab results, scripted events)
     const newEntries: TimelineEntry[] = [];
-    const prevRound5 = Math.floor(clock.currentTime / 5);
-    const newRound5 = Math.floor(newTime / 5);
-    if (newRound5 > prevRound5 || toFire.length > 0) {
+    if (firedEntries.length > 0) {
       newEntries.push({
         id: nextId("tl"),
         gameTime: newTime,
@@ -671,8 +669,8 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         content: `⏰ ${formatGameTime(newTime, clock.startHour)}`,
         sender: "system",
       });
+      newEntries.push(...firedEntries);
     }
-    newEntries.push(...firedEntries);
 
     set((state) => ({
       clock: updatedClock,
