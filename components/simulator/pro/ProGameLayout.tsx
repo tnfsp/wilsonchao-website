@@ -27,7 +27,7 @@ export default function ProGameLayout({
 }: ProGameLayoutProps) {
   return (
     <div
-      className="flex flex-col h-screen overflow-hidden"
+      className="fixed inset-0 z-50 flex flex-col overflow-hidden"
       style={{ background: "#001219" }}
     >
       {/* ── Top bar ────────────────────────────────────────────── */}
@@ -45,9 +45,9 @@ export default function ProGameLayout({
             "flex-shrink-0",
             // Desktop
             "lg:w-[380px] lg:flex lg:flex-col lg:overflow-y-auto lg:border-r lg:border-white/8",
-            // Mobile: full width, max height limited, scrollable
+            // Mobile: full width, scrollable horizontally or collapsible
             "w-full lg:max-w-none",
-            "max-h-[40vh] lg:max-h-none overflow-y-auto",
+            "max-h-[50vh] lg:max-h-none overflow-y-auto",
             "lg:h-full",
           ].join(" ")}
           style={{ scrollbarWidth: "thin", scrollbarColor: "#ffffff1a transparent" }}
