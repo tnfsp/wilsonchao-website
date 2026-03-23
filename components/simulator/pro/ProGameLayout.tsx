@@ -34,35 +34,23 @@ export default function ProGameLayout({
       <IOBalanceBar />
 
       {/* ── Main content area ──────────────────────────────────── */}
-      <div className="flex flex-1 overflow-hidden">
-        {/*
-         * Left column
-         * Desktop: fixed 380px wide, scrollable
-         * Mobile: full width, push right panel below
-         */}
+      {/* Desktop: side-by-side columns */}
+      <div className="hidden lg:flex flex-1 overflow-hidden">
         <div
-          className={[
-            "flex-shrink-0",
-            // Desktop
-            "lg:w-[380px] lg:flex lg:flex-col lg:overflow-y-auto lg:border-r lg:border-white/8",
-            // Mobile: full width, scrollable horizontally or collapsible
-            "w-full lg:max-w-none",
-            "max-h-[50vh] lg:max-h-none overflow-y-auto",
-            "lg:h-full",
-          ].join(" ")}
+          className="w-[380px] flex-shrink-0 overflow-y-auto border-r border-white/8"
           style={{ scrollbarWidth: "thin", scrollbarColor: "#ffffff1a transparent" }}
         >
           <div className="p-3 space-y-3">{leftPanel}</div>
         </div>
-
-        {/*
-         * Right column
-         * Desktop: flex 1, full height, flex column
-         * Mobile: flex 1 remaining height
-         */}
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
           <div className="flex-1 overflow-hidden">{rightPanel}</div>
         </div>
+      </div>
+
+      {/* Mobile: single scrollable column */}
+      <div className="lg:hidden flex-1 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "#ffffff1a transparent" }}>
+        <div className="p-3 space-y-3">{leftPanel}</div>
+        <div className="min-h-[40vh]">{rightPanel}</div>
       </div>
 
       {/* ── Bottom Action Bar ───────────────────────────────────── */}
