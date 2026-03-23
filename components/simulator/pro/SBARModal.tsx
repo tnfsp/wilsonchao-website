@@ -97,7 +97,7 @@ export default function SBARModal() {
 
   return (
     /* Full-screen overlay */
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+    <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
       <div
         className="relative w-full max-w-3xl max-h-[92vh] flex flex-col rounded-2xl border border-white/10"
         style={{ background: "#001219" }}
