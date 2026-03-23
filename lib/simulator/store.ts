@@ -1,0 +1,1078 @@
+/**
+ * ICU 值班模擬器 Pro — zustand Store
+ *
+ * 設計原則：
+ * - Store 不 import engine 函數（避免循環引用）
+ * - Engine 邏輯由 component 層 call 後 dispatch 到 store
+ * - Store 提供完整的 setter / updater 讓 engine 可以 dispatch
+ */
+
+import { create } from "zustand";
+import type {
+  SimScenario,
+  GamePhase,
+  GameClock,
+  PatientState,
+  PendingEvent,
+  PlacedOrder,
+  MTPState,
+  TimelineEntry,
+  GameScore,
+  ModalType,
+  VitalSigns,
+  ChestTubeState,
+  ActiveEffect,
+  OrderDefinition,
+  CriticalAction,
+  LethalTriadState,
+  IOBalance,
+  Pathology,
+  OrderStatus,
+} from "./types";
+
+// ============================================================
+// Store Interface
+// ============================================================
+
+export interface ProGameStore {
+  // 情境
+  scenario: SimScenario | null;
+  isLoading: boolean;
+  loadError: string | null;
+
+  // 遊戲狀態
+  phase: GamePhase;
+  clock: GameClock;
+
+  // 病人
+  patient: PatientState | null;
+
+  // 事件
+  pendingEvents: PendingEvent[];
+  firedEvents: PendingEvent[];
+
+  // Orders
+  placedOrders: PlacedOrder[];
+  mtpState: MTPState;
+
+  // Timeline
+  timeline: TimelineEntry[];
+
+  // Player tracking
+  playerActions: string[];   // 追蹤做了什麼（for scoring）
+  hintsUsed: number;
+  pauseThinkUsed: boolean;
+
+  // SBAR
+  sbarReport: any | null;
+
+  // Score
+  score: GameScore | null;
+
+  // UI
+  activeModal: ModalType;
+
+  // ---- Primary Actions ----
+
+  /** 載入情境，初始化所有狀態 */
+  loadScenario: (id: string) => Promise<void>;
+
+  /** 開始遊戲，phase → playing，排入初始事件 */
+  startGame: () => void;
+
+  /** 推進遊戲時間，觸發到期事件 */
+  advanceTime: (minutes: number) => void;
+
+  /** 下 order：驗證、加入 placedOrders、排入效果事件 */
+  placeOrder: (params: PlaceOrderParams) => PlaceOrderResult;
+
+  /** 啟動 MTP：設定 mtpState，排入血品送達事件 */
+  activateMTP: () => void;
+
+  /** 新增 timeline 條目 */
+  addTimelineEntry: (entry: Omit<TimelineEntry, "id">) => void;
+
+  /** 更新 patient vitals（engine dispatch 用） */
+  updateVitals: (changes: Partial<VitalSigns>) => void;
+
+  /** 更新 chest tube 狀態（engine dispatch 用） */
+  updateChestTube: (changes: Partial<ChestTubeState>) => void;
+
+  /** 玩家傳送訊息到 timeline */
+  sendMessage: (text: string) => void;
+
+  /** 開啟 modal */
+  openModal: (type: Exclude<ModalType, null>) => void;
+
+  /** 關閉 modal */
+  closeModal: () => void;
+
+  /** 使用「暫停思考」功能 */
+  usePauseThink: () => void;
+
+  /** 提交 SBAR 報告，phase → sbar（等待送出後→debrief） */
+  submitSBAR: (report: Record<string, string>) => void;
+
+  /** 遊戲結束：計算分數，phase → debrief */
+  endGame: () => void;
+
+  /** 重置所有狀態 */
+  resetGame: () => void;
+
+  // ---- Engine Dispatch Setters ----
+  // 這些 action 供 component 層呼叫 engine 後 dispatch 結果到 store
+
+  /** 新增單一待觸發事件 */
+  addPendingEvent: (event: PendingEvent) => void;
+
+  /** 批次設置 pendingEvents（engine 重新排程用） */
+  setPendingEvents: (events: PendingEvent[]) => void;
+
+  /** 標記事件已觸發（engine 確認後） */
+  fireEvent: (eventId: string) => void;
+
+  /** 更新病人嚴重度（0-100） */
+  updatePatientSeverity: (severity: number) => void;
+
+  /** 新增 active effect（藥物/輸液生效） */
+  addActiveEffect: (effect: ActiveEffect) => void;
+
+  /** 移除 active effect（效果結束） */
+  removeActiveEffect: (effectId: string) => void;
+
+  /** 更新死亡三角狀態 */
+  updateLethalTriad: (triad: Partial<LethalTriadState>) => void;
+
+  /** 更新 I/O balance */
+  updateIOBalance: (changes: Partial<IOBalance>) => void;
+
+  /** 更新 order 狀態（結果回來、完成等） */
+  updateOrderStatus: (
+    orderId: string,
+    status: OrderStatus,
+    result?: unknown
+  ) => void;
+
+  /** 直接設置計算好的分數（score-engine dispatch 用） */
+  setScore: (score: GameScore) => void;
+
+  /** 更新 pathology（病況變化） */
+  updatePathology: (pathology: Pathology) => void;
+}
+
+// ============================================================
+// Helper Types
+// ============================================================
+
+export interface PlaceOrderParams {
+  definition: OrderDefinition;
+  dose: string;
+  frequency: string;
+}
+
+export interface PlaceOrderResult {
+  success: boolean;
+  orderId: string | null;
+  warning?: string;
+  rejected?: boolean;
+  rejectMessage?: string;
+}
+
+// ============================================================
+// Initial State
+// ============================================================
+
+const initialClock: GameClock = {
+  currentTime: 0,
+  startHour: 2,
+  isPaused: true,
+  speed: 1,
+};
+
+const initialMTPState: MTPState = {
+  activated: false,
+  activatedAt: undefined,
+  roundsDelivered: 0,
+};
+
+const initialState = {
+  scenario: null as SimScenario | null,
+  isLoading: false,
+  loadError: null as string | null,
+  phase: "not_started" as GamePhase,
+  clock: initialClock,
+  patient: null as PatientState | null,
+  pendingEvents: [] as PendingEvent[],
+  firedEvents: [] as PendingEvent[],
+  placedOrders: [] as PlacedOrder[],
+  mtpState: initialMTPState,
+  timeline: [] as TimelineEntry[],
+  playerActions: [] as string[],
+  hintsUsed: 0,
+  pauseThinkUsed: false,
+  sbarReport: null as Record<string, string> | null,
+  score: null as GameScore | null,
+  activeModal: null as ModalType,
+};
+
+// ============================================================
+// Helpers
+// ============================================================
+
+let _idCounter = 0;
+function nextId(prefix = "id"): string {
+  return `${prefix}_${Date.now()}_${++_idCounter}`;
+}
+
+/** 基礎 guard rail 驗證（不 import order-engine，僅做數字範圍檢查） */
+function validateOrderGuardRail(
+  definition: OrderDefinition,
+  dose: string
+): { warning?: string; rejected?: boolean; rejectMessage?: string } {
+  const guardRail = definition.guardRail;
+  if (!guardRail) return {};
+
+  const numericDose = parseFloat(dose);
+  if (isNaN(numericDose)) return {};
+
+  if (guardRail.rejectAbove !== undefined && numericDose > guardRail.rejectAbove) {
+    return {
+      rejected: true,
+      rejectMessage:
+        guardRail.rejectMessage ??
+        `學長，這個劑量太高了（>${guardRail.rejectAbove}），藥局不會配，要不要重開？`,
+    };
+  }
+
+  if (guardRail.warnAbove !== undefined && numericDose > guardRail.warnAbove) {
+    return {
+      warning:
+        guardRail.warnMessage ??
+        `學長，這個劑量有點高（>${guardRail.warnAbove}），確定嗎？`,
+    };
+  }
+
+  return {};
+}
+
+/** 基礎分數計算（不 import score-engine） */
+function computeBasicScore(
+  state: Omit<
+    ProGameStore,
+    | "loadScenario"
+    | "startGame"
+    | "advanceTime"
+    | "placeOrder"
+    | "activateMTP"
+    | "addTimelineEntry"
+    | "updateVitals"
+    | "updateChestTube"
+    | "sendMessage"
+    | "openModal"
+    | "closeModal"
+    | "usePauseThink"
+    | "submitSBAR"
+    | "endGame"
+    | "resetGame"
+    | "addPendingEvent"
+    | "setPendingEvents"
+    | "fireEvent"
+    | "updatePatientSeverity"
+    | "addActiveEffect"
+    | "removeActiveEffect"
+    | "updateLethalTriad"
+    | "updateIOBalance"
+    | "updateOrderStatus"
+    | "setScore"
+    | "updatePathology"
+  >
+): GameScore {
+  const { scenario, placedOrders, playerActions, hintsUsed, pauseThinkUsed, sbarReport, patient, clock } = state;
+
+  if (!scenario) {
+    return {
+      timeToFirstAction: 0,
+      correctDiagnosis: false,
+      criticalActions: [],
+      harmfulOrders: [],
+      escalationTiming: "never",
+      lethalTriadManaged: false,
+      sbar: {
+        completeness: 0,
+        prioritization: 0,
+        quantitative: false,
+        anticipatory: false,
+      },
+      hintsUsed,
+      pauseThinkUsed,
+      overall: "needs_improvement",
+      keyLessons: [],
+    };
+  }
+
+  // 1. Time to first action
+  const timeToFirstAction =
+    playerActions.length > 0 ? clock.currentTime : clock.currentTime;
+
+  // 2. Critical actions — 對照 scenario.expectedActions
+  const criticalActions: CriticalAction[] = scenario.expectedActions.map(
+    (expected) => {
+      // 看 playerActions string array 有沒有 match
+      const met = playerActions.some((a) =>
+        a.toLowerCase().includes(expected.action.toLowerCase())
+      );
+      return {
+        id: expected.id,
+        description: expected.description,
+        met,
+        timeToComplete: met ? clock.currentTime : null,
+        critical: expected.critical,
+        hint: expected.hint,
+      };
+    }
+  );
+
+  // 3. Harmful orders（effect.isCorrectTreatment === false）
+  const harmfulOrders = placedOrders
+    .filter((o) => o.result !== undefined && o.status === "completed")
+    .filter((o) => {
+      // 如果 definition 上有 effect 且標記為不正確，算有害
+      const effectDef = o.definition.effect;
+      return effectDef && effectDef.isCorrectTreatment === false;
+    })
+    .map((o) => o.definition.name);
+
+  // 4. Correct diagnosis（pathology match）
+  const correctDiagnosis = scenario.pathology === patient?.pathology;
+
+  // 5. Escalation timing
+  const escalationAction = playerActions.find((a) =>
+    a.includes("叫學長") || a.includes("consult") || a.includes("通知VS")
+  );
+  let escalationTiming: GameScore["escalationTiming"] = "never";
+  if (escalationAction) {
+    // 如果在 15 分鐘內叫 = early，15-20 = appropriate，20+ = late
+    const idx = playerActions.indexOf(escalationAction);
+    const approxTime = (idx / Math.max(playerActions.length, 1)) * clock.currentTime;
+    if (approxTime <= 10) escalationTiming = "early";
+    else if (approxTime <= 20) escalationTiming = "appropriate";
+    else escalationTiming = "late";
+  }
+
+  // 6. Lethal triad managed
+  const lethalTriadManaged = patient?.lethalTriad.count === 0;
+
+  // 7. SBAR score
+  const sbar = computeSBARScore(sbarReport);
+
+  // 8. Overall
+  const criticalMissed = criticalActions.filter(
+    (ca) => ca.critical && !ca.met
+  ).length;
+  let overall: GameScore["overall"] = "excellent";
+  if (criticalMissed >= 2 || harmfulOrders.length > 0) {
+    overall = "needs_improvement";
+  } else if (criticalMissed === 1 || hintsUsed > 2) {
+    overall = "good";
+  }
+
+  // 9. Key lessons
+  const keyLessons = scenario.debrief.keyPoints.slice(0, 3);
+
+  return {
+    timeToFirstAction,
+    correctDiagnosis,
+    criticalActions,
+    harmfulOrders,
+    escalationTiming,
+    lethalTriadManaged,
+    sbar,
+    hintsUsed,
+    pauseThinkUsed,
+    overall,
+    keyLessons,
+  };
+}
+
+/** SBAR 內容評分 */
+function computeSBARScore(
+  report: Record<string, string> | null
+): GameScore["sbar"] {
+  if (!report) {
+    return {
+      completeness: 0,
+      prioritization: 0,
+      quantitative: false,
+      anticipatory: false,
+    };
+  }
+
+  const text = Object.values(report).join(" ").toLowerCase();
+  const hasQuantitative =
+    /\d+/.test(text) && (text.includes("cc") || text.includes("mg") || text.includes("mmhg"));
+  const hasAnticipatory =
+    text.includes("已準備") ||
+    text.includes("已經") ||
+    text.includes("已開") ||
+    text.includes("建議");
+
+  // completeness: 各 SBAR 欄位是否都填
+  const sbarFields = ["situation", "background", "assessment", "recommendation"];
+  const filled = sbarFields.filter(
+    (f) => report[f] && report[f].trim().length > 10
+  ).length;
+  const completeness = Math.round((filled / sbarFields.length) * 100);
+
+  // prioritization: 是否先說最重要的事
+  const situationText = (report["situation"] ?? "").toLowerCase();
+  const mentionsCritical =
+    situationText.includes("血壓") ||
+    situationText.includes("chest tube") ||
+    situationText.includes("出血");
+  const prioritization = mentionsCritical ? 80 : 40;
+
+  return {
+    completeness,
+    prioritization,
+    quantitative: hasQuantitative,
+    anticipatory: hasAnticipatory,
+  };
+}
+
+// ============================================================
+// Store
+// ============================================================
+
+export const useProGameStore = create<ProGameStore>((set, get) => ({
+  ...initialState,
+
+  // ----------------------------------------------------------
+  // loadScenario
+  // ----------------------------------------------------------
+  loadScenario: async (id: string) => {
+    set({ isLoading: true, loadError: null });
+    try {
+      const res = await fetch(`/api/simulator/scenarios/${id}`);
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+      }
+      const scenario: SimScenario = await res.json();
+
+      // 初始化 patient state 從 scenario
+      const patient: PatientState = {
+        vitals: { ...scenario.initialVitals },
+        chestTube: { ...scenario.initialChestTube },
+        pathology: scenario.pathology,
+        severity: 30, // 預設值，會由 patient-engine 計算
+        activeEffects: [],
+        ioBalance: {
+          totalInput: 0,
+          totalOutput: scenario.initialChestTube.totalOutput,
+          netBalance: -scenario.initialChestTube.totalOutput,
+          breakdown: {
+            input: { iv: 0, blood: 0, oral: 0 },
+            output: {
+              chestTube: scenario.initialChestTube.totalOutput,
+              urine: 0,
+              ngo: 0,
+            },
+          },
+        },
+        lethalTriad: {
+          hypothermia: scenario.initialVitals.temperature < 36,
+          acidosis: false,
+          coagulopathy: false,
+          count: scenario.initialVitals.temperature < 36 ? 1 : 0,
+        },
+      };
+
+      set({
+        scenario,
+        patient,
+        isLoading: false,
+        phase: "not_started",
+        clock: {
+          currentTime: 0,
+          startHour: scenario.startHour,
+          isPaused: true,
+          speed: 1,
+        },
+        pendingEvents: [],
+        firedEvents: [],
+        placedOrders: [],
+        mtpState: { activated: false, roundsDelivered: 0 },
+        timeline: [],
+        playerActions: [],
+        hintsUsed: 0,
+        pauseThinkUsed: false,
+        sbarReport: null,
+        score: null,
+        activeModal: null,
+      });
+    } catch (err) {
+      const message = err instanceof Error ? err.message : String(err);
+      set({ isLoading: false, loadError: message });
+    }
+  },
+
+  // ----------------------------------------------------------
+  // startGame
+  // ----------------------------------------------------------
+  startGame: () => {
+    const { scenario, clock } = get();
+    if (!scenario || get().phase !== "not_started") return;
+
+    // 把 scenario scripted events 轉成 PendingEvent 排入隊列
+    const pendingEvents: PendingEvent[] = scenario.events.map((e) => ({
+      id: e.id,
+      triggerAt: e.triggerTime,
+      triggerCondition: e.triggerCondition,
+      type: e.type,
+      data: {
+        message: e.message,
+        vitalChanges: e.vitalChanges,
+        chestTubeChanges: e.chestTubeChanges,
+        temperatureChange: e.temperatureChange,
+        severityChange: e.severityChange,
+        newLabResults: e.newLabResults,
+      },
+      fired: false,
+      priority: 0,
+    }));
+
+    // 加入開場護理師訊息到 timeline
+    const openingEntry: TimelineEntry = {
+      id: nextId("tl"),
+      gameTime: 0,
+      type: "nurse_message",
+      content: scenario.nurseProfile.name + "：" + (scenario.events[0]?.message ?? "學長，病人狀況需要您來看一下。"),
+      sender: "nurse",
+      isImportant: true,
+    };
+
+    set({
+      phase: "playing",
+      clock: { ...clock, isPaused: false },
+      pendingEvents,
+      timeline: [openingEntry],
+      playerActions: [`game_start:${scenario.id}`],
+    });
+  },
+
+  // ----------------------------------------------------------
+  // advanceTime
+  // ----------------------------------------------------------
+  advanceTime: (minutes: number) => {
+    const { clock, pendingEvents, phase } = get();
+    if (phase !== "playing") return;
+
+    const newTime = clock.currentTime + minutes;
+    const updatedClock: GameClock = { ...clock, currentTime: newTime };
+
+    // 找出所有應在 newTime 前觸發、且尚未觸發的事件
+    // 注意：條件型事件（triggerCondition）由 component/engine 層判斷，
+    // 這裡只處理純時間觸發（無 condition）
+    const toFire = pendingEvents.filter(
+      (e) => !e.fired && e.triggerAt <= newTime && !e.triggerCondition
+    );
+
+    const nowFiredIds = new Set(toFire.map((e) => e.id));
+
+    const updatedPending = pendingEvents.map((e) =>
+      nowFiredIds.has(e.id) ? { ...e, fired: true } : e
+    );
+    const newlyFired = updatedPending.filter((e) => nowFiredIds.has(e.id));
+
+    // 時間推進的 timeline 條目
+    const timeEntry: TimelineEntry = {
+      id: nextId("tl"),
+      gameTime: newTime,
+      type: "system_event",
+      content: `⏰ ${minutes} 分鐘後...`,
+      sender: "system",
+    };
+
+    set((state) => ({
+      clock: updatedClock,
+      pendingEvents: updatedPending,
+      firedEvents: [...state.firedEvents, ...newlyFired],
+      timeline: [...state.timeline, timeEntry],
+    }));
+
+    // 把觸發的事件記錄到 playerActions（供 score-engine 分析）
+    if (toFire.length > 0) {
+      const actionLabels = toFire.map((e) => `event_fired:${e.id}:${e.type}`);
+      set((state) => ({
+        playerActions: [...state.playerActions, ...actionLabels],
+      }));
+    }
+  },
+
+  // ----------------------------------------------------------
+  // placeOrder
+  // ----------------------------------------------------------
+  placeOrder: (params: PlaceOrderParams): PlaceOrderResult => {
+    const { placedOrders, clock, phase, timeline, playerActions } = get();
+    if (phase !== "playing") {
+      return { success: false, orderId: null, rejected: true, rejectMessage: "遊戲尚未開始" };
+    }
+
+    // Guard rail 驗證
+    const guardResult = validateOrderGuardRail(params.definition, params.dose);
+    if (guardResult.rejected) {
+      // 加入 timeline 提示
+      const rejectEntry: TimelineEntry = {
+        id: nextId("tl"),
+        gameTime: clock.currentTime,
+        type: "nurse_message",
+        content: guardResult.rejectMessage ?? "學長，這個 order 無法執行。",
+        sender: "nurse",
+        isImportant: true,
+      };
+      set({ timeline: [...timeline, rejectEntry] });
+      return {
+        success: false,
+        orderId: null,
+        rejected: true,
+        rejectMessage: guardResult.rejectMessage,
+      };
+    }
+
+    const orderId = nextId("order");
+    const resultAvailableAt = params.definition.timeToResult
+      ? clock.currentTime + params.definition.timeToResult
+      : params.definition.timeToEffect
+      ? clock.currentTime + params.definition.timeToEffect
+      : undefined;
+
+    const newOrder: PlacedOrder = {
+      id: orderId,
+      definition: params.definition,
+      dose: params.dose,
+      frequency: params.frequency,
+      placedAt: clock.currentTime,
+      status: "pending",
+      resultAvailableAt,
+      warning: guardResult.warning,
+    };
+
+    // 如果有 timeToResult，排入 lab result 事件
+    const newEvents: PendingEvent[] = [];
+    if (params.definition.timeToResult !== undefined) {
+      newEvents.push({
+        id: nextId("ev"),
+        triggerAt: clock.currentTime + params.definition.timeToResult,
+        type: "lab_result",
+        data: { orderId, orderName: params.definition.name },
+        fired: false,
+        priority: 1,
+      });
+    }
+
+    // Order 下達的 timeline 條目
+    const orderEntry: TimelineEntry = {
+      id: nextId("tl"),
+      gameTime: clock.currentTime,
+      type: "order_placed",
+      content: `📋 開了：${params.definition.name} ${params.dose}${params.definition.unit} ${params.frequency}`,
+      sender: "player",
+    };
+
+    // 護理師確認
+    const nurseConfirmEntry: TimelineEntry = {
+      id: nextId("tl"),
+      gameTime: clock.currentTime,
+      type: "nurse_message",
+      content: `${get().scenario?.nurseProfile.name ?? "護理師"}：收到，馬上準備。`,
+      sender: "nurse",
+    };
+
+    const actionLabel = `order:${params.definition.category}:${params.definition.name}:${params.dose}`;
+
+    set((state) => ({
+      placedOrders: [...state.placedOrders, newOrder],
+      pendingEvents: [...state.pendingEvents, ...newEvents],
+      timeline: [...state.timeline, orderEntry, nurseConfirmEntry],
+      playerActions: [...state.playerActions, actionLabel],
+    }));
+
+    return {
+      success: true,
+      orderId,
+      warning: guardResult.warning,
+    };
+  },
+
+  // ----------------------------------------------------------
+  // activateMTP
+  // ----------------------------------------------------------
+  activateMTP: () => {
+    const { mtpState, clock, scenario, phase } = get();
+    if (mtpState.activated || phase !== "playing") return;
+
+    const activatedAt = clock.currentTime;
+
+    // 排入血品送達事件（每 round 15 分鐘）
+    const bloodDeliveryEvent: PendingEvent = {
+      id: nextId("ev_mtp"),
+      triggerAt: activatedAt + 15,
+      type: "lab_result",
+      data: {
+        isMTP: true,
+        round: 1,
+        products: { prbc: 2, ffp: 2, platelet: 1 },
+      },
+      fired: false,
+      priority: 0,
+    };
+
+    const mtpEntry: TimelineEntry = {
+      id: nextId("tl"),
+      gameTime: activatedAt,
+      type: "player_action",
+      content: "🚨 啟動大量輸血 Protocol（MTP）— pRBC : FFP : Plt = 1:1:1",
+      sender: "player",
+      isImportant: true,
+    };
+
+    const nurseEntry: TimelineEntry = {
+      id: nextId("tl"),
+      gameTime: activatedAt,
+      type: "nurse_message",
+      content: `${scenario?.nurseProfile.name ?? "護理師"}：了解，立刻聯絡血庫，預計 15 分鐘內第一批血品會到。`,
+      sender: "nurse",
+      isImportant: true,
+    };
+
+    set((state) => ({
+      mtpState: {
+        activated: true,
+        activatedAt,
+        roundsDelivered: 0,
+      },
+      pendingEvents: [...state.pendingEvents, bloodDeliveryEvent],
+      timeline: [...state.timeline, mtpEntry, nurseEntry],
+      playerActions: [...state.playerActions, "mtp:activated"],
+    }));
+  },
+
+  // ----------------------------------------------------------
+  // addTimelineEntry
+  // ----------------------------------------------------------
+  addTimelineEntry: (entry: Omit<TimelineEntry, "id">) => {
+    const newEntry: TimelineEntry = {
+      id: nextId("tl"),
+      ...entry,
+    };
+    set((state) => ({
+      timeline: [...state.timeline, newEntry],
+    }));
+  },
+
+  // ----------------------------------------------------------
+  // updateVitals
+  // ----------------------------------------------------------
+  updateVitals: (changes: Partial<VitalSigns>) => {
+    set((state) => {
+      if (!state.patient) return state;
+      const newVitals = { ...state.patient.vitals, ...changes };
+      // 更新 temperature 到 patient 頂層
+      const newPatient = {
+        ...state.patient,
+        vitals: newVitals,
+      };
+      return { patient: newPatient };
+    });
+  },
+
+  // ----------------------------------------------------------
+  // updateChestTube
+  // ----------------------------------------------------------
+  updateChestTube: (changes: Partial<ChestTubeState>) => {
+    set((state) => {
+      if (!state.patient) return state;
+      const newChestTube = { ...state.patient.chestTube, ...changes };
+
+      // 同步更新 I/O balance（CT output 部分）
+      const ctOutputDiff =
+        (changes.totalOutput ?? state.patient.chestTube.totalOutput) -
+        state.patient.chestTube.totalOutput;
+      const io = state.patient.ioBalance;
+      const newIO: IOBalance = {
+        ...io,
+        totalOutput: io.totalOutput + ctOutputDiff,
+        netBalance: io.totalInput - (io.totalOutput + ctOutputDiff),
+        breakdown: {
+          ...io.breakdown,
+          output: {
+            ...io.breakdown.output,
+            chestTube: io.breakdown.output.chestTube + ctOutputDiff,
+          },
+        },
+      };
+
+      return {
+        patient: {
+          ...state.patient,
+          chestTube: newChestTube,
+          ioBalance: newIO,
+        },
+      };
+    });
+  },
+
+  // ----------------------------------------------------------
+  // sendMessage
+  // ----------------------------------------------------------
+  sendMessage: (text: string) => {
+    const { clock, phase } = get();
+    if (phase !== "playing") return;
+
+    const playerEntry: TimelineEntry = {
+      id: nextId("tl"),
+      gameTime: clock.currentTime,
+      type: "player_message",
+      content: text,
+      sender: "player",
+    };
+
+    set((state) => ({
+      timeline: [...state.timeline, playerEntry],
+      playerActions: [...state.playerActions, `message:${text.slice(0, 50)}`],
+    }));
+  },
+
+  // ----------------------------------------------------------
+  // openModal / closeModal
+  // ----------------------------------------------------------
+  openModal: (type: Exclude<ModalType, null>) => {
+    set({ activeModal: type });
+  },
+
+  closeModal: () => {
+    set({ activeModal: null });
+  },
+
+  // ----------------------------------------------------------
+  // usePauseThink
+  // ----------------------------------------------------------
+  usePauseThink: () => {
+    const { phase, clock, pauseThinkUsed } = get();
+    if (phase !== "playing") return;
+
+    const entry: TimelineEntry = {
+      id: nextId("tl"),
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: "⏸ 暫停思考：系統性評估中...",
+      sender: "player",
+    };
+
+    set((state) => ({
+      pauseThinkUsed: true,
+      hintsUsed: pauseThinkUsed ? state.hintsUsed : state.hintsUsed, // 暫停思考不算 hint
+      timeline: [...state.timeline, entry],
+      playerActions: [...state.playerActions, "pause_think:used"],
+    }));
+  },
+
+  // ----------------------------------------------------------
+  // submitSBAR
+  // ----------------------------------------------------------
+  submitSBAR: (report: Record<string, string>) => {
+    const { clock } = get();
+
+    const entry: TimelineEntry = {
+      id: nextId("tl"),
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: "📝 提交 SBAR 交班報告",
+      sender: "player",
+      isImportant: true,
+    };
+
+    set((state) => ({
+      sbarReport: report,
+      phase: "sbar",
+      timeline: [...state.timeline, entry],
+      playerActions: [...state.playerActions, "sbar:submitted"],
+      activeModal: null,
+    }));
+  },
+
+  // ----------------------------------------------------------
+  // endGame
+  // ----------------------------------------------------------
+  endGame: () => {
+    const state = get();
+    if (state.phase === "debrief") return;
+
+    // 停止時鐘
+    const finalClock: GameClock = { ...state.clock, isPaused: true };
+
+    // 計算分數（不 import score-engine，用 store 內的 helper）
+    const score = computeBasicScore({
+      ...state,
+      clock: finalClock,
+    });
+
+    const debriefEntry: TimelineEntry = {
+      id: nextId("tl"),
+      gameTime: finalClock.currentTime,
+      type: "system_event",
+      content: "🏁 情境結束 — 進入 Debrief",
+      sender: "system",
+      isImportant: true,
+    };
+
+    set((s) => ({
+      phase: "debrief",
+      clock: finalClock,
+      score,
+      timeline: [...s.timeline, debriefEntry],
+      activeModal: null,
+    }));
+  },
+
+  // ----------------------------------------------------------
+  // resetGame
+  // ----------------------------------------------------------
+  resetGame: () => {
+    set({
+      ...initialState,
+      // 保留 scenario 讓使用者可以直接 restart
+      scenario: get().scenario,
+    });
+  },
+
+  // ----------------------------------------------------------
+  // Engine Dispatch Setters
+  // ----------------------------------------------------------
+
+  addPendingEvent: (event: PendingEvent) => {
+    set((state) => ({
+      pendingEvents: [...state.pendingEvents, event],
+    }));
+  },
+
+  setPendingEvents: (events: PendingEvent[]) => {
+    set({ pendingEvents: events });
+  },
+
+  fireEvent: (eventId: string) => {
+    set((state) => {
+      const event = state.pendingEvents.find((e) => e.id === eventId);
+      if (!event) return state;
+      const updatedPending = state.pendingEvents.map((e) =>
+        e.id === eventId ? { ...e, fired: true } : e
+      );
+      return {
+        pendingEvents: updatedPending,
+        firedEvents: [...state.firedEvents, { ...event, fired: true }],
+      };
+    });
+  },
+
+  updatePatientSeverity: (severity: number) => {
+    set((state) => {
+      if (!state.patient) return state;
+      return { patient: { ...state.patient, severity } };
+    });
+  },
+
+  addActiveEffect: (effect: ActiveEffect) => {
+    set((state) => {
+      if (!state.patient) return state;
+      return {
+        patient: {
+          ...state.patient,
+          activeEffects: [...state.patient.activeEffects, effect],
+        },
+      };
+    });
+  },
+
+  removeActiveEffect: (effectId: string) => {
+    set((state) => {
+      if (!state.patient) return state;
+      return {
+        patient: {
+          ...state.patient,
+          activeEffects: state.patient.activeEffects.filter(
+            (e) => e.id !== effectId
+          ),
+        },
+      };
+    });
+  },
+
+  updateLethalTriad: (triad: Partial<LethalTriadState>) => {
+    set((state) => {
+      if (!state.patient) return state;
+      const newTriad = { ...state.patient.lethalTriad, ...triad };
+      // 重新計算 count
+      newTriad.count = [
+        newTriad.hypothermia,
+        newTriad.acidosis,
+        newTriad.coagulopathy,
+      ].filter(Boolean).length;
+      return { patient: { ...state.patient, lethalTriad: newTriad } };
+    });
+  },
+
+  updateIOBalance: (changes: Partial<IOBalance>) => {
+    set((state) => {
+      if (!state.patient) return state;
+      const current = state.patient.ioBalance;
+
+      // 合併 breakdown
+      const newBreakdown = changes.breakdown
+        ? {
+            input: {
+              ...current.breakdown.input,
+              ...(changes.breakdown.input ?? {}),
+            },
+            output: {
+              ...current.breakdown.output,
+              ...(changes.breakdown.output ?? {}),
+            },
+          }
+        : current.breakdown;
+
+      const newTotalInput =
+        changes.totalInput ??
+        Object.values(newBreakdown.input).reduce((a, b) => a + b, 0);
+      const newTotalOutput =
+        changes.totalOutput ??
+        Object.values(newBreakdown.output).reduce((a, b) => a + b, 0);
+
+      const newIO: IOBalance = {
+        totalInput: newTotalInput,
+        totalOutput: newTotalOutput,
+        netBalance: newTotalInput - newTotalOutput,
+        breakdown: newBreakdown,
+      };
+
+      return { patient: { ...state.patient, ioBalance: newIO } };
+    });
+  },
+
+  updateOrderStatus: (orderId: string, status: OrderStatus, result?: unknown) => {
+    set((state) => ({
+      placedOrders: state.placedOrders.map((o) =>
+        o.id === orderId ? { ...o, status, ...(result !== undefined ? { result } : {}) } : o
+      ),
+    }));
+  },
+
+  setScore: (score: GameScore) => {
+    set({ score });
+  },
+
+  updatePathology: (pathology: Pathology) => {
+    set((state) => {
+      if (!state.patient) return state;
+      return { patient: { ...state.patient, pathology } };
+    });
+  },
+}));
