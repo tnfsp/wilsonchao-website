@@ -1,0 +1,285 @@
+{
+  "id": "cardiogenic-shock-01",
+  "title": "Cardiogenic Shock Mimicking Sepsis",
+  "difficulty": "intermediate",
+  "author": "ICU Simulator",
+  "version": "1.0",
+
+  "opening": {
+    "caller": "護理師",
+    "message": "醫師，床號 15 的病人看起來怪怪的，血壓有點低，你要不要來看一下？"
+  },
+
+  "patient": {
+    "age": 68,
+    "gender": "M",
+    "bed": "15",
+    "brief_history": "HTN, DM, 三天前 STEMI s/p primary PCI to LAD"
+  },
+
+  "initial_vitals": {
+    "hr": 120,
+    "bp_systolic": 78,
+    "bp_diastolic": 45,
+    "rr": 28,
+    "spo2": 94,
+    "temperature": 37.2
+  },
+
+  "current_status": {
+    "consciousness": "Alert but anxious",
+    "appearance": "蒼白、冒汗、四肢冰冷"
+  },
+
+  "history_context": {
+    "description": "病人三天前因 STEMI 接受 PCI，今天早上開始覺得喘，現在喘得更厲害了。",
+    "key_points": [
+      "沒有發燒",
+      "沒有咳嗽、痰",
+      "尿量減少",
+      "從昨晚開始覺得喘，今天更喘"
+    ]
+  },
+
+  "physical_exam": {
+    "general": "看起來不舒服，端坐呼吸",
+    "cardiac": {
+      "jvp": "Elevated, ~12 cmH2O",
+      "heart_sound": "S3 gallop present, no murmur",
+      "pmi": "Displaced laterally"
+    },
+    "pulmonary": {
+      "breath_sounds": "Bilateral basilar crackles",
+      "percussion": "Dull at bases"
+    },
+    "abdomen": "Soft, mild RUQ tenderness, liver palpable",
+    "extremities": {
+      "edema": "2+ bilateral pedal edema",
+      "pulse": "Weak, thready",
+      "capillary_refill": "> 3 seconds",
+      "temperature": "Cold"
+    }
+  },
+
+  "lab_results": {
+    "cbc": {
+      "wbc": 9.8,
+      "hb": 12.1,
+      "hct": 36.3,
+      "platelet": 178
+    },
+    "biochemistry": {
+      "bun": 45,
+      "cr": 1.8,
+      "na": 134,
+      "k": 4.8,
+      "ast": 56,
+      "alt": 42,
+      "cl": 102,
+      "ca": 8.9,
+      "mg": 2.0,
+      "t_bil": 1.8,
+      "d_bil": 0.6,
+      "albumin": 3.2,
+      "glucose": 168
+    },
+    "cardiac": {
+      "troponin_i": 2.4,
+      "nt_probnp": 8500
+    },
+    "infection": {
+      "procalcitonin": 0.3,
+      "lactate": 4.2,
+      "crp": 2.1
+    },
+    "abg": {
+      "ph": 7.32,
+      "pco2": 32,
+      "po2": 68,
+      "hco3": 18,
+      "be": -6,
+      "sao2": 92
+    },
+    "coagulation": {
+      "pt_inr": 1.2,
+      "aptt": 34,
+      "d_dimer": 1.8
+    },
+    "cultures": {
+      "blood": "pending",
+      "urine": "pending",
+      "sputum": "pending"
+    },
+    "urinalysis": {
+      "ua_routine": "Protein 1+, Blood negative",
+      "ua_sediment": "Few hyaline casts"
+    }
+  },
+
+  "pocus_findings": {
+    "plax": {
+      "video": "echo-plax.mp4",
+      "finding": "Severely reduced LV function, EF ~20%"
+    },
+    "psax": {
+      "video": "echo-psax.mp4",
+      "finding": "Global hypokinesis, D-shaped septum absent"
+    },
+    "a4c": {
+      "video": "echo-a4c.mp4",
+      "finding": "Dilated LV, global hypokinesis"
+    },
+    "subcostal": {
+      "video": "echo-subcostal.mp4",
+      "finding": "Pericardium appears normal, no effusion"
+    },
+    "ivc": {
+      "video": "echo-ivc.mp4",
+      "finding": "Dilated IVC > 2.1cm, < 50% collapse"
+    },
+    "lung": {
+      "image": "lung-us.jpg",
+      "finding": "Multiple B-lines bilaterally (>3 per field)"
+    }
+  },
+
+  "diagnosis": {
+    "primary": "Cardiogenic shock",
+    "differential": [
+      "Septic shock",
+      "Hypovolemic shock",
+      "Obstructive shock (PE)"
+    ],
+    "key_differentiators": [
+      "Elevated JVP (不像 septic shock)",
+      "Cold extremities (septic shock 通常 warm)",
+      "Low procalcitonin (0.3 ng/mL)",
+      "Poor LV function on echo (EF ~20%)",
+      "Dilated non-collapsing IVC (volume overload)",
+      "Recent STEMI history (3 days post-PCI)"
+    ]
+  },
+
+  "optimal_management": {
+    "avoid": [
+      {
+        "action": "大量輸液",
+        "reason": "會加重肺水腫，惡化呼吸狀況"
+      },
+      {
+        "action": "Pure vasopressor without inotrope",
+        "reason": "單純升壓無法改善 cardiac output"
+      }
+    ],
+    "recommended": [
+      {
+        "action": "Norepinephrine",
+        "detail": "0.05-0.1 mcg/kg/min 起始，維持 MAP > 65"
+      },
+      {
+        "action": "Dobutamine",
+        "detail": "2.5-5 mcg/kg/min，改善 cardiac output"
+      },
+      {
+        "action": "Furosemide",
+        "detail": "20-40 mg IV，若有明顯 congestion"
+      },
+      {
+        "action": "考慮照會心臟科",
+        "detail": "評估是否需 IABP 或其他 MCS (Mechanical Circulatory Support)"
+      },
+      {
+        "action": "限水",
+        "detail": "每日限水 1000-1500 mL"
+      }
+    ]
+  },
+
+  "learning_points": [
+    "Cardiogenic shock 可能因低灌流而有 elevated lactate，容易誤認為 sepsis",
+    "Physical exam 的 JVP 和四肢溫度是重要鑑別點：cardiogenic = cold & wet, septic = warm & dry",
+    "Bedside echo 可快速區分 cardiogenic vs distributive shock",
+    "對 cardiogenic shock 給大量輸液會惡化病情（加重 pulmonary edema）",
+    "Post-MI cardiogenic shock 需要同時考慮 mechanical complications (VSD, papillary muscle rupture)",
+    "Procalcitonin 正常或輕度升高 (<0.5) 較不支持 bacterial sepsis"
+  ],
+
+  "vital_transitions": [
+    {
+      "trigger": { "medication": "NS", "volume_gt": 500 },
+      "delay_seconds": 30,
+      "effect": {
+        "spo2_delta": -4,
+        "rr_delta": 4,
+        "bp_systolic_delta": -5
+      },
+      "nurse_message": "醫師！病人好像更喘了，SpO2 掉到 90%！"
+    },
+    {
+      "trigger": { "medication": "NS", "volume_gt": 1000 },
+      "delay_seconds": 60,
+      "effect": {
+        "spo2_delta": -8,
+        "rr_delta": 8,
+        "bp_systolic_delta": -10
+      },
+      "nurse_message": "醫師！病人喘得更厲害了，SpO2 掉下來了！呼吸很費力！"
+    },
+    {
+      "trigger": { "medication": "norepinephrine" },
+      "delay_seconds": 60,
+      "effect": {
+        "bp_systolic_delta": 15,
+        "bp_diastolic_delta": 10
+      },
+      "nurse_message": "血壓有慢慢上來了，MAP 現在 68。"
+    },
+    {
+      "trigger": { "medication": "dobutamine" },
+      "delay_seconds": 120,
+      "effect": {
+        "hr_delta": 10,
+        "bp_systolic_delta": 8,
+        "spo2_delta": 2
+      },
+      "nurse_message": "病人看起來比較好了，血壓穩定，尿量也開始有了。"
+    },
+    {
+      "trigger": { "medication": "furosemide" },
+      "delay_seconds": 300,
+      "effect": {
+        "spo2_delta": 3,
+        "rr_delta": -4
+      },
+      "nurse_message": "利尿劑打完了，病人尿量開始多了，呼吸有比較順。"
+    }
+  ],
+
+  "deterioration_thresholds": {
+    "trigger_acls": {
+      "hr_lt": 40,
+      "hr_gt": 160,
+      "bp_systolic_lt": 55,
+      "spo2_lt": 75
+    }
+  },
+
+  "handoff_evaluation": {
+    "required_mentions": [
+      "68 歲男性",
+      "STEMI 病史",
+      "PCI 三天前",
+      "低血壓/休克",
+      "JVP elevated",
+      "四肢冰冷",
+      "Echo EF 低 (~20%)",
+      "Cardiogenic shock",
+      "Lactate 4.2（但 Procalcitonin 低）"
+    ],
+    "critical_errors": [
+      "誤診為 septic shock",
+      "建議大量輸液",
+      "未提到 Echo 發現"
+    ]
+  }
+}

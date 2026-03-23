@@ -61,6 +61,16 @@ export default function TeachingIndex() {
 
         <section className="mt-12">
           <Link
+            href="/teaching/simulator"
+            className="group block rounded-xl border border-cyan-700/50 bg-cyan-900/10 p-6 text-center hover:border-cyan-400 hover:bg-cyan-900/20 transition-all mb-4"
+          >
+            <div className="text-3xl mb-2">🎮</div>
+            <div className="font-semibold text-lg text-white group-hover:text-cyan-400 transition-colors">
+              ICU Simulator
+            </div>
+            <p className="text-sm text-gray-400 mt-1">模擬情境練習 — AI 學長即時回饋你的臨床決策</p>
+          </Link>
+          <Link
             href="/teaching/feedback"
             className="group block rounded-xl border-2 border-dashed border-cyan-700 p-6 text-center hover:border-cyan-400 hover:bg-white/5 transition-all"
           >
