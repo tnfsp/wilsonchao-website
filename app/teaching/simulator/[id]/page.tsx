@@ -1,6 +1,6 @@
 import { notFound } from "next/navigation";
 import { scenarios } from "@/lib/simulator/scenarios";
-import CasePlayer from "@/components/simulator/CasePlayer";
+import ModeSelector from "./ModeSelector";
 
 export function generateStaticParams() {
   return Object.keys(scenarios).map((id) => ({ id }));
@@ -15,5 +15,5 @@ export default async function SimulatorCasePage({
   const scenario = scenarios[id];
   if (!scenario) notFound();
 
-  return <CasePlayer scenario={scenario} />;
+  return <ModeSelector scenario={scenario} />;
 }
