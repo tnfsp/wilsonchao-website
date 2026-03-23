@@ -134,7 +134,7 @@ export default async function NowPage() {
           <p className="text-[var(--muted)]">
             想聊這些？{" "}
             <a
-              href="mailto:momobear.doctor@gmail.com"
+              href="mailto:aa2670095@gmail.com"
               className="inline-link"
             >
               寫信給我
