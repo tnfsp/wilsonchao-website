@@ -2,39 +2,56 @@
 
 import React from "react";
 import IOBalanceBar from "./IOBalanceBar";
+import { useProGameStore } from "@/lib/simulator/store";
 
 interface ProGameLayoutProps {
-  /** 左欄 — vitals, CT panel, active orders（以外的可選 slot） */
   leftPanel: React.ReactNode;
-  /** 右欄 — chat timeline + 輸入框 */
   rightPanel: React.ReactNode;
-  /** 底部 action bar（action buttons 由外部填入） */
   actionBar?: React.ReactNode;
 }
 
-/**
- * ProGameLayout — ICU 模擬器 Pro 主畫面框架
- *
- * 桌面：左右分欄（左 1/3 右 2/3）
- * 手機：上下堆疊（vitals/CT 可收合）
- *
- * 使用 `"use client"` 因為會包含互動式 children。
- */
+const dangerPulseCSS = `
+@keyframes dangerVignette {
+  0%, 100% { opacity: 0.4; }
+  50% { opacity: 0.8; }
+}
+`;
+
 export default function ProGameLayout({
   leftPanel,
   rightPanel,
   actionBar,
 }: ProGameLayoutProps) {
+  const severity = useProGameStore((s) => s.patient?.severity ?? 0);
+
+  const showDanger = severity > 60;
+  const dangerOpacity = showDanger ? Math.min((severity - 60) / 40, 1) : 0;
+  const dangerPulse = severity > 80;
+
   return (
     <div
       className="fixed inset-0 z-50 flex flex-col overflow-hidden"
       style={{ background: "#001219" }}
     >
-      {/* ── Top bar ────────────────────────────────────────────── */}
+      {/* Danger vignette overlay */}
+      {showDanger && (
+        <>
+          <style dangerouslySetInnerHTML={{ __html: dangerPulseCSS }} />
+          <div
+            className="pointer-events-none fixed inset-0 z-[55]"
+            style={{
+              boxShadow: `inset 0 0 ${60 + dangerOpacity * 80}px ${10 + dangerOpacity * 30}px rgba(220, 38, 38, ${dangerOpacity * 0.4})`,
+              animation: dangerPulse ? "dangerVignette 2s ease-in-out infinite" : undefined,
+              opacity: dangerPulse ? undefined : dangerOpacity,
+            }}
+          />
+        </>
+      )}
+
+      {/* Top bar */}
       <IOBalanceBar />
 
-      {/* ── Main content area ──────────────────────────────────── */}
-      {/* Desktop: side-by-side columns */}
+      {/* Desktop: side-by-side */}
       <div className="hidden lg:flex flex-1 overflow-hidden">
         <div
           className="w-[380px] flex-shrink-0 overflow-y-auto border-r border-white/8"
@@ -47,13 +64,13 @@ export default function ProGameLayout({
         </div>
       </div>
 
-      {/* Mobile: single scrollable column */}
+      {/* Mobile: stacked */}
       <div className="lg:hidden flex-1 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "#ffffff1a transparent" }}>
         <div className="p-3 space-y-3">{leftPanel}</div>
         <div className="min-h-[40vh]">{rightPanel}</div>
       </div>
 
-      {/* ── Bottom Action Bar ───────────────────────────────────── */}
+      {/* Bottom Action Bar */}
       {actionBar && (
         <div className="flex-shrink-0 border-t border-white/8 bg-[#00202e]">
           {actionBar}

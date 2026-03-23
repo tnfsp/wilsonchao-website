@@ -87,6 +87,10 @@ export interface ProGameStore {
   // UI
   activeModal: ModalType;
 
+  // Guidance system
+  guidanceMode: boolean;
+  guidanceHighlight: string | null;
+
   // ---- Primary Actions ----
 
   /** 載入情境，初始化所有狀態 */
@@ -136,6 +140,12 @@ export interface ProGameStore {
 
   /** 重置所有狀態 */
   resetGame: () => void;
+
+  /** 檢查並更新 guidance highlight */
+  checkGuidance: () => void;
+
+  /** 設定 guidance highlight */
+  setGuidanceHighlight: (key: string | null) => void;
 
   // ---- Engine Dispatch Setters ----
   // 這些 action 供 component 層呼叫 engine 後 dispatch 結果到 store
@@ -231,6 +241,8 @@ const initialState = {
   sbarReport: null as Record<string, string> | null,
   score: null as GameScore | null,
   activeModal: null as ModalType,
+  guidanceMode: true,
+  guidanceHighlight: null as string | null,
 };
 
 // ============================================================
@@ -1186,5 +1198,48 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       if (!state.patient) return state;
       return { patient: { ...state.patient, pathology } };
     });
+  },
+
+  // ----------------------------------------------------------
+  // setGuidanceHighlight
+  // ----------------------------------------------------------
+  setGuidanceHighlight: (key: string | null) => {
+    set({ guidanceHighlight: key });
+  },
+
+  // ----------------------------------------------------------
+  // checkGuidance — compute which button to highlight
+  // ----------------------------------------------------------
+  checkGuidance: () => {
+    const { guidanceMode, playerActions, patient } = get();
+    if (!guidanceMode) return;
+
+    const severity = patient?.severity ?? 0;
+
+    // Check what actions have been done
+    const hasPE = playerActions.some((a) => a.startsWith("pe:") || a.includes("pe_done") || a.includes("order:physical_exam") || a.includes("open_pe"));
+    const hasLab = playerActions.some((a) => a.startsWith("order:lab") || a.includes("lab_order") || a.includes("order:lab_panel"));
+    const hasTreatment = playerActions.some(
+      (a) => a.startsWith("order:medication") || a.startsWith("order:transfusion") || a.startsWith("order:fluid") || a.includes("mtp:activated")
+    );
+    const hasCalled = playerActions.some(
+      (a) => a.includes("consult") || a.includes("叫學長") || a.includes("通知VS") || a.includes("call_senior")
+    );
+
+    let highlight: string | null = null;
+
+    if (severity > 80) {
+      highlight = "sbar";
+    } else if (severity > 60 && !hasCalled) {
+      highlight = "consult";
+    } else if (hasPE && hasLab && !hasTreatment) {
+      highlight = "order";
+    } else if (hasPE && !hasLab) {
+      highlight = "lab_order";
+    } else if (!hasPE) {
+      highlight = "pe";
+    }
+
+    set({ guidanceHighlight: highlight });
   },
 }));

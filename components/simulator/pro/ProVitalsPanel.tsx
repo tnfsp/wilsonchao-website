@@ -1,7 +1,34 @@
 "use client";
 
+import { useEffect, useRef, useState } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { VitalSigns, ALineWaveform } from "@/lib/simulator/types";
+
+// ─── CSS ─────────────────────────────────────────────────────────────────────
+
+const vitalsPanelStyle = `
+@keyframes border-flash-green {
+  0% { border-color: rgba(34, 197, 94, 0.9); box-shadow: 0 0 0 2px rgba(34, 197, 94, 0.5); }
+  100% { border-color: transparent; box-shadow: none; }
+}
+@keyframes border-flash-red {
+  0% { border-color: rgba(239, 68, 68, 0.9); box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.5); }
+  100% { border-color: transparent; box-shadow: none; }
+}
+@keyframes severity-pulse {
+  0%, 100% { border-color: rgba(239, 68, 68, 0.4); }
+  50% { border-color: rgba(239, 68, 68, 0.9); }
+}
+.vital-flash-green {
+  animation: border-flash-green 1.2s ease-out forwards;
+}
+.vital-flash-red {
+  animation: border-flash-red 1.2s ease-out forwards;
+}
+.severity-pulse {
+  animation: severity-pulse 2s ease-in-out infinite;
+}
+`;
 
 // ─── helpers ─────────────────────────────────────────────────────────────────
 
@@ -38,6 +65,43 @@ const aLineColors: Record<ALineWaveform, string> = {
   pulsus_alternans: "text-red-400",
 };
 
+// ─── useFlash hook ────────────────────────────────────────────────────────────
+
+/** Returns a flash class ("vital-flash-green" | "vital-flash-red" | "") */
+function useFlash(
+  curr: number,
+  prev: number | undefined,
+  /** positive direction = "good" (e.g. BP going up is good) */
+  higherIsBetter: boolean,
+  threshold = 3
+): string {
+  const [flashClass, setFlashClass] = useState("");
+  const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    if (prev === undefined) return;
+    const diff = curr - prev;
+    if (Math.abs(diff) < threshold) return;
+
+    const improved = higherIsBetter ? diff > 0 : diff < 0;
+    const cls = improved ? "vital-flash-green" : "vital-flash-red";
+
+    // Clear existing timer
+    if (timerRef.current) clearTimeout(timerRef.current);
+    setFlashClass(""); // reset first to re-trigger animation
+
+    // Use rAF trick to force re-render before setting class
+    requestAnimationFrame(() => {
+      requestAnimationFrame(() => {
+        setFlashClass(cls);
+        timerRef.current = setTimeout(() => setFlashClass(""), 1300);
+      });
+    });
+  }, [curr]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  return flashClass;
+}
+
 // ─── VitalCard ────────────────────────────────────────────────────────────────
 
 interface VitalCardProps {
@@ -48,6 +112,7 @@ interface VitalCardProps {
   alert?: boolean;
   trendArrow?: "↑" | "↓" | "→";
   subValue?: string;
+  flashClass?: string;
 }
 
 function VitalCard({
@@ -58,14 +123,17 @@ function VitalCard({
   alert = false,
   trendArrow,
   subValue,
+  flashClass = "",
 }: VitalCardProps) {
   return (
     <div
-      className={`relative rounded-xl p-3 border flex flex-col gap-0.5 ${
+      className={[
+        "relative rounded-xl p-3 border flex flex-col gap-0.5 transition-colors duration-300",
+        flashClass,
         alert
           ? "border-red-500/60 bg-red-950/30 animate-pulse"
-          : "border-white/8 bg-white/5"
-      }`}
+          : "border-white/8 bg-white/5",
+      ].join(" ")}
     >
       <div className="text-[10px] uppercase tracking-widest text-gray-500 font-medium">
         {label}
@@ -99,6 +167,15 @@ export default function ProVitalsPanel({
   prevVitals?: VitalSigns;
 }) {
   const vitals = useProGameStore((s) => s.patient?.vitals);
+  const severity = useProGameStore((s) => s.patient?.severity ?? 0);
+
+  // Flash hooks for each vital
+  const hrFlash = useFlash(vitals?.hr ?? 0, prevVitals?.hr, false /* lower HR = better for tachycardia */, 5);
+  const bpFlash = useFlash(vitals?.sbp ?? 0, prevVitals?.sbp, true /* higher BP = better */, 5);
+  const spo2Flash = useFlash(vitals?.spo2 ?? 0, prevVitals?.spo2, true, 1);
+  const cvpFlash = useFlash(vitals?.cvp ?? 0, prevVitals?.cvp, false /* CVP going down after fluid resolved = context-dependent, skip */, 999);
+  const tempFlash = useFlash(vitals?.temperature ?? 0, prevVitals?.temperature, true /* higher temp = better if hypothermic */, 0.3);
+  const rrFlash = useFlash(vitals?.rr ?? 0, prevVitals?.rr, false, 2);
 
   if (!vitals) {
     return (
@@ -123,92 +200,111 @@ export default function ProVitalsPanel({
   const aLineLabel = aLineLabels[vitals.aLineWaveform] ?? vitals.aLineWaveform;
   const aLineColor = aLineColors[vitals.aLineWaveform] ?? "text-gray-300";
 
+  // Severity-based panel border
+  const severityBorderClass =
+    severity > 70
+      ? "severity-pulse border-red-500/40"
+      : severity > 50
+      ? "border-orange-500/30"
+      : "border-white/8";
+
   return (
-    <div className="rounded-xl border border-white/8 bg-[#001a25] p-4 space-y-3">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
-          <span className="text-[10px] uppercase tracking-widest text-gray-500 font-medium">
-            Vital Signs
+    <>
+      <style>{vitalsPanelStyle}</style>
+      <div
+        className={`rounded-xl border bg-[#001a25] p-4 space-y-3 transition-colors duration-500 ${severityBorderClass}`}
+      >
+        {/* Header */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+            <span className="text-[10px] uppercase tracking-widest text-gray-500 font-medium">
+              Vital Signs
+            </span>
+          </div>
+          <span className="text-[10px] text-gray-600 font-mono">
+            Bedside Monitor
           </span>
         </div>
-        <span className="text-[10px] text-gray-600 font-mono">
-          Bedside Monitor
-        </span>
-      </div>
 
-      {/* Main vitals grid */}
-      <div className="grid grid-cols-2 gap-2">
-        <VitalCard
-          label="HR"
-          value={vitals.hr}
-          unit="bpm"
-          valueColor={hrAlert ? "text-red-400" : vitals.hr > 100 ? "text-yellow-400" : "text-red-300"}
-          alert={hrAlert}
-          trendArrow={hrArrow}
-        />
-        <VitalCard
-          label="BP (A-line)"
-          value={`${vitals.sbp}/${vitals.dbp}`}
-          unit="mmHg"
-          valueColor={bpAlert ? "text-red-400" : vitals.sbp < 100 ? "text-yellow-400" : "text-white"}
-          alert={bpAlert}
-          trendArrow={bpArrow}
-          subValue={`MAP ${mapVal} mmHg`}
-        />
-        <VitalCard
-          label="SpO₂"
-          value={vitals.spo2}
-          unit="%"
-          valueColor={spo2Alert ? "text-red-400" : "text-blue-400"}
-          alert={spo2Alert}
-          trendArrow={spo2Arrow}
-        />
-        <VitalCard
-          label="CVP"
-          value={vitals.cvp}
-          unit="mmHg"
-          valueColor="text-yellow-400"
-          trendArrow={cvpArrow}
-        />
-        <VitalCard
-          label="Temp"
-          value={vitals.temperature.toFixed(1)}
-          unit="°C"
-          valueColor={tempAlert ? "text-red-400" : vitals.temperature < 36.5 ? "text-orange-400" : "text-orange-300"}
-          alert={tempAlert}
-        />
-        <VitalCard
-          label="RR"
-          value={vitals.rr}
-          unit="/min"
-          valueColor={vitals.rr > 25 || vitals.rr < 10 ? "text-orange-400" : "text-gray-300"}
-          trendArrow={rrArrow}
-        />
-      </div>
+        {/* Main vitals grid */}
+        <div className="grid grid-cols-2 gap-2">
+          <VitalCard
+            label="HR"
+            value={vitals.hr}
+            unit="bpm"
+            valueColor={hrAlert ? "text-red-400" : vitals.hr > 100 ? "text-yellow-400" : "text-red-300"}
+            alert={hrAlert}
+            trendArrow={hrArrow}
+            flashClass={hrFlash}
+          />
+          <VitalCard
+            label="BP (A-line)"
+            value={`${vitals.sbp}/${vitals.dbp}`}
+            unit="mmHg"
+            valueColor={bpAlert ? "text-red-400" : vitals.sbp < 100 ? "text-yellow-400" : "text-white"}
+            alert={bpAlert}
+            trendArrow={bpArrow}
+            subValue={`MAP ${mapVal} mmHg`}
+            flashClass={bpFlash}
+          />
+          <VitalCard
+            label="SpO₂"
+            value={vitals.spo2}
+            unit="%"
+            valueColor={spo2Alert ? "text-red-400" : "text-blue-400"}
+            alert={spo2Alert}
+            trendArrow={spo2Arrow}
+            flashClass={spo2Flash}
+          />
+          <VitalCard
+            label="CVP"
+            value={vitals.cvp}
+            unit="mmHg"
+            valueColor="text-yellow-400"
+            trendArrow={cvpArrow}
+            flashClass={cvpFlash}
+          />
+          <VitalCard
+            label="Temp"
+            value={vitals.temperature.toFixed(1)}
+            unit="°C"
+            valueColor={tempAlert ? "text-red-400" : vitals.temperature < 36.5 ? "text-orange-400" : "text-orange-300"}
+            alert={tempAlert}
+            flashClass={tempFlash}
+          />
+          <VitalCard
+            label="RR"
+            value={vitals.rr}
+            unit="/min"
+            valueColor={vitals.rr > 25 || vitals.rr < 10 ? "text-orange-400" : "text-gray-300"}
+            trendArrow={rrArrow}
+            flashClass={rrFlash}
+          />
+        </div>
 
-      {/* A-line waveform */}
-      <div className="rounded-lg border border-white/8 bg-black/30 px-3 py-2 flex items-center justify-between">
-        <span className="text-[10px] uppercase tracking-widest text-gray-500">
-          A-line Waveform
-        </span>
-        <span className={`text-sm font-mono font-semibold ${aLineColor}`}>
-          {aLineLabel}
-        </span>
-      </div>
-
-      {/* etco2 optional */}
-      {vitals.etco2 !== undefined && (
+        {/* A-line waveform */}
         <div className="rounded-lg border border-white/8 bg-black/30 px-3 py-2 flex items-center justify-between">
           <span className="text-[10px] uppercase tracking-widest text-gray-500">
-            EtCO₂
+            A-line Waveform
           </span>
-          <span className="text-sm font-mono font-semibold text-teal-400">
-            {vitals.etco2} mmHg
+          <span className={`text-sm font-mono font-semibold ${aLineColor}`}>
+            {aLineLabel}
           </span>
         </div>
-      )}
-    </div>
+
+        {/* etco2 optional */}
+        {vitals.etco2 !== undefined && (
+          <div className="rounded-lg border border-white/8 bg-black/30 px-3 py-2 flex items-center justify-between">
+            <span className="text-[10px] uppercase tracking-widest text-gray-500">
+              EtCO₂
+            </span>
+            <span className="text-sm font-mono font-semibold text-teal-400">
+              {vitals.etco2} mmHg
+            </span>
+          </div>
+        )}
+      </div>
+    </>
   );
 }
