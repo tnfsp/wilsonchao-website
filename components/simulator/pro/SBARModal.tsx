@@ -57,6 +57,7 @@ type SBARKey = "situation" | "background" | "assessment" | "recommendation";
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function SBARModal() {
+  const activeModal = useProGameStore((s) => s.activeModal);
   const { submitSBAR, endGame, scenario } = useProGameStore();
 
   const [form, setForm] = useState<Record<SBARKey, string>>({
@@ -77,6 +78,8 @@ export default function SBARModal() {
   const allFilled = SECTION_CONFIG.every(
     (s) => form[s.key].trim().length > 15
   );
+
+  if (activeModal !== "sbar") return null;
 
   function handleChange(key: SBARKey, value: string) {
     setForm((prev) => ({ ...prev, [key]: value }));
