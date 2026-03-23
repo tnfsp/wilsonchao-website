@@ -5,9 +5,13 @@
  * - Store 不 import engine 函數（避免循環引用）
  * - Engine 邏輯由 component 層 call 後 dispatch 到 store
  * - Store 提供完整的 setter / updater 讓 engine 可以 dispatch
+ *
+ * 例外：getOrderEffect / getMTPRoundEffect 在 placeOrder / activateMTP 時直接 dispatch，
+ * 以避免需要 component 層中繼，且不造成循環引用（order-engine 不 import store）。
  */
 
 import { create } from "zustand";
+import { getOrderEffect, getMTPRoundEffect } from "@/lib/simulator/engine/order-engine";
 import type {
   SimScenario,
   GamePhase,
@@ -729,6 +733,28 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
           sender: ev.type === "escalation" ? "nurse" : "system",
           isImportant: true,
         });
+      } else if (ev.type === "nurse_call") {
+        // Scripted nurse_call events
+        const content = ev.data?.message ?? `護理師：有事情需要你注意。`;
+        const nurseName = scenario?.nurseProfile?.name ?? "護理師";
+        firedEntries.push({
+          id: nextId("tl"),
+          gameTime: newTime,
+          type: "nurse_message",
+          content: content.startsWith(nurseName) ? content : `${nurseName}：${content}`,
+          sender: "nurse",
+          isImportant: true,
+        });
+      } else if (ev.type === "senior_arrives") {
+        const content = ev.data?.message ?? "（學長到場）";
+        firedEntries.push({
+          id: nextId("tl"),
+          gameTime: newTime,
+          type: "nurse_message",
+          content,
+          sender: "senior",
+          isImportant: true,
+        });
       }
     }
 
@@ -751,6 +777,60 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       firedEvents: [...state.firedEvents, ...newlyFired],
       timeline: newEntries.length > 0 ? [...state.timeline, ...newEntries] : state.timeline,
     }));
+
+    // 處理 order_effect 事件 — 藥物/輸血生效
+    for (const ev of toFire) {
+      if (ev.type === "order_effect") {
+        const nurseName = get().scenario?.nurseProfile?.name ?? "護理師";
+
+        if (ev.data?.isMTP) {
+          // MTP round effect
+          const mtpEffect = getMTPRoundEffect(newTime);
+          get().addActiveEffect(mtpEffect);
+          set((state) => ({
+            mtpState: {
+              ...state.mtpState,
+              roundsDelivered: state.mtpState.roundsDelivered + 1,
+            },
+            timeline: [
+              ...state.timeline,
+              {
+                id: nextId("tl"),
+                gameTime: newTime,
+                type: "nurse_message" as TimelineEntry["type"],
+                content: `${nurseName}：MTP Round ${(ev.data.mtpRound ?? 1)} 血品到了！pRBC 2U + FFP 2U + Plt 1 dose 開始輸注。`,
+                sender: "nurse" as const,
+                isImportant: true,
+              },
+            ],
+          }));
+        } else if (ev.data?.orderId) {
+          const order = get().placedOrders.find((o) => o.id === ev.data.orderId);
+          if (order) {
+            const weight = get().scenario?.patient?.weight ?? 70;
+            const effect = getOrderEffect(order, weight);
+            if (effect) {
+              get().addActiveEffect(effect);
+              // 更新 order 狀態為 in_progress
+              get().updateOrderStatus(ev.data.orderId, "in_progress");
+              // 護理師確認藥物生效
+              set((state) => ({
+                timeline: [
+                  ...state.timeline,
+                  {
+                    id: nextId("tl"),
+                    gameTime: newTime,
+                    type: "nurse_message" as TimelineEntry["type"],
+                    content: `${nurseName}：${order.definition.name} 已開始作用了。`,
+                    sender: "nurse" as const,
+                  },
+                ],
+              }));
+            }
+          }
+        }
+      }
+    }
 
     // 把觸發的事件記錄到 playerActions（供 score-engine 分析）
     if (toFire.length > 0) {
@@ -822,6 +902,19 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       });
     }
 
+    // 如果有 effect（藥物/輸血），排入 order_effect 事件
+    if (params.definition.effect) {
+      const timeToEffect = params.definition.timeToEffect ?? 1;
+      newEvents.push({
+        id: nextId("ev"),
+        triggerAt: clock.currentTime + timeToEffect,
+        type: "order_effect",
+        data: { orderId },
+        fired: false,
+        priority: 1,
+      });
+    }
+
     // Order 下達的 timeline 條目
     const orderEntry: TimelineEntry = {
       id: nextId("tl"),
@@ -868,14 +961,14 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
 
     const activatedAt = clock.currentTime;
 
-    // 排入血品送達事件（每 round 15 分鐘）
+    // 排入血品送達事件（每 round 15 分鐘）— 使用 order_effect type 讓 advanceTime 自動套用 effect
     const bloodDeliveryEvent: PendingEvent = {
       id: nextId("ev_mtp"),
       triggerAt: activatedAt + 15,
-      type: "lab_result",
+      type: "order_effect",
       data: {
         isMTP: true,
-        round: 1,
+        mtpRound: 1,
         products: { prbc: 2, ffp: 2, platelet: 1 },
       },
       fired: false,

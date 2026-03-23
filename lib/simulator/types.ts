@@ -140,7 +140,8 @@ export type GameEventType =
   | "escalation"
   | "senior_arrives"
   | "effect_start"
-  | "effect_end";
+  | "effect_end"
+  | "order_effect";
 
 export interface EventCondition {
   operator: "AND" | "OR";
