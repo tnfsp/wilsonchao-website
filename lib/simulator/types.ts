@@ -326,6 +326,9 @@ export interface GameScore {
   pauseThinkUsed: boolean;
   overall: "excellent" | "good" | "needs_improvement";
   keyLessons: string[];
+  stars: 1 | 2 | 3;
+  totalScore: number;
+  patientDied: boolean;
 }
 
 // ============================================================
@@ -420,6 +423,7 @@ export type GamePhase =
   | "not_started"
   | "playing"
   | "sbar"
+  | "death"
   | "debrief";
 
 export type ModalType =

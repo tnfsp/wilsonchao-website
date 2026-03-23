@@ -29,7 +29,7 @@ function SectionHeader({
 
 // ─── Section 1: Overall Score ─────────────────────────────────────────────────
 
-function OverallScoreSection({ score }: { score: GameScore }) {
+function OverallScoreSection({ score, deathCause }: { score: GameScore; deathCause: string | null }) {
   const config = {
     excellent: {
       emoji: "🏆",
@@ -61,6 +61,32 @@ function OverallScoreSection({ score }: { score: GameScore }) {
 
   return (
     <div className={`rounded-xl border ${cfg.border} ${cfg.bg} p-6 text-center`}>
+      {/* Death banner */}
+      {deathCause && (
+        <div className="rounded-xl border border-red-700/40 bg-red-900/20 p-4 mb-4 text-center">
+          <p className="text-red-400 font-bold">💀 病人死亡</p>
+          <p className="text-slate-400 text-sm mt-1">{deathCause}</p>
+        </div>
+      )}
+
+      {/* Stars */}
+      <div className="flex justify-center gap-2 mb-4">
+        {[1, 2, 3].map((i) => (
+          <span
+            key={i}
+            className={`text-4xl transition-all duration-500 ${
+              i <= (score.stars ?? 1) ? "text-yellow-400 scale-110" : "text-slate-700 scale-90"
+            }`}
+            style={{ animationDelay: `${i * 300}ms` }}
+          >
+            ⭐
+          </span>
+        ))}
+      </div>
+
+      {/* Score number */}
+      <div className="text-gray-500 text-sm mb-3 font-mono">{score.totalScore ?? 0} / 100</div>
+
       <div className="text-6xl mb-3">{cfg.emoji}</div>
       <div className={`text-2xl font-bold ${cfg.color} mb-1`}>{cfg.label}</div>
       <div className="text-gray-400 text-sm">{cfg.sublabel}</div>
@@ -383,7 +409,7 @@ function GuidelinesSection({ guidelines }: { guidelines: string[] }) {
 // ─── Main DebriefPanel ────────────────────────────────────────────────────────
 
 export default function DebriefPanel() {
-  const { score, scenario, timeline, resetGame } = useProGameStore();
+  const { score, scenario, timeline, resetGame, deathCause } = useProGameStore();
 
   if (!score || !scenario) {
     return (
@@ -414,7 +440,7 @@ export default function DebriefPanel() {
         {/* ── Section 1: Overall Score ── */}
         <section>
           <SectionHeader emoji="🏆" title="整體表現" />
-          <OverallScoreSection score={score} />
+          <OverallScoreSection score={score} deathCause={deathCause} />
         </section>
 
         <div className="border-t border-white/8" />
@@ -515,19 +541,19 @@ export default function DebriefPanel() {
         )}
 
         {/* ── Footer buttons ── */}
-        <div className="flex gap-3 justify-center pb-8">
+        <div className="flex gap-3 mt-8 pb-8">
           <button
-            onClick={resetGame}
-            className="flex items-center gap-2 px-6 py-3 rounded-xl bg-teal-700 hover:bg-teal-600 text-white font-semibold text-sm transition-colors shadow-lg shadow-teal-900/40"
+            onClick={() => resetGame()}
+            className="flex-1 py-3 rounded-xl bg-cyan-700 hover:bg-cyan-600 text-white font-bold transition-colors"
           >
-            🔄 再玩一次
+            🔄 重新挑戰
           </button>
-          <a
-            href="/teaching/simulator"
-            className="flex items-center gap-2 px-6 py-3 rounded-xl border border-white/15 hover:bg-white/5 text-gray-300 font-semibold text-sm transition-colors"
+          <button
+            onClick={() => { window.location.href = "/teaching/simulator"; }}
+            className="flex-1 py-3 rounded-xl border border-slate-600 text-slate-300 hover:bg-slate-800 transition-colors"
           >
-            ← 返回情境列表
-          </a>
+            ← 返回列表
+          </button>
         </div>
       </div>
     </div>

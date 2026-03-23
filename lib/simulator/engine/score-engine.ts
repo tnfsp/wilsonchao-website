@@ -547,9 +547,25 @@ export function calculateScore(
       pauseThinkUsed,
       overall,
       keyLessons: [], // placeholder; will be filled below
+      stars: 1,
+      totalScore: numericScore,
+      patientDied: false,
     },
     scenario,
   );
+
+  // Calculate stars
+  const patientDied = false;
+  let stars: 1 | 2 | 3;
+  if (patientDied) {
+    stars = 1;
+  } else if (numericScore >= 80) {
+    stars = 3;
+  } else if (numericScore >= 50) {
+    stars = 2;
+  } else {
+    stars = 1;
+  }
 
   return {
     timeToFirstAction,
@@ -563,6 +579,9 @@ export function calculateScore(
     pauseThinkUsed,
     overall,
     keyLessons,
+    stars,
+    totalScore: numericScore,
+    patientDied,
   };
 }
 

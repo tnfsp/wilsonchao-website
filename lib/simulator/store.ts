@@ -84,6 +84,9 @@ export interface ProGameStore {
   // Score
   score: GameScore | null;
 
+  // Death
+  deathCause: string | null;
+
   // UI
   activeModal: ModalType;
 
@@ -140,6 +143,9 @@ export interface ProGameStore {
 
   /** 重置所有狀態 */
   resetGame: () => void;
+
+  /** 觸發病人死亡（由外部 tick 呼叫） */
+  triggerDeath: (cause: string) => void;
 
   /** 檢查並更新 guidance highlight */
   checkGuidance: () => void;
@@ -240,6 +246,7 @@ const initialState = {
   pauseThinkUsed: false,
   sbarReport: null as Record<string, string> | null,
   score: null as GameScore | null,
+  deathCause: null as string | null,
   activeModal: null as ModalType,
   guidanceMode: true,
   guidanceHighlight: null as string | null,
@@ -337,6 +344,9 @@ function computeBasicScore(
       pauseThinkUsed,
       overall: "needs_improvement",
       keyLessons: [],
+      stars: 1 as 1 | 2 | 3,
+      totalScore: 0,
+      patientDied: !!state.deathCause,
     };
   }
 
@@ -409,6 +419,41 @@ function computeBasicScore(
   // 9. Key lessons
   const keyLessons = scenario.debrief.keyPoints.slice(0, 3);
 
+  // 10. Total score (0-100) and stars
+  const patientDied = !!state.deathCause;
+  let totalScore = 0;
+  // Base: critical actions completion (50 pts)
+  const totalCritical = criticalActions.filter((ca) => ca.critical).length;
+  const metCritical = criticalActions.filter((ca) => ca.critical && ca.met).length;
+  const criticalScore = totalCritical > 0 ? Math.round((metCritical / totalCritical) * 50) : 50;
+  totalScore += criticalScore;
+  // SBAR score (25 pts)
+  totalScore += Math.round((sbar.completeness / 100) * 15);
+  totalScore += sbar.quantitative ? 5 : 0;
+  totalScore += sbar.anticipatory ? 5 : 0;
+  // Escalation (15 pts)
+  if (escalationTiming === "appropriate") totalScore += 15;
+  else if (escalationTiming === "early") totalScore += 10;
+  else if (escalationTiming === "late") totalScore += 5;
+  // Lethal triad (10 pts)
+  if (lethalTriadManaged) totalScore += 10;
+  // Deductions
+  totalScore -= harmfulOrders.length * 10;
+  totalScore -= hintsUsed * 5;
+  totalScore = Math.max(0, Math.min(100, totalScore));
+
+  // Stars
+  let stars: 1 | 2 | 3;
+  if (patientDied) {
+    stars = 1;
+  } else if (totalScore >= 80) {
+    stars = 3;
+  } else if (totalScore >= 50) {
+    stars = 2;
+  } else {
+    stars = 1;
+  }
+
   return {
     timeToFirstAction,
     correctDiagnosis,
@@ -421,6 +466,9 @@ function computeBasicScore(
     pauseThinkUsed,
     overall,
     keyLessons,
+    stars,
+    totalScore,
+    patientDied,
   };
 }
 
@@ -538,6 +586,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         pauseThinkUsed: false,
         sbarReport: null,
         score: null,
+        deathCause: null,
         activeModal: null,
       });
     } catch (err) {
@@ -1030,6 +1079,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
   endGame: () => {
     const state = get();
     if (state.phase === "debrief") return;
+    // Allow transition from death phase to debrief
 
     // 停止時鐘
     const finalClock: GameClock = { ...state.clock, isPaused: true };
@@ -1054,6 +1104,33 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       clock: finalClock,
       score,
       timeline: [...s.timeline, debriefEntry],
+      activeModal: null,
+    }));
+  },
+
+  // ----------------------------------------------------------
+  // triggerDeath
+  // ----------------------------------------------------------
+  triggerDeath: (cause: string) => {
+    const state = get();
+    if (state.phase !== "playing") return;
+
+    const finalClock: GameClock = { ...state.clock, isPaused: true };
+
+    const deathEntry: TimelineEntry = {
+      id: nextId("tl"),
+      gameTime: finalClock.currentTime,
+      type: "system_event",
+      content: "💀 病人死亡 — " + cause,
+      sender: "system",
+      isImportant: true,
+    };
+
+    set((s) => ({
+      phase: "death",
+      clock: finalClock,
+      deathCause: cause,
+      timeline: [...s.timeline, deathEntry],
       activeModal: null,
     }));
   },

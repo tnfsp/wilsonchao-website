@@ -8,6 +8,7 @@ import { updatePatientState } from "@/lib/simulator/engine/patient-engine";
 // Pro components
 import SBARModal from "@/components/simulator/pro/SBARModal";
 import DebriefPanel from "@/components/simulator/pro/DebriefPanel";
+import DeathScreen from "@/components/simulator/pro/DeathScreen";
 import ProGameLayout from "@/components/simulator/pro/ProGameLayout";
 import ProVitalsPanel from "@/components/simulator/pro/ProVitalsPanel";
 import ChestTubePanel from "@/components/simulator/pro/ChestTubePanel";
@@ -190,6 +191,24 @@ function useGameTick() {
     });
     
     useProGameStore.setState({ patient: newPatient });
+
+    // Death check after patient update
+    const vitals = newPatient.vitals;
+    const severity = newPatient.severity ?? 0;
+    if (
+      severity >= 95 ||
+      vitals.map < 30 ||
+      vitals.hr > 180 ||
+      vitals.hr < 30
+    ) {
+      const cause =
+        severity >= 95
+          ? "病人因持續出血未控制，血流動力學衰竭。"
+          : vitals.map < 30
+          ? "MAP 過低，器官灌流不足導致多重器官衰竭。"
+          : "致死性心律不整。";
+      useProGameStore.getState().triggerDeath(cause);
+    }
   }, []);
 
   // Expose tickPatient globally so action handlers can call it
@@ -326,6 +345,10 @@ export default function ProPageClient({ id }: ProPageClientProps) {
   }
 
   // ── Phase routing ──
+  if (phase === "death") {
+    return <DeathScreen />;
+  }
+
   if (phase === "debrief") {
     return <DebriefPanel />;
   }
