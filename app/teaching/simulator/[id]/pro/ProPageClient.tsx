@@ -13,6 +13,14 @@ import ChestTubePanel from "@/components/simulator/pro/ChestTubePanel";
 import ChatTimeline from "@/components/simulator/pro/ChatTimeline";
 import ActionBar from "@/components/simulator/pro/ActionBar";
 import MessageInput from "@/components/simulator/pro/MessageInput";
+// Modals
+import OrderModal from "@/components/simulator/pro/OrderModal";
+import LabOrderModal from "@/components/simulator/pro/LabOrderModal";
+import PEModal from "@/components/simulator/pro/PEModal";
+import POCUSModal from "@/components/simulator/pro/POCUSModal";
+import ImagingModal from "@/components/simulator/pro/ImagingModal";
+import ConsultModal from "@/components/simulator/pro/ConsultModal";
+import PauseThinkModal from "@/components/simulator/pro/PauseThinkModal";
 
 // ─── Difficulty badge ─────────────────────────────────────────────────────────
 
@@ -166,23 +174,33 @@ function InfoRow({
 
 function GameScreen() {
   return (
-    <ProGameLayout
-      leftPanel={
-        <>
-          <ProVitalsPanel />
-          <ChestTubePanel />
-        </>
-      }
-      rightPanel={
-        <div className="flex flex-col h-full">
-          <div className="flex-1 overflow-hidden">
-            <ChatTimeline />
+    <>
+      <ProGameLayout
+        leftPanel={
+          <>
+            <ProVitalsPanel />
+            <ChestTubePanel />
+          </>
+        }
+        rightPanel={
+          <div className="flex flex-col h-full">
+            <div className="flex-1 overflow-hidden">
+              <ChatTimeline />
+            </div>
+            <MessageInput />
           </div>
-          <MessageInput />
-        </div>
-      }
-      actionBar={<ActionBar />}
-    />
+        }
+        actionBar={<ActionBar />}
+      />
+      {/* Modals — rendered as overlays, controlled by store.activeModal */}
+      <OrderModal />
+      <LabOrderModal />
+      <PEModal />
+      <POCUSModal />
+      <ImagingModal />
+      <ConsultModal />
+      <PauseThinkModal />
+    </>
   );
 }
 
