@@ -47,8 +47,12 @@ export function PEModal() {
     if (!area) return;
 
     // Add to timeline
+    // PE examination takes ~2 game-minutes
+    const actionAdvance = useProGameStore.getState().actionAdvance;
+    actionAdvance(2);
+
     addTimelineEntry({
-      gameTime: clock.currentTime,
+      gameTime: useProGameStore.getState().clock.currentTime,
       type: "player_action",
       content: `🔬 你做了理學檢查 — ${area.label}`,
       sender: "player",

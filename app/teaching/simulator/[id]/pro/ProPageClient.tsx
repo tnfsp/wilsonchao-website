@@ -173,32 +173,39 @@ function InfoRow({
 
 // ─── Auto-tick: advance game time every 5 seconds by 1 minute ────────────────
 
+/** Slow background tick: 1 game-minute every 15 real-seconds.
+ *  Pauses when modal is open. Main time progression comes from actions. */
 function useGameTick() {
   const phase = useProGameStore((s) => s.phase);
   const activeModal = useProGameStore((s) => s.activeModal);
   const advanceTime = useProGameStore((s) => s.advanceTime);
 
-  const tickPatient = useCallback(() => {
+  const tickPatient = useCallback((minutes = 1) => {
     const state = useProGameStore.getState();
     if (!state.patient || state.phase !== "playing") return;
     
     const newPatient = updatePatientState(state.patient, {
-      minutesPassed: 1,
-      currentGameMinutes: state.clock.currentTime + 1,
+      minutesPassed: minutes,
+      currentGameMinutes: state.clock.currentTime + minutes,
     });
     
     useProGameStore.setState({ patient: newPatient });
   }, []);
 
+  // Expose tickPatient globally so action handlers can call it
+  useEffect(() => {
+    (window as unknown as Record<string, unknown>).__tickPatient = tickPatient;
+    return () => { delete (window as unknown as Record<string, unknown>).__tickPatient; };
+  }, [tickPatient]);
+
   useEffect(() => {
     if (phase !== "playing") return;
-    // Pause auto-tick when a modal is open (player is thinking/acting)
     if (activeModal) return;
 
     const interval = setInterval(() => {
       advanceTime(1);
-      tickPatient();
-    }, 5000); // 1 game-minute every 5 real-seconds
+      tickPatient(1);
+    }, 15000); // 1 game-minute every 15 real-seconds (slow background)
 
     return () => clearInterval(interval);
   }, [phase, activeModal, advanceTime, tickPatient]);

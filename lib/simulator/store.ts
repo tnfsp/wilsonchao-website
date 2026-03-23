@@ -107,6 +107,9 @@ export interface ProGameStore {
   /** 新增 timeline 條目 */
   addTimelineEntry: (entry: Omit<TimelineEntry, "id">) => void;
 
+  /** 執行動作並推進遊戲時間（事件驅動時間引擎核心） */
+  actionAdvance: (minutes: number) => void;
+
   /** 更新 patient vitals（engine dispatch 用） */
   updateVitals: (changes: Partial<VitalSigns>) => void;
 
@@ -777,6 +780,9 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       playerActions: [...state.playerActions, actionLabel],
     }));
 
+    // Placing an order takes ~1 game-minute
+    get().actionAdvance(1);
+
     return {
       success: true,
       orderId,
@@ -851,6 +857,20 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
   },
 
   // ----------------------------------------------------------
+  // actionAdvance — advance time + trigger events (patient update done by useGameTick)
+  // Called by modals/actions to simulate time passing during an action.
+  // ----------------------------------------------------------
+  actionAdvance: (minutes: number) => {
+    if (minutes <= 0) return;
+    get().advanceTime(minutes);
+    // Patient update is handled by the component-level tickPatient via window.__tickPatient
+    const tick = (window as unknown as Record<string, unknown>).__tickPatient;
+    if (typeof tick === "function") {
+      (tick as (m: number) => void)(minutes);
+    }
+  },
+
+  // ----------------------------------------------------------
   // updateVitals
   // ----------------------------------------------------------
   updateVitals: (changes: Partial<VitalSigns>) => {
@@ -921,6 +941,9 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       timeline: [...state.timeline, playerEntry],
       playerActions: [...state.playerActions, `message:${text.slice(0, 50)}`],
     }));
+
+    // Talking to nurse takes ~1 game-minute
+    get().actionAdvance(1);
   },
 
   // ----------------------------------------------------------

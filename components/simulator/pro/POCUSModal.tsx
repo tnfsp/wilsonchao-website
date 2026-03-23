@@ -63,8 +63,11 @@ export function POCUSModal() {
     const opt = POCUS_OPTIONS.find((o) => o.key === key);
     if (!opt) return;
 
+    // POCUS takes ~3 game-minutes
+    useProGameStore.getState().actionAdvance(3);
+
     addTimelineEntry({
-      gameTime: clock.currentTime,
+      gameTime: useProGameStore.getState().clock.currentTime,
       type: "player_action",
       content: `🫀 你做了 POCUS — ${opt.label}`,
       sender: "player",

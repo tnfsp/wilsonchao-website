@@ -191,6 +191,23 @@ export default function ActionBar() {
       onClick: () => openModal("pause_think"),
       disabled: !isPlaying,
     },
+    {
+      icon: "⏩",
+      label: "快轉5分",
+      onClick: () => {
+        const store = useProGameStore.getState();
+        store.actionAdvance(5);
+      },
+      disabled: !isPlaying,
+      variant: "muted" as const,
+    },
+    {
+      icon: "📋",
+      label: "SBAR",
+      onClick: () => openModal("sbar"),
+      disabled: !isPlaying,
+      variant: "default" as const,
+    },
   ];
 
   return (
@@ -211,7 +228,7 @@ export default function ActionBar() {
         className="w-full px-2 py-2 border-t border-slate-700/60"
         style={{ background: "#0d1f3c" }}
       >
-        <div className="grid grid-cols-5 sm:grid-cols-5 gap-1.5 md:gap-2">
+        <div className="grid grid-cols-4 sm:grid-cols-6 gap-1.5 md:gap-2">
           {buttons.map((btn, idx) => (
             <ActionBtn key={idx} btn={btn} />
           ))}
