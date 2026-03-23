@@ -252,7 +252,7 @@ const initialState = {
   score: null as GameScore | null,
   deathCause: null as string | null,
   activeModal: null as ModalType,
-  guidanceMode: true,
+  guidanceMode: false,
   guidanceHighlight: null as string | null,
 };
 

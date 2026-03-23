@@ -106,7 +106,7 @@ export default function SBARModal() {
         <div className="shrink-0 px-6 py-5 border-b border-white/10">
           <div className="flex items-center gap-3">
             <span className="text-2xl">📝</span>
-            <div>
+            <div className="flex-1">
               <h2 className="text-white font-bold text-xl tracking-tight">
                 SBAR 交班報告
               </h2>
@@ -114,6 +114,13 @@ export default function SBARModal() {
                 學長到了。用 SBAR 格式，清楚地告訴他病人狀況。
               </p>
             </div>
+            <button
+              onClick={() => useProGameStore.getState().closeModal()}
+              className="shrink-0 w-8 h-8 flex items-center justify-center rounded-lg text-slate-400 hover:text-white hover:bg-slate-700 transition-colors"
+              title="關閉"
+            >
+              ✕
+            </button>
           </div>
 
           {/* Patient tag */}
