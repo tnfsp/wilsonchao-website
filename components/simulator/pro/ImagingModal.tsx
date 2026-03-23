@@ -49,6 +49,8 @@ const IMAGING_KEY_MAP: Record<ImagingType, string> = {
 // ── Component ────────────────────────────────────────────────
 
 export function ImagingModal() {
+  const activeModal = useProGameStore((s) => s.activeModal);
+  if (activeModal !== "imaging") return null;
   const { scenario, clock, closeModal, addTimelineEntry, addPendingEvent, advanceTime } =
     useProGameStore();
 

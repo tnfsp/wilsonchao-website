@@ -46,6 +46,8 @@ const CONSULT_OPTIONS: ConsultOption[] = [
 // ── Component ────────────────────────────────────────────────
 
 export function ConsultModal() {
+  const activeModal = useProGameStore((s) => s.activeModal);
+  if (activeModal !== "consult") return null;
   const { scenario, clock, closeModal, addTimelineEntry, advanceTime, addPendingEvent } =
     useProGameStore();
 

@@ -43,6 +43,8 @@ const POCUS_OPTIONS: POCUSOption[] = [
 // ── Component ────────────────────────────────────────────────
 
 export function POCUSModal() {
+  const activeModal = useProGameStore((s) => s.activeModal);
+  if (activeModal !== "pocus") return null;
   const { scenario, clock, closeModal, addTimelineEntry } = useProGameStore();
   const [selected, setSelected] = useState<string | null>(null);
   const [showResult, setShowResult] = useState(false);
