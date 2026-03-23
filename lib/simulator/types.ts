@@ -64,6 +64,7 @@ export interface IOBalance {
 
 export interface PatientState {
   vitals: VitalSigns;
+  baselineVitals: VitalSigns;   // scenario initial vitals (never modified)
   chestTube: ChestTubeState;
   pathology: Pathology;
   severity: number;             // 0-100

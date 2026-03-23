@@ -588,9 +588,9 @@ export function updatePatientState(
     Math.min(100, current.severity + severityDelta)
   );
 
-  // 6. 計算 vitals
+  // 6. 計算 vitals（從 baseline 開始，避免 modifier 雙重累積）
   const newVitals = computeVitals(
-    current.vitals,
+    current.baselineVitals,
     current.pathology,
     newSeverity,
     effects,

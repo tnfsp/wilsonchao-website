@@ -476,6 +476,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       // 初始化 patient state 從 scenario
       const patient: PatientState = {
         vitals: { ...scenario.initialVitals },
+        baselineVitals: { ...scenario.initialVitals },
         chestTube: { ...scenario.initialChestTube },
         pathology: scenario.pathology,
         severity: 30, // 預設值，會由 patient-engine 計算
