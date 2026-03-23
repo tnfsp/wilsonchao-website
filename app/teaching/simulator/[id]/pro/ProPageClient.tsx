@@ -47,7 +47,7 @@ function IntroScreen({ scenario }: { scenario: SimScenario }) {
 
   return (
     <div
-      className="min-h-screen flex items-center justify-center p-6"
+      className="fixed inset-0 z-50 min-h-screen flex items-center justify-center p-6 overflow-y-auto"
       style={{ background: "#001219" }}
     >
       <div className="max-w-lg w-full">
@@ -170,9 +170,30 @@ function InfoRow({
   );
 }
 
+// ─── Auto-tick: advance game time every 5 seconds by 1 minute ────────────────
+
+function useGameTick() {
+  const phase = useProGameStore((s) => s.phase);
+  const activeModal = useProGameStore((s) => s.activeModal);
+  const advanceTime = useProGameStore((s) => s.advanceTime);
+
+  useEffect(() => {
+    if (phase !== "playing") return;
+    // Pause auto-tick when a modal is open (player is thinking/acting)
+    if (activeModal) return;
+
+    const interval = setInterval(() => {
+      advanceTime(1);
+    }, 5000); // 1 game-minute every 5 real-seconds
+
+    return () => clearInterval(interval);
+  }, [phase, activeModal, advanceTime]);
+}
+
 // ─── Game layout wrapper ──────────────────────────────────────────────────────
 
 function GameScreen() {
+  useGameTick();
   return (
     <>
       <ProGameLayout
@@ -209,7 +230,7 @@ function GameScreen() {
 function LoadingScreen() {
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center gap-4"
+      className="fixed inset-0 z-50 min-h-screen flex flex-col items-center justify-center gap-4"
       style={{ background: "#001219" }}
     >
       <div className="w-10 h-10 rounded-full border-2 border-teal-500 border-t-transparent animate-spin" />
@@ -223,7 +244,7 @@ function LoadingScreen() {
 function ErrorScreen({ error }: { error: string }) {
   return (
     <div
-      className="min-h-screen flex flex-col items-center justify-center gap-4 p-6"
+      className="fixed inset-0 z-50 min-h-screen flex flex-col items-center justify-center gap-4 p-6"
       style={{ background: "#001219" }}
     >
       <div className="text-4xl">⚠️</div>

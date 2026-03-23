@@ -31,6 +31,21 @@ import type {
 } from "./types";
 
 // ============================================================
+// Helpers
+// ============================================================
+
+/** Format elapsed game-minutes + startHour into "HH:MM AM" */
+function formatGameTime(elapsedMinutes: number, startHour = 2): string {
+  const totalMin = startHour * 60 + elapsedMinutes;
+  const wrapped = ((totalMin % 1440) + 1440) % 1440;
+  const h = Math.floor(wrapped / 60);
+  const m = wrapped % 60;
+  const ampm = h < 12 ? "AM" : "PM";
+  const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
+  return `${String(h12).padStart(2, "0")}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
+// ============================================================
 // Store Interface
 // ============================================================
 
@@ -583,20 +598,87 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     );
     const newlyFired = updatedPending.filter((e) => nowFiredIds.has(e.id));
 
-    // 時間推進的 timeline 條目
-    const timeEntry: TimelineEntry = {
-      id: nextId("tl"),
-      gameTime: newTime,
-      type: "system_event",
-      content: `⏰ ${minutes} 分鐘後...`,
-      sender: "system",
-    };
+    // Build timeline entries for fired events
+    const firedEntries: TimelineEntry[] = [];
+    const scenario = get().scenario;
+    const placedOrders = get().placedOrders;
+
+    for (const ev of toFire) {
+      if (ev.type === "lab_result" && ev.data?.orderId) {
+        // Find the order and its lab panel results
+        const order = placedOrders.find((o) => o.id === ev.data.orderId);
+        if (order && scenario) {
+          // Find matching lab panel in scenario
+          const labKey = Object.keys(scenario.availableLabs).find((k) => {
+            const panel = scenario.availableLabs[k];
+            return panel.name === order.definition.name || 
+                   order.definition.name.toLowerCase().includes(panel.id);
+          });
+          const labPanel = labKey ? scenario.availableLabs[labKey] : null;
+          
+          if (labPanel) {
+            // Format lab results for timeline
+            const resultLines = Object.entries(labPanel.results)
+              .map(([key, r]) => {
+                const flagStr = r.flag === "critical" ? " 🔴" : r.flag === "H" ? " ↑" : r.flag === "L" ? " ↓" : "";
+                return `${key.toUpperCase()}: ${r.value} ${r.unit}${flagStr}`;
+              })
+              .join(" | ");
+            
+            firedEntries.push({
+              id: nextId("tl"),
+              gameTime: newTime,
+              type: "lab_result" as TimelineEntry["type"],
+              content: `📊 Lab 回報：${order.definition.name}\n${resultLines}`,
+              sender: "system",
+              isImportant: true,
+            });
+
+            // Nurse delivers results
+            const nurseName = scenario.nurseProfile.name ?? "護理師";
+            firedEntries.push({
+              id: nextId("tl"),
+              gameTime: newTime,
+              type: "nurse_message",
+              content: `${nurseName}：學長，${ev.data.orderName ?? order.definition.name} 結果出來了。`,
+              sender: "nurse",
+            });
+          }
+        }
+      } else if (ev.type === "vitals_change" || ev.type === "escalation" || ev.type === "chest_tube_change") {
+        // Scenario scripted events
+        const content = ev.data?.message ?? ev.data?.content ?? `⚠️ 事件觸發：${ev.type}`;
+        firedEntries.push({
+          id: nextId("tl"),
+          gameTime: newTime,
+          type: ev.type === "escalation" ? "nurse_message" : "system_event",
+          content,
+          sender: ev.type === "escalation" ? "nurse" : "system",
+          isImportant: true,
+        });
+      }
+    }
+
+    // Only add "time passed" entry at 5-minute intervals or when events fire
+    const newEntries: TimelineEntry[] = [];
+    const prevRound5 = Math.floor(clock.currentTime / 5);
+    const newRound5 = Math.floor(newTime / 5);
+    if (newRound5 > prevRound5 || toFire.length > 0) {
+      newEntries.push({
+        id: nextId("tl"),
+        gameTime: newTime,
+        type: "system_event",
+        content: `⏰ ${formatGameTime(newTime, clock.startHour)}`,
+        sender: "system",
+      });
+    }
+    newEntries.push(...firedEntries);
 
     set((state) => ({
       clock: updatedClock,
       pendingEvents: updatedPending,
       firedEvents: [...state.firedEvents, ...newlyFired],
-      timeline: [...state.timeline, timeEntry],
+      timeline: newEntries.length > 0 ? [...state.timeline, ...newEntries] : state.timeline,
     }));
 
     // 把觸發的事件記錄到 playerActions（供 score-engine 分析）
