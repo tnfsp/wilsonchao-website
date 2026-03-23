@@ -82,7 +82,7 @@ export const prbc4u: OrderDefinition = {
     min: 4,
     max: 4,
     warnAbove: 4,
-    warnMessage: "學長，一次輸 4U pRBC，確認已 crossmatch 且備好 FFP 補凝血因子嗎？iCa 也要追喔。",
+    warnMessage: "醫師，一次輸 4U pRBC，確認已 crossmatch 且備好 FFP 補凝血因子嗎？iCa 也要追喔。",
     interactions: [
       {
         withDrug: "calcium_gluconate",
@@ -143,7 +143,7 @@ export const ffp4u: OrderDefinition = {
     min: 4,
     max: 4,
     warnAbove: 4,
-    warnMessage: "學長，4U FFP 量不少，確認凝血確實需要嗎？（INR > 1.5 or active bleeding）",
+    warnMessage: "醫師，4U FFP 量不少，確認凝血確實需要嗎？（INR > 1.5 or active bleeding）",
   },
   effect: {
     type: "blood_product",
@@ -195,7 +195,7 @@ export const platelet2dose: OrderDefinition = {
     min: 2,
     max: 2,
     warnAbove: 2,
-    warnMessage: "學長，2 doses Platelet，確認 Plt < 50K 且有 active bleeding 嗎？",
+    warnMessage: "醫師，2 doses Platelet，確認 Plt < 50K 且有 active bleeding 嗎？",
   },
   effect: {
     type: "blood_product",
@@ -245,7 +245,7 @@ export const cryo10u: OrderDefinition = {
     min: 10,
     max: 10,
     warnAbove: 10,
-    warnMessage: "學長，10U Cryo 量很大，確認 Fibrinogen < 150 mg/dL 且有 active bleeding 嗎？",
+    warnMessage: "醫師，10U Cryo 量很大，確認 Fibrinogen < 150 mg/dL 且有 active bleeding 嗎？",
   },
   effect: {
     type: "blood_product",

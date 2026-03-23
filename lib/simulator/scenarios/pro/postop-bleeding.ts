@@ -86,7 +86,7 @@ const events: ScriptedEvent[] = [
     triggerTime: 0,
     type: "nurse_call",
     message:
-      "學長，bed 3 的 Lin 伯伯，chest tube 突然出很多，血壓有點在掉，你要不要先來看一下？",
+      "醫師，bed 3 的 Lin 伯伯，chest tube 突然出很多，血壓有點在掉，你要不要先來看一下？",
     severityChange: 0,
   },
 
@@ -96,7 +96,7 @@ const events: ScriptedEvent[] = [
     triggerTime: 5,
     type: "nurse_call",
     message:
-      "學長，血壓又掉了一點，chest tube 出的是鮮紅色的，有看到一些血塊，量還在增加。",
+      "醫師，血壓又掉了一點，chest tube 出的是鮮紅色的，有看到一些血塊，量還在增加。",
     vitalChanges: {
       hr: 108,
       sbp: 95,
@@ -121,7 +121,7 @@ const events: ScriptedEvent[] = [
     id: "evt-10-lab-result",
     triggerTime: 10,
     type: "lab_result",
-    message: "學長，CBC 和 Coag 結果出來了。",
+    message: "醫師，CBC 和 Coag 結果出來了。",
     newLabResults: {
       cbc_t1: {
         hb:  { value: 8.2,  unit: "g/dL",  normal: "13.5-17.5", flag: "L" },
@@ -145,7 +145,7 @@ const events: ScriptedEvent[] = [
     triggerCondition: conditionHighSeverityNoSenior,
     type: "nurse_call",
     message:
-      "學長，血壓掉到 85 了，CT 累計快到 1100cc，量一直沒有減少。我覺得⋯要不要通知 VS？",
+      "醫師，血壓掉到 85 了，CT 累計快到 1100cc，量一直沒有減少。我覺得⋯要不要通知 VS？",
     vitalChanges: {
       hr: 118,
       sbp: 85,
@@ -192,7 +192,7 @@ const events: ScriptedEvent[] = [
     triggerTime: 18,
     triggerCondition: conditionSecondLabTracked,
     type: "lab_result",
-    message: "學長，追的 CBC 第二次結果出來了。",
+    message: "醫師，追的 CBC 第二次結果出來了。",
     newLabResults: {
       cbc_t2: {
         hb:  { value: 7.1, unit: "g/dL",  normal: "13.5-17.5", flag: "critical" },
@@ -210,7 +210,7 @@ const events: ScriptedEvent[] = [
     triggerCondition: conditionTransfusionNoiCa,
     type: "nurse_call",
     message:
-      "學長，輸了不少血了，要不要追一下 ionized calcium？輸太多有時候 iCa 會掉。",
+      "醫師，輸了不少血了，要不要追一下 ionized calcium？輸太多有時候 iCa 會掉。",
   },
 
   // ── 20:00 ── 學長到場

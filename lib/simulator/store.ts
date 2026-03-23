@@ -281,7 +281,7 @@ function validateOrderGuardRail(
       rejected: true,
       rejectMessage:
         guardRail.rejectMessage ??
-        `學長，這個劑量太高了（>${guardRail.rejectAbove}），藥局不會配，要不要重開？`,
+        `醫師，這個劑量太高了（>${guardRail.rejectAbove}），藥局不會配，要不要重開？`,
     };
   }
 
@@ -289,7 +289,7 @@ function validateOrderGuardRail(
     return {
       warning:
         guardRail.warnMessage ??
-        `學長，這個劑量有點高（>${guardRail.warnAbove}），確定嗎？`,
+        `醫師，這個劑量有點高（>${guardRail.warnAbove}），確定嗎？`,
     };
   }
 
@@ -629,7 +629,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       id: nextId("tl"),
       gameTime: 0,
       type: "nurse_message",
-      content: scenario.nurseProfile.name + "：" + (scenario.events[0]?.message ?? "學長，病人狀況需要您來看一下。"),
+      content: scenario.nurseProfile.name + "：" + (scenario.events[0]?.message ?? "醫師，病人狀況需要您來看一下。"),
       sender: "nurse",
       isImportant: true,
     };
@@ -717,7 +717,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
               id: nextId("tl"),
               gameTime: newTime,
               type: "nurse_message",
-              content: `${nurseName}：學長，${ev.data.orderName ?? order.definition.name} 結果出來了。`,
+              content: `${nurseName}：醫師，${ev.data.orderName ?? order.definition.name} 結果出來了。`,
               sender: "nurse",
             });
           }
@@ -858,7 +858,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         id: nextId("tl"),
         gameTime: clock.currentTime,
         type: "nurse_message",
-        content: guardResult.rejectMessage ?? "學長，這個 order 無法執行。",
+        content: guardResult.rejectMessage ?? "醫師，這個 order 無法執行。",
         sender: "nurse",
         isImportant: true,
       };

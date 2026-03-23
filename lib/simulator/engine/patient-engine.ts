@@ -157,7 +157,8 @@ export function removeExpiredEffects(
   const expired: ActiveEffect[] = [];
 
   for (const effect of activeEffects) {
-    if (effect.startTime + effect.duration <= currentGameMinutes) {
+    // duration === 0 means continuous (e.g. vasopressor drip) — never expires
+    if (effect.duration > 0 && effect.startTime + effect.duration <= currentGameMinutes) {
       expired.push(effect);
     } else {
       updated.push(effect);

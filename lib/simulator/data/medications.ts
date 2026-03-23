@@ -22,8 +22,8 @@ export const norepinephrine: OrderDefinition = {
     max: 1.0,
     warnAbove: 0.3,
     rejectAbove: 1.0,
-    warnMessage: "學長，Norepinephrine 已到 0.3 mcg/kg/min，這個劑量有點高欸，確定要繼續嗎？",
-    rejectMessage: "學長，這個劑量超過 1.0 mcg/kg/min 太高了，藥局不會配，要不要重開？",
+    warnMessage: "醫師，Norepinephrine 已到 0.3 mcg/kg/min，這個劑量有點高欸，確定要繼續嗎？",
+    rejectMessage: "醫師，這個劑量超過 1.0 mcg/kg/min 太高了，藥局不會配，要不要重開？",
     interactions: [
       {
         withDrug: "epinephrine",
@@ -55,8 +55,8 @@ export const epinephrine: OrderDefinition = {
     max: 0.5,
     warnAbove: 0.2,
     rejectAbove: 0.5,
-    warnMessage: "學長，Epinephrine 已到 0.2 mcg/kg/min，注意心律不整風險，確定嗎？",
-    rejectMessage: "學長，Epinephrine 超過 0.5 mcg/kg/min 太高，不建議開這個劑量。",
+    warnMessage: "醫師，Epinephrine 已到 0.2 mcg/kg/min，注意心律不整風險，確定嗎？",
+    rejectMessage: "醫師，Epinephrine 超過 0.5 mcg/kg/min 太高，不建議開這個劑量。",
     interactions: [
       {
         withDrug: "norepinephrine",
@@ -88,8 +88,8 @@ export const vasopressin: OrderDefinition = {
     max: 0.06,
     warnAbove: 0.04,
     rejectAbove: 0.06,
-    warnMessage: "學長，Vasopressin 超過 0.04 units/min 是 off-label 高劑量，確定嗎？",
-    rejectMessage: "學長，Vasopressin 不能超過 0.06 units/min，會有嚴重缺血風險。",
+    warnMessage: "醫師，Vasopressin 超過 0.04 units/min 是 off-label 高劑量，確定嗎？",
+    rejectMessage: "醫師，Vasopressin 不能超過 0.06 units/min，會有嚴重缺血風險。",
   },
   effect: {
     type: "vasopressor",
@@ -114,8 +114,8 @@ export const dopamine: OrderDefinition = {
     max: 25,
     warnAbove: 15,
     rejectAbove: 25,
-    warnMessage: "學長，Dopamine > 15 mcg/kg/min 心律不整風險明顯增加，確定嗎？",
-    rejectMessage: "學長，Dopamine 超過 25 mcg/kg/min 太高，要不要重開？",
+    warnMessage: "醫師，Dopamine > 15 mcg/kg/min 心律不整風險明顯增加，確定嗎？",
+    rejectMessage: "醫師，Dopamine 超過 25 mcg/kg/min 太高，要不要重開？",
   },
   effect: {
     type: "vasopressor",
@@ -144,8 +144,8 @@ export const dobutamine: OrderDefinition = {
     max: 25,
     warnAbove: 15,
     rejectAbove: 25,
-    warnMessage: "學長，Dobutamine > 15 mcg/kg/min 可能誘發心律不整，確定嗎？",
-    rejectMessage: "學長，Dobutamine 超過 25 mcg/kg/min 超出一般範圍，不開。",
+    warnMessage: "醫師，Dobutamine > 15 mcg/kg/min 可能誘發心律不整，確定嗎？",
+    rejectMessage: "醫師，Dobutamine 超過 25 mcg/kg/min 超出一般範圍，不開。",
     interactions: [
       {
         withDrug: "milrinone",
@@ -177,8 +177,8 @@ export const milrinone: OrderDefinition = {
     max: 1.0,
     warnAbove: 0.5,
     rejectAbove: 1.0,
-    warnMessage: "學長，Milrinone > 0.5 mcg/kg/min 低血壓風險增加，確定嗎？",
-    rejectMessage: "學長，Milrinone 超過 1.0 mcg/kg/min 不建議，要不要重開？",
+    warnMessage: "醫師，Milrinone > 0.5 mcg/kg/min 低血壓風險增加，確定嗎？",
+    rejectMessage: "醫師，Milrinone 超過 1.0 mcg/kg/min 不建議，要不要重開？",
     interactions: [
       {
         withDrug: "dobutamine",
@@ -214,8 +214,8 @@ export const protamine: OrderDefinition = {
     max: 100,
     warnAbove: 50,
     rejectAbove: 100,
-    warnMessage: "學長，Protamine 超過 50 mg — 推太快或劑量太高可能造成低血壓、過敏反應，確定？",
-    rejectMessage: "學長，Protamine 超過 100 mg 單次劑量太高了。",
+    warnMessage: "醫師，Protamine 超過 50 mg — 推太快或劑量太高可能造成低血壓、過敏反應，確定？",
+    rejectMessage: "醫師，Protamine 超過 100 mg 單次劑量太高了。",
     interactions: [
       {
         withDrug: "heparin",
@@ -247,8 +247,8 @@ export const txa: OrderDefinition = {
     max: 3000,
     warnAbove: 2000,
     rejectAbove: 3000,
-    warnMessage: "學長，TXA 超過 2g 單次不常見，確定嗎？",
-    rejectMessage: "學長，TXA 單次不超過 3g。",
+    warnMessage: "醫師，TXA 超過 2g 單次不常見，確定嗎？",
+    rejectMessage: "醫師，TXA 單次不超過 3g。",
     interactions: [
       {
         withDrug: "aminocaproic_acid",
@@ -280,8 +280,8 @@ export const aminocaproicAcid: OrderDefinition = {
     max: 10000,
     warnAbove: 5000,
     rejectAbove: 10000,
-    warnMessage: "學長，Aminocaproic acid loading dose 確認是 5g 嗎？",
-    rejectMessage: "學長，Aminocaproic acid 超過 10g 劑量不對。",
+    warnMessage: "醫師，Aminocaproic acid loading dose 確認是 5g 嗎？",
+    rejectMessage: "醫師，Aminocaproic acid 超過 10g 劑量不對。",
     interactions: [
       {
         withDrug: "txa",
@@ -313,8 +313,8 @@ export const ddavp: OrderDefinition = {
     max: 0.4,
     warnAbove: 0.3,
     rejectAbove: 0.4,
-    warnMessage: "學長，DDAVP 劑量確認是 0.3 mcg/kg 嗎？注意低血壓與低血鈉。",
-    rejectMessage: "學長，DDAVP 超過 0.4 mcg/kg 不建議。",
+    warnMessage: "醫師，DDAVP 劑量確認是 0.3 mcg/kg 嗎？注意低血壓與低血鈉。",
+    rejectMessage: "醫師，DDAVP 超過 0.4 mcg/kg 不建議。",
   },
   effect: {
     type: "hemostatic",
@@ -339,8 +339,8 @@ export const vitaminK: OrderDefinition = {
     max: 25,
     warnAbove: 10,
     rejectAbove: 25,
-    warnMessage: "學長，Vitamin K > 10 mg 有 anaphylaxis 風險，要慢推，確定嗎？",
-    rejectMessage: "學長，Vitamin K 超過 25 mg 太高了。",
+    warnMessage: "醫師，Vitamin K > 10 mg 有 anaphylaxis 風險，要慢推，確定嗎？",
+    rejectMessage: "醫師，Vitamin K 超過 25 mg 太高了。",
   },
   effect: {
     type: "hemostatic",
@@ -368,8 +368,8 @@ export const normalSaline: OrderDefinition = {
     max: 2000,
     warnAbove: 1000,
     rejectAbove: 2000,
-    warnMessage: "學長，NS 1L 以上要評估 volume status，cardiogenic shock 要小心欸。",
-    rejectMessage: "學長，單次超過 2L 不安全，分次開吧。",
+    warnMessage: "醫師，NS 1L 以上要評估 volume status，cardiogenic shock 要小心欸。",
+    rejectMessage: "醫師，單次超過 2L 不安全，分次開吧。",
   },
   effect: {
     type: "fluid",
@@ -393,8 +393,8 @@ export const lactatedRingers: OrderDefinition = {
     max: 2000,
     warnAbove: 1000,
     rejectAbove: 2000,
-    warnMessage: "學長，LR 1L 以上要評估 volume status，確定嗎？",
-    rejectMessage: "學長，單次超過 2L 不安全，分次開吧。",
+    warnMessage: "醫師，LR 1L 以上要評估 volume status，確定嗎？",
+    rejectMessage: "醫師，單次超過 2L 不安全，分次開吧。",
   },
   effect: {
     type: "fluid",
@@ -418,8 +418,8 @@ export const albumin5: OrderDefinition = {
     max: 500,
     warnAbove: 500,
     rejectAbove: 1000,
-    warnMessage: "學長，Albumin 單次 500 mL 確認這是必要的嗎？",
-    rejectMessage: "學長，Albumin 單次超過 1L 不建議。",
+    warnMessage: "醫師，Albumin 單次 500 mL 確認這是必要的嗎？",
+    rejectMessage: "醫師，Albumin 單次超過 1L 不建議。",
   },
   effect: {
     type: "fluid",
@@ -447,8 +447,8 @@ export const calciumGluconate: OrderDefinition = {
     max: 3000,
     warnAbove: 2000,
     rejectAbove: 3000,
-    warnMessage: "學長，Calcium gluconate > 2g 確認適應症嗎？",
-    rejectMessage: "學長，Calcium gluconate 超過 3g 單次不建議。",
+    warnMessage: "醫師，Calcium gluconate > 2g 確認適應症嗎？",
+    rejectMessage: "醫師，Calcium gluconate 超過 3g 單次不建議。",
     interactions: [
       {
         withDrug: "calcium_chloride",
@@ -480,7 +480,7 @@ export const calciumChloride: OrderDefinition = {
     warnAbove: 1000,
     rejectAbove: 2000,
     warnMessage: "⚠️ Calcium Chloride 必須走中央靜脈（CVC/arterial line）！外周注射會造成嚴重組織壞死。確認是中央靜脈嗎？",
-    rejectMessage: "學長，Calcium Chloride 超過 2g 不建議。",
+    rejectMessage: "醫師，Calcium Chloride 超過 2g 不建議。",
     interactions: [
       {
         withDrug: "calcium_gluconate",
@@ -511,8 +511,8 @@ export const kclIV: OrderDefinition = {
     max: 40,
     warnAbove: 20,
     rejectAbove: 40,
-    warnMessage: "學長，KCl > 20 mEq 需要中央靜脈，速度不可超過 20 mEq/hr（致命心律不整風險！），確定嗎？",
-    rejectMessage: "學長，KCl 單次超過 40 mEq 太高，危險！",
+    warnMessage: "醫師，KCl > 20 mEq 需要中央靜脈，速度不可超過 20 mEq/hr（致命心律不整風險！），確定嗎？",
+    rejectMessage: "醫師，KCl 單次超過 40 mEq 太高，危險！",
   },
   effect: {
     type: "electrolyte",
@@ -536,8 +536,8 @@ export const mgso4: OrderDefinition = {
     max: 4000,
     warnAbove: 2000,
     rejectAbove: 4000,
-    warnMessage: "學長，MgSO4 > 2g 注意低血壓與呼吸抑制，確定嗎？",
-    rejectMessage: "學長，MgSO4 超過 4g 單次不建議。",
+    warnMessage: "醫師，MgSO4 > 2g 注意低血壓與呼吸抑制，確定嗎？",
+    rejectMessage: "醫師，MgSO4 超過 4g 單次不建議。",
   },
   effect: {
     type: "electrolyte",
@@ -567,8 +567,8 @@ export const furosemide: OrderDefinition = {
     max: 200,
     warnAbove: 80,
     rejectAbove: 200,
-    warnMessage: "學長，Furosemide > 80 mg 單次，確認腎功能正常嗎？",
-    rejectMessage: "學長，Furosemide 單次超過 200 mg IV，考慮改 continuous infusion。",
+    warnMessage: "醫師，Furosemide > 80 mg 單次，確認腎功能正常嗎？",
+    rejectMessage: "醫師，Furosemide 單次超過 200 mg IV，考慮改 continuous infusion。",
   },
   effect: {
     type: "fluid",
@@ -597,8 +597,8 @@ export const ceftriaxone: OrderDefinition = {
     max: 4,
     warnAbove: 2,
     rejectAbove: 4,
-    warnMessage: "學長，Ceftriaxone 單次 > 2g，確認一天總劑量不超過 4g 嗎？",
-    rejectMessage: "學長，Ceftriaxone 超過 4g 不建議。",
+    warnMessage: "醫師，Ceftriaxone 單次 > 2g，確認一天總劑量不超過 4g 嗎？",
+    rejectMessage: "醫師，Ceftriaxone 超過 4g 不建議。",
   },
   effect: {
     type: "procedure",
@@ -623,8 +623,8 @@ export const pipTazo: OrderDefinition = {
     max: 4.5,
     warnAbove: 4.5,
     rejectAbove: 9,
-    warnMessage: "學長，Pip/Tazo 單次 4.5g，確認腎功能嗎？",
-    rejectMessage: "學長，Pip/Tazo 單次超過 9g 不建議。",
+    warnMessage: "醫師，Pip/Tazo 單次 4.5g，確認腎功能嗎？",
+    rejectMessage: "醫師，Pip/Tazo 單次超過 9g 不建議。",
   },
   effect: {
     type: "procedure",
@@ -649,8 +649,8 @@ export const vancomycin: OrderDefinition = {
     max: 3,
     warnAbove: 2,
     rejectAbove: 3,
-    warnMessage: "學長，Vancomycin 單次 > 2g，確認腎功能 + 先抽 trough level？",
-    rejectMessage: "學長，Vancomycin 單次超過 3g 不建議，腎毒性風險。",
+    warnMessage: "醫師，Vancomycin 單次 > 2g，確認腎功能 + 先抽 trough level？",
+    rejectMessage: "醫師，Vancomycin 單次超過 3g 不建議，腎毒性風險。",
   },
   effect: {
     type: "procedure",
@@ -679,8 +679,8 @@ export const propofol: OrderDefinition = {
     max: 80,
     warnAbove: 50,
     rejectAbove: 80,
-    warnMessage: "學長，Propofol > 50 mcg/kg/min 高劑量，注意 Propofol Infusion Syndrome（PRIS）風險，確定嗎？",
-    rejectMessage: "學長，Propofol 超過 80 mcg/kg/min 不建議，PRIS 風險很高。",
+    warnMessage: "醫師，Propofol > 50 mcg/kg/min 高劑量，注意 Propofol Infusion Syndrome（PRIS）風險，確定嗎？",
+    rejectMessage: "醫師，Propofol 超過 80 mcg/kg/min 不建議，PRIS 風險很高。",
   },
   effect: {
     type: "procedure",
@@ -705,8 +705,8 @@ export const fentanyl: OrderDefinition = {
     max: 200,
     warnAbove: 100,
     rejectAbove: 200,
-    warnMessage: "學長，Fentanyl > 100 mcg/hr，確認鎮靜深度嗎？",
-    rejectMessage: "學長，Fentanyl 超過 200 mcg/hr 不建議。",
+    warnMessage: "醫師，Fentanyl > 100 mcg/hr，確認鎮靜深度嗎？",
+    rejectMessage: "醫師，Fentanyl 超過 200 mcg/hr 不建議。",
   },
   effect: {
     type: "procedure",
@@ -731,8 +731,8 @@ export const midazolam: OrderDefinition = {
     max: 20,
     warnAbove: 10,
     rejectAbove: 20,
-    warnMessage: "學長，Midazolam > 10 mg/hr 高劑量，注意低血壓，確定嗎？",
-    rejectMessage: "學長，Midazolam 超過 20 mg/hr 不建議。",
+    warnMessage: "醫師，Midazolam > 10 mg/hr 高劑量，注意低血壓，確定嗎？",
+    rejectMessage: "醫師，Midazolam 超過 20 mg/hr 不建議。",
     interactions: [
       {
         withDrug: "propofol",
@@ -768,8 +768,8 @@ export const hydrocortisone: OrderDefinition = {
     max: 200,
     warnAbove: 100,
     rejectAbove: 200,
-    warnMessage: "學長，Hydrocortisone > 100 mg 單次，確認是 stress dose 嗎？",
-    rejectMessage: "學長，Hydrocortisone 超過 200 mg 單次不建議。",
+    warnMessage: "醫師，Hydrocortisone > 100 mg 單次，確認是 stress dose 嗎？",
+    rejectMessage: "醫師，Hydrocortisone 超過 200 mg 單次不建議。",
   },
   effect: {
     type: "procedure",
