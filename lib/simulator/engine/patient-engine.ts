@@ -672,9 +672,15 @@ export function updatePatientState(
     effects = applyEffect(effects, e);
   }
 
-  // 3. 更新體溫（從 effects 累加）
+  // 3. 更新體溫（rate-based：temperatureChange 是整個 duration 的一次性 delta，攤到每分鐘）
+  // 與 severity 處理方式一致，避免每 tick 重複疊加全額
   const tempChange = effects.reduce(
-    (acc, e) => acc + (e.temperatureChange ?? 0),
+    (acc, e) => {
+      const tc = e.temperatureChange ?? 0;
+      if (tc === 0) return acc;
+      const duration = e.duration > 0 ? e.duration : 30;
+      return acc + (tc / duration) * minutesPassed;
+    },
     0
   );
   const newTemperature = Math.max(
