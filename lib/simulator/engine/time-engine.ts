@@ -10,6 +10,9 @@ import type {
   PatientState,
   PlacedOrder,
   MTPState,
+  LabResultData,
+  NurseCallData,
+  ScriptedEventData,
 } from "../types";
 
 // ============================================================
@@ -360,7 +363,7 @@ export function advanceTime(
 export function createLabResultEvent(
   id: string,
   triggerAt: number,
-  labData: Record<string, unknown>,
+  labData: LabResultData,
   priority: number = 5
 ): PendingEvent {
   return {
@@ -385,7 +388,7 @@ export function createNurseCallEvent(
     id,
     triggerAt,
     type: "nurse_call",
-    data: { message },
+    data: { message } satisfies NurseCallData,
     triggerCondition: condition,
     fired: false,
     priority,
@@ -396,12 +399,7 @@ export function createNurseCallEvent(
 export function createVitalsChangeEvent(
   id: string,
   triggerAt: number,
-  changes: {
-    vitalChanges?: Partial<import("../types").VitalSigns>;
-    chestTubeChanges?: Partial<import("../types").ChestTubeState>;
-    temperatureChange?: number;
-    severityChange?: number;
-  },
+  changes: ScriptedEventData,
   condition?: EventCondition,
   priority: number = 4
 ): PendingEvent {

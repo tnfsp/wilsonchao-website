@@ -323,6 +323,16 @@ const expectedActions: ExpectedAction[] = [
     rationale: "每袋 pRBC 含 citrate 防腐劑。Citrate 會螯合 ionized calcium → 大量輸血後 iCa 下降 → 心肌收縮力變差 → 低血壓惡化。這是 massive transfusion 最容易被忽略的併發症。",
     howTo: "每輸 4U blood product 後 check iCa（ABG 機器可測）。iCa < 1.0 mmol/L → Calcium Gluconate 1g IV over 10 min 或 CaCl2 500mg central line。目標 iCa > 1.1。",
   },
+  {
+    id: "act-vent-fio2-adjust",
+    action: "調整 FiO₂（SpO₂ 下降時）",
+    description: "大量出血導致 Hb 下降，攜氧能力降低 → 適度提高 FiO₂ 維持氧合",
+    deadline: 15,
+    critical: false,
+    hint: "Hb 掉 → 攜氧能力下降 → SpO₂ 可能也跟著掉。提高 FiO₂ 可以暫時補償，但根本治療是輸血。",
+    rationale: "出血導致 Hb 下降，DO₂ = CO × (Hb × 1.34 × SaO₂)。在 Hb 尚未被輸血矯正前，提高 FiO₂ 可以最大化現有 Hb 的攜氧量。但這只是橋接措施，不能取代輸血。",
+    howTo: "SpO₂ < 94% → FiO₂ 提高至 0.6-0.8。同時加速輸血。SpO₂ 穩定後逐步 wean FiO₂，目標 < 0.5。",
+  },
 ];
 
 // ============================================================
@@ -622,6 +632,7 @@ export const postopBleeding: SimScenario = {
     "lethal-triad",
     "escalation",
   ],
+  relevantTags: ["cardiac", "bleeding", "hemostatic", "transfusion", "sedation", "general"],
 
   patient: {
     age: 65,

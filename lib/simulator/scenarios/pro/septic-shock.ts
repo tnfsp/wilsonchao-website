@@ -311,6 +311,26 @@ const expectedActions: ExpectedAction[] = [
     critical: false,
     hint: "pH 7.30 + lactate 4.2 = significant metabolic acidosis with tissue hypoperfusion。",
   },
+  {
+    id: "act-vent-fio2-increase",
+    action: "提高 FiO₂（SpO₂ < 92% 時）",
+    description: "Sepsis 造成肺部氣體交換下降，SpO₂ 持續掉 → 需要先提高 FiO₂ 維持氧合",
+    deadline: 10,
+    critical: false,
+    hint: "SpO₂ < 92% → 先拉 FiO₂。目標 SpO₂ > 94%，但不要長期維持 FiO₂ > 0.6（氧毒性）。",
+    rationale: "Sepsis 引起的 ARDS / pulmonary edema 會導致 V/Q mismatch 和 shunt，SpO₂ 下降。提高 FiO₂ 是最快改善氧合的方式。但長期 FiO₂ > 0.6 有氧毒性風險，應搭配 PEEP 調整。",
+    howTo: "呼吸器調整 FiO₂：從目前設定向上調整，每次 +10-20%，觀察 SpO₂ 反應。若 FiO₂ 已 > 0.6 仍缺氧 → 考慮提高 PEEP。",
+  },
+  {
+    id: "act-vent-peep-increase",
+    action: "提高 PEEP（呼吸衰竭時）",
+    description: "Sepsis-related ARDS → 提高 PEEP 改善肺擴張和氧合",
+    deadline: 20,
+    critical: false,
+    hint: "FiO₂ 拉高還不夠 → 提高 PEEP ≥ 10。注意 PEEP 會降低回心血量，血壓可能更低。",
+    rationale: "PEEP 可以打開塌陷的肺泡（recruitment），改善功能殘氣量（FRC），減少 shunt。但 PEEP 會增加胸腔內壓 → 降低靜脈回流 → 可能惡化 septic shock 的低血壓。需要平衡 oxygenation 和 hemodynamics。",
+    howTo: "從 PEEP 8 開始，每次 +2，觀察 SpO₂ 和 MAP 反應。若 MAP 掉 > 10% → 可能需要加 vasopressor 補償。ARDSnet protocol: Low PEEP table 搭配 FiO₂。",
+  },
 ];
 
 // ============================================================
@@ -598,6 +618,7 @@ export const septicShock: SimScenario = {
     "source-control",
     "escalation",
   ],
+  relevantTags: ["cardiac", "sepsis", "vasopressor", "sedation", "general"],
 
   patient: {
     age: 58,

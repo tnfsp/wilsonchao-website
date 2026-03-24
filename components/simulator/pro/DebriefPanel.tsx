@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
-import type { TimelineEntry, CriticalAction, WhatIfBranch, ExpectedAction } from "@/lib/simulator/types";
+import type { TimelineEntry, CriticalAction, WhatIfBranch, ExpectedAction, TrackedAction } from "@/lib/simulator/types";
 import type { GameScore } from "@/lib/simulator/types";
 
 // ─── Progress persistence ────────────────────────────────────────────────────
@@ -478,7 +478,139 @@ function KeyLessonsSection({ lessons }: { lessons: string[] }) {
   );
 }
 
-// ─── Section 7: Guidelines ────────────────────────────────────────────────────
+// ─── Section 7: Diagnostic Accuracy ──────────────────────────────────────────
+
+interface DiagnosticStep {
+  id: string;
+  label: string;
+  pattern: RegExp;
+  critical: boolean;
+}
+
+const DIAGNOSTIC_STEPS: DiagnosticStep[] = [
+  { id: "pe", label: "Physical Examination", pattern: /^(pe:|open_pe|order:physical_exam)/i, critical: true },
+  { id: "pocus", label: "POCUS", pattern: /^(pocus:|imaging:pocus)/i, critical: true },
+  { id: "labs", label: "Lab Orders", pattern: /^order:lab/i, critical: true },
+  { id: "imaging", label: "Imaging (CXR/ECG)", pattern: /^(order:imaging|imaging:)/i, critical: false },
+  { id: "abg", label: "ABG / Lactate", pattern: /(abg|lactate|blood.?gas)/i, critical: false },
+  { id: "coag", label: "Coagulation Panel", pattern: /(coag|pt.*inr|aptt|fibrinogen)/i, critical: false },
+];
+
+function DiagnosticAccuracySection({
+  score,
+  scenario,
+  playerActions,
+}: {
+  score: GameScore;
+  scenario: { debrief: { correctDiagnosis: string }; expectedActions: ExpectedAction[] };
+  playerActions: TrackedAction[];
+}) {
+  // Determine which diagnostic steps were taken
+  const stepsTaken = DIAGNOSTIC_STEPS.map((step) => ({
+    ...step,
+    done: playerActions.some((pa) => step.pattern.test(pa.action)),
+    time: playerActions.find((pa) => step.pattern.test(pa.action))?.gameTime ?? null,
+  }));
+
+  const criticalSteps = stepsTaken.filter((s) => s.critical);
+  const criticalDone = criticalSteps.filter((s) => s.done).length;
+  const criticalTotal = criticalSteps.length;
+
+  // Time to correct diagnosis: earliest time player mentioned correct diagnosis
+  // (approximation: when first diagnostic action was taken that led to correct dx)
+  const diagnosticActions = playerActions.filter(
+    (pa) =>
+      pa.action.startsWith("pe:") ||
+      pa.action.startsWith("pocus:") ||
+      pa.action.includes("sbar:") ||
+      pa.action.startsWith("message:")
+  );
+  const timeToDiagnosis = diagnosticActions.length > 0
+    ? Math.min(...diagnosticActions.map((pa) => pa.gameTime))
+    : null;
+
+  // Diagnostic accuracy: weighted score based on steps + correct diagnosis
+  const stepScore = stepsTaken.filter((s) => s.done).length / Math.max(stepsTaken.length, 1);
+  const dxBonus = score.correctDiagnosis ? 0.4 : 0;
+  const accuracyPct = Math.round(Math.min(100, (stepScore * 0.6 + dxBonus) * 100));
+
+  return (
+    <div className="space-y-4">
+      {/* Diagnosis correctness */}
+      <div
+        className={`rounded-xl border p-4 ${
+          score.correctDiagnosis
+            ? "border-green-500/30 bg-green-900/10"
+            : "border-red-500/30 bg-red-900/10"
+        }`}
+      >
+        <div className="flex items-center gap-3 mb-2">
+          <span className="text-xl">{score.correctDiagnosis ? "✅" : "❌"}</span>
+          <div>
+            <div className={`font-medium text-sm ${score.correctDiagnosis ? "text-green-400" : "text-red-400"}`}>
+              {score.correctDiagnosis ? "診斷正確" : "診斷未命中"}
+            </div>
+            <div className="text-gray-500 text-xs mt-0.5">
+              正確診斷：{scenario.debrief.correctDiagnosis}
+            </div>
+          </div>
+        </div>
+        {timeToDiagnosis !== null && score.correctDiagnosis && (
+          <div className="text-xs text-gray-400 mt-1">
+            首次診斷性動作時間：第 {timeToDiagnosis} 分鐘
+          </div>
+        )}
+      </div>
+
+      {/* Accuracy bar */}
+      <div>
+        <div className="flex justify-between text-xs mb-1">
+          <span className="text-gray-300 font-medium">診斷準確度</span>
+          <span className="text-gray-400 font-mono">{accuracyPct}%</span>
+        </div>
+        <div className="h-2 bg-white/10 rounded-full overflow-hidden">
+          <div
+            className={`h-full rounded-full transition-all ${
+              accuracyPct >= 70 ? "bg-green-500" : accuracyPct >= 40 ? "bg-yellow-500" : "bg-red-500"
+            }`}
+            style={{ width: `${accuracyPct}%` }}
+          />
+        </div>
+      </div>
+
+      {/* Diagnostic steps checklist */}
+      <div className="rounded-xl border border-white/10 overflow-hidden">
+        <div className="px-3 py-2 border-b border-white/10">
+          <span className="text-xs text-gray-500 font-medium">
+            關鍵診斷步驟 ({criticalDone}/{criticalTotal} 必要步驟完成)
+          </span>
+        </div>
+        <div className="divide-y divide-white/5">
+          {stepsTaken.map((step) => (
+            <div key={step.id} className="flex items-center justify-between px-3 py-2">
+              <div className="flex items-center gap-2">
+                <span className={step.done ? "text-green-400" : "text-gray-600"}>
+                  {step.done ? "✅" : "○"}
+                </span>
+                <span className={`text-xs ${step.done ? "text-gray-300" : "text-gray-500"}`}>
+                  {step.label}
+                </span>
+                {step.critical && (
+                  <span className="text-[10px] px-1 py-0.5 rounded bg-white/5 text-gray-500">必要</span>
+                )}
+              </div>
+              <span className="text-xs text-gray-600 font-mono">
+                {step.time !== null ? `${step.time}m` : "—"}
+              </span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+// ─── Section 8: Guidelines ────────────────────────────────────────────────────
 
 function GuidelinesSection({ guidelines }: { guidelines: string[] }) {
   return (
@@ -496,7 +628,7 @@ function GuidelinesSection({ guidelines }: { guidelines: string[] }) {
 // ─── Main DebriefPanel ────────────────────────────────────────────────────────
 
 export default function DebriefPanel() {
-  const { score, scenario, timeline, resetGame, deathCause } = useProGameStore();
+  const { score, scenario, timeline, resetGame, deathCause, playerActions } = useProGameStore();
 
   // Save progress to localStorage when debrief is shown
   useEffect(() => {
@@ -579,6 +711,22 @@ export default function DebriefPanel() {
               </ul>
             </div>
           )}
+        </section>
+
+        <div className="border-t border-white/8" />
+
+        {/* ── Section 3.5: Diagnostic Accuracy ── */}
+        <section>
+          <SectionHeader
+            emoji="🔍"
+            title="診斷準確度"
+            subtitle="診斷過程分析"
+          />
+          <DiagnosticAccuracySection
+            score={score}
+            scenario={scenario}
+            playerActions={playerActions}
+          />
         </section>
 
         <div className="border-t border-white/8" />

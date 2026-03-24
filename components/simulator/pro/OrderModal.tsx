@@ -5,13 +5,13 @@ import { useProGameStore } from "@/lib/simulator/store";
 import { medicationCategories } from "@/lib/simulator/data/medications";
 import { transfusionCategories, MTP_ACTIVATION_CRITERIA } from "@/lib/simulator/data/transfusions";
 import { checkDrugInteractions } from "@/lib/simulator/engine/order-engine";
-import type { OrderDefinition, DrugInteraction } from "@/lib/simulator/types";
+import type { OrderDefinition, DrugInteraction, VentMode, VentilatorState } from "@/lib/simulator/types";
 
 // ============================================================
 // Tab config
 // ============================================================
 
-type TabKey = "medication" | "fluid" | "transfusion" | "hemostatic" | "electrolyte";
+type TabKey = "medication" | "fluid" | "transfusion" | "hemostatic" | "electrolyte" | "ventilator";
 
 const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key: "medication", label: "藥物", emoji: "💊" },
@@ -19,6 +19,7 @@ const TABS: { key: TabKey; label: string; emoji: string }[] = [
   { key: "transfusion", label: "輸血", emoji: "🩸" },
   { key: "hemostatic", label: "止血", emoji: "🩹" },
   { key: "electrolyte", label: "電解質", emoji: "💉" },
+  { key: "ventilator", label: "呼吸器", emoji: "🫁" },
 ];
 
 // Category → drug list mapping (inside the tabs)
@@ -427,6 +428,249 @@ function TransfusionTab({
 }
 
 // ============================================================
+// Ventilator Tab
+// ============================================================
+
+const VENT_MODES: VentMode[] = ["VC", "PC", "PS", "SIMV"];
+const IE_RATIOS = ["1:1.5", "1:2", "1:3", "1:4"];
+
+function VentStepper({
+  label,
+  value,
+  min,
+  max,
+  step,
+  unit,
+  onChange,
+}: {
+  label: string;
+  value: number;
+  min: number;
+  max: number;
+  step: number;
+  unit: string;
+  onChange: (v: number) => void;
+}) {
+  return (
+    <div className="flex items-center justify-between py-2">
+      <span className="text-sm text-zinc-300">{label}</span>
+      <div className="flex items-center gap-2">
+        <button
+          onClick={() => onChange(Math.max(min, value - step))}
+          className="w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-600 text-zinc-400 hover:text-white hover:border-cyan-500/50 transition-colors text-lg"
+        >
+          −
+        </button>
+        <span className="font-mono text-base font-bold text-white w-16 text-center">
+          {value}
+          <span className="text-xs text-zinc-500 ml-0.5 font-normal">{unit}</span>
+        </span>
+        <button
+          onClick={() => onChange(Math.min(max, value + step))}
+          className="w-8 h-8 flex items-center justify-center rounded-lg border border-zinc-600 text-zinc-400 hover:text-white hover:border-cyan-500/50 transition-colors text-lg"
+        >
+          +
+        </button>
+      </div>
+    </div>
+  );
+}
+
+function VentilatorTab({
+  onConfirm,
+}: {
+  onConfirm: (changes: Partial<VentilatorState>, summary: string) => void;
+}) {
+  const currentVent = useProGameStore((s) => s.ventilator);
+  const patient = useProGameStore((s) => s.patient);
+
+  const [mode, setMode] = useState<VentMode>(currentVent.mode);
+  const [fio2, setFio2] = useState(Math.round(currentVent.fio2 * 100));
+  const [peep, setPeep] = useState(currentVent.peep);
+  const [rrSet, setRrSet] = useState(currentVent.rrSet);
+  const [tvSet, setTvSet] = useState(currentVent.tvSet);
+  const [ieRatio, setIeRatio] = useState(currentVent.ieRatio);
+
+  // Detect what changed
+  const changes: Partial<VentilatorState> = {};
+  const diffs: string[] = [];
+  if (mode !== currentVent.mode) {
+    changes.mode = mode;
+    diffs.push(`Mode ${currentVent.mode} → ${mode}`);
+  }
+  if (fio2 !== Math.round(currentVent.fio2 * 100)) {
+    changes.fio2 = fio2 / 100;
+    diffs.push(`FiO₂ ${Math.round(currentVent.fio2 * 100)}% → ${fio2}%`);
+  }
+  if (peep !== currentVent.peep) {
+    changes.peep = peep;
+    diffs.push(`PEEP ${currentVent.peep} → ${peep}`);
+  }
+  if (rrSet !== currentVent.rrSet) {
+    changes.rrSet = rrSet;
+    diffs.push(`RR ${currentVent.rrSet} → ${rrSet}`);
+  }
+  if (tvSet !== currentVent.tvSet) {
+    changes.tvSet = tvSet;
+    diffs.push(`TV ${currentVent.tvSet} → ${tvSet}`);
+  }
+  if (ieRatio !== currentVent.ieRatio) {
+    changes.ieRatio = ieRatio;
+    diffs.push(`I:E ${currentVent.ieRatio} → ${ieRatio}`);
+  }
+
+  const hasChanges = diffs.length > 0;
+  const fio2Color = fio2 > 60 ? "text-yellow-400" : fio2 > 80 ? "text-red-400" : "text-cyan-400";
+
+  return (
+    <div className="space-y-5">
+      {/* Current settings display */}
+      <div className="rounded-xl border border-zinc-700 bg-zinc-800/50 px-4 py-3">
+        <p className="text-xs uppercase tracking-widest text-zinc-500 mb-2">目前設定</p>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="bg-black/30 rounded-lg py-1.5 px-2">
+            <p className="text-zinc-500 text-[10px]">Mode</p>
+            <p className="text-blue-400 font-mono font-bold text-sm">{currentVent.mode}</p>
+          </div>
+          <div className="bg-black/30 rounded-lg py-1.5 px-2">
+            <p className="text-zinc-500 text-[10px]">FiO₂</p>
+            <p className="text-cyan-400 font-mono font-bold text-sm">{Math.round(currentVent.fio2 * 100)}%</p>
+          </div>
+          <div className="bg-black/30 rounded-lg py-1.5 px-2">
+            <p className="text-zinc-500 text-[10px]">PEEP</p>
+            <p className="text-cyan-400 font-mono font-bold text-sm">{currentVent.peep}</p>
+          </div>
+          <div className="bg-black/30 rounded-lg py-1.5 px-2">
+            <p className="text-zinc-500 text-[10px]">RR</p>
+            <p className="text-zinc-300 font-mono font-bold text-sm">{currentVent.rrSet}</p>
+          </div>
+          <div className="bg-black/30 rounded-lg py-1.5 px-2">
+            <p className="text-zinc-500 text-[10px]">TV</p>
+            <p className="text-zinc-300 font-mono font-bold text-sm">{currentVent.tvSet}</p>
+          </div>
+          <div className="bg-black/30 rounded-lg py-1.5 px-2">
+            <p className="text-zinc-500 text-[10px]">I:E</p>
+            <p className="text-zinc-300 font-mono font-bold text-sm">{currentVent.ieRatio}</p>
+          </div>
+        </div>
+        {patient && (
+          <p className="text-zinc-600 text-xs mt-2 text-center">
+            SpO₂ {patient.vitals.spo2}% · RR {patient.vitals.rr}/min
+          </p>
+        )}
+      </div>
+
+      {/* Adjustment controls */}
+      <div className="space-y-4">
+        <p className="text-xs uppercase tracking-widest text-zinc-500">調整呼吸器</p>
+
+        {/* Mode selection */}
+        <div className="flex items-center justify-between py-2">
+          <span className="text-sm text-zinc-300">Mode</span>
+          <div className="flex gap-1.5">
+            {VENT_MODES.map((m) => (
+              <button
+                key={m}
+                onClick={() => setMode(m)}
+                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors font-mono font-bold ${
+                  mode === m
+                    ? "border-blue-500/60 bg-blue-900/30 text-blue-300"
+                    : "border-zinc-600 text-zinc-500 hover:border-zinc-400 hover:text-zinc-300"
+                }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* FiO₂ slider */}
+        <div className="py-2 space-y-2">
+          <div className="flex items-center justify-between">
+            <span className="text-sm text-zinc-300">FiO₂</span>
+            <span className={`font-mono text-base font-bold ${fio2Color}`}>{fio2}%</span>
+          </div>
+          <input
+            type="range"
+            min={21}
+            max={100}
+            step={5}
+            value={fio2}
+            onChange={(e) => setFio2(parseInt(e.target.value))}
+            className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-cyan-400"
+            style={{ background: `linear-gradient(to right, #22d3ee ${((fio2 - 21) / 79) * 100}%, #27272a ${((fio2 - 21) / 79) * 100}%)` }}
+          />
+          <div className="flex justify-between text-[10px] text-zinc-600">
+            <span>21%</span>
+            <span>60%</span>
+            <span>100%</span>
+          </div>
+        </div>
+
+        {/* PEEP */}
+        <VentStepper label="PEEP" value={peep} min={0} max={20} step={1} unit="cmH₂O" onChange={setPeep} />
+
+        {/* RR */}
+        <VentStepper label="RR" value={rrSet} min={8} max={30} step={1} unit="/min" onChange={setRrSet} />
+
+        {/* TV */}
+        <VentStepper label="TV" value={tvSet} min={300} max={700} step={25} unit="mL" onChange={setTvSet} />
+
+        {/* I:E ratio */}
+        <div className="flex items-center justify-between py-2">
+          <span className="text-sm text-zinc-300">I:E Ratio</span>
+          <div className="flex gap-1.5">
+            {IE_RATIOS.map((ie) => (
+              <button
+                key={ie}
+                onClick={() => setIeRatio(ie)}
+                className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors font-mono ${
+                  ieRatio === ie
+                    ? "border-teal-500/60 bg-teal-900/30 text-teal-300"
+                    : "border-zinc-600 text-zinc-500 hover:border-zinc-400 hover:text-zinc-300"
+                }`}
+              >
+                {ie}
+              </button>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Change summary + confirm */}
+      {hasChanges && (
+        <div className="rounded-xl border border-cyan-800/40 bg-cyan-900/10 px-4 py-3">
+          <p className="text-cyan-400 text-xs font-medium mb-2">變更預覽</p>
+          <ul className="space-y-1">
+            {diffs.map((d, i) => (
+              <li key={i} className="text-sm text-zinc-300 flex items-center gap-2">
+                <span className="text-cyan-500">→</span> {d}
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <button
+        onClick={() => {
+          if (hasChanges) {
+            onConfirm(changes, diffs.join(", "));
+          }
+        }}
+        disabled={!hasChanges}
+        className={`w-full py-3 rounded-xl font-bold text-sm transition ${
+          hasChanges
+            ? "bg-cyan-600 hover:bg-cyan-500 text-white"
+            : "bg-zinc-700 text-zinc-500 cursor-not-allowed"
+        }`}
+      >
+        {hasChanges ? "確認調整呼吸器" : "尚未更改設定"}
+      </button>
+    </div>
+  );
+}
+
+// ============================================================
 // Main OrderModal
 // ============================================================
 
@@ -435,6 +679,9 @@ export default function OrderModal() {
   const closeModal = useProGameStore((s) => s.closeModal);
   const placeOrder = useProGameStore((s) => s.placeOrder);
   const patient = useProGameStore((s) => s.patient);
+  const updateVentilator = useProGameStore((s) => s.updateVentilator);
+  const addTimelineEntry = useProGameStore((s) => s.addTimelineEntry);
+  const clock = useProGameStore((s) => s.clock);
 
   const [activeTab, setActiveTab] = useState<TabKey>("medication");
   const [selectedDrug, setSelectedDrug] = useState<OrderDefinition | null>(null);
@@ -459,6 +706,21 @@ export default function OrderModal() {
       }
     },
     [selectedDrug, placeOrder]
+  );
+
+  const handleVentConfirm = useCallback(
+    (changes: Partial<VentilatorState>, summary: string) => {
+      updateVentilator(changes);
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "order_placed",
+        content: `🫁 呼吸器調整：${summary}`,
+        sender: "player",
+        isImportant: true,
+      });
+      setLastResult({ ok: true, message: `✅ 呼吸器調整完成：${summary}` });
+    },
+    [updateVentilator, addTimelineEntry, clock.currentTime]
   );
 
   if (!isOpen) return null;
@@ -587,6 +849,10 @@ export default function OrderModal() {
                 selectedId={selectedDrug?.id ?? null}
                 onSelect={handleSelectDrug}
               />
+            )}
+
+            {activeTab === "ventilator" && (
+              <VentilatorTab onConfirm={handleVentConfirm} />
             )}
           </div>
         </div>

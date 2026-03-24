@@ -141,12 +141,56 @@ export interface GameClock {
   speed: number;
 }
 
+// ── PendingEvent data types (discriminated by GameEventType) ─────────────────
+
+export interface LabResultData {
+  orderId?: string;
+  orderName?: string;
+  imagingKey?: string;
+  imagingType?: "ecg" | "cxr";
+  label?: string;
+}
+
+export interface NurseCallData {
+  message: string;
+}
+
+export interface ScriptedEventData {
+  message?: string;
+  content?: string;
+  vitalChanges?: Partial<VitalSigns>;
+  chestTubeChanges?: Partial<ChestTubeState>;
+  temperatureChange?: number;
+  severityChange?: number;
+  newLabResults?: Record<string, unknown>;
+}
+
+export interface SeniorArrivesData {
+  type?: string;
+  message?: string;
+  label?: string;
+}
+
+export interface OrderEffectData {
+  orderId?: string;
+  isMTP?: boolean;
+  mtpRound?: number;
+  products?: { prbc: number; ffp: number; platelet: number };
+}
+
+export type PendingEventData =
+  | LabResultData
+  | NurseCallData
+  | ScriptedEventData
+  | SeniorArrivesData
+  | OrderEffectData;
+
 export interface PendingEvent {
   id: string;
   triggerAt: number;            // game minutes
   triggerCondition?: EventCondition;
   type: GameEventType;
-  data: any;
+  data: PendingEventData;
   fired: boolean;
   priority: number;             // lower = fires first at same time
 }
@@ -196,6 +240,7 @@ export interface OrderDefinition {
   name: string;
   category: OrderCategory;
   subcategory?: string;         // e.g. "vasopressor", "inotrope"
+  tags?: string[];              // clinical usage tags for filtering (e.g. 'cardiac', 'sepsis')
   defaultDose: string;
   unit: string;
   route: string;
@@ -365,6 +410,7 @@ export interface SimScenario {
   difficulty: "beginner" | "intermediate" | "advanced";
   duration: "15min" | "30min";
   tags: string[];
+  relevantTags?: string[];    // medication tags relevant to this scenario (for order filtering)
 
   patient: PatientInfo;
   initialVitals: VitalSigns;

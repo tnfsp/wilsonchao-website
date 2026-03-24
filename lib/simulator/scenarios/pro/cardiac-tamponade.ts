@@ -268,6 +268,16 @@ const expectedActions: ExpectedAction[] = [
     rationale: "Lactate 和 base deficit 反映組織灌流狀態。Tamponade 造成的低心輸出會導致 lactic acidosis。追蹤數值可以客觀評估 resuscitation 效果和手術急迫性。",
     howTo: "從 arterial line 抽 ABG（如果有的話），或做 venous blood gas + lactate。重點看 pH、base deficit、lactate。Lactate > 4 mmol/L 代表嚴重組織低灌流。",
   },
+  {
+    id: "act-vent-fio2-adjust",
+    action: "調整 FiO₂（低心輸出致 SpO₂ 下降時）",
+    description: "Tamponade 造成低心輸出 → 組織灌流不足 → 提高 FiO₂ 維持氧合，爭取手術時間",
+    deadline: 15,
+    critical: false,
+    hint: "SpO₂ 掉是因為低心輸出，不是肺的問題。提高 FiO₂ 可以暫時幫助，但根本治療是解除 tamponade。",
+    rationale: "Tamponade 導致 CO 下降 → mixed venous O₂ 降低 → SpO₂ 跟著掉。提高 FiO₂ 是暫時性措施，可以稍微改善 PaO₂，但不能解決 CO 不足的根本問題。",
+    howTo: "FiO₂ 調至 1.0（100%）作為 bridge。注意 PEEP 不要調太高 — tamponade 時心臟已經被壓迫，高 PEEP 會進一步降低靜脈回流，血壓更低。",
+  },
 ];
 
 // ============================================================
@@ -526,6 +536,7 @@ export const cardiacTamponade: SimScenario = {
     "escalation",
     "time-critical",
   ],
+  relevantTags: ["cardiac", "bleeding", "hemostatic", "transfusion", "sedation", "general"],
 
   patient: {
     age: 72,

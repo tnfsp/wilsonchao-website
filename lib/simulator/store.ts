@@ -40,6 +40,9 @@ import type {
   OrderStatus,
   VentilatorState,
   TrackedAction,
+  LabResultData,
+  ScriptedEventData,
+  OrderEffectData,
 } from "./types";
 
 // ============================================================
@@ -402,6 +405,11 @@ function computeBasicScore(
     "act-mtp": /mtp:activated/i,
     "act-pericardiocentesis": /order:procedure:.*pericardio/i,
     "act-echo": /pocus:cardiac/i,
+    "act-vent-fio2-increase": /vent:.*fio2=/i,
+    "act-vent-peep-increase": /vent:.*peep=/i,
+    "act-vent-fio2-adjust": /vent:.*fio2=/i,
+    "act-vent-peep-adjust": /vent:.*peep=/i,
+    "act-vent-maintain": /vent:/i,
   };
 
   const criticalActions: CriticalAction[] = scenario.expectedActions.map(
@@ -665,7 +673,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         temperatureChange: e.temperatureChange,
         severityChange: e.severityChange,
         newLabResults: e.newLabResults,
-      },
+      } as ScriptedEventData,
       fired: false,
       priority: 0,
     }));
@@ -739,11 +747,11 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     // 這樣 patient-engine 下一次 tick 會算出正確的 vitals
     // 護理師對白在 STEP 2 讀 patient state 動態生成
     for (const ev of toFire) {
-      const data = ev.data as Record<string, unknown> | undefined;
+      const data = ev.data as ScriptedEventData | undefined;
       if (!data) continue;
 
-      const chestTubeChanges = data.chestTubeChanges as Partial<ChestTubeState> | undefined;
-      const severityChange = data.severityChange as number | undefined;
+      const chestTubeChanges = data.chestTubeChanges;
+      const severityChange = data.severityChange;
 
       if (chestTubeChanges || severityChange) {
         set((state) => {
@@ -813,9 +821,10 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     const placedOrders = get().placedOrders;
 
     for (const ev of toFire) {
-      if (ev.type === "lab_result" && ev.data?.orderId) {
+      if (ev.type === "lab_result" && (ev.data as LabResultData)?.orderId) {
         // Find the order and its lab panel results
-        const order = placedOrders.find((o) => o.id === ev.data.orderId);
+        const labData = ev.data as LabResultData;
+        const order = placedOrders.find((o) => o.id === labData.orderId);
         if (order && scenario) {
           const orderId = (order.definition as unknown as Record<string, unknown>).id as string | undefined;
 
@@ -863,13 +872,14 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
               id: nextId("tl"),
               gameTime: newTime,
               type: "nurse_message",
-              content: `${nurseName}：醫師，${ev.data.orderName ?? order.definition.name} 結果出來了。`,
+              content: `${nurseName}：醫師，${labData.orderName ?? order.definition.name} 結果出來了。`,
               sender: "nurse",
             });
           }
         }
       } else if (ev.type === "vitals_change" || ev.type === "escalation" || ev.type === "chest_tube_change") {
-        const rawContent = ev.data?.message ?? ev.data?.content ?? "";
+        const scriptData = ev.data as ScriptedEventData;
+        const rawContent = scriptData?.message ?? scriptData?.content ?? "";
         // vitals_change without message = silent update (no timeline entry)
         if (rawContent) {
           firedEntries.push({
@@ -882,7 +892,8 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
           });
         }
       } else if (ev.type === "nurse_call") {
-        const rawContent = ev.data?.message ?? `護理師：有事情需要你注意。`;
+        const nurseData = ev.data as ScriptedEventData;
+        const rawContent = nurseData?.message ?? `護理師：有事情需要你注意。`;
         const nurseName = scenario?.nurseProfile?.name ?? "護理師";
         const content = rawContent.startsWith(nurseName) ? rawContent : `${nurseName}：${rawContent}`;
         firedEntries.push({
@@ -894,7 +905,8 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
           isImportant: true,
         });
       } else if (ev.type === "senior_arrives") {
-        const content = ev.data?.message ?? "（學長到場）";
+        const seniorData = ev.data as ScriptedEventData;
+        const content = seniorData?.message ?? "（學長到場）";
         firedEntries.push({
           id: nextId("tl"),
           gameTime: newTime,
@@ -930,8 +942,9 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     for (const ev of toFire) {
       if (ev.type === "order_effect") {
         const nurseName = get().scenario?.nurseProfile?.name ?? "護理師";
+        const effectData = ev.data as OrderEffectData;
 
-        if (ev.data?.isMTP) {
+        if (effectData?.isMTP) {
           // MTP round effect
           const mtpEffect = getMTPRoundEffect(newTime);
           get().addActiveEffect(mtpEffect);
@@ -946,7 +959,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
                 id: nextId("tl"),
                 gameTime: newTime,
                 type: "nurse_message" as TimelineEntry["type"],
-                content: `${nurseName}：MTP Round ${(ev.data.mtpRound ?? 1)} 血品到了！pRBC 2U + FFP 2U + Plt 1 dose 開始輸注。`,
+                content: `${nurseName}：MTP Round ${(effectData.mtpRound ?? 1)} 血品到了！pRBC 2U + FFP 2U + Plt 1 dose 開始輸注。`,
                 sender: "nurse" as const,
                 isImportant: true,
               },
@@ -963,22 +976,22 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
                   id: nextId("evt"),
                   type: "order_effect" as PendingEvent["type"],
                   triggerAt: newTime + 15,
-                  data: { isMTP: true, mtpRound: currentRound + 1 },
+                  data: { isMTP: true, mtpRound: currentRound + 1 } as OrderEffectData,
                   fired: false,
                   priority: 0,
                 },
               ],
             }));
           }
-        } else if (ev.data?.orderId) {
-          const order = get().placedOrders.find((o) => o.id === ev.data.orderId);
+        } else if (effectData?.orderId) {
+          const order = get().placedOrders.find((o) => o.id === effectData.orderId);
           if (order) {
             const weight = get().scenario?.patient?.weight ?? 70;
             const effect = getOrderEffect(order, weight, get().patient?.pathology);
             if (effect) {
               get().addActiveEffect(effect);
               // 更新 order 狀態為 in_progress
-              get().updateOrderStatus(ev.data.orderId, "in_progress");
+              get().updateOrderStatus(effectData.orderId, "in_progress");
               // 護理師確認藥物生效
               set((state) => ({
                 timeline: [
@@ -1065,7 +1078,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         id: nextId("ev"),
         triggerAt: clock.currentTime + params.definition.timeToResult,
         type: "lab_result",
-        data: { orderId, orderName: params.definition.name },
+        data: { orderId, orderName: params.definition.name } as LabResultData,
         fired: false,
         priority: 1,
       });
@@ -1078,7 +1091,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         id: nextId("ev"),
         triggerAt: clock.currentTime + timeToEffect,
         type: "order_effect",
-        data: { orderId },
+        data: { orderId } as OrderEffectData,
         fired: false,
         priority: 1,
       });
@@ -1139,7 +1152,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         isMTP: true,
         mtpRound: 1,
         products: { prbc: 2, ffp: 2, platelet: 1 },
-      },
+      } as OrderEffectData,
       fired: false,
       priority: 0,
     };

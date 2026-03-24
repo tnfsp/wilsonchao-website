@@ -292,9 +292,9 @@ export default function ProVitalsPanel({
             value={`${vitals.sbp}/${vitals.dbp}`}
             unit="mmHg"
             valueColor={bpLevel === "critical" ? "text-red-400" : bpLevel === "warning" ? "text-yellow-400" : "text-white"}
-            alertLevel={mapLevel !== "normal" ? mapLevel : bpLevel}
+            alertLevel={bpLevel}
             trendArrow={bpArrow}
-            subValue={`MAP ${mapVal} mmHg`}
+            subValue={`MAP ${mapVal}${mapLevel !== "normal" ? (mapLevel === "critical" ? " ⚠" : " ↓") : ""}`}
             flashClass={bpFlash}
           />
           <VitalCard
