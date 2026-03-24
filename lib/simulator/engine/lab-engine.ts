@@ -480,7 +480,7 @@ export function buildLabContext(
     const subcat = order.definition.subcategory;
 
     // Only count administered orders
-    if (order.status !== "active" && order.status !== "completed") continue;
+    if (order.status !== "in_progress" && order.status !== "completed") continue;
 
     if (subcat === "prbc" || id?.startsWith("prbc")) {
       const units = parseInt(order.dose) || 1;

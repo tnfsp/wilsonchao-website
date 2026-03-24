@@ -433,7 +433,7 @@ function computeALineWaveform(
   severity: number,
   vitals: VitalSigns
 ): VitalSigns["aLineWaveform"] {
-  if (pathology === "tamponade" && severity > 40) return "low_amplitude";
+  if ((pathology === "tamponade" || pathology === "cardiac_tamponade") && severity > 40) return "low_amplitude";
   if (pathology === "surgical_bleeding" || pathology === "coagulopathy") {
     if (severity > 60) return "low_amplitude";
     if (severity > 30) return "dampened";

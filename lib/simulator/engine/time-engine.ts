@@ -223,6 +223,32 @@ function evaluateSingleCondition(
   } else if (field.startsWith("action_not_taken:")) {
     const actionKey = field.slice(17);
     return !matchAction(state.actionsTaken, actionKey);
+  } else if (field === "blood_units_given") {
+    // Count blood product orders (pRBC, FFP, Platelet, Cryo)
+    const bloodPatterns = ["prbc", "ffp", "platelet", "cryo"];
+    let totalUnits = 0;
+    for (const order of state.orders) {
+      if (order.status !== "in_progress" && order.status !== "completed") continue;
+      const oid = order.definition.id?.toLowerCase() ?? "";
+      const subcat = order.definition.subcategory?.toLowerCase() ?? "";
+      if (bloodPatterns.some((p) => oid.includes(p) || subcat.includes(p))) {
+        totalUnits += parseInt(order.dose) || 1;
+      }
+    }
+    actual = totalUnits;
+  } else if (field === "total_fluid_given") {
+    // Sum fluid volumes (NS, LR, Albumin, or category=fluid)
+    const fluidPatterns = ["normal_saline", "lactated_ringer", "ns", "lr", "albumin"];
+    let totalMl = 0;
+    for (const order of state.orders) {
+      if (order.status !== "in_progress" && order.status !== "completed") continue;
+      const oid = order.definition.id?.toLowerCase() ?? "";
+      const cat = order.definition.category;
+      if (cat === "fluid" || fluidPatterns.some((p) => oid.includes(p))) {
+        totalMl += parseFloat(order.dose) || 500;
+      }
+    }
+    actual = totalMl;
   } else {
     // 未知欄位，條件不成立
     return false;
