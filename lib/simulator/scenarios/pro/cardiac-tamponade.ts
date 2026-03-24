@@ -85,13 +85,13 @@ const events: ScriptedEvent[] = [
     severityChange: 0,
   },
 
-  // ── 05:00 ── CT output 突然掉！CVP 開始爬
+  // ── 05:00 ── CT output 突然掉
   {
     id: "evt-05-ct-drops",
     triggerTime: 5,
     type: "nurse_call",
     message:
-      "醫師！不太對——chest tube 突然出很少了，現在大概 {{ct_rate}} cc/hr。而且 CVP monitor 在升，現在 {{cvp}}。",
+      "醫師！不太對——chest tube 突然出很少了，現在大概 {{ct_rate}} cc/hr。之前都還蠻穩定的，這兩個小時突然變少。",
     chestTubeChanges: {
       currentRate: 50,
       totalOutput: 575,
@@ -99,7 +99,17 @@ const events: ScriptedEvent[] = [
       hasClots: true,
       isPatent: true, // 還沒完全堵
     },
-    severityChange: 20,
+    severityChange: 15,
+  },
+
+  // ── 07:00 ── CVP 悄悄爬上來（分開報，讓學員自己串線索）
+  {
+    id: "evt-07-cvp-rising",
+    triggerTime: 7,
+    type: "nurse_call",
+    message:
+      "醫師，跟你報一下，CVP 現在 {{cvp}}，比剛剛高了一些。血壓 {{sbp}}/{{dbp}}，接下來要怎麼處理？",
+    severityChange: 5,
   },
 
   // ── 10:00 ── CT output 幾乎沒了。Beck triad 開始形成
@@ -108,7 +118,7 @@ const events: ScriptedEvent[] = [
     triggerTime: 10,
     type: "nurse_call",
     message:
-      "醫師，CT 這 5 分鐘幾乎沒引流了，只有 {{ct_rate}}cc/hr。血壓掉到 {{sbp}}/{{dbp}}，心跳 {{hr}}，CVP 直接跳到 {{cvp}}。我聽心音好像有變悶。還有——A-line 波形呼吸的時候落差變很大。",
+      "醫師，CT 這幾分鐘幾乎沒東西出來了，只有 {{ct_rate}}cc/hr。血壓 {{sbp}}/{{dbp}}，心跳 {{hr}}。病人看起來越來越不舒服，一直說胸悶。",
     chestTubeChanges: {
       currentRate: 20,
       totalOutput: 595,
@@ -134,7 +144,7 @@ const events: ScriptedEvent[] = [
     triggerTime: 15,
     type: "nurse_call",
     message:
-      "醫師！CT 完全沒出了——零！CVP {{cvp}}，血壓 {{sbp}}/{{dbp}}，heart rate {{hr}}。頸靜脈怒張很明顯，聽心音很悶。",
+      "醫師！CT 完全沒出了——零！血壓 {{sbp}}/{{dbp}}，heart rate {{hr}}，CVP {{cvp}}。病人躁動、冒冷汗。",
     chestTubeChanges: {
       currentRate: 0,
       totalOutput: 595,

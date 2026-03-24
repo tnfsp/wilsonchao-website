@@ -61,7 +61,7 @@ export default function IOBalanceBar() {
           <span className="hidden sm:inline">返回</span>
         </button>
         <span className="text-white font-semibold text-sm truncate max-w-[160px] sm:max-w-xs">
-          {scenario?.title ?? "ICU 模擬器"}
+          {scenario?.hiddenTitle ?? scenario?.title ?? "ICU 模擬器"}
         </span>
         {scenario?.difficulty && (
           <span
