@@ -390,19 +390,20 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
         });
       } else {
         // Special action (call_senior, pocus_cardiac, etc.) — track directly
-        const current = useProGameStore.getState();
+        // Re-read state each iteration to avoid overwriting previous actions
+        const fresh = useProGameStore.getState();
         useProGameStore.setState({
           playerActions: [
-            ...current.playerActions,
+            ...fresh.playerActions,
             {
               action: order.definitionId,
-              gameTime: current.clock.currentTime,
+              gameTime: fresh.clock.currentTime,
               category: "preset",
             },
           ],
         });
-        current.addTimelineEntry({
-          gameTime: current.clock.currentTime,
+        fresh.addTimelineEntry({
+          gameTime: fresh.clock.currentTime,
           type: "player_action",
           content: preset.label,
           sender: "player",

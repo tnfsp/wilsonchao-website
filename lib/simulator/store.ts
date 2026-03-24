@@ -892,7 +892,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         const fallback = get().scenario;
         if (!fallback) return text;
         const v = fallback.initialVitals;
-        const ct = fallback.initialChestTube;
+        const ct = fallback.initialChestTube ?? { currentRate: 0, totalOutput: 0 };
         return text
           .replace(/\{\{hr\}\}/g, String(Math.round(v.hr)))
           .replace(/\{\{sbp\}\}/g, String(Math.round(v.sbp)))
