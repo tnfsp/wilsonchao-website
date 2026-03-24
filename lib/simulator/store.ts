@@ -13,6 +13,7 @@
 import { create } from "zustand";
 import { getOrderEffect, getMTPRoundEffect } from "@/lib/simulator/engine/order-engine";
 import { updatePatientState } from "@/lib/simulator/engine/patient-engine";
+import { checkRescueActivation, evaluateRescueActions, getRescueStabilizeValues } from "@/lib/simulator/engine/rescue-engine";
 import { evaluateCondition } from "@/lib/simulator/engine/time-engine";
 import type { GameStateSnapshot } from "@/lib/simulator/engine/time-engine";
 import { computeLabSnapshot, buildLabContext } from "@/lib/simulator/engine/lab-engine";
@@ -47,6 +48,7 @@ import type {
   ShockResult,
   DifficultyLevel,
   DifficultyConfig,
+  RescueState,
 } from "./types";
 
 // ============================================================
@@ -111,6 +113,9 @@ export interface ProGameStore {
   // Death
   deathCause: string | null;
 
+  // Rescue Window (Standard mode delayed death)
+  rescueState: RescueState | null;
+
   // UI
   activeModal: ModalType;
 
@@ -173,6 +178,12 @@ export interface ProGameStore {
 
   /** 觸發病人死亡（由外部 tick 呼叫） */
   triggerDeath: (cause: string) => void;
+
+  /** Set rescue window state (Standard mode) */
+  setRescueState: (state: RescueState | null) => void;
+
+  /** Tick rescue countdown (call every real-time second) */
+  tickRescueCountdown: () => void;
 
   /** 檢查並更新 guidance highlight */
   checkGuidance: () => void;
@@ -331,6 +342,7 @@ const initialState = {
   sbarReport: null as Record<string, string> | null,
   score: null as GameScore | null,
   deathCause: null as string | null,
+  rescueState: null as RescueState | null,
   activeModal: null as ModalType,
   ventilator: initialVentilatorState,
   guidanceMode: false,
@@ -414,6 +426,8 @@ function computeBasicScore(
     | "setDefibrillatorMode"
     | "deliverShock"
     | "triggerDeath"
+    | "setRescueState"
+    | "tickRescueCountdown"
     | "checkGuidance"
     | "setGuidanceHighlight"
     | "actionAdvance"
@@ -1457,12 +1471,56 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
   },
 
   // ----------------------------------------------------------
-  // triggerDeath
+  // triggerDeath (with rescue window interception for Standard)
   // ----------------------------------------------------------
   triggerDeath: (cause: string) => {
     const state = get();
     if (state.phase !== "playing") return;
 
+    // Standard mode: intercept death → activate rescue window instead
+    if (state.difficulty !== "pro" && state.difficultyConfig.rescueWindowSeconds && !state.rescueState) {
+      const rescueState: RescueState = {
+        active: true,
+        startedAt: state.clock.currentTime,
+        expiresAt: state.clock.currentTime + (state.difficultyConfig.rescueWindowSeconds / 60),
+        remainingSeconds: state.difficultyConfig.rescueWindowSeconds,
+        requiredActions: [],
+        cause,
+      };
+
+      // Try to get scenario-specific rescue config
+      const scenarioId = state.scenario?.id ?? "";
+      const activation = checkRescueActivation(
+        state.patient!.vitals,
+        state.patient!.severity,
+        state.difficultyConfig,
+        scenarioId,
+        state.clock.currentTime,
+      );
+      if (activation) {
+        rescueState.requiredActions = activation.requiredActions;
+        rescueState.cause = activation.cause;
+      }
+
+      const nurseName = state.scenario?.nurseProfile?.name ?? "護理師";
+      const rescueEntry: TimelineEntry = {
+        id: nextId("tl"),
+        gameTime: state.clock.currentTime,
+        type: "nurse_message",
+        content: `${nurseName}：醫師！病人快不行了！趕快處理！`,
+        sender: "nurse",
+        isImportant: true,
+      };
+
+      set((s) => ({
+        rescueState,
+        timeline: [...s.timeline, rescueEntry],
+      }));
+      return;
+    }
+
+    // Already in rescue window and it expired → actual death
+    // Or Pro mode → direct death
     const finalClock: GameClock = { ...state.clock, isPaused: true };
 
     const deathEntry: TimelineEntry = {
@@ -1478,9 +1536,86 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       phase: "death",
       clock: finalClock,
       deathCause: cause,
+      rescueState: null,
       timeline: [...s.timeline, deathEntry],
       activeModal: null,
     }));
+  },
+
+  // ----------------------------------------------------------
+  // setRescueState
+  // ----------------------------------------------------------
+  setRescueState: (rescueState: RescueState | null) => {
+    set({ rescueState });
+  },
+
+  // ----------------------------------------------------------
+  // tickRescueCountdown
+  // ----------------------------------------------------------
+  tickRescueCountdown: () => {
+    const state = get();
+    if (!state.rescueState?.active) return;
+
+    // Check if player took a rescue action
+    const rescued = evaluateRescueActions(
+      state.playerActions,
+      state.rescueState.startedAt,
+      state.rescueState.requiredActions,
+    );
+
+    if (rescued) {
+      // Stabilize patient
+      const nurseName = state.scenario?.nurseProfile?.name ?? "護理師";
+      const stabilizeEntry: TimelineEntry = {
+        id: nextId("tl"),
+        gameTime: state.clock.currentTime,
+        type: "nurse_message",
+        content: `${nurseName}：好險！穩住了！`,
+        sender: "nurse",
+        isImportant: true,
+      };
+
+      // Reduce severity and stabilize vitals
+      const pathology = state.patient?.pathology ?? "surgical_bleeding";
+      const safeVitals = getRescueStabilizeValues(pathology);
+      const currentPatient = state.patient;
+      if (currentPatient) {
+        const stabilizedVitals = { ...currentPatient.vitals, ...safeVitals };
+        const newSeverity = Math.min(currentPatient.severity, 60); // cap severity down
+
+        set((s) => ({
+          rescueState: null,
+          patient: {
+            ...currentPatient,
+            vitals: stabilizedVitals,
+            severity: newSeverity,
+          },
+          timeline: [...s.timeline, stabilizeEntry],
+        }));
+      } else {
+        set((s) => ({
+          rescueState: null,
+          timeline: [...s.timeline, stabilizeEntry],
+        }));
+      }
+      return;
+    }
+
+    // Decrement countdown
+    const remaining = state.rescueState.remainingSeconds - 1;
+    if (remaining <= 0) {
+      // Rescue window expired → actual death
+      set({ rescueState: null });
+      get().triggerDeath(state.rescueState.cause);
+      return;
+    }
+
+    set({
+      rescueState: {
+        ...state.rescueState,
+        remainingSeconds: remaining,
+      },
+    });
   },
 
   // ----------------------------------------------------------

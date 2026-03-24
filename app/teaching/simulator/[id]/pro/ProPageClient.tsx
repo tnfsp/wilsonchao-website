@@ -15,6 +15,7 @@ import {
 import SBARModal from "@/components/simulator/pro/SBARModal";
 import DebriefPanel from "@/components/simulator/pro/DebriefPanel";
 import DeathScreen from "@/components/simulator/pro/DeathScreen";
+import RescueCountdown from "@/components/simulator/standard/RescueCountdown";
 import ProGameLayout from "@/components/simulator/pro/ProGameLayout";
 import ProVitalsPanel from "@/components/simulator/pro/ProVitalsPanel";
 import ChestTubePanel from "@/components/simulator/pro/ChestTubePanel";
@@ -501,6 +502,7 @@ export default function ProPageClient({ id }: ProPageClientProps) {
       <>
         <GameScreen />
         <SBARModal />
+        <RescueCountdown />
       </>
     );
   }
