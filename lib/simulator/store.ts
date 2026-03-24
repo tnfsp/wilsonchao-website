@@ -887,7 +887,24 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     // 插值為當前 patient state 的真實數字
     const currentPatient = get().patient;
     const interpolateVitals = (text: string): string => {
-      if (!currentPatient) return text;
+      if (!currentPatient) {
+        // Fallback: use scenario initialVitals if patient not yet hydrated
+        const fallback = get().scenario;
+        if (!fallback) return text;
+        const v = fallback.initialVitals;
+        const ct = fallback.initialChestTube;
+        return text
+          .replace(/\{\{hr\}\}/g, String(Math.round(v.hr)))
+          .replace(/\{\{sbp\}\}/g, String(Math.round(v.sbp)))
+          .replace(/\{\{dbp\}\}/g, String(Math.round(v.dbp)))
+          .replace(/\{\{map\}\}/g, String(Math.round(v.map)))
+          .replace(/\{\{cvp\}\}/g, String(Math.round(v.cvp)))
+          .replace(/\{\{spo2\}\}/g, String(Math.round(v.spo2)))
+          .replace(/\{\{rr\}\}/g, String(Math.round(v.rr)))
+          .replace(/\{\{temp\}\}/g, String(v.temperature))
+          .replace(/\{\{ct_rate\}\}/g, String(ct.currentRate))
+          .replace(/\{\{ct_total\}\}/g, String(ct.totalOutput));
+      }
       const v = currentPatient.vitals;
       const ct = currentPatient.chestTube;
       return text
