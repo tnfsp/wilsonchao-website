@@ -81,6 +81,16 @@ export const septicShockPresets: StandardPresetOrder[] = [
     orders: [
       { definitionId: "acetaminophen", dose: "1000", frequency: "STAT" },
     ],
+    penaltyEffect: {
+      id: "penalty-antipyretic",
+      source: "Acetaminophen 1000mg",
+      type: "fluid",
+      startTime: 0,
+      duration: 15,
+      vitalChanges: {},
+      severityChange: 5,
+      isCorrectTreatment: false,
+    },
   },
   {
     id: "preset-dopamine",
@@ -93,6 +103,104 @@ export const septicShockPresets: StandardPresetOrder[] = [
     orders: [
       { definitionId: "dopamine", dose: "5", frequency: "Continuous" },
     ],
+    penaltyEffect: {
+      id: "penalty-dopamine",
+      source: "Dopamine 5mcg/kg/min",
+      type: "vasopressor",
+      startTime: 0,
+      duration: 10,
+      vitalChanges: { hr: 20 },
+      severityChange: 3,
+      isCorrectTreatment: false,
+    },
+  },
+  {
+    id: "preset-dexamethasone-high",
+    label: "Dexamethasone 10mg IV",
+    icon: "💊",
+    category: "medication",
+    isCorrect: false,
+    feedbackIfWrong:
+      "學長，高劑量 Dexamethasone 不是 septic shock 的第一線，先給抗生素和輸液才對，類固醇要拖到 vasopressor refractory 才考慮。",
+    orders: [
+      { definitionId: "dexamethasone", dose: "10", frequency: "STAT" },
+    ],
+    penaltyEffect: {
+      id: "penalty-dexamethasone-high",
+      source: "Dexamethasone 10mg IV",
+      type: "fluid",
+      startTime: 0,
+      duration: 20,
+      vitalChanges: { hr: 5 },
+      severityChange: 6,
+      isCorrectTreatment: false,
+    },
+  },
+  {
+    id: "preset-restrict-fluid",
+    label: "限制補液、觀察",
+    icon: "🚫",
+    category: "medication",
+    isCorrect: false,
+    feedbackIfWrong:
+      "學長，sepsis 早期需要積極 volume resuscitation，限液觀察會讓器官灌流更差！",
+    orders: [
+      { definitionId: "fluid_restrict", dose: "1", frequency: "STAT" },
+    ],
+    penaltyEffect: {
+      id: "penalty-restrict-fluid",
+      source: "Fluid restriction order",
+      type: "fluid",
+      startTime: 0,
+      duration: 15,
+      vitalChanges: { sbp: -15, map: -12, hr: 10 },
+      severityChange: 10,
+      isCorrectTreatment: false,
+    },
+  },
+  {
+    id: "preset-esmolol",
+    label: "Esmolol drip（控制心跳）",
+    icon: "💊",
+    category: "medication",
+    isCorrect: false,
+    feedbackIfWrong:
+      "學長，septic shock 時 tachycardia 是代償機制，用 Esmolol 壓心率只會讓心輸出量更差、血壓更低！",
+    orders: [
+      { definitionId: "esmolol", dose: "50", frequency: "Continuous" },
+    ],
+    penaltyEffect: {
+      id: "penalty-esmolol",
+      source: "Esmolol 50mcg/kg/min",
+      type: "vasopressor",
+      startTime: 0,
+      duration: 10,
+      vitalChanges: { sbp: -20, hr: -30, map: -15 },
+      severityChange: 14,
+      isCorrectTreatment: false,
+    },
+  },
+  {
+    id: "preset-oral-antibiotics",
+    label: "口服 Augmentin 抗生素",
+    icon: "💊",
+    category: "medication",
+    isCorrect: false,
+    feedbackIfWrong:
+      "學長，septic shock 一定要靜脈注射抗生素，口服吸收太慢、生物利用率不夠，這樣等不及！",
+    orders: [
+      { definitionId: "oral_augmentin", dose: "875", frequency: "BID" },
+    ],
+    penaltyEffect: {
+      id: "penalty-oral-antibiotics",
+      source: "Oral Augmentin 875mg",
+      type: "fluid",
+      startTime: 0,
+      duration: 20,
+      vitalChanges: { hr: 5 },
+      severityChange: 8,
+      isCorrectTreatment: false,
+    },
   },
 ];
 
@@ -177,4 +285,9 @@ export const septicShockStandard: StandardOverlay = {
   timeScale: 0.75,
   rescueThreshold: { sbp: 65, hr: 150, spo2: 85 },
   rescueWindowSeconds: 60,
+  nurseUrgencyEvents: [
+    { id: "urg-1", triggerAfterIdleMinutes: 2, message: "學長，病人燒成這樣，要趕快處理吧？" },
+    { id: "urg-2", triggerAfterIdleMinutes: 5, message: "學長！病人意識越來越差了，Sepsis Hour-1 Bundle 的時間在跑！" },
+    { id: "urg-3", triggerAfterIdleMinutes: 8, message: "學長！！感染很嚴重，我先叫主治來了！" },
+  ],
 };

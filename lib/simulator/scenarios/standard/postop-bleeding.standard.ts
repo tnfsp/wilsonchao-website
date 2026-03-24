@@ -81,6 +81,16 @@ export const postopBleedingPresets: StandardPresetOrder[] = [
     orders: [
       { definitionId: "furosemide", dose: "20", frequency: "STAT" },
     ],
+    penaltyEffect: {
+      id: "penalty-furosemide",
+      source: "Furosemide 20mg",
+      type: "fluid",
+      startTime: 0,
+      duration: 10,
+      vitalChanges: { sbp: -20, hr: 15 },
+      severityChange: 10,
+      isCorrectTreatment: false,
+    },
   },
   {
     id: "preset-dopamine",
@@ -93,6 +103,104 @@ export const postopBleedingPresets: StandardPresetOrder[] = [
     orders: [
       { definitionId: "dopamine", dose: "5", frequency: "Continuous" },
     ],
+    penaltyEffect: {
+      id: "penalty-dopamine",
+      source: "Dopamine 5mcg/kg/min",
+      type: "vasopressor",
+      startTime: 0,
+      duration: 10,
+      vitalChanges: { sbp: 5, hr: 10 },
+      severityChange: 5,
+      isCorrectTreatment: false,
+    },
+  },
+  {
+    id: "preset-heparin-drip",
+    label: "Heparin Drip（抗凝）",
+    icon: "💊",
+    category: "medication",
+    isCorrect: false,
+    feedbackIfWrong:
+      "學長，病人在大量出血，給抗凝血劑只會讓出血更難止、情況更快惡化！",
+    orders: [
+      { definitionId: "heparin", dose: "1000", frequency: "Continuous" },
+    ],
+    penaltyEffect: {
+      id: "penalty-heparin-drip",
+      source: "Heparin drip 1000U/hr",
+      type: "fluid",
+      startTime: 0,
+      duration: 15,
+      vitalChanges: { sbp: -15, hr: 12 },
+      severityChange: 18,
+      isCorrectTreatment: false,
+    },
+  },
+  {
+    id: "preset-warfarin",
+    label: "Warfarin 5mg 口服",
+    icon: "💊",
+    category: "medication",
+    isCorrect: false,
+    feedbackIfWrong:
+      "學長，抗凝血劑在術後大出血時是絕對禁忌，會讓凝血更差、失血量更多！",
+    orders: [
+      { definitionId: "warfarin", dose: "5", frequency: "STAT" },
+    ],
+    penaltyEffect: {
+      id: "penalty-warfarin",
+      source: "Warfarin 5mg PO",
+      type: "fluid",
+      startTime: 0,
+      duration: 20,
+      vitalChanges: { sbp: -10, hr: 8 },
+      severityChange: 15,
+      isCorrectTreatment: false,
+    },
+  },
+  {
+    id: "preset-nitroglycerin-pb",
+    label: "Nitroglycerin 降血壓",
+    icon: "💊",
+    category: "medication",
+    isCorrect: false,
+    feedbackIfWrong:
+      "學長，血壓已經在掉了，Nitroglycerin 會讓血壓更低，出血的傷口更難靠血壓自我止血！",
+    orders: [
+      { definitionId: "nitroglycerin", dose: "5", frequency: "Continuous" },
+    ],
+    penaltyEffect: {
+      id: "penalty-nitroglycerin-pb",
+      source: "Nitroglycerin drip 5mcg/min",
+      type: "fluid",
+      startTime: 0,
+      duration: 10,
+      vitalChanges: { sbp: -22, dbp: -12, hr: 15 },
+      severityChange: 13,
+      isCorrectTreatment: false,
+    },
+  },
+  {
+    id: "preset-hold-transfuse-observe",
+    label: "暫緩輸血、繼續觀察",
+    icon: "⏸️",
+    category: "medication",
+    isCorrect: false,
+    feedbackIfWrong:
+      "學長，CT 一直在出鮮紅色的血，觀察等待只會讓 Hb 繼續掉、血壓繼續崩，active bleeding 要積極補血！",
+    orders: [
+      { definitionId: "hold_transfusion", dose: "1", frequency: "STAT" },
+    ],
+    penaltyEffect: {
+      id: "penalty-hold-transfuse-observe",
+      source: "Hold transfusion order",
+      type: "blood_product",
+      startTime: 0,
+      duration: 15,
+      vitalChanges: { sbp: -12, hr: 15, spo2: -3 },
+      severityChange: 12,
+      isCorrectTreatment: false,
+    },
   },
 ];
 
@@ -167,4 +275,9 @@ export const postopBleedingStandard: StandardOverlay = {
   timeScale: 0.75,
   rescueThreshold: { sbp: 70, hr: 140, spo2: 85 },
   rescueWindowSeconds: 60,
+  nurseUrgencyEvents: [
+    { id: "urg-1", triggerAfterIdleMinutes: 2, message: "學長，血一直在出耶，要怎麼辦？" },
+    { id: "urg-2", triggerAfterIdleMinutes: 5, message: "學長！CT 出血量越來越多了！再不處理真的會出事！" },
+    { id: "urg-3", triggerAfterIdleMinutes: 8, message: "學長！！血壓快撐不住了，我先通知 OR 了！" },
+  ],
 };

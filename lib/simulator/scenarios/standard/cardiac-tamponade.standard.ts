@@ -80,6 +80,16 @@ export const cardiacTamponadePresets: StandardPresetOrder[] = [
     orders: [
       { definitionId: "furosemide", dose: "20", frequency: "STAT" },
     ],
+    penaltyEffect: {
+      id: "penalty-furosemide",
+      source: "Furosemide 20mg",
+      type: "fluid",
+      startTime: 0, // will be set at runtime
+      duration: 10,
+      vitalChanges: { sbp: -15, hr: 10 },
+      severityChange: 8,
+      isCorrectTreatment: false,
+    },
   },
   {
     id: "preset-pericardiocentesis",
@@ -92,6 +102,82 @@ export const cardiacTamponadePresets: StandardPresetOrder[] = [
     orders: [
       { definitionId: "pericardiocentesis", dose: "1", frequency: "STAT" },
     ],
+    penaltyEffect: {
+      id: "penalty-pericardiocentesis",
+      source: "Pericardiocentesis",
+      type: "procedure",
+      startTime: 0,
+      duration: 5,
+      vitalChanges: {},
+      severityChange: 5,
+      isCorrectTreatment: false,
+    },
+  },
+  {
+    id: "preset-nitroglycerin-ct",
+    label: "Nitroglycerin Drip",
+    icon: "💊",
+    category: "medication",
+    isCorrect: false,
+    feedbackIfWrong:
+      "學長，Nitroglycerin 會降低 preload，tamponade 本來就回心血量不夠，這樣會讓血壓更掉！",
+    orders: [
+      { definitionId: "nitroglycerin", dose: "5", frequency: "Continuous" },
+    ],
+    penaltyEffect: {
+      id: "penalty-nitroglycerin-ct",
+      source: "Nitroglycerin drip 5mcg/min",
+      type: "fluid",
+      startTime: 0,
+      duration: 8,
+      vitalChanges: { sbp: -25, dbp: -15, hr: 15 },
+      severityChange: 12,
+      isCorrectTreatment: false,
+    },
+  },
+  {
+    id: "preset-metoprolol-ct",
+    label: "Metoprolol 1mg IV",
+    icon: "💊",
+    category: "medication",
+    isCorrect: false,
+    feedbackIfWrong:
+      "學長，病人靠心跳快來維持心輸出量，現在把心率壓下去會讓血壓直接崩掉！",
+    orders: [
+      { definitionId: "metoprolol", dose: "1", frequency: "STAT" },
+    ],
+    penaltyEffect: {
+      id: "penalty-metoprolol-ct",
+      source: "Metoprolol 1mg IV",
+      type: "fluid",
+      startTime: 0,
+      duration: 10,
+      vitalChanges: { sbp: -20, hr: -25 },
+      severityChange: 15,
+      isCorrectTreatment: false,
+    },
+  },
+  {
+    id: "preset-morphine-ct",
+    label: "Morphine 2mg IV 止痛",
+    icon: "💊",
+    category: "medication",
+    isCorrect: false,
+    feedbackIfWrong:
+      "學長，Morphine 會擴張血管又抑制呼吸，tamponade 的病人根本無法承受這種 preload 下降！",
+    orders: [
+      { definitionId: "morphine", dose: "2", frequency: "STAT" },
+    ],
+    penaltyEffect: {
+      id: "penalty-morphine-ct",
+      source: "Morphine 2mg IV",
+      type: "fluid",
+      startTime: 0,
+      duration: 12,
+      vitalChanges: { sbp: -20, dbp: -10, spo2: -5, rr: -4 },
+      severityChange: 12,
+      isCorrectTreatment: false,
+    },
   },
 ];
 
@@ -172,4 +258,9 @@ export const cardiacTamponadeStandard: StandardOverlay = {
   timeScale: 0.75,
   rescueThreshold: { sbp: 60, hr: 150, spo2: 80 },
   rescueWindowSeconds: 60,
+  nurseUrgencyEvents: [
+    { id: "urg-1", triggerAfterIdleMinutes: 2, message: "學長...病人看起來不太好耶，要不要處理一下？" },
+    { id: "urg-2", triggerAfterIdleMinutes: 5, message: "學長！病人血壓一直在掉，我們真的要趕快做點什麼！" },
+    { id: "urg-3", triggerAfterIdleMinutes: 8, message: "學長！！我先 call 值班主治了！！！" },
+  ],
 };

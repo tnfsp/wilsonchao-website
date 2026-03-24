@@ -3,6 +3,7 @@
 import React from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import MiniVitalsBar from "../pro/MiniVitalsBar";
+import MiniWaveform from "./MiniWaveform";
 
 // ── CSS ─────────────────────────────────────────────────────────────────────
 
@@ -70,6 +71,10 @@ export default function StandardGameLayout({
       </div>
       {/* Sticky mini vitals bar — visible on mobile only, mirrors Pro mode */}
       <MiniVitalsBar />
+      {/* Mini waveform — visible on mobile only, right after MiniVitalsBar */}
+      <div className="lg:hidden">
+        <MiniWaveform />
+      </div>
 
       {/* Desktop: side-by-side */}
       <div className="hidden lg:flex flex-1 overflow-hidden">
@@ -78,6 +83,7 @@ export default function StandardGameLayout({
           className="w-[340px] flex-shrink-0 overflow-y-auto border-r border-white/8 p-3 space-y-3"
           style={{ scrollbarWidth: "thin", scrollbarColor: "#ffffff1a transparent" }}
         >
+          <MiniWaveform />
           {vitalsPanel}
         </div>
 

@@ -12,6 +12,7 @@ import {
 import type { PlayerAction } from "@/lib/simulator/engine/score-engine";
 import { standardOverlays } from "@/lib/simulator/scenarios/standard";
 import type { StandardPresetOrder } from "@/lib/simulator/scenarios/standard/types";
+import { evaluateUrgency } from "@/lib/simulator/engine/urgency-engine";
 import { getMedicationById } from "@/lib/simulator/data/medications";
 import { getLabById } from "@/lib/simulator/data/labs";
 import { getTransfusionById } from "@/lib/simulator/data/transfusions";
@@ -24,6 +25,8 @@ import SimplifiedActionBar from "@/components/simulator/standard/SimplifiedActio
 import PresetOrderPanel from "@/components/simulator/standard/PresetOrderPanel";
 import RescueCountdown from "@/components/simulator/standard/RescueCountdown";
 import StandardDebriefPanel from "@/components/simulator/standard/StandardDebriefPanel";
+import StandardPEModal from "@/components/simulator/standard/StandardPEModal";
+import StandardImagingModal from "@/components/simulator/standard/StandardImagingModal";
 
 // Re-use Pro components where appropriate
 import ChatTimeline from "@/components/simulator/pro/ChatTimeline";
@@ -33,6 +36,7 @@ import DeathScreen from "@/components/simulator/pro/DeathScreen";
 import LabOrderModal from "@/components/simulator/pro/LabOrderModal";
 import { ConsultModal } from "@/components/simulator/pro/ConsultModal";
 import { PauseThinkModal } from "@/components/simulator/pro/PauseThinkModal";
+import StandardDefibrillatorModal from "@/components/simulator/standard/DefibrillatorModal";
 
 // ── Tags to hide from pre-game display ───────────────────────────────────────
 
@@ -190,8 +194,17 @@ function useStandardGameTick(
   const activeModal = useProGameStore((s) => s.activeModal);
   const advanceTime = useProGameStore((s) => s.advanceTime);
   const difficultyConfig = useProGameStore((s) => s.difficultyConfig);
+  const playerActions = useProGameStore((s) => s.playerActions);
 
   const lastGuidanceRef = useRef<Set<string>>(new Set());
+  const lastPlayerActionTimeRef = useRef<number>(0);
+  const firedUrgencyIdsRef = useRef<Set<string>>(new Set());
+
+  // Update lastPlayerActionTime whenever playerActions length changes
+  useEffect(() => {
+    const state = useProGameStore.getState();
+    lastPlayerActionTimeRef.current = state.clock.currentTime;
+  }, [playerActions.length]);
 
   const tickPatient = useCallback((minutes = 1) => {
     const state = useProGameStore.getState();
@@ -228,6 +241,30 @@ function useStandardGameTick(
               gameTime: state.clock.currentTime,
             });
           }
+        }
+      }
+    }
+
+    // Urgency engine: fire nurse messages when player is idle too long
+    if (overlay?.nurseUrgencyEvents && overlay.nurseUrgencyEvents.length > 0) {
+      const { toFire, updatedFiredIds } = evaluateUrgency(
+        overlay.nurseUrgencyEvents,
+        {
+          currentGameMinutes: state.clock.currentTime + minutes,
+          lastPlayerActionTime: lastPlayerActionTimeRef.current,
+          firedUrgencyIds: firedUrgencyIdsRef.current,
+        },
+      );
+
+      if (toFire.length > 0) {
+        firedUrgencyIdsRef.current = updatedFiredIds;
+        for (const evt of toFire) {
+          useProGameStore.getState().addTimelineEntry({
+            type: "nurse_message",
+            sender: "nurse",
+            content: evt.message,
+            gameTime: state.clock.currentTime + minutes,
+          });
         }
       }
     }
@@ -359,6 +396,22 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
           },
         ],
       });
+      // Apply penalty through patient-engine's ActiveEffect system
+      if (preset.penaltyEffect) {
+        const effect = {
+          ...preset.penaltyEffect,
+          startTime: state.clock.currentTime,
+        };
+        const patient = state.patient;
+        if (patient) {
+          useProGameStore.setState({
+            patient: {
+              ...patient,
+              activeEffects: [...patient.activeEffects, effect],
+            },
+          });
+        }
+      }
       return;
     }
 
@@ -433,6 +486,11 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
       <LabOrderModal />
       <ConsultModal />
       <PauseThinkModal />
+
+      {/* Standard-specific modals */}
+      <StandardPEModal />
+      <StandardImagingModal />
+      <StandardDefibrillatorModal />
     </>
   );
 }

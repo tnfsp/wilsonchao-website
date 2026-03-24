@@ -245,6 +245,190 @@ function ChecklistCard({
 }
 
 // ============================================================
+// Guided Review Step
+// ============================================================
+
+interface GuidedStepProps {
+  step: number;
+  expectedAction: ExpectedAction;
+  checklistItem?: ChecklistItem;
+}
+
+function GuidedStep({ step, expectedAction, checklistItem }: GuidedStepProps) {
+  const [whyExpanded, setWhyExpanded] = useState(false);
+  const completed = checklistItem?.completed ?? false;
+  const timeCompleted = checklistItem?.timeCompleted;
+
+  return (
+    <div
+      className={`rounded-xl border ${
+        completed
+          ? "border-emerald-700/40 bg-emerald-900/10"
+          : "border-red-700/30 bg-red-900/5"
+      } overflow-hidden`}
+    >
+      {/* Step header */}
+      <div className="px-4 py-3 flex items-start gap-3">
+        {/* Step number + status */}
+        <div className="shrink-0 flex flex-col items-center gap-1">
+          <div
+            className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${
+              completed
+                ? "bg-emerald-700 text-emerald-100"
+                : "bg-red-900/60 text-red-400 border border-red-700/50"
+            }`}
+          >
+            {step}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-2">
+            <p
+              className={`text-sm font-medium ${
+                completed ? "text-gray-200" : "text-gray-400"
+              }`}
+            >
+              {expectedAction.description || expectedAction.action}
+            </p>
+            {/* Status badge */}
+            <span
+              className={`shrink-0 text-xs px-2 py-0.5 rounded-full font-medium ${
+                completed
+                  ? "bg-emerald-900/50 text-emerald-400"
+                  : "bg-red-900/40 text-red-400"
+              }`}
+            >
+              {completed ? (timeCompleted !== undefined ? `✅ ${timeCompleted}min` : "✅ 完成") : "❌ 未執行"}
+            </span>
+          </div>
+
+          {/* Deadline hint */}
+          <p className="text-xs text-gray-600 mt-0.5">
+            建議在 {expectedAction.deadline} 分鐘內完成
+            {expectedAction.critical && (
+              <span className="ml-2 text-red-500 font-medium">• Critical</span>
+            )}
+          </p>
+
+          {/* Why toggle */}
+          {expectedAction.rationale && (
+            <button
+              onClick={() => setWhyExpanded(!whyExpanded)}
+              className="mt-2 flex items-center gap-1.5 text-xs text-amber-500 hover:text-amber-400 transition-colors"
+            >
+              <span
+                className={`transition-transform duration-200 ${
+                  whyExpanded ? "rotate-90" : ""
+                }`}
+              >
+                ▶
+              </span>
+              為什麼？
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Expandable why section */}
+      {whyExpanded && expectedAction.rationale && (
+        <div className="px-4 pb-4 ml-10 space-y-2">
+          <div className="rounded-lg bg-amber-900/10 border border-amber-700/20 p-3 space-y-2">
+            <p className="text-xs text-amber-300 leading-relaxed">
+              {expectedAction.rationale}
+            </p>
+            {expectedAction.howTo && (
+              <>
+                <div className="border-t border-amber-700/20 pt-2">
+                  <p className="text-[10px] text-cyan-500 font-medium mb-1">
+                    正確做法
+                  </p>
+                  <p className="text-xs text-gray-300 leading-relaxed">
+                    {expectedAction.howTo}
+                  </p>
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
+// Guided Review Section
+// ============================================================
+
+function GuidedReviewSection({
+  score,
+  scenario,
+}: {
+  score: StandardScore;
+  scenario: SimScenario;
+}) {
+  // Build a lookup from expectedAction id → checklistItem
+  const itemMap = new Map<string, ChecklistItem>(
+    score.items.map((item) => [item.id, item]),
+  );
+
+  // Order by criticality (critical first), then by deadline
+  const orderedActions = [...scenario.expectedActions].sort((a, b) => {
+    if (a.critical !== b.critical) return a.critical ? -1 : 1;
+    return a.deadline - b.deadline;
+  });
+
+  return (
+    <div className="space-y-3">
+      {orderedActions.map((action, idx) => (
+        <GuidedStep
+          key={action.id}
+          step={idx + 1}
+          expectedAction={action}
+          checklistItem={itemMap.get(action.id)}
+        />
+      ))}
+    </div>
+  );
+}
+
+// ============================================================
+// Key Learning Points Section
+// ============================================================
+
+function KeyLearningPoints({ keyPoints }: { keyPoints: string[] }) {
+  if (!keyPoints || keyPoints.length === 0) return null;
+
+  // Render bold text for **...** markdown pattern
+  function renderBold(text: string) {
+    const parts = text.split(/\*\*(.*?)\*\*/g);
+    return parts.map((part, i) =>
+      i % 2 === 1 ? (
+        <strong key={i} className="text-amber-300 font-semibold">
+          {part}
+        </strong>
+      ) : (
+        <span key={i}>{part}</span>
+      ),
+    );
+  }
+
+  return (
+    <div className="rounded-xl border border-amber-700/30 bg-amber-900/10 p-4 space-y-3">
+      <ul className="space-y-3">
+        {keyPoints.map((point, i) => (
+          <li key={i} className="flex gap-2 text-sm leading-relaxed">
+            <span className="text-amber-400 shrink-0 mt-0.5">💡</span>
+            <span className="text-gray-300">{renderBold(point)}</span>
+          </li>
+        ))}
+      </ul>
+    </div>
+  );
+}
+
+// ============================================================
 // Guideline Summary Section
 // ============================================================
 
@@ -396,6 +580,9 @@ export default function StandardDebriefPanel({
   const importantItems = score.items.filter((i) => i.importance === "important");
   const bonusItems = score.items.filter((i) => i.importance === "bonus");
 
+  const hasKeyPoints =
+    scenario.debrief.keyPoints && scenario.debrief.keyPoints.length > 0;
+
   return (
     <div
       className="min-h-screen overflow-y-auto"
@@ -474,6 +661,31 @@ export default function StandardDebriefPanel({
                 />
               ))}
             </div>
+          </section>
+        )}
+
+        <div className="border-t border-white/8" />
+
+        {/* Guided Review Section */}
+        {scenario.expectedActions.length > 0 && (
+          <section>
+            <h3 className="text-white font-bold text-sm mb-1 flex items-center gap-2">
+              <span className="text-cyan-400">🎓</span> Guided Review — 正確處置流程
+            </h3>
+            <p className="text-gray-500 text-xs mb-3">
+              點擊「為什麼？」查看每步驟的臨床理由
+            </p>
+            <GuidedReviewSection score={score} scenario={scenario} />
+          </section>
+        )}
+
+        {/* Key Learning Points */}
+        {hasKeyPoints && (
+          <section>
+            <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
+              <span className="text-amber-400">💡</span> Key Learning Points
+            </h3>
+            <KeyLearningPoints keyPoints={scenario.debrief.keyPoints} />
           </section>
         )}
 

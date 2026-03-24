@@ -9,14 +9,17 @@ interface ActionButtonConfig {
   id: string;
   icon: string;
   label: string;
-  modal: "order" | "lab_order" | "consult" | "sbar";
+  modal: "order" | "lab_order" | "consult" | "sbar" | "defibrillator" | "pe" | "imaging";
 }
 
 const MAIN_ACTIONS: ActionButtonConfig[] = [
   { id: "orders", icon: "\uD83D\uDC8A", label: "\u8655\u7F6E", modal: "order" },
   { id: "labs", icon: "\uD83E\uDE78", label: "\u6AA2\u67E5", modal: "lab_order" },
+  { id: "pe", icon: "\uD83E\uDE7A", label: "PE", modal: "pe" },
+  { id: "imaging", icon: "\uD83D\uDCF8", label: "\u5F71\u50CF", modal: "imaging" },
   { id: "call", icon: "\uD83D\uDCDE", label: "\u53EB\u4EBA", modal: "consult" },
   { id: "sbar", icon: "\uD83D\uDCCB", label: "SBAR", modal: "sbar" },
+  { id: "defib", icon: "⚡", label: "電擊", modal: "defibrillator" },
 ];
 
 // ── ActionButton ────────────────────────────────────────────────────────────
@@ -75,7 +78,7 @@ export default function SimplifiedActionBar() {
       className="w-full px-3 py-3 space-y-2"
       style={{ background: "#0d1f3c" }}
     >
-      {/* 4 main action buttons */}
+      {/* action buttons */}
       <div className="grid grid-cols-4 gap-2">
         {MAIN_ACTIONS.map((action) => (
           <ActionButton

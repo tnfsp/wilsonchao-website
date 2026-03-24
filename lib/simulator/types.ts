@@ -24,6 +24,7 @@ export interface StandardOverlay {
   timeScale: number;
   rescueThreshold: { sbp: number; hr: number; spo2: number };
   rescueWindowSeconds: number;
+  nurseUrgencyEvents?: import("./scenarios/standard/types").NurseUrgencyEvent[];
 }
 
 export interface PresetOrder {
