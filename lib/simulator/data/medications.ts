@@ -793,6 +793,342 @@ export const midazolam: OrderDefinition = {
 };
 
 // ============================================================
+// ACLS MEDICATIONS
+// ============================================================
+
+export const epinephrineIvp: OrderDefinition = {
+  id: "epinephrine-ivp",
+  name: "Epinephrine 1mg IVP (ACLS)",
+  category: "medication",
+  subcategory: "acls",
+  tags: ["acls", "cardiac", "general"],
+  defaultDose: "1",
+  unit: "mg",
+  route: "IV push",
+  frequencies: ["Q3-5min", "STAT"],
+  timeToEffect: 1,
+  guardRail: {
+    min: 0.5,
+    max: 1,
+    warnAbove: 1,
+    rejectAbove: 3,
+    warnMessage: "醫師，Epinephrine IVP 標準 ACLS 劑量是 1mg，確定要更高嗎？",
+    rejectMessage: "醫師，Epinephrine IVP 單次超過 3mg 不建議。",
+    interactions: [
+      {
+        withDrug: "epinephrine",
+        message: "注意：Epinephrine IVP + Epinephrine drip 同時使用，心律不整風險極高。",
+        severity: "warning",
+      },
+    ],
+  },
+  effect: {
+    type: "vasopressor",
+    duration: 5,
+    isCorrectTreatment: false,
+    vitalChanges: { hr: 30, sbp: 20, map: 15 },
+  },
+};
+
+export const atropine: OrderDefinition = {
+  id: "atropine",
+  name: "Atropine",
+  category: "medication",
+  subcategory: "acls",
+  tags: ["acls", "cardiac", "general"],
+  defaultDose: "0.5",
+  unit: "mg",
+  route: "IV push",
+  frequencies: ["Q3-5min", "STAT"],
+  timeToEffect: 1,
+  guardRail: {
+    min: 0.5,
+    max: 1,
+    warnAbove: 1,
+    rejectAbove: 3,
+    warnMessage: "醫師，Atropine 單次 > 1mg，確定嗎？最大總劑量 3mg。",
+    rejectMessage: "醫師，Atropine 總劑量超過 3mg 不建議，效果不會再增加。",
+  },
+  effect: {
+    type: "procedure",
+    duration: 15,
+    isCorrectTreatment: false,
+    vitalChanges: { hr: 20 },
+  },
+};
+
+export const amiodaroneIvp: OrderDefinition = {
+  id: "amiodarone-ivp",
+  name: "Amiodarone 300mg IVP (ACLS)",
+  category: "medication",
+  subcategory: "acls",
+  tags: ["acls", "cardiac", "general"],
+  defaultDose: "300",
+  unit: "mg",
+  route: "IV push",
+  frequencies: ["STAT"],
+  timeToEffect: 2,
+  guardRail: {
+    min: 150,
+    max: 300,
+    warnAbove: 300,
+    rejectAbove: 450,
+    warnMessage: "醫師，Amiodarone ACLS 首劑 300mg，第二劑 150mg。確定劑量嗎？",
+    rejectMessage: "醫師，Amiodarone IVP 超過 450mg 不建議。",
+  },
+  effect: {
+    type: "procedure",
+    duration: 30,
+    isCorrectTreatment: false,
+    vitalChanges: { hr: -10, sbp: -5 },
+  },
+};
+
+// ============================================================
+// ANTIHYPERTENSIVES
+// ============================================================
+
+export const nicardipine: OrderDefinition = {
+  id: "nicardipine",
+  name: "Nicardipine (Cardene)",
+  category: "medication",
+  subcategory: "antihypertensive",
+  tags: ["cardiac", "general"],
+  defaultDose: "5",
+  unit: "mg/hr",
+  route: "IV continuous",
+  frequencies: ["Continuous"],
+  timeToEffect: 5,
+  guardRail: {
+    min: 5,
+    max: 15,
+    warnAbove: 10,
+    rejectAbove: 15,
+    warnMessage: "醫師，Nicardipine > 10 mg/hr，注意低血壓與反射性心跳加速，確定嗎？",
+    rejectMessage: "醫師，Nicardipine 超過 15 mg/hr 不建議。",
+  },
+  effect: {
+    type: "procedure",
+    duration: 0,
+    isCorrectTreatment: false,
+    vitalChanges: { sbp: -20, dbp: -10, map: -13 },
+  },
+};
+
+export const labetalol: OrderDefinition = {
+  id: "labetalol",
+  name: "Labetalol",
+  category: "medication",
+  subcategory: "antihypertensive",
+  tags: ["cardiac", "general"],
+  defaultDose: "20",
+  unit: "mg",
+  route: "IV push",
+  frequencies: ["STAT", "Q10min PRN"],
+  timeToEffect: 5,
+  guardRail: {
+    min: 10,
+    max: 80,
+    warnAbove: 40,
+    rejectAbove: 80,
+    warnMessage: "醫師，Labetalol > 40mg 單次，注意 bradycardia 和低血壓，確定嗎？",
+    rejectMessage: "醫師，Labetalol 單次超過 80mg 不建議。",
+  },
+  effect: {
+    type: "procedure",
+    duration: 30,
+    isCorrectTreatment: false,
+    vitalChanges: { sbp: -15, map: -10, hr: -10 },
+  },
+};
+
+export const nitroglycerin: OrderDefinition = {
+  id: "nitroglycerin",
+  name: "Nitroglycerin (NTG)",
+  category: "medication",
+  subcategory: "antihypertensive",
+  tags: ["cardiac", "general"],
+  defaultDose: "5",
+  unit: "mcg/min",
+  route: "IV continuous",
+  frequencies: ["Continuous"],
+  timeToEffect: 2,
+  guardRail: {
+    min: 5,
+    max: 200,
+    warnAbove: 100,
+    rejectAbove: 200,
+    warnMessage: "醫師，NTG > 100 mcg/min 高劑量，注意嚴重低血壓與頭痛，確定嗎？",
+    rejectMessage: "醫師，NTG 超過 200 mcg/min 不建議。",
+  },
+  effect: {
+    type: "procedure",
+    duration: 0,
+    isCorrectTreatment: false,
+    vitalChanges: { sbp: -10, map: -7, hr: 5 },
+  },
+};
+
+// ============================================================
+// ANTICOAGULANTS / THROMBOLYTICS
+// ============================================================
+
+export const heparin: OrderDefinition = {
+  id: "heparin",
+  name: "Heparin (UFH) Bolus + Drip",
+  category: "medication",
+  subcategory: "anticoagulant",
+  tags: ["cardiac", "bleeding", "general"],
+  defaultDose: "80",
+  unit: "units/kg bolus then 18 units/kg/hr",
+  route: "IV",
+  frequencies: ["Bolus then Continuous"],
+  timeToEffect: 5,
+  guardRail: {
+    min: 40,
+    max: 100,
+    warnAbove: 80,
+    rejectAbove: 100,
+    warnMessage: "醫師，Heparin bolus > 80 units/kg，確認 aPTT baseline 和出血風險了嗎？",
+    rejectMessage: "醫師，Heparin bolus 超過 100 units/kg 不建議。",
+    interactions: [
+      {
+        withDrug: "tpa",
+        message: "Heparin + tPA 同時使用：出血風險極高！確認 protocol 允許嗎？",
+        severity: "warning",
+      },
+      {
+        withDrug: "protamine",
+        message: "Protamine 用於中和 Heparin，推注速度不可超過 5 mg/min。",
+        severity: "info",
+      },
+    ],
+  },
+  effect: {
+    type: "procedure",
+    duration: 0,
+    isCorrectTreatment: false,
+    severityChange: 0,
+  },
+};
+
+export const tpa: OrderDefinition = {
+  id: "tpa",
+  name: "tPA (Alteplase)",
+  category: "medication",
+  subcategory: "thrombolytic",
+  tags: ["general"],
+  defaultDose: "100",
+  unit: "mg",
+  route: "IV over 2hrs",
+  frequencies: ["Over 2hr"],
+  timeToEffect: 15,
+  guardRail: {
+    min: 50,
+    max: 100,
+    warnAbove: 100,
+    rejectAbove: 100,
+    warnMessage: "醫師，tPA 100mg 是 PE 標準劑量。確認適應症和出血風險了嗎？",
+    rejectMessage: "醫師，tPA 超過 100mg 不建議。心外術後病人使用 tPA 出血風險極高，禁忌！",
+    interactions: [
+      {
+        withDrug: "heparin",
+        message: "⚠️ CRITICAL：tPA + Heparin 同時使用出血風險極高！需嚴密監測。",
+        severity: "block",
+      },
+      {
+        withDrug: "clopidogrel",
+        message: "tPA + Clopidogrel：出血風險顯著增加，需嚴密監測。",
+        severity: "warning",
+      },
+      {
+        withDrug: "aspirin",
+        message: "tPA + Aspirin：出血風險增加，需監測。",
+        severity: "warning",
+      },
+    ],
+  },
+  effect: {
+    type: "procedure",
+    duration: 120,
+    isCorrectTreatment: false,
+    severityChange: 0,
+  },
+};
+
+// ============================================================
+// ANTIPLATELET AGENTS
+// ============================================================
+
+export const aspirin: OrderDefinition = {
+  id: "aspirin",
+  name: "Aspirin",
+  category: "medication",
+  subcategory: "antiplatelet",
+  tags: ["cardiac", "general"],
+  defaultDose: "325",
+  unit: "mg",
+  route: "PO/NG",
+  frequencies: ["STAT", "QD"],
+  timeToEffect: 30,
+  guardRail: {
+    min: 81,
+    max: 650,
+    warnAbove: 325,
+    rejectAbove: 650,
+    warnMessage: "醫師，Aspirin > 325mg 確認適應症嗎？一般維持劑量 81-100mg。",
+    rejectMessage: "醫師，Aspirin 超過 650mg 單次不建議。",
+    interactions: [
+      {
+        withDrug: "tpa",
+        message: "Aspirin + tPA：出血風險增加，需監測。",
+        severity: "warning",
+      },
+    ],
+  },
+  effect: {
+    type: "procedure",
+    duration: 480,
+    isCorrectTreatment: false,
+    severityChange: 0,
+  },
+};
+
+export const clopidogrel: OrderDefinition = {
+  id: "clopidogrel",
+  name: "Clopidogrel (Plavix)",
+  category: "medication",
+  subcategory: "antiplatelet",
+  tags: ["cardiac", "general"],
+  defaultDose: "300",
+  unit: "mg",
+  route: "PO",
+  frequencies: ["STAT loading", "QD"],
+  timeToEffect: 60,
+  guardRail: {
+    min: 75,
+    max: 600,
+    warnAbove: 300,
+    rejectAbove: 600,
+    warnMessage: "醫師，Clopidogrel > 300mg loading dose，確定嗎？心外術後出血風險較高。",
+    rejectMessage: "醫師，Clopidogrel 超過 600mg 不建議。",
+    interactions: [
+      {
+        withDrug: "tpa",
+        message: "Clopidogrel + tPA：出血風險顯著增加。",
+        severity: "warning",
+      },
+    ],
+  },
+  effect: {
+    type: "procedure",
+    duration: 480,
+    isCorrectTreatment: false,
+    severityChange: 0,
+  },
+};
+
+// ============================================================
 // STEROIDS
 // ============================================================
 
@@ -867,6 +1203,20 @@ export const allMedications: OrderDefinition[] = [
   midazolam,
   // Steroids
   hydrocortisone,
+  // ACLS
+  epinephrineIvp,
+  atropine,
+  amiodaroneIvp,
+  // Antihypertensives
+  nicardipine,
+  labetalol,
+  nitroglycerin,
+  // Anticoagulants / Thrombolytics
+  heparin,
+  tpa,
+  // Antiplatelet Agents
+  aspirin,
+  clopidogrel,
 ];
 
 export const medicationCategories = {
@@ -879,6 +1229,10 @@ export const medicationCategories = {
   antibiotics: [ceftriaxone, pipTazo, vancomycin],
   sedation: [propofol, fentanyl, midazolam],
   steroids: [hydrocortisone],
+  acls: [epinephrineIvp, atropine, amiodaroneIvp],
+  antihypertensives: [nicardipine, labetalol, nitroglycerin],
+  anticoagulants: [heparin, tpa],
+  antiplatelets: [aspirin, clopidogrel],
 };
 
 export const getMedicationById = (id: string): OrderDefinition | undefined =>

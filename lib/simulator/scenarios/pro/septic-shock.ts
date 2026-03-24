@@ -245,7 +245,7 @@ const expectedActions: ExpectedAction[] = [
     deadline: 10,
     critical: true,
     hint: "Sternal wound infection + septic shock → 要蓋 MRSA + Gram-negative。Vancomycin + Tazocin 是標準組合。",
-    rationale: "Septic shock 每延遲 1 小時給抗生素，死亡率增加約 7.6%（Kumar et al. 2006）。Hour-1 bundle 是 SSC 2021 最高等級建議。Sternal wound infection 需要蓋 MRSA（Vancomycin）+ Gram-negative（Piperacillin-Tazobactam），因為術後感染可能是 polymicrobial。",
+    rationale: "Septic shock 每延遲 1 小時給抗生素，死亡率增加約 7.6%（Kumar et al. 2006）。Hour-1 bundle 是 SSC 2026 最高等級建議。Sternal wound infection 需要蓋 MRSA（Vancomycin）+ Gram-negative（Piperacillin-Tazobactam），因為術後感染可能是 polymicrobial。SSC 2026 新增強烈建議使用 prolonged infusion beta-lactams。",
     howTo: "Vancomycin 25-30mg/kg IV loading dose（90kg → 約 2g）over 1-2hr + Piperacillin-Tazobactam 4.5g IV q6h。先打 Tazocin（快），Vancomycin 需要 infuse 較久。如果 PCN allergy → 改 Meropenem + Vancomycin。",
   },
   {
@@ -540,8 +540,8 @@ const debrief: DebriefData = {
   correctDiagnosis: "Septic shock secondary to deep sternal wound infection (DSWI)",
 
   keyPoints: [
-    "Sepsis-3 定義：感染 + qSOFA ≥ 2（altered mental status + tachypnea + hypotension）→ 啟動 sepsis workup。",
-    "Hour-1 Bundle（Surviving Sepsis Campaign 2021）：①Lactate ②Blood cultures ×2 ③Broad-spectrum antibiotics ④30mL/kg crystalloid（if hypotension or lactate ≥ 4）⑤Vasopressor（if MAP < 65 after fluid）。",
+    "Sepsis-3 定義：感染 + SOFA score increase ≥ 2。SSC 2026 建議使用 NEWS/NEWS2/MEWS/SIRS 進行 sepsis 篩檢（優於 qSOFA，敏感度更高）→ 啟動 sepsis workup。",
+    "Hour-1 Bundle（Surviving Sepsis Campaign 2026）：①Lactate ②Blood cultures ×2（as soon as possible, ideally before antimicrobials — strong recommendation）③Broad-spectrum antibiotics（prolonged infusion beta-lactams strongly recommended）④30mL/kg balanced crystalloid（LR/Plasmalyte suggested over NS）⑤Vasopressor（if MAP < 65 after fluid; peripheral initiation acceptable, don't delay for CVC）。SSC 2026 建議使用 NEWS/NEWS2 篩檢取代 qSOFA。",
     "Blood culture 要在抗生素之前！順序很重要：先抽再打。但不要因為等 culture 而延遲 antibiotics — 兩者要幾乎同時進行。",
     "Sternal wound infection（深部 / DSWI）是 CABG 術後嚴重併發症（發生率 1-3%）。Risk factors：DM、COPD、肥胖、bilateral IMA harvest。",
     "Source control 是 sepsis 治療的核心之一：抗生素只能殺菌，但膿和壞死組織必須手術清除。VS 需要安排 washout。",
@@ -562,8 +562,8 @@ const debrief: DebriefData = {
   ],
 
   guidelines: [
-    "Surviving Sepsis Campaign 2021 Hour-1 Bundle：Lactate + Blood cultures + Antibiotics + 30mL/kg fluid + Vasopressor（if MAP < 65 after fluid）。",
-    "Sepsis-3 定義：Infection + SOFA score increase ≥ 2。qSOFA（screening）：AMS + RR ≥ 22 + SBP ≤ 100。兩項即 positive。",
+    "Surviving Sepsis Campaign 2026 Hour-1 Bundle：Lactate + Blood cultures（strong recommendation, ideally before antibiotics）+ Antibiotics（prolonged infusion beta-lactams strongly recommended）+ 30mL/kg balanced crystalloid（LR/Plasmalyte suggested over NS）+ Vasopressor（if MAP < 65 after fluid; peripheral initiation acceptable）。",
+    "Sepsis-3 定義：Infection + SOFA score increase ≥ 2。SSC 2026 篩檢工具建議：NEWS/NEWS2/MEWS/SIRS（strong recommendation over qSOFA）。qSOFA 敏感度不足，不再作為首選篩檢工具。",
     "Empiric antibiotics for post-cardiac surgery wound infection：Vancomycin（cover MRSA）+ Piperacillin-Tazobactam（cover Gram-negative + anaerobes）。",
     "DSWI（Deep Sternal Wound Infection）CDC 分類：Superficial（皮膚）vs Deep（胸骨下到縱膈腔）。Deep 需要 surgical debridement + VAC therapy + possible muscle flap。",
     "Norepinephrine starting dose：0.05-0.1 mcg/kg/min，titrate to MAP ≥ 65。如果需要 > 0.5 mcg/kg/min，加 Vasopressin 0.03-0.04 U/min。",
@@ -584,7 +584,7 @@ const debrief: DebriefData = {
       outcome:
         "30 分鐘內 MAP 掉到 55，lactate 飆到 6.8。1 小時後 multi-organ dysfunction（AKI + DIC + respiratory failure）。需要 intubation + 高劑量 vasopressor。死亡率從 20% 升到 > 50%。",
       lesson:
-        "術後發燒不是都 benign。38.8 + qSOFA ≥ 2 = sepsis until proven otherwise。不要用退燒藥蒙蔽自己。",
+        "術後發燒不是都 benign。38.8 + NEWS score elevated = sepsis until proven otherwise。不要用退燒藥蒙蔽自己。",
     },
     {
       scenario: "如果你沒有找到 source（沒注意到 sternal wound）",
@@ -603,11 +603,11 @@ const debrief: DebriefData = {
 
 const guidelineBundles: GuidelineBundle[] = [
   {
-    id: "ssc-2021-hour1",
-    name: "Surviving Sepsis Campaign 2021 — Hour-1 Bundle",
+    id: "ssc-2026-hour1",
+    name: "Surviving Sepsis Campaign 2026 — Hour-1 Bundle",
     shortName: "SSC Hour-1 Bundle",
-    source: "Evans L, et al. Surviving Sepsis Campaign: International Guidelines for Management of Sepsis and Septic Shock 2021. Crit Care Med. 2021;49(11):e1063-e1143.",
-    url: "https://doi.org/10.1097/CCM.0000000000005337",
+    source: "Prescott HC, et al. Surviving Sepsis Campaign: International Guidelines for Management of Sepsis and Septic Shock 2026. Intensive Care Med. 2026.",
+    url: "https://doi.org/10.1007/s00134-026-08361-1",
     items: [
       {
         id: "ssc-lactate",
@@ -619,35 +619,42 @@ const guidelineBundles: GuidelineBundle[] = [
       },
       {
         id: "ssc-blood-culture",
-        description: "Obtain blood cultures before administering antibiotics",
+        description: "Obtain blood cultures as soon as possible, ideally before antimicrobials",
         actionIds: ["act-blood-culture"],
         timeWindow: 10,
-        evidenceLevel: "Best practice statement",
-        rationale: "Obtaining cultures before antibiotics significantly improves pathogen identification. Do not delay antibiotics to obtain cultures.",
+        evidenceLevel: "Strong recommendation, low quality of evidence",
+        rationale: "Blood cultures should be obtained as soon as possible, ideally before antimicrobials (upgraded from best practice statement to strong recommendation with low certainty). Do not delay antibiotics to obtain cultures.",
       },
       {
         id: "ssc-antibiotics",
-        description: "Administer broad-spectrum antibiotics within 1 hour",
+        description: "Administer broad-spectrum antibiotics within 1 hour (prolonged infusion beta-lactams strongly recommended)",
         actionIds: ["act-antibiotics"],
         timeWindow: 10,
         evidenceLevel: "Strong recommendation, moderate quality of evidence",
-        rationale: "For septic shock, administer antimicrobials ideally within 1 hour of recognition. Each hour of delay is associated with measurable increase in mortality.",
+        rationale: "For septic shock, administer antimicrobials ideally within 1 hour of recognition (strong recommendation). Prolonged infusion of beta-lactams (e.g. piperacillin-tazobactam, meropenem) is now a strong recommendation over intermittent bolus dosing.",
       },
       {
         id: "ssc-fluid",
-        description: "Begin rapid administration of 30 mL/kg crystalloid for hypotension or lactate ≥4",
+        description: "Begin rapid administration of 30 mL/kg crystalloid for hypotension or lactate ≥4; balanced crystalloids suggested over 0.9% saline",
         actionIds: ["act-fluid-resuscitation"],
         timeWindow: 15,
         evidenceLevel: "Strong recommendation, low quality of evidence",
-        rationale: "Initial resuscitation with at least 30 mL/kg IV crystalloid fluid within the first 3 hours. Reassess hemodynamic status with dynamic measures.",
+        rationale: "Initial resuscitation with at least 30 mL/kg IV crystalloid fluid within the first 3 hours. Balanced crystalloids (e.g. LR, Plasmalyte) suggested over 0.9% NaCl (conditional, moderate certainty). Individualized approach for the optimization phase.",
       },
       {
         id: "ssc-vasopressor",
-        description: "Apply vasopressors if hypotensive during or after fluid resuscitation (target MAP ≥65 mmHg)",
+        description: "Apply vasopressors if hypotensive during or after fluid resuscitation (target MAP ≥65 mmHg; consider MAP 60-65 for age ≥65)",
         actionIds: ["act-vasopressor"],
         timeWindow: 20,
         evidenceLevel: "Strong recommendation, moderate quality of evidence",
-        rationale: "Norepinephrine is first-line vasopressor. Start if MAP <65 despite adequate fluid resuscitation.",
+        rationale: "Norepinephrine is first-line vasopressor. Start if MAP <65 despite adequate fluid resuscitation. Peripheral vasopressor initiation is acceptable — do not delay for CVC placement. For patients ≥65 years old, an initial MAP target of 60-65 mmHg is conditionally recommended.",
+      },
+      {
+        id: "ssc-screening",
+        description: "Use NEWS/NEWS2/MEWS/SIRS for sepsis screening (preferred over qSOFA)",
+        actionIds: [],
+        evidenceLevel: "Strong recommendation",
+        rationale: "SSC 2026 strongly recommends using NEWS, NEWS2, MEWS, or SIRS for sepsis screening over qSOFA, which has inferior sensitivity for early detection.",
       },
     ],
   },
