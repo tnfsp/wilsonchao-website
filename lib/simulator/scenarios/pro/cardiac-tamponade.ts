@@ -89,7 +89,7 @@ const events: ScriptedEvent[] = [
     triggerTime: 5,
     type: "nurse_call",
     message:
-      "醫師！不太對——chest tube 突然出很少了，從 150 掉到大概 50。而且 CVP monitor 在升，現在 14。",
+      "醫師！不太對——chest tube 突然出很少了，現在大概 {{ct_rate}} cc/hr。而且 CVP monitor 在升，現在 {{cvp}}。",
     vitalChanges: {
       hr: 115,
       sbp: 90,
@@ -114,7 +114,7 @@ const events: ScriptedEvent[] = [
     triggerTime: 10,
     type: "nurse_call",
     message:
-      "醫師，CT 這 5 分鐘幾乎沒引流了，只有 20cc/hr。血壓掉到 85/60，心跳 120，CVP 直接跳到 17。我聽心音好像有變悶。還有——A-line 波形呼吸的時候落差變很大。",
+      "醫師，CT 這 5 分鐘幾乎沒引流了，只有 {{ct_rate}}cc/hr。血壓掉到 {{sbp}}/{{dbp}}，心跳 {{hr}}，CVP 直接跳到 {{cvp}}。我聽心音好像有變悶。還有——A-line 波形呼吸的時候落差變很大。",
     vitalChanges: {
       hr: 120,
       sbp: 85,
@@ -150,7 +150,7 @@ const events: ScriptedEvent[] = [
     triggerTime: 15,
     type: "nurse_call",
     message:
-      "醫師！CT 完全沒出了——零！CVP 20，血壓 75/55，heart rate 130。頸靜脈怒張很明顯，聽心音很悶。",
+      "醫師！CT 完全沒出了——零！CVP {{cvp}}，血壓 {{sbp}}/{{dbp}}，heart rate {{hr}}。頸靜脈怒張很明顯，聽心音很悶。",
     vitalChanges: {
       hr: 130,
       sbp: 75,
@@ -196,7 +196,7 @@ const events: ScriptedEvent[] = [
     triggerTime: 20,
     type: "escalation",
     message:
-      "⚠️ 血壓 60/45，心跳 140，意識下降。病人呈現 near-PEA 狀態——心臟在跳但幾乎沒有 output。必須立即行動！",
+      "⚠️ 血壓 {{sbp}}/{{dbp}}，心跳 {{hr}}，意識下降。病人呈現 near-PEA 狀態——心臟在跳但幾乎沒有 output。必須立即行動！",
     vitalChanges: {
       hr: 140,
       sbp: 60,
@@ -216,7 +216,7 @@ const events: ScriptedEvent[] = [
     triggerTime: 25,
     type: "escalation",
     message:
-      "⚠️ PEA arrest！心跳從 140 突然掉到 30 → asystole。Tamponade 導致心臟完全無法舒張充盈。→ 情境結束，進入 Debrief。",
+      "⚠️ PEA arrest！心跳從 {{hr}} 突然掉 → asystole。Tamponade 導致心臟完全無法舒張充盈。→ 情境結束，進入 Debrief。",
     vitalChanges: {
       hr: 30,
       sbp: 0,

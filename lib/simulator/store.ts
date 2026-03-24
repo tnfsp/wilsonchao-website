@@ -12,6 +12,7 @@
 
 import { create } from "zustand";
 import { getOrderEffect, getMTPRoundEffect } from "@/lib/simulator/engine/order-engine";
+import { updatePatientState } from "@/lib/simulator/engine/patient-engine";
 import { computeLabSnapshot, buildLabContext } from "@/lib/simulator/engine/lab-engine";
 import { getLastBioGearsState } from "@/lib/simulator/engine/biogears-engine";
 import type { LabPanelId } from "@/lib/simulator/engine/lab-engine";
@@ -670,7 +671,79 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     );
     const newlyFired = updatedPending.filter((e) => nowFiredIds.has(e.id));
 
-    // Build timeline entries for fired events
+    // ── STEP 1: 先套用 severityChange + chestTubeChanges ──
+    // 這樣 patient-engine 下一次 tick 會算出正確的 vitals
+    // 護理師對白在 STEP 2 讀 patient state 動態生成
+    for (const ev of toFire) {
+      const data = ev.data as Record<string, unknown> | undefined;
+      if (!data) continue;
+
+      const chestTubeChanges = data.chestTubeChanges as Partial<ChestTubeState> | undefined;
+      const severityChange = data.severityChange as number | undefined;
+
+      if (chestTubeChanges || severityChange) {
+        set((state) => {
+          if (!state.patient) return {};
+
+          let newSeverity = state.patient.severity;
+          if (severityChange) {
+            newSeverity = Math.max(0, Math.min(100, newSeverity + severityChange));
+          }
+
+          let newChestTube = state.patient.chestTube;
+          if (chestTubeChanges) {
+            newChestTube = { ...newChestTube, ...chestTubeChanges };
+          }
+
+          const ctOutputDiff = newChestTube.totalOutput - state.patient.chestTube.totalOutput;
+          let newIO = state.patient.ioBalance;
+          if (ctOutputDiff !== 0) {
+            newIO = {
+              ...newIO,
+              totalOutput: newIO.totalOutput + ctOutputDiff,
+              netBalance: newIO.netBalance - ctOutputDiff,
+              breakdown: {
+                ...newIO.breakdown,
+                output: {
+                  ...newIO.breakdown.output,
+                  chestTube: newIO.breakdown.output.chestTube + ctOutputDiff,
+                },
+              },
+            };
+          }
+
+          // 同時立即重算 vitals（用新 severity）讓 STEP 2 讀到最新數字
+          const newPatient = updatePatientState(
+            { ...state.patient, severity: newSeverity, chestTube: newChestTube, ioBalance: newIO },
+            { minutesPassed: 0, currentGameMinutes: newTime }
+          );
+
+          return { patient: newPatient };
+        });
+      }
+    }
+
+    // ── STEP 2: 讀取最新 patient state，建 timeline entries ──
+    // 護理師對白用模板 {{hr}} {{sbp}} {{dbp}} {{cvp}} {{ct_rate}} {{ct_total}} {{spo2}} {{map}} {{rr}}
+    // 插值為當前 patient state 的真實數字
+    const currentPatient = get().patient;
+    const interpolateVitals = (text: string): string => {
+      if (!currentPatient) return text;
+      const v = currentPatient.vitals;
+      const ct = currentPatient.chestTube;
+      return text
+        .replace(/\{\{hr\}\}/g, String(Math.round(v.hr)))
+        .replace(/\{\{sbp\}\}/g, String(Math.round(v.sbp)))
+        .replace(/\{\{dbp\}\}/g, String(Math.round(v.dbp)))
+        .replace(/\{\{map\}\}/g, String(Math.round(v.map)))
+        .replace(/\{\{cvp\}\}/g, String(Math.round(v.cvp)))
+        .replace(/\{\{spo2\}\}/g, String(Math.round(v.spo2)))
+        .replace(/\{\{rr\}\}/g, String(Math.round(v.rr)))
+        .replace(/\{\{temp\}\}/g, String(v.temperature))
+        .replace(/\{\{ct_rate\}\}/g, String(ct.currentRate))
+        .replace(/\{\{ct_total\}\}/g, String(ct.totalOutput));
+    };
+
     const firedEntries: TimelineEntry[] = [];
     const scenario = get().scenario;
     const placedOrders = get().placedOrders;
@@ -689,11 +762,9 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
             ? computeLabSnapshot(bgState, labCtx, orderId as LabPanelId)
             : null;
 
-          // Use dynamic results if available, otherwise fall back to scenario static
           let labResults: Record<string, { value: number | string; unit: string; normal?: string; flag?: string }> | null = dynamicResults;
 
           if (!labResults) {
-            // Fallback: scenario static labs
             const orderName = order.definition.name.toLowerCase();
             const labKey = Object.keys(scenario.availableLabs).find((k) => {
               const panel = scenario.availableLabs[k];
@@ -707,7 +778,6 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
           }
 
           if (labResults) {
-            // Format lab results for timeline
             const resultLines = Object.entries(labResults)
               .map(([key, r]) => {
                 const flagStr = r.flag === "critical" ? " 🔴" : r.flag === "H" ? " ↑" : r.flag === "L" ? " ↓" : "";
@@ -724,7 +794,6 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
               isImportant: true,
             });
 
-            // Nurse delivers results
             const nurseName = scenario.nurseProfile.name ?? "護理師";
             firedEntries.push({
               id: nextId("tl"),
@@ -736,25 +805,24 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
           }
         }
       } else if (ev.type === "vitals_change" || ev.type === "escalation" || ev.type === "chest_tube_change") {
-        // Scenario scripted events
-        const content = ev.data?.message ?? ev.data?.content ?? `⚠️ 事件觸發：${ev.type}`;
+        const rawContent = ev.data?.message ?? ev.data?.content ?? `⚠️ 事件觸發：${ev.type}`;
         firedEntries.push({
           id: nextId("tl"),
           gameTime: newTime,
           type: ev.type === "escalation" ? "nurse_message" : "system_event",
-          content,
+          content: interpolateVitals(rawContent),
           sender: ev.type === "escalation" ? "nurse" : "system",
           isImportant: true,
         });
       } else if (ev.type === "nurse_call") {
-        // Scripted nurse_call events
-        const content = ev.data?.message ?? `護理師：有事情需要你注意。`;
+        const rawContent = ev.data?.message ?? `護理師：有事情需要你注意。`;
         const nurseName = scenario?.nurseProfile?.name ?? "護理師";
+        const content = rawContent.startsWith(nurseName) ? rawContent : `${nurseName}：${rawContent}`;
         firedEntries.push({
           id: nextId("tl"),
           gameTime: newTime,
           type: "nurse_message",
-          content: content.startsWith(nurseName) ? content : `${nurseName}：${content}`,
+          content: interpolateVitals(content),
           sender: "nurse",
           isImportant: true,
         });
@@ -764,14 +832,14 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
           id: nextId("tl"),
           gameTime: newTime,
           type: "nurse_message",
-          content,
+          content: interpolateVitals(content),
           sender: "senior",
           isImportant: true,
         });
       }
     }
 
-    // Only add time marker when events actually fire (lab results, scripted events)
+    // Only add time marker when events actually fire
     const newEntries: TimelineEntry[] = [];
     if (firedEntries.length > 0) {
       newEntries.push({
@@ -790,88 +858,6 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       firedEvents: [...state.firedEvents, ...newlyFired],
       timeline: newEntries.length > 0 ? [...state.timeline, ...newEntries] : state.timeline,
     }));
-
-    // ── 套用 scripted event 的 vitalChanges / chestTubeChanges / severityChange ──
-    // 這些來自 scenario 定義，讓 monitor 數字跟護理師對白同步
-    for (const ev of toFire) {
-      const data = ev.data as Record<string, unknown> | undefined;
-      if (!data) continue;
-
-      const vitalChanges = data.vitalChanges as Partial<VitalSigns> | undefined;
-      const chestTubeChanges = data.chestTubeChanges as Partial<ChestTubeState> | undefined;
-      const severityChange = data.severityChange as number | undefined;
-
-      if (vitalChanges || chestTubeChanges || severityChange) {
-        set((state) => {
-          if (!state.patient) return {};
-
-          // Severity: 累加 delta
-          let newSeverity = state.patient.severity;
-          if (severityChange) {
-            newSeverity = Math.max(0, Math.min(100, newSeverity + severityChange));
-          }
-
-          // Vitals: 事件指定的是絕對值（不是 delta），直接覆蓋 baselineVitals
-          // 這樣 patient-engine 後續 tick 會以新 baseline 為基礎計算
-          let newBaseline = state.patient.baselineVitals;
-          let newVitals = state.patient.vitals;
-          if (vitalChanges) {
-            newBaseline = { ...newBaseline };
-            newVitals = { ...newVitals };
-            for (const key of Object.keys(vitalChanges) as Array<keyof VitalSigns>) {
-              if (key === "aLineWaveform") {
-                newBaseline.aLineWaveform = vitalChanges.aLineWaveform!;
-                newVitals.aLineWaveform = vitalChanges.aLineWaveform!;
-              } else {
-                const val = vitalChanges[key] as number;
-                if (val != null) {
-                  (newBaseline[key] as number) = val;
-                  (newVitals[key] as number) = val;
-                }
-              }
-            }
-            // Recalculate MAP
-            newVitals.map = Math.round((newVitals.sbp + 2 * newVitals.dbp) / 3);
-            newBaseline.map = newVitals.map;
-          }
-
-          // Chest tube: 合併更新
-          let newChestTube = state.patient.chestTube;
-          if (chestTubeChanges) {
-            newChestTube = { ...newChestTube, ...chestTubeChanges };
-          }
-
-          // I/O: 如果 chest tube totalOutput 改變了，同步 IO
-          const ctOutputDiff = newChestTube.totalOutput - state.patient.chestTube.totalOutput;
-          let newIO = state.patient.ioBalance;
-          if (ctOutputDiff !== 0) {
-            newIO = {
-              ...newIO,
-              totalOutput: newIO.totalOutput + ctOutputDiff,
-              netBalance: newIO.netBalance - ctOutputDiff,
-              breakdown: {
-                ...newIO.breakdown,
-                output: {
-                  ...newIO.breakdown.output,
-                  chestTube: newIO.breakdown.output.chestTube + ctOutputDiff,
-                },
-              },
-            };
-          }
-
-          return {
-            patient: {
-              ...state.patient,
-              baselineVitals: newBaseline,
-              vitals: newVitals,
-              severity: newSeverity,
-              chestTube: newChestTube,
-              ioBalance: newIO,
-            },
-          };
-        });
-      }
-    }
 
     // 處理 order_effect 事件 — 藥物/輸血生效
     for (const ev of toFire) {

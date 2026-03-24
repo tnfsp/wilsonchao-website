@@ -96,7 +96,7 @@ const events: ScriptedEvent[] = [
     triggerTime: 5,
     type: "nurse_call",
     message:
-      "醫師，血壓又掉了一點，chest tube 出的是鮮紅色的，有看到一些血塊，量還在增加。",
+      "醫師，血壓又掉了一點，{{sbp}}/{{dbp}}。chest tube 出的是鮮紅色的，有看到一些血塊，現在 {{ct_rate}}cc/hr。",
     vitalChanges: {
       hr: 108,
       sbp: 95,
@@ -145,7 +145,7 @@ const events: ScriptedEvent[] = [
     triggerCondition: conditionHighSeverityNoSenior,
     type: "nurse_call",
     message:
-      "醫師，血壓掉到 85 了，CT 累計快到 1100cc，量一直沒有減少。我覺得⋯要不要通知 VS？",
+      "醫師，血壓掉到 {{sbp}} 了，CT 累計快到 {{ct_total}}cc，量一直沒有減少。我覺得⋯要不要通知 VS？",
     vitalChanges: {
       hr: 118,
       sbp: 85,
@@ -229,7 +229,7 @@ const events: ScriptedEvent[] = [
     triggerCondition: conditionCTOccluded,
     type: "escalation",
     message:
-      "⚠️ Chest tube output 突然減少接近零！病人血壓同時在快速下降。可能是 clot 堵住 — tamponade 風險極高！",
+      "⚠️ Chest tube output 突然減少接近零！血壓 {{sbp}}/{{dbp}}，心跳 {{hr}}。可能是 clot 堵住 — tamponade 風險極高！",
     vitalChanges: {
       hr: 130,
       sbp: 70,

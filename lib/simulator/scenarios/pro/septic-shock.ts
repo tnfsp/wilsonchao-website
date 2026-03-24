@@ -104,7 +104,7 @@ const events: ScriptedEvent[] = [
     triggerTime: 5,
     type: "nurse_call",
     message:
-      "醫師，體溫升到 39.2 了。他講話開始有點語無倫次，問他今天星期幾答不出來。我覺得不太對勁⋯⋯",
+      "醫師，體溫升到 {{temp}} 了。他講話開始有點語無倫次，問他今天星期幾答不出來。我覺得不太對勁⋯⋯",
     vitalChanges: {
       hr: 110,
       sbp: 95,
@@ -133,7 +133,7 @@ const events: ScriptedEvent[] = [
     triggerTime: 10,
     type: "nurse_call",
     message:
-      "醫師，500cc NS 給完了，但血壓還是掉——現在 85/50。心跳 115。人越來越不清楚了。",
+      "醫師，500cc NS 給完了，但血壓還是掉——現在 {{sbp}}/{{dbp}}。心跳 {{hr}}。人越來越不清楚了。",
     vitalChanges: {
       hr: 115,
       sbp: 85,
@@ -162,7 +162,7 @@ const events: ScriptedEvent[] = [
     triggerTime: 15,
     type: "nurse_call",
     message:
-      "醫師，又給了 1000cc fluid，血壓還是上不來，MAP 勉強 58。心跳 120。WBC 和 lactate 結果出來了——看起來很不好。你要不要開 vasopressor？",
+      "醫師，又給了 1000cc fluid，血壓還是上不來，MAP 勉強 {{map}}。心跳 {{hr}}。WBC 和 lactate 結果出來了——看起來很不好。你要不要開 vasopressor？",
     vitalChanges: {
       hr: 120,
       sbp: 82,
@@ -215,7 +215,7 @@ const events: ScriptedEvent[] = [
     triggerCondition: conditionNoAntibiotics,
     type: "escalation",
     message:
-      "⚠️ 血壓 70/42，MAP < 55。Lactate 趨勢上升。病人開始出現 mottled skin。敗血性休克正在失控！",
+      "⚠️ 血壓 {{sbp}}/{{dbp}}，MAP {{map}}。Lactate 趨勢上升。病人開始出現 mottled skin。敗血性休克正在失控！",
     vitalChanges: {
       hr: 128,
       sbp: 70,
