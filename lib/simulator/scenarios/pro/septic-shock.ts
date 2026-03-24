@@ -71,6 +71,14 @@ const conditionHighSeverityNoSenior: EventCondition = {
   ],
 };
 
+// Condition: 有給抗生素（互斥 conditionNoAntibiotics，用於正常穩定路徑）
+const conditionAntibioticsGiven: EventCondition = {
+  operator: "AND",
+  conditions: [
+    { field: "action_taken", op: "==", value: "order_antibiotics" },
+  ],
+};
+
 // Condition: 給了足夠 fluid（> 2000mL）後追蹤
 const conditionFluidGiven: EventCondition = {
   operator: "AND",
@@ -219,10 +227,11 @@ const events: ScriptedEvent[] = [
     severityChange: 20,
   },
 
-  // ── 20:00 ── 正常路徑（有給 vasopressor + antibiotics）
+  // ── 20:00 ── 正常路徑（有給 antibiotics → 互斥 evt-20-deterioration）
   {
     id: "evt-20-stabilizing",
     triggerTime: 20,
+    triggerCondition: conditionAntibioticsGiven,
     type: "vitals_change",
     vitalChanges: {
       hr: 112,

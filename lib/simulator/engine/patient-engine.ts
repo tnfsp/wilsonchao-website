@@ -202,7 +202,7 @@ function getPathologyVitalModifier(
       cvp: -3 * s,
       spo2: -2 * s,
     },
-    tamponade: {
+    tamponade: {            // legacy (self-study scenarios) — Pro uses "cardiac_tamponade"
       hr: 30 * s,          // compensatory tachycardia
       sbp: -45 * s,
       dbp: -20 * s,

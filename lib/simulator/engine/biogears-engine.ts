@@ -143,42 +143,45 @@ export async function dispatchOrderToBioGears(
   const client = getBioGearsClient();
   if (!client.isInitialized) return;
 
-  const nameLower = orderName.toLowerCase();
+  try {
+    const nameLower = orderName.toLowerCase();
 
-  // Blood products
-  if (category === "transfusion" || nameLower.includes("prbc") || nameLower.includes("blood")) {
-    const volumeMl = parseFloat(dose) || 250;
-    await client.compoundInfusion("Blood_ONegative", 200, volumeMl);
-    return;
-  }
-
-  // Fluids
-  if (category === "fluid" || nameLower.includes("ns") || nameLower.includes("ringer") || nameLower.includes("lactate") || nameLower.includes("saline")) {
-    const compound = nameLower.includes("ringer") || nameLower.includes("lactate")
-      ? "RingersLactate" : "Saline";
-    const volumeMl = parseFloat(dose) || 500;
-    await client.fluidBolus(compound, volumeMl);
-    return;
-  }
-
-  // Drugs
-  const drugName = Object.entries(BIOGEARS_DRUGS).find(
-    ([key]) => nameLower.includes(key)
-  );
-  if (drugName) {
-    const doseMg = parseFloat(dose) || 1;
-    // Check if it's an infusion (has rate/continuous keywords)
-    if (nameLower.includes("drip") || nameLower.includes("infusion") || nameLower.includes("continuous")) {
-      // Approximate: dose as rate, standard concentration
-      await client.drugInfusion(drugName[1], doseMg, 4);
-    } else {
-      await client.drugBolus(drugName[1], doseMg);
+    // Blood products
+    if (category === "transfusion" || nameLower.includes("prbc") || nameLower.includes("blood")) {
+      const volumeMl = parseFloat(dose) || 250;
+      await client.compoundInfusion("Blood_ONegative", 200, volumeMl);
+      return;
     }
-    return;
-  }
 
-  // Unknown — no BioGears equivalent, let formula engine handle
-  console.warn(`[BioGears] No mapping for order: ${orderName}`);
+    // Fluids
+    if (category === "fluid" || nameLower.includes("ns") || nameLower.includes("ringer") || nameLower.includes("lactate") || nameLower.includes("saline")) {
+      const compound = nameLower.includes("ringer") || nameLower.includes("lactate")
+        ? "RingersLactate" : "Saline";
+      const volumeMl = parseFloat(dose) || 500;
+      await client.fluidBolus(compound, volumeMl);
+      return;
+    }
+
+    // Drugs
+    const drugName = Object.entries(BIOGEARS_DRUGS).find(
+      ([key]) => nameLower.includes(key)
+    );
+    if (drugName) {
+      const doseMg = parseFloat(dose) || 1;
+      if (nameLower.includes("drip") || nameLower.includes("infusion") || nameLower.includes("continuous")) {
+        await client.drugInfusion(drugName[1], doseMg, 4);
+      } else {
+        await client.drugBolus(drugName[1], doseMg);
+      }
+      return;
+    }
+
+    // Unknown — no BioGears equivalent, let formula engine handle
+    console.warn(`[BioGears] No mapping for order: ${orderName}`);
+  } catch (err) {
+    console.warn(`[BioGears] dispatchOrder failed for "${orderName}":`, err);
+    // Silently fail — formula engine handles fallback
+  }
 }
 
 /**

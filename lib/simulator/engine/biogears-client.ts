@@ -173,7 +173,15 @@ export class BioGearsClient {
     }
 
     return new Promise((resolve, reject) => {
-      this.messageQueue.push({ resolve, reject });
+      const timeout = setTimeout(() => {
+        const idx = this.messageQueue.findIndex((q) => q.resolve === resolve);
+        if (idx !== -1) this.messageQueue.splice(idx, 1);
+        reject(new Error(`BioGears command timeout (30s): ${cmd.cmd}`));
+      }, 30_000);
+      this.messageQueue.push({
+        resolve: (v: any) => { clearTimeout(timeout); resolve(v); },
+        reject: (e: any) => { clearTimeout(timeout); reject(e); },
+      });
       this.ws!.send(JSON.stringify(cmd));
     });
   }
