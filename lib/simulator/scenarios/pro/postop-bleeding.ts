@@ -97,15 +97,6 @@ const events: ScriptedEvent[] = [
     type: "nurse_call",
     message:
       "醫師，血壓又掉了一點，{{sbp}}/{{dbp}}。chest tube 出的是鮮紅色的，有看到一些血塊，現在 {{ct_rate}}cc/hr。",
-    vitalChanges: {
-      hr: 108,
-      sbp: 95,
-      dbp: 55,
-      map: 68,
-      cvp: 5,
-      temperature: 35.5,
-      aLineWaveform: "low_amplitude",
-    },
     chestTubeChanges: {
       currentRate: 280,
       totalOutput: 480,
@@ -146,15 +137,6 @@ const events: ScriptedEvent[] = [
     type: "nurse_call",
     message:
       "醫師，血壓掉到 {{sbp}} 了，CT 累計快到 {{ct_total}}cc，量一直沒有減少。我覺得⋯要不要通知 VS？",
-    vitalChanges: {
-      hr: 118,
-      sbp: 85,
-      dbp: 48,
-      map: 60,
-      cvp: 4,
-      temperature: 35.2,
-      aLineWaveform: "low_amplitude",
-    },
     chestTubeChanges: {
       currentRate: 320,
       totalOutput: 1100,
@@ -169,14 +151,6 @@ const events: ScriptedEvent[] = [
     id: "evt-15-vitals-progress",
     triggerTime: 15,
     type: "vitals_change",
-    vitalChanges: {
-      hr: 115,
-      sbp: 90,
-      dbp: 50,
-      map: 63,
-      cvp: 4,
-      temperature: 35.3,
-    },
     chestTubeChanges: {
       currentRate: 310,
       totalOutput: 1050,
@@ -230,13 +204,6 @@ const events: ScriptedEvent[] = [
     type: "escalation",
     message:
       "⚠️ Chest tube output 突然減少接近零！血壓 {{sbp}}/{{dbp}}，心跳 {{hr}}。可能是 clot 堵住 — tamponade 風險極高！",
-    vitalChanges: {
-      hr: 130,
-      sbp: 70,
-      dbp: 40,
-      map: 50,
-      cvp: 16,
-    },
     severityChange: 30,
   },
 

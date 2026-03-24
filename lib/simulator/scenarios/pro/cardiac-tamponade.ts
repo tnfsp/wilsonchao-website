@@ -90,14 +90,6 @@ const events: ScriptedEvent[] = [
     type: "nurse_call",
     message:
       "醫師！不太對——chest tube 突然出很少了，現在大概 {{ct_rate}} cc/hr。而且 CVP monitor 在升，現在 {{cvp}}。",
-    vitalChanges: {
-      hr: 115,
-      sbp: 90,
-      dbp: 62,
-      map: 71,
-      cvp: 14,
-      aLineWaveform: "low_amplitude",
-    },
     chestTubeChanges: {
       currentRate: 50,
       totalOutput: 575,
@@ -115,16 +107,6 @@ const events: ScriptedEvent[] = [
     type: "nurse_call",
     message:
       "醫師，CT 這 5 分鐘幾乎沒引流了，只有 {{ct_rate}}cc/hr。血壓掉到 {{sbp}}/{{dbp}}，心跳 {{hr}}，CVP 直接跳到 {{cvp}}。我聽心音好像有變悶。還有——A-line 波形呼吸的時候落差變很大。",
-    vitalChanges: {
-      hr: 120,
-      sbp: 85,
-      dbp: 60,
-      map: 68,
-      cvp: 17,
-      spo2: 95,
-      rr: 22,
-      aLineWaveform: "wide_pp_variation", // pulsus paradoxus
-    },
     chestTubeChanges: {
       currentRate: 20,
       totalOutput: 595,
@@ -151,16 +133,6 @@ const events: ScriptedEvent[] = [
     type: "nurse_call",
     message:
       "醫師！CT 完全沒出了——零！CVP {{cvp}}，血壓 {{sbp}}/{{dbp}}，heart rate {{hr}}。頸靜脈怒張很明顯，聽心音很悶。",
-    vitalChanges: {
-      hr: 130,
-      sbp: 75,
-      dbp: 55,
-      map: 62,
-      cvp: 20,
-      spo2: 93,
-      rr: 24,
-      aLineWaveform: "wide_pp_variation",
-    },
     chestTubeChanges: {
       currentRate: 0,
       totalOutput: 595,
@@ -197,16 +169,6 @@ const events: ScriptedEvent[] = [
     type: "escalation",
     message:
       "⚠️ 血壓 {{sbp}}/{{dbp}}，心跳 {{hr}}，意識下降。病人呈現 near-PEA 狀態——心臟在跳但幾乎沒有 output。必須立即行動！",
-    vitalChanges: {
-      hr: 140,
-      sbp: 60,
-      dbp: 45,
-      map: 50,
-      cvp: 22,
-      spo2: 88,
-      rr: 28,
-      aLineWaveform: "low_amplitude",
-    },
     severityChange: 20,
   },
 
@@ -217,13 +179,6 @@ const events: ScriptedEvent[] = [
     type: "escalation",
     message:
       "⚠️ PEA arrest！心跳從 {{hr}} 突然掉 → asystole。Tamponade 導致心臟完全無法舒張充盈。→ 情境結束，進入 Debrief。",
-    vitalChanges: {
-      hr: 30,
-      sbp: 0,
-      dbp: 0,
-      map: 0,
-      spo2: 0,
-    },
     severityChange: 100,
   },
 ];

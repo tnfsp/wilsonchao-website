@@ -105,15 +105,6 @@ const events: ScriptedEvent[] = [
     type: "nurse_call",
     message:
       "醫師，體溫升到 {{temp}} 了。他講話開始有點語無倫次，問他今天星期幾答不出來。我覺得不太對勁⋯⋯",
-    vitalChanges: {
-      hr: 110,
-      sbp: 95,
-      dbp: 50,
-      map: 65,
-      temperature: 39.2,
-      rr: 26,
-      spo2: 93,
-    },
     severityChange: 15,
   },
 
@@ -134,15 +125,6 @@ const events: ScriptedEvent[] = [
     type: "nurse_call",
     message:
       "醫師，500cc NS 給完了，但血壓還是掉——現在 {{sbp}}/{{dbp}}。心跳 {{hr}}。人越來越不清楚了。",
-    vitalChanges: {
-      hr: 115,
-      sbp: 85,
-      dbp: 50,
-      map: 62,
-      cvp: 6,
-      spo2: 92,
-      rr: 28,
-    },
     severityChange: 15,
   },
 
@@ -163,16 +145,6 @@ const events: ScriptedEvent[] = [
     type: "nurse_call",
     message:
       "醫師，又給了 1000cc fluid，血壓還是上不來，MAP 勉強 {{map}}。心跳 {{hr}}。WBC 和 lactate 結果出來了——看起來很不好。你要不要開 vasopressor？",
-    vitalChanges: {
-      hr: 120,
-      sbp: 82,
-      dbp: 48,
-      map: 59,
-      cvp: 8,
-      temperature: 39.4,
-      rr: 30,
-      spo2: 91,
-    },
     newLabResults: {
       cbc_t1: {
         wbc: { value: 18.5, unit: "K/μL",  normal: "4.5-11.0", flag: "H" },
@@ -216,14 +188,6 @@ const events: ScriptedEvent[] = [
     type: "escalation",
     message:
       "⚠️ 血壓 {{sbp}}/{{dbp}}，MAP {{map}}。Lactate 趨勢上升。病人開始出現 mottled skin。敗血性休克正在失控！",
-    vitalChanges: {
-      hr: 128,
-      sbp: 70,
-      dbp: 42,
-      map: 51,
-      spo2: 89,
-      rr: 32,
-    },
     severityChange: 20,
   },
 
@@ -233,13 +197,6 @@ const events: ScriptedEvent[] = [
     triggerTime: 20,
     triggerCondition: conditionAntibioticsGiven,
     type: "vitals_change",
-    vitalChanges: {
-      hr: 112,
-      sbp: 88,
-      dbp: 52,
-      map: 64,
-      cvp: 9,
-    },
     severityChange: -5,
   },
 
@@ -251,10 +208,7 @@ const events: ScriptedEvent[] = [
     type: "nurse_call",
     message:
       "醫師，給了不少水了。我聽到雙側底部有一些 crackle，SpO2 也掉了一點。要不要放慢 fluid rate？",
-    vitalChanges: {
-      spo2: 90,
-      cvp: 12,
-    },
+    severityChange: 5,
   },
 
   // ── 30:00 ── 穩定或結束
