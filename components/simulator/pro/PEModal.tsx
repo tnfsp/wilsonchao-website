@@ -62,7 +62,7 @@ export function PEModal() {
     useProGameStore.setState((state) => ({
       playerActions: [
         ...state.playerActions,
-        `pe:${key}:${area.label}`,
+        { action: `pe:${key}:${area.label}`, gameTime: useProGameStore.getState().clock.currentTime, category: "pe" },
       ],
     }));
 

@@ -616,6 +616,15 @@ export const septicShock: SimScenario = {
   initialVitals,
   initialChestTube,
 
+  initialVentilator: {
+    mode: 'VC',
+    fio2: 0.5,
+    peep: 8,
+    rrSet: 16,
+    tvSet: 480,
+    ieRatio: '1:2',
+  },
+
   initialLabs: {
     hb_baseline:  11.5,
     wbc_pod1:     12.0,

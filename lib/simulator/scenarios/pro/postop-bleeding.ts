@@ -623,6 +623,15 @@ export const postopBleeding: SimScenario = {
   initialVitals,
   initialChestTube,
 
+  initialVentilator: {
+    mode: 'VC',
+    fio2: 0.4,
+    peep: 5,
+    rrSet: 14,
+    tvSet: 500,
+    ieRatio: '1:2',
+  },
+
   initialLabs: {
     // 術後回 ICU 時的 baseline labs（不需 order 即可查）
     hb_baseline:  10.5,

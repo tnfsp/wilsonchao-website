@@ -38,6 +38,8 @@ import type {
   IOBalance,
   Pathology,
   OrderStatus,
+  VentilatorState,
+  TrackedAction,
 } from "./types";
 
 // ============================================================
@@ -84,7 +86,7 @@ export interface ProGameStore {
   timeline: TimelineEntry[];
 
   // Player tracking
-  playerActions: string[];   // 追蹤做了什麼（for scoring）
+  playerActions: TrackedAction[];   // 追蹤做了什麼（for scoring）— with timestamps
   hintsUsed: number;
   pauseThinkUsed: boolean;
 
@@ -99,6 +101,9 @@ export interface ProGameStore {
 
   // UI
   activeModal: ModalType;
+
+  // Ventilator
+  ventilator: VentilatorState;
 
   // Guidance system
   guidanceMode: boolean;
@@ -202,6 +207,9 @@ export interface ProGameStore {
 
   /** 更新 pathology（病況變化） */
   updatePathology: (pathology: Pathology) => void;
+
+  /** 更新呼吸器設定 */
+  updateVentilator: (changes: Partial<VentilatorState>) => void;
 }
 
 // ============================================================
@@ -239,6 +247,15 @@ const initialMTPState: MTPState = {
   roundsDelivered: 0,
 };
 
+const initialVentilatorState: VentilatorState = {
+  mode: 'VC',
+  fio2: 0.4,
+  peep: 5,
+  rrSet: 14,
+  tvSet: 500,
+  ieRatio: '1:2',
+};
+
 const initialState = {
   scenario: null as SimScenario | null,
   isLoading: false,
@@ -251,13 +268,14 @@ const initialState = {
   placedOrders: [] as PlacedOrder[],
   mtpState: initialMTPState,
   timeline: [] as TimelineEntry[],
-  playerActions: [] as string[],
+  playerActions: [] as TrackedAction[],
   hintsUsed: 0,
   pauseThinkUsed: false,
   sbarReport: null as Record<string, string> | null,
   score: null as GameScore | null,
   deathCause: null as string | null,
   activeModal: null as ModalType,
+  ventilator: initialVentilatorState,
   guidanceMode: false,
   guidanceHighlight: null as string | null,
 };
@@ -360,22 +378,46 @@ function computeBasicScore(
     };
   }
 
-  // 1. Time to first action
-  const timeToFirstAction =
-    playerActions.length > 0 ? clock.currentTime : clock.currentTime;
+  // 1. Time to first action (skip game_start entry)
+  const meaningfulActions = playerActions.filter((pa) => !pa.action.startsWith("game_start:") && !pa.action.startsWith("event_fired:"));
+  const timeToFirstAction = meaningfulActions.length > 0
+    ? meaningfulActions[0].gameTime
+    : clock.currentTime;
 
-  // 2. Critical actions — 對照 scenario.expectedActions
+  // 2. Critical actions — 對照 scenario.expectedActions with pattern matching
+  const ACTION_PATTERNS: Record<string, RegExp> = {
+    "act-blood-culture": /order:lab:.*blood.?culture|lab:.*blood.?culture/i,
+    "act-antibiotics": /order:medication:.*(?:vancomycin|piptazo|ceftriaxone|pip.*tazo|meropenem|cefepime)/i,
+    "act-fluid-resuscitation": /order:fluid:.*(?:ns|lr|normal.?saline|lactated|albumin)|order:transfusion|mtp:activated/i,
+    "act-lactate": /order:lab:.*(?:lactate|abg|blood.?gas)/i,
+    "act-vasopressor": /order:medication:.*(?:norepinephrine|levophed|epinephrine|vasopressin)/i,
+    "act-call-senior": /consult:.*senior|consult:.*vs|call_senior|call_vs|message:.*叫學長|message:.*通知/i,
+    "act-wound-culture": /order:lab:.*wound.?culture|order:lab:.*swab/i,
+    "act-foley": /order:procedure:.*foley|order:procedure:.*catheter/i,
+    "act-central-line": /order:procedure:.*central.?line|order:procedure:.*cvc/i,
+    "act-abg": /order:lab:.*abg|order:lab:.*blood.?gas/i,
+    "act-check-ct": /pocus:.*|order:imaging:.*cxr|order:lab:.*cbc/i,
+    "act-protamine": /order:.*protamine/i,
+    "act-txa": /order:.*txa|order:.*tranexamic/i,
+    "act-mtp": /mtp:activated/i,
+    "act-pericardiocentesis": /order:procedure:.*pericardio/i,
+    "act-echo": /pocus:cardiac/i,
+  };
+
   const criticalActions: CriticalAction[] = scenario.expectedActions.map(
     (expected) => {
-      // 看 playerActions string array 有沒有 match
-      const met = playerActions.some((a) =>
-        a.toLowerCase().includes(expected.action.toLowerCase())
-      );
+      const pattern = ACTION_PATTERNS[expected.id];
+      const matchingAction = pattern
+        ? playerActions.find((pa) => pattern.test(pa.action))
+        : playerActions.find((pa) =>
+            pa.action.toLowerCase().includes(expected.action.toLowerCase())
+          );
+
       return {
         id: expected.id,
         description: expected.description,
-        met,
-        timeToComplete: met ? clock.currentTime : null,
+        met: !!matchingAction,
+        timeToComplete: matchingAction ? matchingAction.gameTime : null,
         critical: expected.critical,
         hint: expected.hint,
       };
@@ -384,7 +426,7 @@ function computeBasicScore(
 
   // 3. Harmful orders（effect.isCorrectTreatment === false）
   const harmfulOrders = placedOrders
-    .filter((o) => o.result !== undefined && o.status === "completed")
+    .filter((o) => o.status === "completed" || o.status === "in_progress")
     .filter((o) => {
       // 如果 definition 上有 effect 且標記為不正確，算有害
       const effectDef = o.definition.effect;
@@ -395,17 +437,14 @@ function computeBasicScore(
   // 4. Correct diagnosis（pathology match）
   const correctDiagnosis = scenario.pathology === patient?.pathology;
 
-  // 5. Escalation timing
-  const escalationAction = playerActions.find((a) =>
-    a.includes("叫學長") || a.includes("consult") || a.includes("通知VS")
+  // 5. Escalation timing (now using actual gameTime from TrackedAction)
+  const escalationAction = playerActions.find((pa) =>
+    pa.action.includes("叫學長") || pa.action.includes("consult") || pa.action.includes("通知VS") || pa.action.includes("call_senior") || pa.action.includes("call_vs")
   );
   let escalationTiming: GameScore["escalationTiming"] = "never";
   if (escalationAction) {
-    // 如果在 15 分鐘內叫 = early，15-20 = appropriate，20+ = late
-    const idx = playerActions.indexOf(escalationAction);
-    const approxTime = (idx / Math.max(playerActions.length, 1)) * clock.currentTime;
-    if (approxTime <= 10) escalationTiming = "early";
-    else if (approxTime <= 20) escalationTiming = "appropriate";
+    if (escalationAction.gameTime <= 10) escalationTiming = "early";
+    else if (escalationAction.gameTime <= 20) escalationTiming = "appropriate";
     else escalationTiming = "late";
   }
 
@@ -590,6 +629,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         firedEvents: [],
         placedOrders: [],
         mtpState: { activated: false, roundsDelivered: 0 },
+        ventilator: scenario.initialVentilator ?? initialVentilatorState,
         timeline: [],
         playerActions: [],
         hintsUsed: 0,
@@ -645,7 +685,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       clock: { ...clock, isPaused: false },
       pendingEvents,
       timeline: [openingEntry],
-      playerActions: [`game_start:${scenario.id}`],
+      playerActions: [{ action: `game_start:${scenario.id}`, gameTime: 0 }],
     });
   },
 
@@ -669,7 +709,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       mtp: currentState.mtpState,
       severity: currentState.patient?.severity ?? 0,
       elapsedMinutes: newTime,
-      actionsTaken: currentState.playerActions,
+      actionsTaken: currentState.playerActions.map((pa) => pa.action),
       hintsUsed: currentState.hintsUsed ?? 0,
     };
 
@@ -902,11 +942,29 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
               },
             ],
           }));
+
+          // Schedule next MTP round (15 min intervals) — up to 4 rounds max
+          const currentRound = get().mtpState.roundsDelivered;
+          if (currentRound < 4) {
+            set((state) => ({
+              pendingEvents: [
+                ...state.pendingEvents,
+                {
+                  id: nextId("evt"),
+                  type: "order_effect" as PendingEvent["type"],
+                  triggerAt: newTime + 15,
+                  data: { isMTP: true, mtpRound: currentRound + 1 },
+                  fired: false,
+                  priority: 0,
+                },
+              ],
+            }));
+          }
         } else if (ev.data?.orderId) {
           const order = get().placedOrders.find((o) => o.id === ev.data.orderId);
           if (order) {
             const weight = get().scenario?.patient?.weight ?? 70;
-            const effect = getOrderEffect(order, weight);
+            const effect = getOrderEffect(order, weight, get().patient?.pathology);
             if (effect) {
               get().addActiveEffect(effect);
               // 更新 order 狀態為 in_progress
@@ -932,9 +990,12 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
 
     // 把觸發的事件記錄到 playerActions（供 score-engine 分析）
     if (toFire.length > 0) {
-      const actionLabels = toFire.map((e) => `event_fired:${e.id}:${e.type}`);
+      const trackedActions: TrackedAction[] = toFire.map((e) => ({
+        action: `event_fired:${e.id}:${e.type}`,
+        gameTime: get().clock.currentTime,
+      }));
       set((state) => ({
-        playerActions: [...state.playerActions, ...actionLabels],
+        playerActions: [...state.playerActions, ...trackedActions],
       }));
     }
   },
@@ -1037,7 +1098,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       placedOrders: [...state.placedOrders, newOrder],
       pendingEvents: [...state.pendingEvents, ...newEvents],
       timeline: [...state.timeline, orderEntry, nurseConfirmEntry],
-      playerActions: [...state.playerActions, actionLabel],
+      playerActions: [...state.playerActions, { action: actionLabel, gameTime: clock.currentTime, category: params.definition.category }],
     }));
 
     // Placing an order takes ~1 game-minute
@@ -1099,7 +1160,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       },
       pendingEvents: [...state.pendingEvents, bloodDeliveryEvent],
       timeline: [...state.timeline, mtpEntry, nurseEntry],
-      playerActions: [...state.playerActions, "mtp:activated"],
+      playerActions: [...state.playerActions, { action: "mtp:activated", gameTime: activatedAt, category: "mtp" }],
     }));
   },
 
@@ -1199,7 +1260,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
 
     set((state) => ({
       timeline: [...state.timeline, playerEntry],
-      playerActions: [...state.playerActions, `message:${text.slice(0, 50)}`],
+      playerActions: [...state.playerActions, { action: `message:${text.slice(0, 50)}`, gameTime: clock.currentTime, category: "message" }],
     }));
 
     // Talking to nurse takes ~1 game-minute
@@ -1236,7 +1297,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       pauseThinkUsed: true,
       hintsUsed: pauseThinkUsed ? state.hintsUsed : state.hintsUsed, // 暫停思考不算 hint
       timeline: [...state.timeline, entry],
-      playerActions: [...state.playerActions, "pause_think:used"],
+      playerActions: [...state.playerActions, { action: "pause_think:used", gameTime: clock.currentTime }],
     }));
   },
 
@@ -1259,7 +1320,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       sbarReport: report,
       phase: "sbar",
       timeline: [...state.timeline, entry],
-      playerActions: [...state.playerActions, "sbar:submitted"],
+      playerActions: [...state.playerActions, { action: "sbar:submitted", gameTime: get().clock.currentTime }],
       activeModal: null,
     }));
   },
@@ -1469,6 +1530,15 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
   },
 
   // ----------------------------------------------------------
+  // updateVentilator
+  // ----------------------------------------------------------
+  updateVentilator: (changes: Partial<VentilatorState>) => {
+    set((state) => ({
+      ventilator: { ...state.ventilator, ...changes },
+    }));
+  },
+
+  // ----------------------------------------------------------
   // setGuidanceHighlight
   // ----------------------------------------------------------
   setGuidanceHighlight: (key: string | null) => {
@@ -1485,13 +1555,13 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     const severity = patient?.severity ?? 0;
 
     // Check what actions have been done
-    const hasPE = playerActions.some((a) => a.startsWith("pe:") || a.includes("pe_done") || a.includes("order:physical_exam") || a.includes("open_pe"));
-    const hasLab = playerActions.some((a) => a.startsWith("order:lab") || a.includes("lab_order") || a.includes("order:lab_panel"));
+    const hasPE = playerActions.some((pa) => pa.action.startsWith("pe:") || pa.action.includes("pe_done") || pa.action.includes("order:physical_exam") || pa.action.includes("open_pe"));
+    const hasLab = playerActions.some((pa) => pa.action.startsWith("order:lab") || pa.action.includes("lab_order") || pa.action.includes("order:lab_panel"));
     const hasTreatment = playerActions.some(
-      (a) => a.startsWith("order:medication") || a.startsWith("order:transfusion") || a.startsWith("order:fluid") || a.includes("mtp:activated")
+      (pa) => pa.action.startsWith("order:medication") || pa.action.startsWith("order:transfusion") || pa.action.startsWith("order:fluid") || pa.action.includes("mtp:activated")
     );
     const hasCalled = playerActions.some(
-      (a) => a.includes("consult") || a.includes("叫學長") || a.includes("通知VS") || a.includes("call_senior")
+      (pa) => pa.action.includes("consult") || pa.action.includes("叫學長") || pa.action.includes("通知VS") || pa.action.includes("call_senior")
     );
 
     let highlight: string | null = null;

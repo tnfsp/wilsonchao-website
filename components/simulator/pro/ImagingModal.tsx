@@ -15,7 +15,7 @@ import {
 
 // ── Imaging options ──────────────────────────────────────────
 
-type ImagingType = "cxr_portable" | "bedside_echo" | "pocus" | "ecg_12lead";
+type ImagingType = "cxr_portable" | "pocus" | "ecg_12lead";
 
 interface ImagingOption {
   key: ImagingType;
@@ -38,22 +38,13 @@ const IMAGING_OPTIONS: ImagingOption[] = [
     note: "排 X 光技師 → 照相 → 上傳 PACS — 需要等",
   },
   {
-    key: "bedside_echo",
-    emoji: "🫀",
-    title: "Bedside Echo",
-    subtitle: "床邊心臟超音波（完整）",
-    turnaround: "immediate",
-    turnaroundLabel: "即時結果",
-    note: "比 POCUS 更完整的正式超音波，即時取像",
-  },
-  {
     key: "pocus",
     emoji: "📱",
     title: "POCUS",
     subtitle: "床邊即時超音波",
     turnaround: "immediate",
     turnaroundLabel: "即時結果",
-    note: "Focused echo + IVC + Lung — 快速評估",
+    note: "A4C cardiac + IVC + Lung — 快速床邊評估",
   },
   {
     key: "ecg_12lead",
@@ -70,7 +61,6 @@ const IMAGING_OPTIONS: ImagingOption[] = [
 
 const IMAGING_KEY_MAP: Record<ImagingType, string> = {
   cxr_portable: "cxr_portable",
-  bedside_echo: "bedside_echo",   // may not be in every scenario
   pocus: "pocus",
   ecg_12lead: "ecg_12lead",
 };
@@ -116,7 +106,7 @@ export function ImagingModal() {
       });
 
       useProGameStore.setState((state) => ({
-        playerActions: [...state.playerActions, `imaging:${opt.key}`],
+        playerActions: [...state.playerActions, { action: `imaging:${opt.key}`, gameTime: clock.currentTime, category: "imaging" }],
       }));
 
       setOrdered((prev) => new Set(prev).add(opt.key));
@@ -143,7 +133,7 @@ export function ImagingModal() {
       });
 
       useProGameStore.setState((state) => ({
-        playerActions: [...state.playerActions, `imaging:${opt.key}`],
+        playerActions: [...state.playerActions, { action: `imaging:${opt.key}`, gameTime: clock.currentTime, category: "imaging" }],
       }));
 
       // Schedule result event
@@ -415,13 +405,7 @@ export function ImagingModal() {
             </p>
           </div>
         )}
-        {key === "bedside_echo" && (
-          <div className="mx-4 mb-4 px-3 py-2 rounded bg-teal-900/20 border border-teal-700/25">
-            <p className="text-teal-300/70 text-xs leading-relaxed">
-              💡 Bedside Echo 比 POCUS 更完整。可以精確評估 pericardial effusion、LV/RV function，是排除 tamponade 的最佳工具。
-            </p>
-          </div>
-        )}
+
       </div>
     );
   }
@@ -446,7 +430,7 @@ export function ImagingModal() {
                 影像檢查
               </h2>
               <p className="text-teal-400/60 text-xs">
-                Portable CXR / Bedside Echo / POCUS / 12-Lead ECG
+                Portable CXR / POCUS / 12-Lead ECG
               </p>
             </div>
           </div>
@@ -586,8 +570,8 @@ export function ImagingModal() {
             >
               <p className="text-teal-500/40 text-xs leading-relaxed">
                 💡 <strong className="text-teal-400/50">臨床提示：</strong>
-                Portable CXR 排影像技師需要等，Bedside Echo 即時。
-                急性出血情境下，POCUS（cardiac）比等 CXR 更快排除 tamponade。
+                Portable CXR 排影像技師需要等，POCUS 即時床邊評估。
+                急性出血情境下，POCUS（A4C cardiac）比等 CXR 更快排除 tamponade 和評估 volume status。
                 12-Lead ECG 可偵測 tamponade 特徵（低電壓 + 電交替）。
               </p>
             </div>

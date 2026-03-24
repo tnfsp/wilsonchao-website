@@ -18,6 +18,7 @@ import DeathScreen from "@/components/simulator/pro/DeathScreen";
 import ProGameLayout from "@/components/simulator/pro/ProGameLayout";
 import ProVitalsPanel from "@/components/simulator/pro/ProVitalsPanel";
 import ChestTubePanel from "@/components/simulator/pro/ChestTubePanel";
+import VentilatorPanel from "@/components/simulator/pro/VentilatorPanel";
 import ChatTimeline from "@/components/simulator/pro/ChatTimeline";
 import ActionBar from "@/components/simulator/pro/ActionBar";
 import MessageInput from "@/components/simulator/pro/MessageInput";
@@ -247,6 +248,7 @@ function useGameTick() {
     const newPatient = updatePatientState(state.patient, {
       minutesPassed: minutes,
       currentGameMinutes: state.clock.currentTime + minutes,
+      ventilator: state.ventilator,
     });
     
     useProGameStore.setState({ patient: newPatient });
@@ -341,6 +343,7 @@ function GameScreen() {
           <>
             <WaveformMonitor height={280} />
             <ProVitalsPanel />
+            <VentilatorPanel />
             <ChestTubePanel />
           </>
         }

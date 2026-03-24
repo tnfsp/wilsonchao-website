@@ -10,6 +10,7 @@ import type {
   IOBalance,
   LethalTriadState,
   Pathology,
+  VentilatorState,
 } from "../types";
 
 // ============================================================
@@ -45,9 +46,15 @@ function applyVitalNoise(vitals: VitalSigns): VitalSigns {
 
 /**
  * 計算每分鐘的 severity 變化量。
- * - 無治療：+0.5 ~ +1.5 / min（依 pathology）
- * - 正確治療中：-0.3 ~ -1.0 / min
- * - 錯誤治療：可能 +0.2 ~ +0.8 / min
+ *
+ * severityChange on each effect is a ONE-TIME delta spread over the
+ * effect's duration, NOT a per-minute rate. For example Protamine with
+ * severityChange: -8 and duration: 60 contributes -8/60 ≈ -0.133 per
+ * minute (total -8 over the full 60 minutes).
+ *
+ * - 無治療：+0.25 ~ +0.8 / min（依 pathology）
+ * - 正確治療中：one-time delta amortised over duration
+ * - 錯誤治療：|amortised delta| * 0.5 worsening / min
  * - 死亡三角 2+：額外 +0.5 / min
  */
 export function computeSeverityDelta(
@@ -76,13 +83,21 @@ export function computeSeverityDelta(
   const untreatedRate = baseRates[pathology] ?? 1.0;
 
   // 計算 effect 貢獻
+  // severityChange is a ONE-TIME delta spread over the effect's duration.
   let effectDelta = 0;
   for (const effect of activeEffects) {
     const sc = effect.severityChange ?? 0;
+    if (sc === 0) continue;
+
+    // Convert one-time delta to per-minute rate.
+    // Continuous effects (duration 0) default to 30-min spread.
+    const duration = effect.duration > 0 ? effect.duration : 30;
+    const perMinute = sc / duration;
+
     if (effect.isCorrectTreatment) {
-      effectDelta += sc; // sc 應為負值（改善）
+      effectDelta += perMinute;
     } else {
-      effectDelta += Math.abs(sc) * 0.5; // 錯誤治療輕微惡化
+      effectDelta += Math.abs(perMinute) * 0.5; // wrong treatment: mild worsening
     }
   }
 
@@ -278,6 +293,54 @@ function getTemperatureVitalModifier(temperature: number): Partial<VitalSigns> {
   };
 }
 
+// ============================================================
+// Ventilator Effects
+// ============================================================
+
+/**
+ * 呼吸器設定對 vitals 的影響
+ * - FiO2 → SpO2 bonus
+ * - PEEP → CVP delta + 肺水腫/ARDS 的 SpO2 bonus
+ * - RR × TV → PaCO2 (reflected in etco2)
+ */
+export function computeVentilatorVitalModifier(
+  vent: VentilatorState,
+  pathology: Pathology,
+  baseSpO2?: number
+): Partial<VitalSigns> {
+  const result: Partial<VitalSigns> = {};
+
+  // ── FiO2 → SpO2 bonus ──────────────────────────────────────
+  // fio2Bonus = (fio2 - 0.21) * 15
+  // Shunt fraction 大時效果打折 (tamponade/septic)
+  const shuntPathologies: Pathology[] = ['cardiac_tamponade', 'tamponade', 'septic_shock', 'lcos'];
+  const shuntFraction = shuntPathologies.includes(pathology) ? 0.4 : 0.0;
+  const fio2Bonus = (vent.fio2 - 0.21) * 15 * (1 - shuntFraction);
+  result.spo2 = fio2Bonus; // additive on top of base
+
+  // ── PEEP → CVP ─────────────────────────────────────────────
+  // cvpDelta = (peep - 5) * 0.5
+  const cvpDelta = (vent.peep - 5) * 0.5;
+  result.cvp = cvpDelta;
+
+  // ── PEEP → SpO2 bonus (肺水腫/ARDS) ─────────────────────────
+  // PEEP > 8 在 septic/lcos 時給額外 SpO2 bonus
+  const peepPathologies: Pathology[] = ['septic_shock', 'lcos', 'vasoplegia'];
+  if (peepPathologies.includes(pathology) && vent.peep > 8) {
+    const peepBonus = Math.min(5, (vent.peep - 8) * 0.7);
+    result.spo2 = (result.spo2 ?? 0) + peepBonus;
+  }
+
+  // ── RR × TV → PaCO2 → EtCO2 ───────────────────────────────
+  // minuteVent (L/min) = rrSet * tvSet / 1000 (rough approximation)
+  const minuteVent = (vent.rrSet * vent.tvSet) / 1000;
+  // PaCO2 ≈ 40 * (5.0 / MV), normal MV = 5L → PaCO2 = 40
+  const etco2 = Math.round(Math.min(80, Math.max(15, 40 * (5.0 / Math.max(minuteVent, 1)))));
+  result.etco2 = etco2;
+
+  return result;
+}
+
 /**
  * 主要 vitals 計算函數
  *
@@ -285,6 +348,7 @@ function getTemperatureVitalModifier(temperature: number): Partial<VitalSigns> {
  *           + pathologyModifier(severity)
  *           + Σ activeEffects.vitalChanges
  *           + temperatureModifier
+ *           + ventilatorModifier (if provided)
  *           + noise(±5%)
  */
 export function computeVitals(
@@ -292,7 +356,8 @@ export function computeVitals(
   pathology: Pathology,
   severity: number,
   activeEffects: ActiveEffect[],
-  temperature: number
+  temperature: number,
+  ventilator?: VentilatorState
 ): VitalSigns {
   // 1. 從 base 開始
   let vitals: VitalSigns = { ...baseVitals };
@@ -309,6 +374,16 @@ export function computeVitals(
   // 4. 溫度影響
   const tempMod = getTemperatureVitalModifier(temperature);
   vitals = mergeVitalModifier(vitals, tempMod);
+
+  // 4.5. 呼吸器影響（若有呼吸器設定）
+  if (ventilator) {
+    const ventMod = computeVentilatorVitalModifier(ventilator, pathology, vitals.spo2);
+    vitals = mergeVitalModifier(vitals, ventMod);
+    // etco2 直接覆蓋（計算值）
+    if (ventMod.etco2 !== undefined) {
+      vitals.etco2 = ventMod.etco2;
+    }
+  }
 
   // 5. 計算 MAP（如果 sbp/dbp 有更新就重算）
   vitals.map = Math.round((vitals.sbp + 2 * vitals.dbp) / 3);
@@ -548,6 +623,7 @@ export function assessTamponadeRisk(
 
 export interface PatientUpdateOptions {
   minutesPassed: number;
+  ventilator?: VentilatorState;
   labValues?: LethalTriadInput;
   ctUpdate?: ChestTubeUpdateOptions;
   ioUpdate?: IOUpdate;
@@ -570,6 +646,7 @@ export function updatePatientState(
     ioUpdate,
     newEffects,
     currentGameMinutes,
+    ventilator,
   } = options;
 
   // 1. 移除過期 effects
@@ -618,7 +695,8 @@ export function updatePatientState(
     current.pathology,
     newSeverity,
     effects,
-    newTemperature
+    newTemperature,
+    ventilator
   );
 
   // 7. 更新 chest tube

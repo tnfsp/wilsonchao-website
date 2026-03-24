@@ -105,7 +105,7 @@ export function ConsultModal() {
     useProGameStore.setState((state) => ({
       playerActions: [
         ...state.playerActions,
-        type === "senior" ? "call_senior" : "call_vs",
+        { action: type === "senior" ? "call_senior" : "call_vs", gameTime: clock.currentTime, category: "consult" },
       ],
     }));
 
@@ -169,7 +169,7 @@ export function ConsultModal() {
     useProGameStore.setState((state) => ({
       playerActions: [
         ...state.playerActions,
-        `consult:${consultDept}`,
+        { action: `consult:${consultDept}`, gameTime: clock.currentTime, category: "consult" },
       ],
     }));
 

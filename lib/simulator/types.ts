@@ -61,6 +61,21 @@ export interface IOBalance {
 }
 
 // ============================================================
+// Ventilator
+// ============================================================
+
+export type VentMode = 'VC' | 'PC' | 'PS' | 'SIMV';
+
+export interface VentilatorState {
+  mode: VentMode;
+  fio2: number;       // 0.21 - 1.0
+  peep: number;       // cmH2O
+  rrSet: number;      // breaths/min
+  tvSet: number;      // mL
+  ieRatio: string;    // e.g. "1:2"
+}
+
+// ============================================================
 // Patient State
 // ============================================================
 
@@ -189,6 +204,7 @@ export interface OrderDefinition {
   timeToResult?: number;        // for labs: game minutes until result
   guardRail?: GuardRail;
   effect?: Partial<ActiveEffect>;
+  scenarioOverrides?: Partial<Record<Pathology, Partial<ActiveEffect>>>;
 }
 
 export interface GuardRail {
@@ -351,6 +367,7 @@ export interface SimScenario {
   patient: PatientInfo;
   initialVitals: VitalSigns;
   initialChestTube: ChestTubeState;
+  initialVentilator?: VentilatorState;
   initialLabs: Record<string, any>;
   pathology: Pathology;
   startHour: number;            // e.g. 2 for 02:00 AM
@@ -443,3 +460,14 @@ export type ModalType =
   | "debrief"
   | "pause_think"
   | "consult";
+
+// ============================================================
+// Tracked Player Action (for scoring timestamps)
+// ============================================================
+
+/** Wraps every action string pushed to playerActions with game-time metadata. */
+export interface TrackedAction {
+  action: string;       // existing action string (e.g. "order:medication:norepinephrine:0.05")
+  gameTime: number;     // game minutes when action was recorded
+  category?: string;    // "order" | "pocus" | "lab" | "mtp" | "message" | "consult" | etc.
+}

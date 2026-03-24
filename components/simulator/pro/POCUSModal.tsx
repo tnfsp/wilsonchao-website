@@ -76,7 +76,7 @@ export function POCUSModal() {
     useProGameStore.setState((state) => ({
       playerActions: [
         ...state.playerActions,
-        `pocus:${key}:${opt.label}`,
+        { action: `pocus:${key}:${opt.label}`, gameTime: useProGameStore.getState().clock.currentTime, category: "pocus" },
       ],
     }));
 

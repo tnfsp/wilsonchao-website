@@ -1,7 +1,7 @@
 // ICU 模擬器 — 藥物定義
 // 包含完整 Guard Rails + Drug Interactions
 
-import type { OrderDefinition } from "../types";
+import type { OrderDefinition, Pathology } from "../types";
 
 // ============================================================
 // VASOPRESSORS
@@ -37,6 +37,10 @@ export const norepinephrine: OrderDefinition = {
     duration: 0, // continuous
     isCorrectTreatment: true,
     vitalChanges: { sbp: 15, dbp: 10, map: 12, hr: 5 },
+    severityChange: -5,
+  },
+  scenarioOverrides: {
+    septic_shock: { isCorrectTreatment: true, severityChange: -8 },
   },
 };
 
@@ -70,6 +74,7 @@ export const epinephrine: OrderDefinition = {
     duration: 0,
     isCorrectTreatment: true,
     vitalChanges: { sbp: 20, dbp: 8, map: 15, hr: 15 },
+    severityChange: -4,
   },
 };
 
@@ -96,6 +101,10 @@ export const vasopressin: OrderDefinition = {
     duration: 0,
     isCorrectTreatment: true,
     vitalChanges: { sbp: 12, dbp: 8, map: 9, hr: -2 },
+    severityChange: -3,
+  },
+  scenarioOverrides: {
+    septic_shock: { isCorrectTreatment: true, severityChange: -5 },
   },
 };
 
@@ -606,6 +615,9 @@ export const ceftriaxone: OrderDefinition = {
     isCorrectTreatment: false,
     severityChange: 0,
   },
+  scenarioOverrides: {
+    septic_shock: { isCorrectTreatment: true, severityChange: -6 },
+  },
 };
 
 export const pipTazo: OrderDefinition = {
@@ -632,6 +644,9 @@ export const pipTazo: OrderDefinition = {
     isCorrectTreatment: false,
     severityChange: 0,
   },
+  scenarioOverrides: {
+    septic_shock: { isCorrectTreatment: true, severityChange: -10 },
+  },
 };
 
 export const vancomycin: OrderDefinition = {
@@ -657,6 +672,9 @@ export const vancomycin: OrderDefinition = {
     duration: 0,
     isCorrectTreatment: false,
     severityChange: 0,
+  },
+  scenarioOverrides: {
+    septic_shock: { isCorrectTreatment: true, severityChange: -8 },
   },
 };
 
@@ -777,6 +795,9 @@ export const hydrocortisone: OrderDefinition = {
     isCorrectTreatment: false,
     vitalChanges: { sbp: 5, map: 3 },
     severityChange: -2,
+  },
+  scenarioOverrides: {
+    septic_shock: { isCorrectTreatment: true, severityChange: -4 },
   },
 };
 

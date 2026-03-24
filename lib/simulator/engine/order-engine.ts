@@ -8,6 +8,7 @@ import type {
   ActiveEffect,
   MTPState,
   DrugInteraction,
+  Pathology,
 } from "../types";
 import {
   allMedications,
@@ -169,7 +170,8 @@ export function validateOrder(
  */
 export function getOrderEffect(
   order: PlacedOrder,
-  weight: number = 70
+  weight: number = 70,
+  pathology?: Pathology
 ): ActiveEffect | null {
   const { definition, placedAt } = order;
 
@@ -210,6 +212,20 @@ export function getOrderEffect(
       : undefined,
     isCorrectTreatment: effectTemplate.isCorrectTreatment ?? false,
   };
+
+  // Apply pathology-specific overrides (e.g. antibiotics correct in sepsis but not bleeding)
+  if (pathology && definition.scenarioOverrides?.[pathology]) {
+    const override = definition.scenarioOverrides[pathology];
+    if (override.isCorrectTreatment !== undefined) {
+      activeEffect.isCorrectTreatment = override.isCorrectTreatment;
+    }
+    if (override.severityChange !== undefined) {
+      activeEffect.severityChange = override.severityChange;
+    }
+    if (override.vitalChanges) {
+      activeEffect.vitalChanges = { ...activeEffect.vitalChanges, ...override.vitalChanges };
+    }
+  }
 
   return activeEffect;
 }
@@ -376,10 +392,23 @@ export function checkDrugInteractions(
 // ============================================================
 
 function getActiveOrderIds(state: PatientState): string[] {
-  return state.activeEffects.map((e) => {
-    // Source is the drug name — match by lowercased id convention
-    return e.source.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
-  });
+  const ids: string[] = [];
+  for (const e of state.activeEffects) {
+    // Add the effect ID (e.g., "norepinephrine_effect") — strip "_effect" suffix
+    // and any "order_<digits>_" prefix to get the base drug id
+    const baseId = e.id.replace(/_effect$/, "").replace(/^order_\d+_/, "");
+    ids.push(baseId);
+
+    // Also add the sanitized source name for backwards compatibility
+    const sanitized = e.source.toLowerCase().replace(/\s+/g, "_").replace(/[^a-z0-9_]/g, "");
+    ids.push(sanitized);
+
+    // Also add each word of the source as a separate potential match
+    // e.g. "Norepinephrine (Levophed)" → ["norepinephrine", "levophed"]
+    const words = e.source.toLowerCase().split(/[\s()]+/).filter(Boolean);
+    ids.push(...words);
+  }
+  return ids;
 }
 
 // ============================================================

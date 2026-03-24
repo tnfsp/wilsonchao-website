@@ -532,6 +532,15 @@ export const cardiacTamponade: SimScenario = {
   initialVitals,
   initialChestTube,
 
+  initialVentilator: {
+    mode: 'VC',
+    fio2: 0.4,
+    peep: 5,
+    rrSet: 14,
+    tvSet: 500,
+    ieRatio: '1:2',
+  },
+
   initialLabs: {
     hb_baseline:  10.2,
     inr_baseline: 1.3,
