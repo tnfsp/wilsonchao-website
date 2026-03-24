@@ -845,9 +845,9 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
             const resultLines = Object.entries(labResults)
               .map(([key, r]) => {
                 const flagStr = r.flag === "critical" ? " 🔴" : r.flag === "H" ? " ↑" : r.flag === "L" ? " ↓" : "";
-                return `${key}: ${r.value} ${r.unit}${flagStr}`;
+                return `${key.padEnd(10)} ${String(r.value).padStart(7)}  ${r.unit}${flagStr}`;
               })
-              .join(" | ");
+              .join("\n");
             
             firedEntries.push({
               id: nextId("tl"),
