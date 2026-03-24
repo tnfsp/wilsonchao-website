@@ -869,15 +869,18 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
           }
         }
       } else if (ev.type === "vitals_change" || ev.type === "escalation" || ev.type === "chest_tube_change") {
-        const rawContent = ev.data?.message ?? ev.data?.content ?? `⚠️ 事件觸發：${ev.type}`;
-        firedEntries.push({
-          id: nextId("tl"),
-          gameTime: newTime,
-          type: ev.type === "escalation" ? "nurse_message" : "system_event",
-          content: interpolateVitals(rawContent),
-          sender: ev.type === "escalation" ? "nurse" : "system",
-          isImportant: true,
-        });
+        const rawContent = ev.data?.message ?? ev.data?.content ?? "";
+        // vitals_change without message = silent update (no timeline entry)
+        if (rawContent) {
+          firedEntries.push({
+            id: nextId("tl"),
+            gameTime: newTime,
+            type: ev.type === "escalation" ? "nurse_message" : "system_event",
+            content: interpolateVitals(rawContent),
+            sender: ev.type === "escalation" ? "nurse" : "system",
+            isImportant: true,
+          });
+        }
       } else if (ev.type === "nurse_call") {
         const rawContent = ev.data?.message ?? `護理師：有事情需要你注意。`;
         const nurseName = scenario?.nurseProfile?.name ?? "護理師";
