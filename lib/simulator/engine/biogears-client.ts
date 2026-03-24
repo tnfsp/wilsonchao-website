@@ -368,6 +368,7 @@ export function biogearsToVitals(bg: BioGearsState): VitalSigns {
     bloodVolume: Math.round(v.blood_volume_mL),
     ejectionFraction: Math.round(v.ejection_fraction * 100),  // fraction → %
     aLineWaveform: inferALineWaveform(bg),
+    rhythmStrip: "nsr",
   };
 }
 

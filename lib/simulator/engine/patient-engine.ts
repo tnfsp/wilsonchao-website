@@ -418,7 +418,7 @@ function mergeVitalModifier(
 ): VitalSigns {
   const result = { ...vitals };
   for (const key of Object.keys(modifier) as Array<keyof VitalSigns>) {
-    if (key === "aLineWaveform") continue;
+    if (key === "aLineWaveform" || key === "rhythmStrip") continue;
     const mod = modifier[key] as number | undefined;
     if (mod != null) {
       (result[key] as number) = (result[key] as number) + mod;

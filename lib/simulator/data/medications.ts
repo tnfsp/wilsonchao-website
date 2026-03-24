@@ -1054,6 +1054,10 @@ export const tpa: OrderDefinition = {
     isCorrectTreatment: false,
     severityChange: 0,
   },
+  scenarioOverrides: {
+    surgical_bleeding: { isCorrectTreatment: false, severityChange: 30 },
+    cardiac_tamponade: { isCorrectTreatment: false, severityChange: 25 },
+  },
 };
 
 // ============================================================

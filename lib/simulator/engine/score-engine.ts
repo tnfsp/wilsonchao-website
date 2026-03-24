@@ -414,7 +414,9 @@ function evaluateGuidelineBundles(
   if (!bundles || bundles.length === 0) return [];
 
   return bundles.map((bundle): GuidelineBundleScore => {
-    const items: GuidelineBundleItemResult[] = bundle.items.map((item) => {
+    // Filter out informational items from scoring
+    const scorableItems = bundle.items.filter((item) => !item.informational);
+    const items: GuidelineBundleItemResult[] = scorableItems.map((item) => {
       // Check if any of the mapped actionIds were completed
       const matchingCritical = criticalActions.filter((ca) =>
         item.actionIds.includes(ca.id),
@@ -445,12 +447,12 @@ function evaluateGuidelineBundles(
     });
 
     const completedItems = items.filter((i) => i.completed).length;
-    const compliancePercent = bundle.items.length > 0
-      ? Math.round((completedItems / bundle.items.length) * 100)
+    const compliancePercent = scorableItems.length > 0
+      ? Math.round((completedItems / scorableItems.length) * 100)
       : 0;
 
     // Time to complete ALL items (null if not all completed)
-    const allCompleted = completedItems === bundle.items.length;
+    const allCompleted = completedItems === scorableItems.length;
     const allTimes = items
       .filter((i) => i.completedAt !== null)
       .map((i) => i.completedAt!);
@@ -463,7 +465,7 @@ function evaluateGuidelineBundles(
       bundleName: bundle.shortName,
       source: bundle.source,
       url: bundle.url,
-      totalItems: bundle.items.length,
+      totalItems: scorableItems.length,
       completedItems,
       items,
       compliancePercent,

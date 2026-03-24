@@ -31,6 +31,7 @@ const initialVitals: VitalSigns = {
   temperature: 35.8,
   rr: 18,
   aLineWaveform: "dampened",
+  rhythmStrip: "sinus_tach",
 };
 
 const initialChestTube: ChestTubeState = {
@@ -130,14 +131,14 @@ const events: ScriptedEvent[] = [
     },
   },
 
-  // ── 15:00 ── 如果沒叫學長 → 護理師主動建議（條件觸發）
+  // ── 15:00 ── 如果沒叫學長 → 護理師只報數字，不建議行動
   {
-    id: "evt-15-nurse-suggest-senior",
+    id: "evt-15-nurse-report-status",
     triggerTime: 15,
     triggerCondition: conditionHighSeverityNoSenior,
     type: "nurse_call",
     message:
-      "醫師，血壓掉到 {{sbp}} 了，CT 累計快到 {{ct_total}}cc，量一直沒有減少。我覺得⋯要不要通知 VS？",
+      "醫師，血壓 {{sbp}}/{{dbp}}，CT 累計 {{ct_total}}cc，這一個小時量一直沒有減少⋯⋯接下來要怎麼處理？",
     chestTubeChanges: {
       currentRate: 320,
       totalOutput: 1100,

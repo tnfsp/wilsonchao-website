@@ -31,6 +31,7 @@ const initialVitals: VitalSigns = {
   temperature: 38.8,
   rr: 24,
   aLineWaveform: "normal", // A-line 已拔除，但 type 需要
+  rhythmStrip: "sinus_tach",
 };
 
 const initialChestTube: ChestTubeState = {
@@ -171,14 +172,14 @@ const events: ScriptedEvent[] = [
       "醫師，WBC 18.5、lactate 4.2，wound 又在流膿⋯⋯要不要先經驗性給個抗生素？Vancomycin + Tazocin 好不好？",
   },
 
-  // ── 18:00 ── 沒叫學長 → 護理師建議（條件觸發）
+  // ── 18:00 ── 沒叫學長 → 護理師只報數字，不建議行動
   {
-    id: "evt-18-nurse-suggest-senior",
+    id: "evt-18-nurse-report-status",
     triggerTime: 18,
     triggerCondition: conditionHighSeverityNoSenior,
     type: "nurse_call",
     message:
-      "醫師，他的 wound 需要 surgical washout，這個你沒辦法自己處理。我覺得應該通知 VS⋯⋯",
+      "醫師，Levophed 已經開到 {{sbp}}/{{dbp}} 了，wound 那邊還是一直有滲⋯⋯接下來要怎麼處理？",
   },
 
   // ── 20:00 ── 如果沒給抗生素 → 持續惡化
@@ -653,8 +654,9 @@ const guidelineBundles: GuidelineBundle[] = [
         id: "ssc-screening",
         description: "Use NEWS/NEWS2/MEWS/SIRS for sepsis screening (preferred over qSOFA)",
         actionIds: [],
+        informational: true,
         evidenceLevel: "Strong recommendation",
-        rationale: "SSC 2026 strongly recommends using NEWS, NEWS2, MEWS, or SIRS for sepsis screening over qSOFA, which has inferior sensitivity for early detection.",
+        rationale: "SSC 2026 strongly recommends using NEWS, NEWS2, MEWS, or SIRS for sepsis screening over qSOFA, which has inferior sensitivity for early detection. (Informational — not scored as player action.)",
       },
     ],
   },

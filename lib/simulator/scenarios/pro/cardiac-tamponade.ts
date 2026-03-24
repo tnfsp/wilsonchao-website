@@ -31,6 +31,7 @@ const initialVitals: VitalSigns = {
   temperature: 35.5,
   rr: 20,
   aLineWaveform: "dampened",
+  rhythmStrip: "sinus_tach",
 };
 
 const initialChestTube: ChestTubeState = {
@@ -143,14 +144,14 @@ const events: ScriptedEvent[] = [
     severityChange: 20,
   },
 
-  // ── 15:00 ── 沒叫學長 → 護理師主動建議（條件觸發）
+  // ── 15:00 ── 沒叫學長 → 護理師只報數字，不建議行動
   {
-    id: "evt-15-nurse-suggest-senior",
+    id: "evt-15-nurse-report-status",
     triggerTime: 15,
     triggerCondition: conditionHighSeverityNoSenior,
     type: "nurse_call",
     message:
-      "醫師，我覺得這個很不對⋯⋯要不要趕快通知 VS？如果是 tamponade 可能需要緊急處理。",
+      "醫師，血壓 {{sbp}}/{{dbp}}，CVP 一直在升⋯⋯CT 反而沒什麼量了。病人看起來越來越不舒服，接下來要怎麼做？",
   },
 
   // ── 18:00 ── 沒做 POCUS 的提醒（條件觸發）

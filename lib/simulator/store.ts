@@ -43,6 +43,8 @@ import type {
   LabResultData,
   ScriptedEventData,
   OrderEffectData,
+  DefibrillatorState,
+  ShockResult,
 } from "./types";
 
 // ============================================================
@@ -213,6 +215,23 @@ export interface ProGameStore {
 
   /** 更新呼吸器設定 */
   updateVentilator: (changes: Partial<VentilatorState>) => void;
+
+  // ---- Hint System ----
+  /** 使用提示（最多 3 次），找到第一個未完成的 critical action 並顯示 hint */
+  useHint: () => void;
+
+  // ---- Defibrillator (ACLS) ----
+  /** Defibrillator 狀態 */
+  defibrillator: DefibrillatorState;
+
+  /** 設定電擊能量 */
+  setDefibrillatorEnergy: (energy: number) => void;
+
+  /** 設定電擊模式 */
+  setDefibrillatorMode: (mode: "sync" | "async") => void;
+
+  /** 執行電擊 */
+  deliverShock: () => ShockResult;
 }
 
 // ============================================================
@@ -259,6 +278,12 @@ const initialVentilatorState: VentilatorState = {
   ieRatio: '1:2',
 };
 
+const initialDefibrillatorState: DefibrillatorState = {
+  energy: 200,
+  mode: "async",
+  lastShockAt: null,
+};
+
 const initialState = {
   scenario: null as SimScenario | null,
   isLoading: false,
@@ -281,6 +306,7 @@ const initialState = {
   ventilator: initialVentilatorState,
   guidanceMode: false,
   guidanceHighlight: null as string | null,
+  defibrillator: initialDefibrillatorState,
 };
 
 // ============================================================
@@ -646,6 +672,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         score: null,
         deathCause: null,
         activeModal: null,
+        defibrillator: initialDefibrillatorState,
       });
     } catch (err) {
       const message = err instanceof Error ? err.message : String(err);
@@ -1607,5 +1634,132 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     }
 
     set({ guidanceHighlight: highlight });
+  },
+
+  // ----------------------------------------------------------
+  // useHint — 使用提示（最多 3 次）
+  // ----------------------------------------------------------
+  useHint: () => {
+    const { phase, hintsUsed, scenario, playerActions, clock } = get();
+    if (phase !== "playing" || hintsUsed >= 3 || !scenario) return;
+
+    // 用 scoring 邏輯找第一個未完成的 critical action
+    const ACTION_PATTERNS: Record<string, RegExp> = {
+      "act-blood-culture": /order:lab:.*blood.?culture|lab:.*blood.?culture/i,
+      "act-antibiotics": /order:medication:.*(?:vancomycin|piptazo|ceftriaxone|pip.*tazo|meropenem|cefepime)/i,
+      "act-fluid-resuscitation": /order:fluid:.*(?:ns|lr|normal.?saline|lactated|albumin)|order:transfusion|mtp:activated/i,
+      "act-lactate": /order:lab:.*(?:lactate|abg|blood.?gas)/i,
+      "act-vasopressor": /order:medication:.*(?:norepinephrine|levophed|epinephrine|vasopressin)/i,
+      "act-call-senior": /consult:.*senior|consult:.*vs|call_senior|call_vs|message:.*叫學長|message:.*通知/i,
+      "act-wound-culture": /order:lab:.*wound.?culture|order:lab:.*swab/i,
+      "act-foley": /order:procedure:.*foley|order:procedure:.*catheter/i,
+      "act-central-line": /order:procedure:.*central.?line|order:procedure:.*cvc/i,
+      "act-abg": /order:lab:.*abg|order:lab:.*blood.?gas/i,
+      "act-check-ct": /pocus:.*|order:imaging:.*cxr|order:lab:.*cbc/i,
+      "act-protamine": /order:.*protamine/i,
+      "act-txa": /order:.*txa|order:.*tranexamic/i,
+      "act-mtp": /mtp:activated/i,
+      "act-pericardiocentesis": /order:procedure:.*pericardio/i,
+      "act-echo": /pocus:cardiac/i,
+      "act-vent-fio2-increase": /vent:.*fio2=/i,
+      "act-vent-peep-increase": /vent:.*peep=/i,
+      "act-vent-fio2-adjust": /vent:.*fio2=/i,
+      "act-vent-peep-adjust": /vent:.*peep=/i,
+      "act-vent-maintain": /vent:/i,
+    };
+
+    const unmetAction = scenario.expectedActions.find((expected) => {
+      if (!expected.critical) return false;
+      const pattern = ACTION_PATTERNS[expected.id];
+      const matched = pattern
+        ? playerActions.some((pa) => pattern.test(pa.action))
+        : playerActions.some((pa) => pa.action.toLowerCase().includes(expected.action.toLowerCase()));
+      return !matched;
+    });
+
+    if (!unmetAction) return;
+
+    const hintEntry: Omit<TimelineEntry, "id"> = {
+      gameTime: clock.currentTime,
+      type: "hint",
+      content: `💡 提示：${unmetAction.hint}`,
+      sender: "system",
+      isImportant: true,
+    };
+
+    set((state) => ({
+      hintsUsed: state.hintsUsed + 1,
+      timeline: [...state.timeline, { id: nextId("tl"), ...hintEntry }],
+      playerActions: [...state.playerActions, { action: `hint:${unmetAction.id}`, gameTime: clock.currentTime }],
+    }));
+  },
+
+  // ----------------------------------------------------------
+  // Defibrillator actions
+  // ----------------------------------------------------------
+  setDefibrillatorEnergy: (energy: number) => {
+    set((state) => ({
+      defibrillator: { ...state.defibrillator, energy },
+    }));
+  },
+
+  setDefibrillatorMode: (mode: "sync" | "async") => {
+    set((state) => ({
+      defibrillator: { ...state.defibrillator, mode },
+    }));
+  },
+
+  deliverShock: (): ShockResult => {
+    const { phase, patient, clock, defibrillator } = get();
+    if (phase !== "playing" || !patient) {
+      return { success: false, message: "無法在此狀態下電擊" };
+    }
+
+    const rhythm = patient.vitals.rhythmStrip;
+    const { energy, mode } = defibrillator;
+
+    // Record action
+    const actionLabel = `acls:shock:${energy}J:${mode}`;
+    const shockEntry: Omit<TimelineEntry, "id"> = {
+      gameTime: clock.currentTime,
+      type: "player_action",
+      sender: "player",
+      isImportant: true,
+      content: "",
+    };
+
+    // Determine outcome based on rhythm
+    let result: ShockResult;
+    if (rhythm === "vf" || rhythm === "vt_pulseless") {
+      // Async shock — appropriate for VF/pulseless VT
+      result = { success: true, message: "電擊成功 — 節律恢復中" };
+      shockEntry.content = `⚡ 電擊 ${energy}J（${mode === "sync" ? "同步" : "非同步"}）— VF/VT 電擊後觀察節律`;
+    } else if (rhythm === "vt_pulse") {
+      // Sync cardioversion for VT with pulse
+      if (mode === "sync") {
+        result = { success: true, message: "同步電擊成功 — VT 轉為竇性節律" };
+        shockEntry.content = `⚡ 同步電擊 ${energy}J — VT with pulse → 節律轉換中`;
+      } else {
+        result = { success: true, message: "非同步電擊 — 注意：VT with pulse 建議使用同步模式" };
+        shockEntry.content = `⚡ 非同步電擊 ${energy}J — VT with pulse（⚠ 建議同步模式）`;
+      }
+    } else if (rhythm === "asystole" || rhythm === "pea") {
+      result = { success: false, message: "不適合電擊 — Asystole/PEA 為不可電擊節律" };
+      shockEntry.content = `⚡ 嘗試電擊 ${energy}J — ⚠ ${rhythm === "asystole" ? "Asystole" : "PEA"} 不可電擊`;
+    } else {
+      result = { success: false, message: `目前節律（${rhythm}）不需要電擊` };
+      shockEntry.content = `⚡ 嘗試電擊 ${energy}J — 目前節律不需電擊`;
+    }
+
+    set((state) => ({
+      defibrillator: { ...state.defibrillator, lastShockAt: clock.currentTime },
+      timeline: [...state.timeline, { id: nextId("tl"), ...shockEntry }],
+      playerActions: [...state.playerActions, { action: actionLabel, gameTime: clock.currentTime, category: "acls" }],
+    }));
+
+    // Advance 1 minute for the procedure
+    get().actionAdvance(1);
+
+    return result;
   },
 }));

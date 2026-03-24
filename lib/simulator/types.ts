@@ -18,7 +18,21 @@ export interface VitalSigns {
   bloodVolume?: number;          // mL — from BioGears blood_volume_mL
   ejectionFraction?: number;     // 0-100 % — from BioGears ejection_fraction
   aLineWaveform: ALineWaveform;
+  rhythmStrip: RhythmType;
 }
+
+export type RhythmType =
+  | "nsr"
+  | "sinus_tach"
+  | "sinus_brady"
+  | "afib"
+  | "aflutter"
+  | "vf"
+  | "vt_pulse"
+  | "vt_pulseless"
+  | "svt"
+  | "pea"
+  | "asystole";
 
 export type ALineWaveform =
   | "normal"
@@ -417,6 +431,7 @@ export interface GuidelineBundleItem {
   id: string;                           // e.g. "ssc-lactate"
   description: string;                  // "Measure lactate level"
   actionIds: string[];                  // maps to ExpectedAction.id(s) that fulfill this item
+  informational?: boolean;              // true = display-only, excluded from scoring
   timeWindow?: number;                  // guideline-recommended time (game minutes), if applicable
   evidenceLevel?: string;               // "Strong recommendation, moderate quality"
   rationale?: string;                   // brief clinical rationale from guideline
@@ -558,7 +573,23 @@ export type ModalType =
   | "sbar"
   | "debrief"
   | "pause_think"
-  | "consult";
+  | "consult"
+  | "defibrillator";
+
+// ============================================================
+// Defibrillator (ACLS)
+// ============================================================
+
+export interface DefibrillatorState {
+  energy: number;                 // Joules (default 200)
+  mode: "sync" | "async";
+  lastShockAt: number | null;     // game minutes
+}
+
+export type ShockResult = {
+  success: boolean;
+  message: string;
+};
 
 // ============================================================
 // Tracked Player Action (for scoring timestamps)
