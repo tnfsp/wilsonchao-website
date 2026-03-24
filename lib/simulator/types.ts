@@ -395,6 +395,54 @@ export interface GameScore {
   stars: 1 | 2 | 3;
   totalScore: number;
   patientDied: boolean;
+  guidelineBundleScores?: GuidelineBundleScore[];  // guideline compliance results
+}
+
+// ============================================================
+// Guideline-Based Scoring
+// ============================================================
+
+/** A clinical guideline bundle that anchors scenario scoring */
+export interface GuidelineBundle {
+  id: string;                           // e.g. "ssc-2021-hour1"
+  name: string;                         // "Surviving Sepsis Campaign 2021 Hour-1 Bundle"
+  shortName: string;                    // "SSC Hour-1 Bundle"
+  source: string;                       // "Evans et al. Crit Care Med 2021;49(11):e1063-e1143"
+  url?: string;                         // link to guideline
+  items: GuidelineBundleItem[];         // ordered checklist items
+}
+
+/** Individual checklist item within a guideline bundle */
+export interface GuidelineBundleItem {
+  id: string;                           // e.g. "ssc-lactate"
+  description: string;                  // "Measure lactate level"
+  actionIds: string[];                  // maps to ExpectedAction.id(s) that fulfill this item
+  timeWindow?: number;                  // guideline-recommended time (game minutes), if applicable
+  evidenceLevel?: string;               // "Strong recommendation, moderate quality"
+  rationale?: string;                   // brief clinical rationale from guideline
+}
+
+/** Score result for a single guideline bundle */
+export interface GuidelineBundleScore {
+  bundleId: string;
+  bundleName: string;
+  source: string;
+  url?: string;
+  totalItems: number;
+  completedItems: number;
+  items: GuidelineBundleItemResult[];
+  compliancePercent: number;            // 0-100
+  timeToCompletion: number | null;      // game minutes to complete ALL items, null if incomplete
+}
+
+/** Result for each guideline bundle item */
+export interface GuidelineBundleItemResult {
+  id: string;
+  description: string;
+  completed: boolean;
+  completedAt: number | null;           // game minutes
+  withinTimeWindow: boolean;            // completed within guideline time window
+  evidenceLevel?: string;
 }
 
 // ============================================================
@@ -423,6 +471,7 @@ export interface SimScenario {
   nurseProfile: NurseProfile;
   events: ScriptedEvent[];
   expectedActions: ExpectedAction[];
+  guidelineBundles?: GuidelineBundle[];    // guideline-anchored scoring
 
   availableLabs: Record<string, LabPanel>;
   availableImaging: Record<string, string>;  // id → description

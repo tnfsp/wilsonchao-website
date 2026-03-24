@@ -12,6 +12,9 @@ import type {
   WhatIfBranch,
   ExpectedAction,
   MTPState,
+  GuidelineBundle,
+  GuidelineBundleScore,
+  GuidelineBundleItemResult,
 } from "../types";
 
 // ============================================================
@@ -396,6 +399,80 @@ function calculateTimeToFirstAction(playerActions: PlayerAction[]): number {
 }
 
 // ============================================================
+// Helpers — Guideline Bundle Compliance
+// ============================================================
+
+/**
+ * Evaluate player compliance with guideline bundles defined in the scenario.
+ * Maps each bundle item's actionIds to actual player actions to determine completion.
+ */
+function evaluateGuidelineBundles(
+  bundles: GuidelineBundle[] | undefined,
+  criticalActions: CriticalAction[],
+  playerActions: PlayerAction[],
+): GuidelineBundleScore[] {
+  if (!bundles || bundles.length === 0) return [];
+
+  return bundles.map((bundle): GuidelineBundleScore => {
+    const items: GuidelineBundleItemResult[] = bundle.items.map((item) => {
+      // Check if any of the mapped actionIds were completed
+      const matchingCritical = criticalActions.filter((ca) =>
+        item.actionIds.includes(ca.id),
+      );
+      const completed = matchingCritical.some((ca) => ca.met);
+
+      // Find the earliest completion time among matching actions
+      const completionTimes = matchingCritical
+        .filter((ca) => ca.met && ca.timeToComplete !== null)
+        .map((ca) => ca.timeToComplete!);
+      const completedAt = completionTimes.length > 0
+        ? Math.min(...completionTimes)
+        : null;
+
+      // Check if within guideline time window
+      const withinTimeWindow = item.timeWindow
+        ? completed && completedAt !== null && completedAt <= item.timeWindow
+        : completed;
+
+      return {
+        id: item.id,
+        description: item.description,
+        completed,
+        completedAt,
+        withinTimeWindow,
+        evidenceLevel: item.evidenceLevel,
+      };
+    });
+
+    const completedItems = items.filter((i) => i.completed).length;
+    const compliancePercent = bundle.items.length > 0
+      ? Math.round((completedItems / bundle.items.length) * 100)
+      : 0;
+
+    // Time to complete ALL items (null if not all completed)
+    const allCompleted = completedItems === bundle.items.length;
+    const allTimes = items
+      .filter((i) => i.completedAt !== null)
+      .map((i) => i.completedAt!);
+    const timeToCompletion = allCompleted && allTimes.length > 0
+      ? Math.max(...allTimes)
+      : null;
+
+    return {
+      bundleId: bundle.id,
+      bundleName: bundle.shortName,
+      source: bundle.source,
+      url: bundle.url,
+      totalItems: bundle.items.length,
+      completedItems,
+      items,
+      compliancePercent,
+      timeToCompletion,
+    };
+  });
+}
+
+// ============================================================
 // Helpers — Numeric Score (for overall rating)
 // ============================================================
 
@@ -514,6 +591,13 @@ export function calculateScore(
 
   const timeToFirstAction = calculateTimeToFirstAction(playerActions);
 
+  // --- Guideline bundle compliance ---
+  const guidelineBundleScores = evaluateGuidelineBundles(
+    scenario.guidelineBundles,
+    criticalActions,
+    playerActions,
+  );
+
   // --- Compute numeric score for overall rating ---
   const numericScore = computeNumericScore(
     criticalActions,
@@ -582,6 +666,7 @@ export function calculateScore(
     stars,
     totalScore: numericScore,
     patientDied,
+    guidelineBundleScores: guidelineBundleScores.length > 0 ? guidelineBundleScores : undefined,
   };
 }
 

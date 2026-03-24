@@ -14,6 +14,7 @@ import type {
   PEFinding,
   DebriefData,
   EventCondition,
+  GuidelineBundle,
 } from "@/lib/simulator/types";
 
 // ============================================================
@@ -611,6 +612,61 @@ const debrief: DebriefData = {
 };
 
 // ============================================================
+// Guideline Bundles
+// ============================================================
+
+const guidelineBundles: GuidelineBundle[] = [
+  {
+    id: "sts-reexplore",
+    name: "STS/EACTS Re-exploration Criteria for Post-Cardiac Surgery Bleeding",
+    shortName: "STS Re-exploration Criteria",
+    source: "Colson PH, et al. Post cardiac surgery bleeding: Management algorithm. J Cardiothorac Vasc Anesth. 2020;34(7):1923-1935. & EACTS/EACTA Guidelines on Patient Blood Management. Eur J Cardiothorac Surg. 2017;53:79-97.",
+    items: [
+      {
+        id: "sts-labs",
+        description: "Obtain CBC + coagulation panel (PT/INR, aPTT, fibrinogen, platelet count)",
+        actionIds: ["act-cbc-stat", "act-coag-panel"],
+        timeWindow: 10,
+        evidenceLevel: "Class I, Level B",
+        rationale: "Rapid assessment of coagulation status is essential to differentiate surgical bleeding from coagulopathy. Fibrinogen <1.5 g/L and platelet count <100K are transfusion triggers.",
+      },
+      {
+        id: "sts-type-screen",
+        description: "Type & screen / crossmatch blood products",
+        actionIds: ["act-type-screen"],
+        timeWindow: 10,
+        evidenceLevel: "Best practice statement",
+        rationale: "Ensuring blood product availability is critical in actively bleeding post-cardiac surgery patients.",
+      },
+      {
+        id: "sts-volume",
+        description: "Initiate volume resuscitation (crystalloid + blood products as indicated)",
+        actionIds: ["act-volume-resuscitation"],
+        timeWindow: 10,
+        evidenceLevel: "Class I, Level B",
+        rationale: "Goal-directed resuscitation to maintain hemodynamic stability. Target Hb >7-8 g/dL, platelet >100K, fibrinogen >1.5g/L.",
+      },
+      {
+        id: "sts-act",
+        description: "Check ACT for residual heparin effect, give protamine if prolonged",
+        actionIds: ["act-act", "act-protamine"],
+        timeWindow: 15,
+        evidenceLevel: "Class I, Level B",
+        rationale: "Incomplete heparin reversal post-CPB is a common cause of medical bleeding. ACT >130s suggests residual heparin requiring protamine.",
+      },
+      {
+        id: "sts-escalation",
+        description: "Notify attending surgeon — consider re-exploration if CT output >200mL/hr for 2hrs or >400mL in first hour",
+        actionIds: ["act-call-senior"],
+        timeWindow: 15,
+        evidenceLevel: "Class I, Level C",
+        rationale: "Delayed re-exploration (>12hrs) is associated with increased mortality, prolonged ICU stay, and higher transfusion requirements. The decision to re-explore should not be delayed.",
+      },
+    ],
+  },
+];
+
+// ============================================================
 // Scenario Export
 // ============================================================
 
@@ -685,6 +741,7 @@ export const postopBleeding: SimScenario = {
 
   events,
   expectedActions,
+  guidelineBundles,
 
   availableLabs,
   availableImaging,

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
-import type { TimelineEntry, CriticalAction, WhatIfBranch, ExpectedAction, TrackedAction } from "@/lib/simulator/types";
+import type { TimelineEntry, CriticalAction, WhatIfBranch, ExpectedAction, TrackedAction, GuidelineBundleScore } from "@/lib/simulator/types";
 import type { GameScore } from "@/lib/simulator/types";
 
 // ─── Progress persistence ────────────────────────────────────────────────────
@@ -496,6 +496,122 @@ const DIAGNOSTIC_STEPS: DiagnosticStep[] = [
   { id: "coag", label: "Coagulation Panel", pattern: /(coag|pt.*inr|aptt|fibrinogen)/i, critical: false },
 ];
 
+// ─── Guideline Bundle Compliance Section ─────────────────────────────────────
+
+function GuidelineBundleSection({ bundles }: { bundles: GuidelineBundleScore[] }) {
+  return (
+    <div className="space-y-4">
+      {bundles.map((bundle) => {
+        const complianceColor =
+          bundle.compliancePercent >= 80
+            ? "text-emerald-400"
+            : bundle.compliancePercent >= 50
+            ? "text-yellow-400"
+            : "text-red-400";
+
+        const complianceBg =
+          bundle.compliancePercent >= 80
+            ? "bg-emerald-500"
+            : bundle.compliancePercent >= 50
+            ? "bg-yellow-500"
+            : "bg-red-500";
+
+        return (
+          <div
+            key={bundle.bundleId}
+            className="rounded-xl border border-white/10 bg-white/[0.03] overflow-hidden"
+          >
+            {/* Bundle header */}
+            <div className="px-4 py-3 border-b border-white/8">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-white text-sm font-semibold">{bundle.bundleName}</h4>
+                  <p className="text-gray-500 text-[11px] mt-0.5 leading-tight max-w-md">
+                    {bundle.source.length > 100 ? bundle.source.slice(0, 100) + "…" : bundle.source}
+                  </p>
+                </div>
+                <div className="text-right">
+                  <div className={`text-2xl font-bold ${complianceColor}`}>
+                    {bundle.completedItems}/{bundle.totalItems}
+                  </div>
+                  <div className="text-gray-500 text-[10px]">compliance</div>
+                </div>
+              </div>
+
+              {/* Progress bar */}
+              <div className="mt-2 h-1.5 rounded-full bg-white/10 overflow-hidden">
+                <div
+                  className={`h-full rounded-full transition-all duration-700 ${complianceBg}`}
+                  style={{ width: `${bundle.compliancePercent}%` }}
+                />
+              </div>
+
+              {bundle.timeToCompletion !== null && (
+                <p className="text-emerald-400 text-[10px] mt-1">
+                  ✅ Bundle 完成於 {bundle.timeToCompletion} 分鐘
+                </p>
+              )}
+            </div>
+
+            {/* Checklist items */}
+            <div className="divide-y divide-white/5">
+              {bundle.items.map((item) => (
+                <div
+                  key={item.id}
+                  className="px-4 py-2.5 flex items-start gap-3"
+                >
+                  <div className="mt-0.5">
+                    {item.completed ? (
+                      item.withinTimeWindow ? (
+                        <span className="text-emerald-400 text-sm">✅</span>
+                      ) : (
+                        <span className="text-yellow-400 text-sm">⚠️</span>
+                      )
+                    ) : (
+                      <span className="text-red-400 text-sm">❌</span>
+                    )}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className={`text-xs ${item.completed ? "text-gray-300" : "text-gray-500"}`}>
+                      {item.description}
+                    </p>
+                    <div className="flex gap-3 mt-0.5">
+                      {item.completedAt !== null && (
+                        <span className="text-[10px] text-gray-600">
+                          {item.withinTimeWindow ? "⏱" : "⏱ 延遲"} {item.completedAt}min
+                        </span>
+                      )}
+                      {item.evidenceLevel && (
+                        <span className="text-[10px] text-cyan-700">{item.evidenceLevel}</span>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Source link */}
+            {bundle.url && (
+              <div className="px-4 py-2 border-t border-white/5">
+                <a
+                  href={bundle.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-cyan-500 text-[10px] hover:underline"
+                >
+                  📄 查看原始 Guideline →
+                </a>
+              </div>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+}
+
+// ─── Diagnostic Accuracy Section ─────────────────────────────────────────────
+
 function DiagnosticAccuracySection({
   score,
   scenario,
@@ -715,7 +831,22 @@ export default function DebriefPanel() {
 
         <div className="border-t border-white/8" />
 
-        {/* ── Section 3.5: Diagnostic Accuracy ── */}
+        {/* ── Section 3.5: Guideline Bundle Compliance ── */}
+        {score.guidelineBundleScores && score.guidelineBundleScores.length > 0 && (
+          <>
+            <section>
+              <SectionHeader
+                emoji="📋"
+                title="Guideline 遵循度"
+                subtitle="根據國際指引評估你的處置"
+              />
+              <GuidelineBundleSection bundles={score.guidelineBundleScores} />
+            </section>
+            <div className="border-t border-white/8" />
+          </>
+        )}
+
+        {/* ── Section 3.6: Diagnostic Accuracy ── */}
         <section>
           <SectionHeader
             emoji="🔍"

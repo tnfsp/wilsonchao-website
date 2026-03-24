@@ -14,6 +14,7 @@ import type {
   PEFinding,
   DebriefData,
   EventCondition,
+  GuidelineBundle,
 } from "@/lib/simulator/types";
 
 // ============================================================
@@ -596,6 +597,87 @@ const debrief: DebriefData = {
 };
 
 // ============================================================
+// ============================================================
+// Guideline Bundles
+// ============================================================
+
+const guidelineBundles: GuidelineBundle[] = [
+  {
+    id: "ssc-2021-hour1",
+    name: "Surviving Sepsis Campaign 2021 — Hour-1 Bundle",
+    shortName: "SSC Hour-1 Bundle",
+    source: "Evans L, et al. Surviving Sepsis Campaign: International Guidelines for Management of Sepsis and Septic Shock 2021. Crit Care Med. 2021;49(11):e1063-e1143.",
+    url: "https://doi.org/10.1097/CCM.0000000000005337",
+    items: [
+      {
+        id: "ssc-lactate",
+        description: "Measure lactate level",
+        actionIds: ["act-lactate", "act-abg"],
+        timeWindow: 10,
+        evidenceLevel: "Strong recommendation, low quality of evidence",
+        rationale: "If initial lactate is >2 mmol/L, remeasure within 2-4 hrs to guide resuscitation.",
+      },
+      {
+        id: "ssc-blood-culture",
+        description: "Obtain blood cultures before administering antibiotics",
+        actionIds: ["act-blood-culture"],
+        timeWindow: 10,
+        evidenceLevel: "Best practice statement",
+        rationale: "Obtaining cultures before antibiotics significantly improves pathogen identification. Do not delay antibiotics to obtain cultures.",
+      },
+      {
+        id: "ssc-antibiotics",
+        description: "Administer broad-spectrum antibiotics within 1 hour",
+        actionIds: ["act-antibiotics"],
+        timeWindow: 10,
+        evidenceLevel: "Strong recommendation, moderate quality of evidence",
+        rationale: "For septic shock, administer antimicrobials ideally within 1 hour of recognition. Each hour of delay is associated with measurable increase in mortality.",
+      },
+      {
+        id: "ssc-fluid",
+        description: "Begin rapid administration of 30 mL/kg crystalloid for hypotension or lactate ≥4",
+        actionIds: ["act-fluid-resuscitation"],
+        timeWindow: 15,
+        evidenceLevel: "Strong recommendation, low quality of evidence",
+        rationale: "Initial resuscitation with at least 30 mL/kg IV crystalloid fluid within the first 3 hours. Reassess hemodynamic status with dynamic measures.",
+      },
+      {
+        id: "ssc-vasopressor",
+        description: "Apply vasopressors if hypotensive during or after fluid resuscitation (target MAP ≥65 mmHg)",
+        actionIds: ["act-vasopressor"],
+        timeWindow: 20,
+        evidenceLevel: "Strong recommendation, moderate quality of evidence",
+        rationale: "Norepinephrine is first-line vasopressor. Start if MAP <65 despite adequate fluid resuscitation.",
+      },
+    ],
+  },
+  {
+    id: "sts-source-control",
+    name: "Source Control in Post-Cardiac Surgery Sepsis",
+    shortName: "Source Control",
+    source: "STS Practice Guidelines: Diagnosis & Management of Sternal Wound Infections. Ann Thorac Surg. 2017;104:e325-e335.",
+    items: [
+      {
+        id: "src-wound-eval",
+        description: "Evaluate surgical wound for signs of deep sternal wound infection",
+        actionIds: ["act-wound-culture"],
+        timeWindow: 15,
+        evidenceLevel: "Strong recommendation",
+        rationale: "DSWI requires early recognition. Sternal instability, purulent drainage, or positive cultures from mediastinal tissue/fluid are diagnostic criteria.",
+      },
+      {
+        id: "src-escalation",
+        description: "Notify attending surgeon for source control planning",
+        actionIds: ["act-call-senior"],
+        timeWindow: 20,
+        evidenceLevel: "Best practice statement",
+        rationale: "Surgical debridement is the cornerstone of DSWI treatment. Early notification enables timely OR scheduling for washout + debridement.",
+      },
+    ],
+  },
+];
+
+// ============================================================
 // Scenario Export
 // ============================================================
 
@@ -671,6 +753,7 @@ export const septicShock: SimScenario = {
 
   events,
   expectedActions,
+  guidelineBundles,
 
   availableLabs,
   availableImaging,

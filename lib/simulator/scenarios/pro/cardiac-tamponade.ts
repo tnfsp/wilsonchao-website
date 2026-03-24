@@ -14,6 +14,7 @@ import type {
   PEFinding,
   DebriefData,
   EventCondition,
+  GuidelineBundle,
 } from "@/lib/simulator/types";
 
 // ============================================================
@@ -514,6 +515,53 @@ const debrief: DebriefData = {
 };
 
 // ============================================================
+// Guideline Bundles
+// ============================================================
+
+const guidelineBundles: GuidelineBundle[] = [
+  {
+    id: "eacts-tamponade",
+    name: "EACTS Guidelines on Post-Operative Cardiac Tamponade Management",
+    shortName: "EACTS Tamponade Protocol",
+    source: "Boyle EM, et al. Diagnosis and management of cardiac tamponade after cardiac surgery. Ann Thorac Surg. 2023. & EACTS/EACTA Guidelines on Patient Blood Management 2017.",
+    items: [
+      {
+        id: "eacts-ct-check",
+        description: "Assess and troubleshoot chest tube patency (strip/milk if clotted)",
+        actionIds: ["act-strip-milk-ct"],
+        timeWindow: 5,
+        evidenceLevel: "Class I, Level C",
+        rationale: "Abrupt cessation of chest tube drainage in the context of hemodynamic deterioration is classic for tamponade from clotted hemothorax/hemopericardium.",
+      },
+      {
+        id: "eacts-pocus",
+        description: "Bedside echocardiography / POCUS to confirm pericardial effusion and RV/RA collapse",
+        actionIds: ["act-cardiac-pocus"],
+        timeWindow: 10,
+        evidenceLevel: "Class I, Level B",
+        rationale: "Focused cardiac ultrasound is the diagnostic standard for post-surgical tamponade. Look for pericardial fluid, RV diastolic collapse, IVC plethora, and respiratory variation.",
+      },
+      {
+        id: "eacts-volume",
+        description: "Volume loading to increase venous return as a temporizing bridge",
+        actionIds: ["act-volume-challenge"],
+        timeWindow: 10,
+        evidenceLevel: "Class IIa, Level C",
+        rationale: "Volume loading can partially overcome the impaired filling from external cardiac compression, maintaining cardiac output temporarily while preparing for definitive surgical treatment.",
+      },
+      {
+        id: "eacts-escalation",
+        description: "Immediately notify attending surgeon — prepare for emergent re-sternotomy",
+        actionIds: ["act-call-senior", "act-prepare-resternotomy"],
+        timeWindow: 10,
+        evidenceLevel: "Class I, Level B",
+        rationale: "Post-cardiac surgery tamponade requires emergent surgical evacuation. Every minute of delay increases mortality. Bedside re-sternotomy may be necessary if patient is in extremis.",
+      },
+    ],
+  },
+];
+
+// ============================================================
 // Scenario Export
 // ============================================================
 
@@ -590,6 +638,7 @@ export const cardiacTamponade: SimScenario = {
 
   events,
   expectedActions,
+  guidelineBundles,
 
   availableLabs,
   availableImaging,
