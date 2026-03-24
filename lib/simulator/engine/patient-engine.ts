@@ -69,6 +69,8 @@ export function computeSeverityDelta(
     vasoplegia: 0.3,
     tension_pneumothorax: 0.8,
     postop_af: 0.1,
+    cardiac_tamponade: 0.7,
+    septic_shock: 0.35,
   };
 
   const untreatedRate = baseRates[pathology] ?? 1.0;
@@ -240,6 +242,23 @@ function getPathologyVitalModifier(
       map: -10 * s,
       cvp: 2 * s,
       spo2: -1 * s,
+    },
+    cardiac_tamponade: {
+      hr: 35 * s,          // compensatory tachycardia
+      sbp: -50 * s,
+      dbp: -25 * s,
+      map: -33 * s,
+      cvp: 12 * s,         // markedly elevated CVP
+      spo2: -6 * s,
+    },
+    septic_shock: {
+      hr: 30 * s,          // tachycardia
+      sbp: -35 * s,
+      dbp: -25 * s,        // wide pulse pressure (distributive)
+      map: -28 * s,
+      cvp: -3 * s,         // low preload initially
+      spo2: -5 * s,
+      rr: 8 * s,           // tachypnea
     },
   };
 

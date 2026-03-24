@@ -357,6 +357,8 @@ export function biogearsToVitals(bg: BioGearsState): VitalSigns {
     rr: Math.round(v.rr),
     temperature: Math.round(v.temperature * 10) / 10,
     etco2: Math.round(v.etco2 * 760),  // fraction → mmHg (atmospheric pressure)
+    bloodVolume: Math.round(v.blood_volume_mL),
+    ejectionFraction: Math.round(v.ejection_fraction * 100),  // fraction → %
     aLineWaveform: inferALineWaveform(bg),
   };
 }

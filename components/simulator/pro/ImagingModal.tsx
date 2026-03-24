@@ -3,10 +3,11 @@
 import { useState } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { PendingEvent } from "@/lib/simulator/types";
+import { PocusCanvas } from "./PocusCanvas";
 
 // ── Imaging options ──────────────────────────────────────────
 
-type ImagingType = "cxr_portable" | "bedside_echo";
+type ImagingType = "cxr_portable" | "bedside_echo" | "pocus";
 
 interface ImagingOption {
   key: ImagingType;
@@ -37,6 +38,15 @@ const IMAGING_OPTIONS: ImagingOption[] = [
     turnaroundLabel: "即時結果",
     note: "比 POCUS 更完整的正式超音波，即時取像",
   },
+  {
+    key: "pocus",
+    emoji: "📱",
+    title: "POCUS",
+    subtitle: "床邊即時超音波",
+    turnaround: "immediate",
+    turnaroundLabel: "即時結果",
+    note: "Focused echo + IVC + Lung — 快速評估",
+  },
 ];
 
 // ── CXR result map (scenario key → scenario availableImaging key) ──────────
@@ -44,6 +54,7 @@ const IMAGING_OPTIONS: ImagingOption[] = [
 const IMAGING_KEY_MAP: Record<ImagingType, string> = {
   cxr_portable: "cxr_portable",
   bedside_echo: "bedside_echo",   // may not be in every scenario
+  pocus: "pocus",
 };
 
 // ── Component ────────────────────────────────────────────────
@@ -162,6 +173,32 @@ export function ImagingModal() {
   // ── Render helpers ───────────────────────────────────────────
 
   function renderResult(key: ImagingType) {
+    // POCUS renders the live canvas instead of text
+    if (key === "pocus") {
+      return (
+        <div
+          className="rounded-lg border border-teal-800/30 overflow-hidden"
+          style={{ backgroundColor: "#001e2e" }}
+        >
+          <div className="px-4 py-2.5 border-b border-teal-900/30 flex items-center gap-2">
+            <span className="text-lg">📱</span>
+            <span className="text-teal-200 font-medium text-sm">POCUS</span>
+            <span className="ml-auto text-xs text-teal-500/50 uppercase tracking-widest">
+              即時
+            </span>
+          </div>
+          <div className="p-3">
+            <PocusCanvas />
+          </div>
+          <div className="mx-4 mb-4 px-3 py-2 rounded bg-teal-900/20 border border-teal-700/25">
+            <p className="text-teal-300/70 text-xs leading-relaxed">
+              💡 POCUS 提供即時床邊評估：Cardiac A4C 看心臟功能與 tamponade，IVC 評估 volume status，Lung 看 B-lines（肺水腫）。
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     const scenarioKey = IMAGING_KEY_MAP[key];
     const text = availableImaging[scenarioKey];
 
@@ -249,7 +286,7 @@ export function ImagingModal() {
                 影像檢查
               </h2>
               <p className="text-teal-400/60 text-xs">
-                Portable CXR / Bedside Echo
+                Portable CXR / Bedside Echo / POCUS
               </p>
             </div>
           </div>

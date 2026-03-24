@@ -15,6 +15,8 @@ export interface VitalSigns {
   temperature: number;
   rr: number;
   etco2?: number;
+  bloodVolume?: number;          // mL — from BioGears blood_volume_mL
+  ejectionFraction?: number;     // 0-100 % — from BioGears ejection_fraction
   aLineWaveform: ALineWaveform;
 }
 
@@ -77,10 +79,12 @@ export type Pathology =
   | "surgical_bleeding"
   | "coagulopathy"
   | "tamponade"
+  | "cardiac_tamponade"
   | "lcos"
   | "vasoplegia"
   | "tension_pneumothorax"
-  | "postop_af";
+  | "postop_af"
+  | "septic_shock";
 
 export interface LethalTriadState {
   hypothermia: boolean;         // temp < 36

@@ -12,6 +12,9 @@
 
 import { create } from "zustand";
 import { getOrderEffect, getMTPRoundEffect } from "@/lib/simulator/engine/order-engine";
+import { computeLabSnapshot, buildLabContext } from "@/lib/simulator/engine/lab-engine";
+import { getLastBioGearsState } from "@/lib/simulator/engine/biogears-engine";
+import type { LabPanelId } from "@/lib/simulator/engine/lab-engine";
 import type {
   SimScenario,
   GamePhase,
@@ -677,28 +680,38 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         // Find the order and its lab panel results
         const order = placedOrders.find((o) => o.id === ev.data.orderId);
         if (order && scenario) {
-          // Find matching lab panel in scenario
-          // Match lab panel: try exact id match first, then name match
-          const orderName = order.definition.name.toLowerCase();
           const orderId = (order.definition as unknown as Record<string, unknown>).id as string | undefined;
-          const labKey = Object.keys(scenario.availableLabs).find((k) => {
-            const panel = scenario.availableLabs[k];
-            // Exact id match (most reliable)
-            if (orderId && panel.id === orderId) return true;
-            // Exact name match
-            if (panel.name === order.definition.name) return true;
-            // Exact id-in-name match (panel.id must equal a word boundary, not substring)
-            if (panel.id === orderName) return true;
-            return false;
-          });
-          const labPanel = labKey ? scenario.availableLabs[labKey] : null;
-          
-          if (labPanel) {
+
+          // === Try BioGears dynamic labs first ===
+          const bgState = getLastBioGearsState();
+          const labCtx = buildLabContext(placedOrders as Parameters<typeof buildLabContext>[0], newTime);
+          const dynamicResults = bgState && orderId
+            ? computeLabSnapshot(bgState, labCtx, orderId as LabPanelId)
+            : null;
+
+          // Use dynamic results if available, otherwise fall back to scenario static
+          let labResults: Record<string, { value: number | string; unit: string; normal?: string; flag?: string }> | null = dynamicResults;
+
+          if (!labResults) {
+            // Fallback: scenario static labs
+            const orderName = order.definition.name.toLowerCase();
+            const labKey = Object.keys(scenario.availableLabs).find((k) => {
+              const panel = scenario.availableLabs[k];
+              if (orderId && panel.id === orderId) return true;
+              if (panel.name === order.definition.name) return true;
+              if (panel.id === orderName) return true;
+              return false;
+            });
+            const labPanel = labKey ? scenario.availableLabs[labKey] : null;
+            labResults = labPanel?.results ?? null;
+          }
+
+          if (labResults) {
             // Format lab results for timeline
-            const resultLines = Object.entries(labPanel.results)
+            const resultLines = Object.entries(labResults)
               .map(([key, r]) => {
                 const flagStr = r.flag === "critical" ? " 🔴" : r.flag === "H" ? " ↑" : r.flag === "L" ? " ↓" : "";
-                return `${key.toUpperCase()}: ${r.value} ${r.unit}${flagStr}`;
+                return `${key}: ${r.value} ${r.unit}${flagStr}`;
               })
               .join(" | ");
             
