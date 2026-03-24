@@ -119,23 +119,60 @@ export default function ActionBar() {
   const clock = useProGameStore((s) => s.clock);
   const phase = useProGameStore((s) => s.phase);
   const guidanceHighlight = useProGameStore((s) => s.guidanceHighlight);
+  const hintsUsed = useProGameStore((s) => s.hintsUsed);
+  const useHint = useProGameStore((s) => s.useHint);
+  const actionAdvance = useProGameStore((s) => s.actionAdvance);
 
   const [showMTPConfirm, setShowMTPConfirm] = useState(false);
   const [showSubMenu, setShowSubMenu] = useState(false);
 
   const isPlaying = phase === "playing";
 
-  const handleOpenCT = () => {
+  const handleMilkCT = () => {
     if (!patient || !isPlaying) return;
-    updateChestTube({ isPatent: true });
-    addTimelineEntry({
-      gameTime: clock.currentTime,
-      type: "player_action",
-      content: "🔧 通暢胸管（Milk/Strip CT）— 確認引流通暢",
-      sender: "player",
-      isImportant: false,
-    });
+    const ct = patient.chestTube;
+
+    if (ct.isPatent) return; // already patent — button disabled
+
+    if (ct.hasClots) {
+      // Blocked by clots: milking restores patency + burst output
+      updateChestTube({ isPatent: true, totalOutput: ct.totalOutput + 50 });
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "🔧 Milk chest tube — 擠出血塊，引流恢復",
+        sender: "player",
+        isImportant: true,
+      });
+    } else {
+      // No clots but not patent (kinked): partial fix
+      updateChestTube({ isPatent: true });
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "🔧 通暢胸管（Milk/Strip CT）",
+        sender: "player",
+        isImportant: false,
+      });
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "nurse_message",
+        content: "護理師：通了，但引流量不多，可能不是血塊的問題",
+        sender: "nurse",
+        isImportant: false,
+      });
+    }
+
+    // Track action and advance 1 minute
+    useProGameStore.setState((state) => ({
+      playerActions: [...state.playerActions, { action: "procedure:chest_tube_milk", gameTime: clock.currentTime, category: "procedure" }],
+    }));
+    actionAdvance(1);
   };
+
+  // CT button disabled state
+  const ctIsPatent = patient?.chestTube.isPatent === true;
+  const ctDisabledReason = ctIsPatent ? "胸管目前通暢" : undefined;
 
   return (
     <>
@@ -202,12 +239,13 @@ export default function ActionBar() {
             />
             <ActionBtn
               icon="🔧" label="通CT"
-              onClick={() => { handleOpenCT(); setShowSubMenu(false); }}
-              disabled={patient?.chestTube.isPatent === true}
-              disabledReason="胸管目前通暢，無需處理"
+              onClick={() => { handleMilkCT(); setShowSubMenu(false); }}
+              disabled={ctIsPatent}
+              disabledReason={ctDisabledReason}
               small
             />
             <ActionBtn icon="🫁" label="POCUS" onClick={() => { openModal("pocus"); setShowSubMenu(false); }} small />
+            <ActionBtn icon="⚡" label="電擊" onClick={() => { openModal("defibrillator"); setShowSubMenu(false); }} small />
             <ActionBtn icon="🌬️" label="呼吸器" onClick={() => { sessionStorage.setItem("sim-order-tab", "ventilator"); openModal("order"); setShowSubMenu(false); }} small />
             <ActionBtn icon="🩻" label="影像" onClick={() => { openModal("imaging"); setShowSubMenu(false); }} small />
           </div>
@@ -220,6 +258,14 @@ export default function ActionBar() {
             onClick={() => openModal("pause_think")}
             disabled={!isPlaying} small
             shortcut="Space"
+          />
+          <ActionBtn
+            icon="💡" label={`提示 ${3 - hintsUsed}/3`}
+            onClick={useHint}
+            disabled={!isPlaying || hintsUsed >= 3}
+            disabledReason={hintsUsed >= 3 ? "已用完所有提示" : undefined}
+            small
+            shortcut="H"
           />
           <ActionBtn
             icon="⏩" label="快轉5分"

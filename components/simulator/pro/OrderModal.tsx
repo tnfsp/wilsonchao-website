@@ -682,10 +682,14 @@ export default function OrderModal() {
   const updateVentilator = useProGameStore((s) => s.updateVentilator);
   const addTimelineEntry = useProGameStore((s) => s.addTimelineEntry);
   const clock = useProGameStore((s) => s.clock);
+  const scenario = useProGameStore((s) => s.scenario);
 
   const [activeTab, setActiveTab] = useState<TabKey>("medication");
   const [selectedDrug, setSelectedDrug] = useState<OrderDefinition | null>(null);
   const [lastResult, setLastResult] = useState<{ ok: boolean; message: string } | null>(null);
+  const [filterRelevant, setFilterRelevant] = useState(false);
+
+  const relevantTags = scenario?.relevantTags ?? [];
 
   const isOpen = activeModal === "order";
 
@@ -812,26 +816,59 @@ export default function OrderModal() {
             </div>
           )}
 
+          {/* Relevance filter toggle — shown for medication/fluid/hemostatic/electrolyte tabs */}
+          {relevantTags.length > 0 && activeTab !== "transfusion" && activeTab !== "ventilator" && (
+            <div className="flex items-center gap-3 bg-zinc-800 rounded-lg px-4 py-3 border border-zinc-700 mb-4">
+              <button
+                onClick={() => setFilterRelevant(!filterRelevant)}
+                className={`w-10 h-5 rounded-full transition-colors relative ${
+                  filterRelevant ? "bg-cyan-500" : "bg-zinc-600"
+                }`}
+              >
+                <span
+                  className={`absolute top-0.5 w-4 h-4 rounded-full bg-white shadow transition-transform ${
+                    filterRelevant ? "translate-x-5" : "translate-x-0.5"
+                  }`}
+                />
+              </button>
+              <div>
+                <p className="text-sm text-white">只顯示相關藥物</p>
+                <p className="text-xs text-zinc-500">依情境篩選（{relevantTags.join(", ")}）</p>
+              </div>
+              {filterRelevant && (
+                <span className="ml-auto text-cyan-400 text-xs font-semibold">ON</span>
+              )}
+            </div>
+          )}
+
           {/* Tab content */}
           <div className="max-h-[55vh] overflow-y-auto pr-1 space-y-2 scrollbar-thin scrollbar-thumb-zinc-700">
             {activeTab === "medication" && (
               <div className="space-y-4">
-                {MED_SUBCATEGORIES.map((cat) => (
-                  <DrugList
-                    key={cat.label}
-                    label={cat.label}
-                    drugs={cat.drugs}
-                    selectedId={selectedDrug?.id ?? null}
-                    onSelect={handleSelectDrug}
-                  />
-                ))}
+                {MED_SUBCATEGORIES.map((cat) => {
+                  const filtered = filterRelevant && relevantTags.length > 0
+                    ? cat.drugs.filter((d) => d.tags?.some((t) => relevantTags.includes(t)))
+                    : cat.drugs;
+                  if (filtered.length === 0) return null;
+                  return (
+                    <DrugList
+                      key={cat.label}
+                      label={cat.label}
+                      drugs={filtered}
+                      selectedId={selectedDrug?.id ?? null}
+                      onSelect={handleSelectDrug}
+                    />
+                  );
+                })}
               </div>
             )}
 
             {activeTab === "fluid" && (
               <DrugList
                 label="輸液 IV Fluids"
-                drugs={medicationCategories.fluids}
+                drugs={filterRelevant && relevantTags.length > 0
+                  ? medicationCategories.fluids.filter((d) => d.tags?.some((t) => relevantTags.includes(t)))
+                  : medicationCategories.fluids}
                 selectedId={selectedDrug?.id ?? null}
                 onSelect={handleSelectDrug}
               />
@@ -847,7 +884,9 @@ export default function OrderModal() {
             {activeTab === "hemostatic" && (
               <DrugList
                 label="止血劑 Hemostatics"
-                drugs={medicationCategories.hemostatics}
+                drugs={filterRelevant && relevantTags.length > 0
+                  ? medicationCategories.hemostatics.filter((d) => d.tags?.some((t) => relevantTags.includes(t)))
+                  : medicationCategories.hemostatics}
                 selectedId={selectedDrug?.id ?? null}
                 onSelect={handleSelectDrug}
               />
@@ -856,7 +895,9 @@ export default function OrderModal() {
             {activeTab === "electrolyte" && (
               <DrugList
                 label="電解質補充 Electrolytes"
-                drugs={medicationCategories.electrolytes}
+                drugs={filterRelevant && relevantTags.length > 0
+                  ? medicationCategories.electrolytes.filter((d) => d.tags?.some((t) => relevantTags.includes(t)))
+                  : medicationCategories.electrolytes}
                 selectedId={selectedDrug?.id ?? null}
                 onSelect={handleSelectDrug}
               />

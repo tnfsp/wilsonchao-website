@@ -379,6 +379,16 @@ function computeBasicScore(
     | "updateOrderStatus"
     | "setScore"
     | "updatePathology"
+    | "updateVentilator"
+    | "useHint"
+    | "setDefibrillatorEnergy"
+    | "setDefibrillatorMode"
+    | "deliverShock"
+    | "triggerDeath"
+    | "checkGuidance"
+    | "setGuidanceHighlight"
+    | "actionAdvance"
+    | "resetGame"
   >
 ): GameScore {
   const { scenario, placedOrders, playerActions, hintsUsed, pauseThinkUsed, sbarReport, patient, clock } = state;
