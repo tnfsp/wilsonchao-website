@@ -510,6 +510,27 @@ a:focus-visible {
   line-height: 1.85;
 }
 
+/* ============================================
+   Simulator fullscreen — hide site header
+   ============================================ */
+
+body.simulator-fullscreen > .page-shell,
+body.simulator-fullscreen > header.page-shell {
+  display: none !important;
+}
+
+/* Fast-forward toast animation */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
 /* Respect user's motion preferences for accessibility */
 @media (prefers-reduced-motion: reduce) {
   *,

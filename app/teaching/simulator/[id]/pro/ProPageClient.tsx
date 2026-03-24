@@ -31,6 +31,9 @@ import { POCUSModal } from "@/components/simulator/pro/POCUSModal";
 import { ImagingModal } from "@/components/simulator/pro/ImagingModal";
 import { ConsultModal } from "@/components/simulator/pro/ConsultModal";
 import { PauseThinkModal } from "@/components/simulator/pro/PauseThinkModal";
+import TutorialOverlay from "@/components/simulator/pro/TutorialOverlay";
+import FastForwardToast from "@/components/simulator/pro/FastForwardToast";
+import { useKeyboardShortcuts } from "@/lib/simulator/useKeyboardShortcuts";
 
 // ─── Difficulty badge ─────────────────────────────────────────────────────────
 
@@ -335,6 +338,7 @@ function useGameTick() {
 
 function GameScreen() {
   useGameTick();
+  useKeyboardShortcuts();
   const isBioGears = useBioGearsMode();
   return (
     <>
@@ -344,6 +348,8 @@ function GameScreen() {
           🧬 BioGears Physics Engine
         </div>
       )}
+      <TutorialOverlay />
+      <FastForwardToast />
       <ProGameLayout
         leftPanel={
           <>
@@ -443,6 +449,12 @@ export default function ProPageClient({ id }: ProPageClientProps) {
       loadScenario(id);
     }
   }, [id, loadScenario, scenario]);
+
+  // Hide site header when simulator is active
+  useEffect(() => {
+    document.body.classList.add("simulator-fullscreen");
+    return () => document.body.classList.remove("simulator-fullscreen");
+  }, []);
 
   // ── Loading ──
   if (isLoading) {

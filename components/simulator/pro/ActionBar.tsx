@@ -69,9 +69,10 @@ interface ActionBtnProps {
   variant?: "default" | "danger" | "muted";
   highlighted?: boolean;
   small?: boolean;
+  shortcut?: string;
 }
 
-function ActionBtn({ icon, label, onClick, disabled, variant, highlighted, small }: ActionBtnProps) {
+function ActionBtn({ icon, label, onClick, disabled, variant, highlighted, small, shortcut }: ActionBtnProps) {
   let base = small
     ? "flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all select-none"
     : "flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-2.5 text-xs font-medium transition-all select-none";
@@ -96,6 +97,11 @@ function ActionBtn({ icon, label, onClick, disabled, variant, highlighted, small
     >
       <span className={small ? "text-base" : "text-xl leading-none"}>{icon}</span>
       <span className="leading-tight text-center">{label}</span>
+      {shortcut && (
+        <span className="hidden lg:block text-[10px] text-slate-500 leading-none">
+          {shortcut}
+        </span>
+      )}
     </button>
   );
 }
@@ -149,30 +155,35 @@ export default function ActionBar() {
             onClick={() => openModal("pe")}
             disabled={!isPlaying}
             highlighted={guidanceHighlight === "pe"}
+            shortcut="1"
           />
           <ActionBtn
             icon="🩸" label="抽血"
             onClick={() => openModal("lab_order")}
             disabled={!isPlaying}
             highlighted={guidanceHighlight === "lab_order"}
+            shortcut="2"
           />
           <ActionBtn
             icon="💊" label="處置"
             onClick={() => setShowSubMenu(!showSubMenu)}
             disabled={!isPlaying}
             highlighted={guidanceHighlight === "order"}
+            shortcut="3"
           />
           <ActionBtn
             icon="📞" label="叫人"
             onClick={() => openModal("consult")}
             disabled={!isPlaying}
             highlighted={guidanceHighlight === "consult"}
+            shortcut="4"
           />
           <ActionBtn
             icon="📋" label="SBAR"
             onClick={() => openModal("sbar")}
             disabled={!isPlaying}
             highlighted={guidanceHighlight === "sbar"}
+            shortcut="5"
           />
         </div>
 
@@ -204,11 +215,13 @@ export default function ActionBar() {
             icon="⏸" label="暫停思考"
             onClick={() => openModal("pause_think")}
             disabled={!isPlaying} small
+            shortcut="Space"
           />
           <ActionBtn
             icon="⏩" label="快轉5分"
             onClick={() => useProGameStore.getState().actionAdvance(5)}
             disabled={!isPlaying} variant="muted" small
+            shortcut="F"
           />
         </div>
       </div>
