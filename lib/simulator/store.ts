@@ -791,6 +791,88 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       timeline: newEntries.length > 0 ? [...state.timeline, ...newEntries] : state.timeline,
     }));
 
+    // ── 套用 scripted event 的 vitalChanges / chestTubeChanges / severityChange ──
+    // 這些來自 scenario 定義，讓 monitor 數字跟護理師對白同步
+    for (const ev of toFire) {
+      const data = ev.data as Record<string, unknown> | undefined;
+      if (!data) continue;
+
+      const vitalChanges = data.vitalChanges as Partial<VitalSigns> | undefined;
+      const chestTubeChanges = data.chestTubeChanges as Partial<ChestTubeState> | undefined;
+      const severityChange = data.severityChange as number | undefined;
+
+      if (vitalChanges || chestTubeChanges || severityChange) {
+        set((state) => {
+          if (!state.patient) return {};
+
+          // Severity: 累加 delta
+          let newSeverity = state.patient.severity;
+          if (severityChange) {
+            newSeverity = Math.max(0, Math.min(100, newSeverity + severityChange));
+          }
+
+          // Vitals: 事件指定的是絕對值（不是 delta），直接覆蓋 baselineVitals
+          // 這樣 patient-engine 後續 tick 會以新 baseline 為基礎計算
+          let newBaseline = state.patient.baselineVitals;
+          let newVitals = state.patient.vitals;
+          if (vitalChanges) {
+            newBaseline = { ...newBaseline };
+            newVitals = { ...newVitals };
+            for (const key of Object.keys(vitalChanges) as Array<keyof VitalSigns>) {
+              if (key === "aLineWaveform") {
+                newBaseline.aLineWaveform = vitalChanges.aLineWaveform!;
+                newVitals.aLineWaveform = vitalChanges.aLineWaveform!;
+              } else {
+                const val = vitalChanges[key] as number;
+                if (val != null) {
+                  (newBaseline[key] as number) = val;
+                  (newVitals[key] as number) = val;
+                }
+              }
+            }
+            // Recalculate MAP
+            newVitals.map = Math.round((newVitals.sbp + 2 * newVitals.dbp) / 3);
+            newBaseline.map = newVitals.map;
+          }
+
+          // Chest tube: 合併更新
+          let newChestTube = state.patient.chestTube;
+          if (chestTubeChanges) {
+            newChestTube = { ...newChestTube, ...chestTubeChanges };
+          }
+
+          // I/O: 如果 chest tube totalOutput 改變了，同步 IO
+          const ctOutputDiff = newChestTube.totalOutput - state.patient.chestTube.totalOutput;
+          let newIO = state.patient.ioBalance;
+          if (ctOutputDiff !== 0) {
+            newIO = {
+              ...newIO,
+              totalOutput: newIO.totalOutput + ctOutputDiff,
+              netBalance: newIO.netBalance - ctOutputDiff,
+              breakdown: {
+                ...newIO.breakdown,
+                output: {
+                  ...newIO.breakdown.output,
+                  chestTube: newIO.breakdown.output.chestTube + ctOutputDiff,
+                },
+              },
+            };
+          }
+
+          return {
+            patient: {
+              ...state.patient,
+              baselineVitals: newBaseline,
+              vitals: newVitals,
+              severity: newSeverity,
+              chestTube: newChestTube,
+              ioBalance: newIO,
+            },
+          };
+        });
+      }
+    }
+
     // 處理 order_effect 事件 — 藥物/輸血生效
     for (const ev of toFire) {
       if (ev.type === "order_effect") {
