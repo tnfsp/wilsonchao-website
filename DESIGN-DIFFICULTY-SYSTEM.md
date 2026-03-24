@@ -1,6 +1,6 @@
 # ICU 模擬器 — 三級難度系統 SPEC
 
-> 2026-03-24 | Status: Draft → 等 Wilson 確認
+> 2026-03-24 | Status: Reviewed by Opus → Patched → 開工中
 
 ---
 
@@ -69,12 +69,20 @@ Pro 模式是 R/Fellow 等級，太難。Clerk 不會玩，一般人更看不懂
 |------|------|------|
 | 🌟 英雄結局 | 所有選擇正確 | 「你的直覺救了病人一命」|
 | 📚 學到一課 | 部分正確 | 「雖然有波折，但最終穩定了」|
-| 😰 驚險結局 | 多數錯誤 | 「幸好學長及時趕到...」|
+| 😰 驚險結局 | 多數錯誤 | 「團隊合作最終穩定了狀況——ICU 永遠是團隊作戰」|
+
+### Disclaimer（開場）
+> 「本模擬僅供教育體驗，不構成醫療建議。真實 ICU 情境遠比此複雜。」
 
 ### End Screen（3-in-1 轉換漏斗）
 1. **分享卡** — OG image 自動生成，一鍵分享 IG Story
 2. **Email 訂閱** — 用現有 `SubscribeForm` + `/api/subscribe`（source=`simulator-lite`）
-3. **CTA** — 「想試試真正的 ICU 模擬器？」→ Standard 模式
+3. **CTA** — 「一個心外值班醫師要同時處理數十種變數，想體驗看看嗎？→ Standard」
+
+### 結尾 Guideline 呈現（定性，不用百分比）
+- 🌟：「你的直覺和現行醫學指引高度一致！但在真正的 ICU，醫師還需要考慮更多細節。」
+- 📚：「你做了幾個好選擇！想知道醫師在這種情況下會怎麼決定嗎？→ Standard」
+- 😰：「ICU 的決策真的很不容易。看看專業醫師的思考過程 → Standard」
 
 ### 技術
 - **新 UI**：`components/simulator/lite/LiteGameLayout.tsx`（StoryReader）
@@ -98,12 +106,12 @@ Pro 模式是 R/Fellow 等級，太難。Clerk 不會玩，一般人更看不懂
 | 操作 | Preset 藥物組合，一鍵下單 | 完整 OrderModal，自選劑量 |
 | 護理師 | 主動引導 + idle/錯誤提示 | 只報數字 |
 | Vitals 顯示 | 顏色標示（綠/黃/紅）+ 正常值 | 純數字 |
-| 時間 | 0.5x 速度 | 1x |
-| 死亡 | 不會死（stabilize at threshold）| 會死 |
+| 時間 | 0.75x 速度 | 1x |
+| 死亡 | 延遲死亡（60s 搶救窗口）| 會死 |
 | 評分 | 簡單 checklist（✅/❌）| 完整 guideline compliance |
 | Hint | 無限 | 3 次 |
 
-### 護理師引導 Trigger
+### 護理師引導 Trigger（7 種）
 | 情境 | 護理師反應 |
 |------|-----------|
 | Idle 30s | 「學長，要不要先...」+ 建議按鈕 pulse |
@@ -111,6 +119,15 @@ Pro 模式是 R/Fellow 等級，太難。Clerk 不會玩，一般人更看不懂
 | 漏掉關鍵 | 「學長，我覺得 XX 好像也需要注意...」|
 | Vitals 臨界 | 「學長！XX 掉很快！」+ highlight 對應動作 |
 | Phase 轉換 | 「目前狀況穩了，接下來可能要考慮...」|
+| **重複下單** | 「學長，這個剛剛已經給過了耶，要再追加嗎？」|
+| **劑量離譜** | 「學長，這個劑量我再確認一下喔...」+ 顯示正常劑量範圍 |
+
+### 延遲死亡 + 搶救窗口（取代原「不死」設計）
+- Vitals 到 critical threshold → 觸發 **60 秒搶救視窗**
+- 畫面：紅色脈衝閃爍 + 護理師大喊「學長！」
+- 60s 內做對關鍵動作 → vitals 穩住
+- 60s 沒做或做錯 → 死亡
+- 保留 urgency 教學價值，同時比 Pro 寬容
 
 ### 技術
 - **共用 engine**：`lib/simulator/engine/*`
@@ -151,9 +168,10 @@ interface StandardOverlay {
   // 引導步驟
   guidanceSteps: GuidanceStep[];
   // 時間倍率
-  timeScale: number; // 0.5
-  // 不死 threshold
-  stabilizeThreshold: { sbp: number; hr: number; spo2: number };
+  timeScale: number; // 0.75
+  // 搶救窗口 threshold（到此觸發 60s rescue window）
+  rescueThreshold: { sbp: number; hr: number; spo2: number };
+  rescueWindowSeconds: number; // 60
 }
 ```
 
@@ -243,8 +261,8 @@ setDifficulty(d: DifficultyLevel): void;
 |------|------|------|------|
 | 先做哪個 | Standard vs Lite | **Standard** | 教學價值最高，overlay 架構驗證 |
 | 資料結構 | 三份獨立 vs overlay | **Overlay** | 維護成本低，Pro 改了自動帶動 |
-| 死亡機制 | Standard 也能死 vs 不能死 | **不能死** | Clerk 會被嚇到不敢玩 |
-| 時間 | 即時 vs 0.5x | **0.5x** | 給 Clerk 思考時間 |
+| 死亡機制 | 不死 vs 延遲死亡 | **延遲死亡（60s 搶救窗口）** | 保留 urgency + 比 Pro 寬容 |
+| 時間 | 即時 vs 0.75x | **0.75x** | 給思考時間但不失節奏 |
 | Email | 新服務 vs 現有 | **現有 /api/subscribe** | 已驗證可用，source 參數區分 |
 
 ---
@@ -262,13 +280,13 @@ setDifficulty(d: DifficultyLevel): void;
 | 維度 | Lite | Standard | Pro |
 |------|------|----------|-----|
 | 遊戲中 | 不顯示 | 選擇後即時回饋「根據 SSC 2026...」| 不顯示（自己判斷）|
-| 結尾 | 「你的選擇符合 X% 醫學指引」（一句話）| Checklist（✅/❌）+ guideline 原文摘要 | 完整 bundle breakdown + compliance % + 引用 |
+| 結尾 | 定性描述（見 Lite End Screen 段落）| Checklist（✅/❌）+ guideline 原文摘要 | 完整 bundle breakdown + compliance % + 引用 |
 | 教學深度 | 科普等級 | 教科書等級 | 實戰等級（知道 guideline 但要臨場判斷）|
 
 ### 待做
 - [ ] Standard debrief：簡化版 guideline checklist（不需 evidence level，只需 ✅/❌ + 一句話解釋）
 - [ ] Standard 遊戲中：選擇後 inline feedback 引用 guideline（例如「SSC 2026 建議 1 小時內給抗生素 ✅」）
-- [ ] Lite end screen：一句話 guideline compliance summary
+- [ ] Lite end screen：定性 guideline 描述（不用百分比）
 - [ ] 新 scenario 的 guideline bundle（隨 Tier 2 scenario 逐一建立）
 
 ---
@@ -370,6 +388,53 @@ setDifficulty(d: DifficultyLevel): void;
 - [x] 鍵盤快捷鍵（1-5, Space, F, Esc）
 - [x] SSC 2026 guideline 更新（MAP age-specific, qSOFA downgrade, peripheral vasopressor）
 - [x] 護理師行為 refactor（numbers only, no escalation suggestions）
+
+---
+
+## 醫學內容審核流程
+
+| 項目 | 審核者 | 時機 |
+|------|--------|------|
+| 新 Scenario 上線 | Wilson 親自 sign-off | 上線前必審 |
+| 藥物劑量 / guardRail | Wilson + 查 UpToDate | 新增藥物時 |
+| GuidelineBundle 引用 | Wilson | 建立時 + guideline 更新時 |
+| 護理師台詞（Standard 教學語） | Wilson 快速過目 | Phase 1 完成時 |
+| Lite 故事敘述 | Wilson 確認醫學正確 + 品牌調性 | Phase 2 完成時 |
+| Guideline 年度更新 | Wilson | 每年 1 月（SSC/AHA/STS 更新後）|
+
+**原則**：所有醫學內容最終由 Wilson sign-off。Owl/CC 可以初稿，但不自行上線。
+
+---
+
+## 色盲 / 無障礙
+
+- Color-coded vitals（綠/黃/紅）必須加 icon 或 pattern 輔助，不純靠顏色
+  - ✅ 正常 → 綠 + 無 icon
+  - ⚠️ 警告 → 黃 + ⚠️ icon + 虛線邊框
+  - 🔴 危險 → 紅 + 脈衝動畫 + 實線邊框
+- ARIA labels on all interactive elements
+- Keyboard navigation 已有（1-5, Space, F, Esc）
+
+---
+
+## Standard Inline Guideline 觸發時機
+
+不是每個 order 都跳（會打斷節奏）。只在：
+1. 完成了一個 guideline bundle item → 正向回饋 toast
+2. 做了和 guideline 矛盾的動作 → 教學回饋 toast
+3. Phase 轉換時 → summary panel
+
+其餘留到 debrief。
+
+---
+
+## 效能注意事項
+
+- DifficultySelect 頁不載入 scenario 資料
+- Standard overlay 用 `dynamic import`，不 bundle 在一起
+- 9 modules（3 scenario × 3 difficulty）全部 lazy load
+- BioGears WSS 斷線 → Pro 顯示 graceful fallback（「引擎離線，使用內建模擬」）
+- localStorage 進度加版本 hash，scenario 更新後提示重玩
 
 ---
 
