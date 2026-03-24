@@ -670,6 +670,13 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       priority: 0,
     }));
 
+    // 開場事件已手動加入 timeline，標記為已觸發避免重複
+    for (const pe of pendingEvents) {
+      if (pe.triggerAt === 0 && pe.type === "nurse_call") {
+        pe.fired = true;
+      }
+    }
+
     // 加入開場護理師訊息到 timeline
     const openingEntry: TimelineEntry = {
       id: nextId("tl"),
