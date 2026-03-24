@@ -1,9 +1,15 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { SimScenario } from "@/lib/simulator/types";
 import { updatePatientState } from "@/lib/simulator/engine/patient-engine";
+import {
+  getBioGearsClient,
+  syncBioGearsToStore,
+  advanceBioGears,
+  startBioGearsHemorrhage,
+} from "@/lib/simulator/engine/biogears-engine";
 
 // Pro components
 import SBARModal from "@/components/simulator/pro/SBARModal";
@@ -15,6 +21,7 @@ import ChestTubePanel from "@/components/simulator/pro/ChestTubePanel";
 import ChatTimeline from "@/components/simulator/pro/ChatTimeline";
 import ActionBar from "@/components/simulator/pro/ActionBar";
 import MessageInput from "@/components/simulator/pro/MessageInput";
+import WaveformMonitor from "@/components/simulator/pro/WaveformMonitor";
 // Modals
 import OrderModal from "@/components/simulator/pro/OrderModal";
 import LabOrderModal from "@/components/simulator/pro/LabOrderModal";
@@ -172,16 +179,68 @@ function InfoRow({
   );
 }
 
+// ─── Engine Mode ─────────────────────────────────────────────────────────────
+
+/** Check if BioGears engine should be used (query param ?engine=biogears) */
+function useBioGearsMode(): boolean {
+  const [enabled, setEnabled] = useState(false);
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      setEnabled(params.get("engine") === "biogears");
+    }
+  }, []);
+  return enabled;
+}
+
 // ─── Auto-tick: advance game time every 5 seconds by 1 minute ────────────────
 
 /** Slow background tick: 1 game-minute every 15 real-seconds.
- *  Pauses when modal is open. Main time progression comes from actions. */
+ *  Pauses when modal is open. Main time progression comes from actions.
+ *  Supports two modes: formula (default) and biogears (physics engine). */
 function useGameTick() {
   const phase = useProGameStore((s) => s.phase);
   const activeModal = useProGameStore((s) => s.activeModal);
   const advanceTime = useProGameStore((s) => s.advanceTime);
+  const useBioGears = useBioGearsMode();
+  const bgInitRef = useRef(false);
 
-  const tickPatient = useCallback((minutes = 1) => {
+  // ── BioGears initialization ──
+  useEffect(() => {
+    if (!useBioGears || phase !== "playing" || bgInitRef.current) return;
+
+    let cancelled = false;
+    const init = async () => {
+      try {
+        const client = getBioGearsClient();
+        if (!client.isReady) {
+          await client.connect();
+        }
+        if (!client.isInitialized && !cancelled) {
+          console.log("[BioGears] Initializing patient...");
+          const result = await client.initPatient("StandardMale");
+          if (result.ok && !cancelled) {
+            console.log("[BioGears] Patient ready, syncing initial vitals");
+            syncBioGearsToStore(result);
+            bgInitRef.current = true;
+
+            // Start hemorrhage if scenario is bleeding-related
+            const scenario = useProGameStore.getState().scenario;
+            if (scenario?.pathology === "surgical_bleeding") {
+              await startBioGearsHemorrhage("Aorta", 150);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("[BioGears] Init failed, falling back to formula engine:", err);
+      }
+    };
+    init();
+    return () => { cancelled = true; };
+  }, [useBioGears, phase]);
+
+  // ── Formula-mode tick ──
+  const tickPatientFormula = useCallback((minutes = 1) => {
     const state = useProGameStore.getState();
     if (!state.patient || state.phase !== "playing") return;
     
@@ -211,6 +270,30 @@ function useGameTick() {
     }
   }, []);
 
+  // ── BioGears-mode tick ──
+  const tickPatientBioGears = useCallback(async (minutes = 1) => {
+    const state = useProGameStore.getState();
+    if (!state.patient || state.phase !== "playing") return;
+    if (!bgInitRef.current) return;
+
+    try {
+      await advanceBioGears(minutes);
+    } catch (err) {
+      console.error("[BioGears] Advance failed:", err);
+      // Fallback to formula
+      tickPatientFormula(minutes);
+    }
+  }, [tickPatientFormula]);
+
+  // ── Unified tick dispatcher ──
+  const tickPatient = useCallback((minutes = 1) => {
+    if (useBioGears && bgInitRef.current) {
+      tickPatientBioGears(minutes);
+    } else {
+      tickPatientFormula(minutes);
+    }
+  }, [useBioGears, tickPatientFormula, tickPatientBioGears]);
+
   // Expose tickPatient globally so action handlers can call it
   useEffect(() => {
     (window as unknown as Record<string, unknown>).__tickPatient = tickPatient;
@@ -228,17 +311,35 @@ function useGameTick() {
 
     return () => clearInterval(interval);
   }, [phase, activeModal, advanceTime, tickPatient]);
+
+  // ── Cleanup BioGears on unmount ──
+  useEffect(() => {
+    return () => {
+      if (useBioGears && bgInitRef.current) {
+        getBioGearsClient().disconnect().catch(() => {});
+        bgInitRef.current = false;
+      }
+    };
+  }, [useBioGears]);
 }
 
 // ─── Game layout wrapper ──────────────────────────────────────────────────────
 
 function GameScreen() {
   useGameTick();
+  const isBioGears = useBioGearsMode();
   return (
     <>
+      {/* Engine indicator badge */}
+      {isBioGears && (
+        <div className="fixed top-2 right-2 z-50 px-2 py-1 rounded bg-emerald-900/80 border border-emerald-500/40 text-emerald-400 text-[10px] font-mono uppercase tracking-wider">
+          🧬 BioGears Physics Engine
+        </div>
+      )}
       <ProGameLayout
         leftPanel={
           <>
+            <WaveformMonitor height={280} />
             <ProVitalsPanel />
             <ChestTubePanel />
           </>
