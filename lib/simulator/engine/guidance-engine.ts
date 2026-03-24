@@ -170,8 +170,7 @@ export function checkWrongAction(
     return {
       trigger: "wrong_action",
       severity: "warning",
-      message:
-        "這樣做可能有風險，要不要再想想？病人正在出血，抗凝血劑可能加重出血。",
+      message: "學長，病人還在出血，確定要開這個嗎？",
       relatedAction: latest.action,
     };
   }
@@ -184,8 +183,7 @@ export function checkWrongAction(
     return {
       trigger: "wrong_action",
       severity: "warning",
-      message:
-        "這樣做可能有風險，要不要再想想？病人血行動力學不穩，利尿劑可能讓循環更差。",
+      message: "學長，血壓這樣，利尿好嗎？",
       relatedAction: latest.action,
     };
   }
@@ -205,8 +203,7 @@ export function checkWrongAction(
       return {
         trigger: "wrong_action",
         severity: "warning",
-        message:
-          "這樣做可能有風險，要不要再想想？還沒給 volume 就用升壓藥，效果可能不理想。",
+        message: "學長，volume 還沒給，先上升壓藥嗎？",
         relatedAction: latest.action,
       };
     }
@@ -235,7 +232,7 @@ export function checkMissedAction(
       return {
         trigger: "missed_action",
         severity: "warning",
-        message: `有一件重要的事還沒處理...${ea.hint}`,
+        message: "學長，好像有一件事還沒做...",
         relatedAction: ea.id,
       };
     }
@@ -256,35 +253,35 @@ export function checkVitalsCritical(
     return {
       trigger: "vitals_critical",
       severity: "critical",
-      message: `醫師，血壓很不穩！SBP 只有 ${vitals.sbp}，要不要考慮 volume 或升壓藥？`,
+      message: `醫師，BP 只有 ${vitals.sbp}！`,
     };
   }
   if (vitals.hr > VITAL_DANGER.hr.high) {
     return {
       trigger: "vitals_critical",
       severity: "critical",
-      message: `醫師，心跳很快！HR ${vitals.hr}，要注意是不是有低血容或其他原因。`,
+      message: `醫師，HR ${vitals.hr}！`,
     };
   }
   if (vitals.hr < VITAL_DANGER.hr.low) {
     return {
       trigger: "vitals_critical",
       severity: "critical",
-      message: `醫師，心跳很慢！HR ${vitals.hr}，要注意是不是需要處理。`,
+      message: `醫師，HR 只有 ${vitals.hr}！`,
     };
   }
   if (vitals.spo2 < VITAL_DANGER.spo2.low) {
     return {
       trigger: "vitals_critical",
       severity: "critical",
-      message: `醫師，SpO2 掉很快！只有 ${vitals.spo2}%，要不要檢查呼吸道和氧氣？`,
+      message: `醫師，SpO2 掉到 ${vitals.spo2}%！`,
     };
   }
   if (vitals.map < VITAL_DANGER.map.low) {
     return {
       trigger: "vitals_critical",
       severity: "critical",
-      message: `醫師，MAP 只有 ${vitals.map}，灌流可能不足！`,
+      message: `醫師，MAP 只有 ${vitals.map}！`,
     };
   }
   return null;
@@ -371,7 +368,7 @@ export function checkDoseError(
     return {
       trigger: "dose_error",
       severity: "warning",
-      message: `劑量是不是太高了？要確認一下嗎？（通常劑量約 ${typicalDose}）`,
+      message: "學長，這個劑量...你再確認一下好不好？",
       relatedAction: latest.action,
     };
   }

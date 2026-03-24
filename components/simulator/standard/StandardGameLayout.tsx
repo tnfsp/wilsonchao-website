@@ -2,8 +2,6 @@
 
 import React from "react";
 import { useProGameStore } from "@/lib/simulator/store";
-import GuidanceBubble from "./GuidanceBubble";
-import type { GuidanceMessage } from "./GuidanceBubble";
 import MiniVitalsBar from "../pro/MiniVitalsBar";
 
 // ── CSS ─────────────────────────────────────────────────────────────────────
@@ -21,16 +19,12 @@ interface StandardGameLayoutProps {
   vitalsPanel: React.ReactNode;
   chatTimeline: React.ReactNode;
   actionBar: React.ReactNode;
-  guidanceMessages: GuidanceMessage[];
-  onDismissGuidance: (id: string) => void;
 }
 
 export default function StandardGameLayout({
   vitalsPanel,
   chatTimeline,
   actionBar,
-  guidanceMessages,
-  onDismissGuidance,
 }: StandardGameLayoutProps) {
   const severity = useProGameStore((s) => s.patient?.severity ?? 0);
 
@@ -87,15 +81,8 @@ export default function StandardGameLayout({
           {vitalsPanel}
         </div>
 
-        {/* Right: chat + guidance */}
+        {/* Right: chat */}
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-          {/* Guidance bubble overlay */}
-          <div className="flex-shrink-0 px-3 pt-2">
-            <GuidanceBubble
-              messages={guidanceMessages}
-              onDismiss={onDismissGuidance}
-            />
-          </div>
           <div className="flex-1 overflow-hidden">{chatTimeline}</div>
         </div>
       </div>
@@ -107,13 +94,6 @@ export default function StandardGameLayout({
         className="lg:hidden flex-1 overflow-y-auto"
         style={{ scrollbarWidth: "thin", scrollbarColor: "#ffffff1a transparent" }}
       >
-        {/* Guidance bubble */}
-        <div className="px-3 pt-2">
-          <GuidanceBubble
-            messages={guidanceMessages}
-            onDismiss={onDismissGuidance}
-          />
-        </div>
         <div className="min-h-[50vh]" id="std-chat-area">{chatTimeline}</div>
         <div className="p-3 space-y-3" id="vitals-panel">{vitalsPanel}</div>
       </div>

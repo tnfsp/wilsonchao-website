@@ -15,7 +15,6 @@ import type { StandardPresetOrder } from "@/lib/simulator/scenarios/standard/typ
 import { getMedicationById } from "@/lib/simulator/data/medications";
 import { getLabById } from "@/lib/simulator/data/labs";
 import { getTransfusionById } from "@/lib/simulator/data/transfusions";
-import type { GuidanceMessage as GuidanceBubbleMessage } from "@/components/simulator/standard/GuidanceBubble";
 import type { OrderDefinition } from "@/lib/simulator/types";
 
 // Standard components
@@ -186,7 +185,6 @@ function IntroScreen({ scenario }: { scenario: SimScenario }) {
 
 function useStandardGameTick(
   overlay: StandardOverlay | null,
-  pushGuidance: (msgs: GuidanceBubbleMessage[]) => void,
 ) {
   const phase = useProGameStore((s) => s.phase);
   const activeModal = useProGameStore((s) => s.activeModal);
@@ -207,7 +205,7 @@ function useStandardGameTick(
 
     useProGameStore.setState({ patient: newPatient });
 
-    // Guidance engine: evaluate all 7 triggers
+    // Guidance engine: evaluate all 7 triggers → push to ChatTimeline as nurse messages
     if (overlay && state.scenario) {
       const guidanceMsgs = evaluateGuidance(
         newPatient,
@@ -219,20 +217,17 @@ function useStandardGameTick(
 
       if (guidanceMsgs.length > 0) {
         // Dedup: only push messages not seen recently (by trigger+relatedAction)
-        const newMsgs: GuidanceBubbleMessage[] = [];
         for (const gm of guidanceMsgs) {
           const key = `${gm.trigger}:${gm.relatedAction ?? ""}`;
           if (!lastGuidanceRef.current.has(key)) {
             lastGuidanceRef.current.add(key);
-            newMsgs.push({
-              id: `guide-${gm.trigger}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
-              text: gm.message,
-              severity: gm.severity,
+            useProGameStore.getState().addTimelineEntry({
+              type: "nurse_message",
+              sender: "nurse",
+              content: gm.message,
+              gameTime: state.clock.currentTime,
             });
           }
-        }
-        if (newMsgs.length > 0) {
-          pushGuidance(newMsgs);
         }
       }
     }
@@ -266,7 +261,7 @@ function useStandardGameTick(
       }
       useProGameStore.getState().triggerDeath(cause);
     }
-  }, [difficultyConfig, overlay, pushGuidance]);
+  }, [difficultyConfig, overlay]);
 
   // Expose for action handlers
   useEffect(() => {
@@ -334,35 +329,24 @@ function PresetOrderModal({
 // ── Game Screen ─────────────────────────────────────────────────────────────
 
 function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
-  const [guidanceMessages, setGuidanceMessages] = useState<GuidanceBubbleMessage[]>([]);
   const [executedPresetIds, setExecutedPresetIds] = useState<Set<string>>(new Set());
   const activeModal = useProGameStore((s) => s.activeModal);
   const closeModal = useProGameStore((s) => s.closeModal);
 
-  const pushGuidance = useCallback((msgs: GuidanceBubbleMessage[]) => {
-    setGuidanceMessages((prev) => [...prev, ...msgs]);
-  }, []);
-
-  useStandardGameTick(overlay, pushGuidance);
-
-  const handleDismissGuidance = useCallback((id: string) => {
-    setGuidanceMessages((prev) => prev.filter((m) => m.id !== id));
-  }, []);
+  useStandardGameTick(overlay);
 
   const handlePresetOrder = useCallback((preset: StandardPresetOrder) => {
     const state = useProGameStore.getState();
 
     if (!preset.isCorrect) {
-      // Wrong order: push guidance feedback, don't execute
+      // Wrong order: push feedback to ChatTimeline as nurse message
       if (preset.feedbackIfWrong) {
-        setGuidanceMessages((prev) => [
-          ...prev,
-          {
-            id: `preset-wrong-${preset.id}-${Date.now()}`,
-            text: preset.feedbackIfWrong!,
-            severity: "warning" as const,
-          },
-        ]);
+        useProGameStore.getState().addTimelineEntry({
+          type: "nurse_message",
+          sender: "nurse",
+          content: preset.feedbackIfWrong,
+          gameTime: state.clock.currentTime,
+        });
       }
       // Track wrong action for scoring
       useProGameStore.setState({
@@ -430,8 +414,6 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
           </div>
         }
         actionBar={<SimplifiedActionBar />}
-        guidanceMessages={guidanceMessages}
-        onDismissGuidance={handleDismissGuidance}
       />
 
       {/* Rescue countdown overlay — reads from store, self-manages visibility */}

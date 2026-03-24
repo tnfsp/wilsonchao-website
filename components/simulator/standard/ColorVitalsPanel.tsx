@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { VitalSigns } from "@/lib/simulator/types";
+import { applyVitalsFog, FOG_PRESETS } from "@/lib/simulator/engine/fog-of-war";
 
 // ── CSS animations ──────────────────────────────────────────────────────────
 
@@ -17,6 +18,13 @@ const colorVitalsCSS = `
 }
 .std-critical-pulse {
   animation: std-bg-pulse 1.5s ease-in-out infinite, std-critical-pulse 1.5s ease-in-out infinite;
+}
+@keyframes fog-false-alarm-blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+.fog-false-alarm {
+  animation: fog-false-alarm-blink 0.5s ease-in-out infinite;
 }
 `;
 
@@ -132,10 +140,12 @@ function VitalTile({
   config,
   vitals,
   prevVitals,
+  fogArtifacts,
 }: {
   config: VitalTileConfig;
   vitals: VitalSigns;
   prevVitals?: VitalSigns;
+  fogArtifacts?: string[];
 }) {
   const value = config.getValue(vitals);
   const displayValue = config.format ? config.format(vitals) : String(Math.round(value));
@@ -143,6 +153,9 @@ function VitalTile({
   const level = getAlertLevel(config.key, value);
   const style = TILE_STYLES[level];
   const trendArrow = trend(value, prevValue, config.key === "spo2" ? 1 : config.key === "temp" ? 0.3 : 3);
+
+  const isFalseAlarm = config.key === "spo2" && fogArtifacts?.includes("spo2_false_alarm");
+  const isDampened = config.key === "sbp" && fogArtifacts?.includes("aline_dampened");
 
   return (
     <div
@@ -161,16 +174,23 @@ function VitalTile({
       </div>
 
       {/* Value + trend */}
-      <div className={`font-mono font-bold text-2xl leading-none ${style.text}`}>
+      <div className={[
+        "font-mono font-bold text-2xl leading-none",
+        isDampened ? "text-gray-500" : style.text,
+        isFalseAlarm ? "fog-false-alarm" : "",
+      ].join(" ")}>
         {displayValue}
         <span className="text-sm ml-1 opacity-70">{trendArrow}</span>
+        {isFalseAlarm && (
+          <span className="text-sm ml-1 animate-pulse" role="img" aria-label="Artifact">⚠️</span>
+        )}
       </div>
 
       {/* Unit */}
       <div className="text-[10px] text-gray-500">{config.unit}</div>
 
       {/* Alert icons (a11y: not color-only) */}
-      {level === "warning" && (
+      {level === "warning" && !isFalseAlarm && (
         <span
           className="absolute top-1.5 right-1.5 text-sm"
           role="img"
@@ -179,7 +199,7 @@ function VitalTile({
           {"\u26A0\uFE0F"}
         </span>
       )}
-      {level === "critical" && (
+      {level === "critical" && !isFalseAlarm && (
         <span
           className="absolute top-1.5 right-1.5 text-sm animate-pulse"
           role="img"
@@ -200,11 +220,21 @@ export default function ColorVitalsPanel({
   prevVitals?: VitalSigns;
 }) {
   const vitals = useProGameStore((s) => s.patient?.vitals);
+  const fogLevel = useProGameStore((s) => s.difficultyConfig.fogLevel ?? "none");
+  const gameTime = useProGameStore((s) => s.clock.currentTime);
 
-  if (!vitals) {
+  // Apply fog-of-war to vitals (display layer only — engine uses true vitals)
+  const fogConfig = FOG_PRESETS[fogLevel] ?? FOG_PRESETS.none;
+  const { displayVitals, artifacts } = useMemo(() => {
+    if (!vitals) return { displayVitals: undefined, artifacts: [] as string[] };
+    // Use gameTime as seed for deterministic per-tick randomness
+    return applyVitalsFog(vitals, fogConfig, Math.floor(gameTime * 1000));
+  }, [vitals, fogConfig, gameTime]);
+
+  if (!displayVitals) {
     return (
       <div className="rounded-xl border border-white/8 bg-white/5 p-4 text-gray-500 text-sm">
-        Vitals \u5C1A\u672A\u8F09\u5165
+        Vitals 尚未載入
       </div>
     );
   }
@@ -224,8 +254,9 @@ export default function ColorVitalsPanel({
             <VitalTile
               key={tile.key}
               config={tile}
-              vitals={vitals}
+              vitals={displayVitals}
               prevVitals={prevVitals}
+              fogArtifacts={artifacts}
             />
           ))}
         </div>

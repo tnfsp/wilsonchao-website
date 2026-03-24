@@ -77,7 +77,7 @@ export const postopBleedingPresets: StandardPresetOrder[] = [
     category: "medication",
     isCorrect: false,
     feedbackIfWrong:
-      "學長，病人在出血欸！利尿會讓血壓更低、volume 更不夠。出血的時候要補液和輸血，不是利尿。",
+      "學長，病人在出血欸，確定要利尿？",
     orders: [
       { definitionId: "furosemide", dose: "20", frequency: "STAT" },
     ],
@@ -89,7 +89,7 @@ export const postopBleedingPresets: StandardPresetOrder[] = [
     category: "medication",
     isCorrect: false,
     feedbackIfWrong:
-      "學長，出血性休克的首要處置是補充 volume（輸液+輸血），不是先拉升壓劑。而且 Dopamine 不是心外首選，Norepinephrine 比較好。",
+      "學長，出血的話是不是先補 volume 比較重要？",
     orders: [
       { definitionId: "dopamine", dose: "5", frequency: "Continuous" },
     ],
@@ -105,35 +105,31 @@ const guidanceSteps: StandardOverlay["guidanceSteps"] = [
     id: "guide-orientation",
     trigger: "phase_change",
     message:
-      "護理師叫你來看 bed 3 的 CABG 病人，chest tube 突然出很多血。先看 vitals，評估嚴重度。",
-    highlightAction: "preset-cbc-coag",
+      "學長，CT 突然出很多血，你要不要先看一下？",
   },
   {
     id: "guide-assessment",
     trigger: "idle",
     message:
-      "學長，要不要先抽血（CBC + Coag）看看 Hb 跟凝血功能？同時可以先加壓輸液穩住血壓。",
-    highlightAction: "preset-cbc-coag",
+      "學長，要不要先看看數字？",
   },
   {
     id: "guide-intervention",
     trigger: "vitals_critical",
     message:
-      "學長！血壓一直在掉，CT 出血量越來越大！要不要先輸血？鮮紅色有血塊，很可能是 surgical bleeding。",
-    highlightAction: "preset-prbc-2u",
+      "學長！血壓一直在掉耶...",
   },
   {
     id: "guide-escalation",
     trigger: "missed_critical",
     message:
-      "學長，出血趨勢一直上升，血壓也不穩⋯⋯是不是要叫學長來評估需不需要回 OR re-explore？",
-    highlightAction: "preset-call-senior",
+      "學長，這個量一直沒有減少...是不是要找人來？",
   },
   {
     id: "guide-wrong-action",
     trigger: "wrong_action",
     message:
-      "學長，這個處置可能不太適合現在的狀況。出血的病人最需要的是補液、輸血、找出血原因。",
+      "學長，確定嗎？",
   },
 ];
 

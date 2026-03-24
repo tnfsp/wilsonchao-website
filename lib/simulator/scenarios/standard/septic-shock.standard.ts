@@ -77,7 +77,7 @@ export const septicShockPresets: StandardPresetOrder[] = [
     category: "medication",
     isCorrect: false,
     feedbackIfWrong:
-      "學長，38.8 度 + 心跳快 + 意識改變 + 傷口流膿——這不是普通發燒！這是 sepsis，需要啟動 Hour-1 Bundle（血液培養 → 抗生素 → 輸液），不是退燒觀察。",
+      "學長，高燒加意識改變，只退燒觀察嗎？",
     orders: [
       { definitionId: "acetaminophen", dose: "1000", frequency: "STAT" },
     ],
@@ -89,7 +89,7 @@ export const septicShockPresets: StandardPresetOrder[] = [
     category: "medication",
     isCorrect: false,
     feedbackIfWrong:
-      "學長，Septic shock 的首選升壓劑是 Norepinephrine，不是 Dopamine。SSC 指引明確建議 NE first-line，Dopamine 心律不整風險比較高。",
+      "學長，septic shock 首選不是用 Dopamine 喔...",
     orders: [
       { definitionId: "dopamine", dose: "5", frequency: "Continuous" },
     ],
@@ -105,42 +105,37 @@ const guidanceSteps: StandardOverlay["guidanceSteps"] = [
     id: "guide-orientation",
     trigger: "phase_change",
     message:
-      "CABG 術後第 3 天的病人發燒 38.8、心跳快、意識改變。想想看：術後發燒 + 這些症狀，最需要排除什麼？",
-    highlightAction: "preset-blood-culture",
+      "學長，這個病人高燒加意識改變，你覺得要先做什麼？",
   },
   {
     id: "guide-hour1-bundle",
     trigger: "idle",
     message:
-      "學長，高燒 + tachycardia + 意識改變 + 傷口流膿——這很像 sepsis！SSC Hour-1 Bundle：先抽 blood culture，然後馬上給抗生素，同時開始輸液。",
-    highlightAction: "preset-blood-culture",
+      "學長，病人燒成這樣、人又迷迷糊糊的...要不要先查一下原因？",
   },
   {
     id: "guide-antibiotics",
     trigger: "idle",
     message:
-      "學長，blood culture 抽了嗎？抽完就趕快給抗生素！Sternal wound infection 要蓋 MRSA + Gram-negative：Vancomycin + Tazocin。每延遲 1 小時死亡率增加 7%。",
-    highlightAction: "preset-antibiotics",
+      "學長，感染源還沒處理，時間一直在跑欸...",
   },
   {
     id: "guide-vasopressor",
     trigger: "vitals_critical",
     message:
-      "學長！已經給了不少輸液但 MAP 還是上不來。輸液給夠後 MAP 仍 < 65 → 要加 Norepinephrine 升壓。不要等太久！",
-    highlightAction: "preset-norepinephrine",
+      "學長，液體給了不少但血壓還是上不來耶...",
   },
   {
     id: "guide-source-control",
     trigger: "missed_critical",
     message:
-      "學長，sternal wound 在流膿——這是感染源！抗生素可以殺菌，但膿要靠手術清。是不是要通知學長安排 washout？",
-    highlightAction: "preset-call-senior",
+      "學長，傷口那邊的問題...是不是要找人來處理？",
   },
   {
     id: "guide-wrong-action",
     trigger: "wrong_action",
     message:
-      "學長，這個處置可能不太對。Sepsis 的核心處置是：抽培養 → 打抗生素 → 輸液 → 升壓劑 → source control。",
+      "學長，確定嗎？",
   },
 ];
 

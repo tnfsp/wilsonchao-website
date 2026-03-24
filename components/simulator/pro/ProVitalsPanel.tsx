@@ -1,8 +1,9 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { VitalSigns, ALineWaveform } from "@/lib/simulator/types";
+import { applyVitalsFog, FOG_PRESETS } from "@/lib/simulator/engine/fog-of-war";
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 
@@ -222,8 +223,17 @@ export default function ProVitalsPanel({
 }: {
   prevVitals?: VitalSigns;
 }) {
-  const vitals = useProGameStore((s) => s.patient?.vitals);
+  const rawVitals = useProGameStore((s) => s.patient?.vitals);
   const severity = useProGameStore((s) => s.patient?.severity ?? 0);
+  const fogLevel = useProGameStore((s) => s.difficultyConfig.fogLevel ?? "none");
+  const gameTime = useProGameStore((s) => s.clock.currentTime);
+
+  // Apply fog-of-war (display layer only)
+  const fogConfig = FOG_PRESETS[fogLevel] ?? FOG_PRESETS.none;
+  const { displayVitals: vitals, artifacts: fogArtifacts } = useMemo(() => {
+    if (!rawVitals) return { displayVitals: undefined as VitalSigns | undefined, artifacts: [] as string[] };
+    return applyVitalsFog(rawVitals, fogConfig, Math.floor(gameTime * 1000));
+  }, [rawVitals, fogConfig, gameTime]);
 
   // Flash hooks for each vital
   const hrFlash = useFlash(vitals?.hr ?? 0, prevVitals?.hr, false /* lower HR = better for tachycardia */, 5);

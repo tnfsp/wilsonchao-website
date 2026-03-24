@@ -13,6 +13,7 @@ export interface DifficultyConfig {
   rescueWindowSeconds?: number;
   timeScale: number;
   hintLimit: number;
+  fogLevel?: "none" | "light" | "full";
 }
 
 /** Standard mode overlay — simplifies Pro scenario with guidance */

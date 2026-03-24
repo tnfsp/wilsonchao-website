@@ -307,6 +307,7 @@ const DIFFICULTY_CONFIGS: Record<DifficultyLevel, DifficultyConfig> = {
     canDie: false,
     timeScale: 0,
     hintLimit: Infinity,
+    fogLevel: "none",
   },
   standard: {
     canDie: true,
@@ -314,11 +315,13 @@ const DIFFICULTY_CONFIGS: Record<DifficultyLevel, DifficultyConfig> = {
     rescueWindowSeconds: 60,
     timeScale: 0.75,
     hintLimit: Infinity,
+    fogLevel: "light",
   },
   pro: {
     canDie: true,
     timeScale: 1,
     hintLimit: 3,
+    fogLevel: "full",
   },
 };
 
