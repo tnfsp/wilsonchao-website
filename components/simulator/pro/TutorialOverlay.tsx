@@ -48,10 +48,17 @@ function useTargetRect(targetId: TargetId): DOMRect | null {
     const el = document.getElementById(targetId);
     if (!el) { setRect(null); return; }
 
+    // Scroll the element into view so the spotlight lands on it even on mobile
+    el.scrollIntoView({ behavior: "smooth", block: "center" });
+
     const update = () => setRect(el.getBoundingClientRect());
-    update();
+    // Small delay to let scroll settle before measuring
+    const t = setTimeout(update, 400);
     window.addEventListener("resize", update);
-    return () => window.removeEventListener("resize", update);
+    return () => {
+      clearTimeout(t);
+      window.removeEventListener("resize", update);
+    };
   }, [targetId]);
 
   return rect;

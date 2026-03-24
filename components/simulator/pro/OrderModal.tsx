@@ -688,6 +688,7 @@ export default function OrderModal() {
   const [selectedDrug, setSelectedDrug] = useState<OrderDefinition | null>(null);
   const [lastResult, setLastResult] = useState<{ ok: boolean; message: string } | null>(null);
   const [filterRelevant, setFilterRelevant] = useState(false);
+  const [activeTagFilter, setActiveTagFilter] = useState<string | null>(null);
 
   const relevantTags = scenario?.relevantTags ?? [];
 
@@ -766,7 +767,7 @@ export default function OrderModal() {
           {TABS.map((tab) => (
             <button
               key={tab.key}
-              onClick={() => { setActiveTab(tab.key); setSelectedDrug(null); setLastResult(null); }}
+              onClick={() => { setActiveTab(tab.key); setSelectedDrug(null); setLastResult(null); setActiveTagFilter(null); }}
               className={`flex-shrink-0 flex items-center gap-1.5 px-5 py-3 text-sm font-medium transition border-b-2 ${
                 activeTab === tab.key
                   ? "border-cyan-500 text-cyan-400"
@@ -820,7 +821,7 @@ export default function OrderModal() {
           {relevantTags.length > 0 && activeTab !== "transfusion" && activeTab !== "ventilator" && (
             <div className="flex items-center gap-3 bg-zinc-800 rounded-lg px-4 py-3 border border-zinc-700 mb-4">
               <button
-                onClick={() => setFilterRelevant(!filterRelevant)}
+                onClick={() => { setFilterRelevant(!filterRelevant); setActiveTagFilter(null); }}
                 className={`w-10 h-5 rounded-full transition-colors relative ${
                   filterRelevant ? "bg-cyan-500" : "bg-zinc-600"
                 }`}
@@ -841,6 +842,33 @@ export default function OrderModal() {
             </div>
           )}
 
+          {/* Tag filter chips — quick category filter for medication/fluid tabs */}
+          {activeTab !== "transfusion" && activeTab !== "ventilator" && !filterRelevant && (
+            <div className="flex flex-wrap gap-1.5 mb-4">
+              {[
+                { tag: null, label: "全部" },
+                { tag: "vasopressor", label: "升壓" },
+                { tag: "cardiac", label: "心臟" },
+                { tag: "sepsis", label: "敗血症" },
+                { tag: "bleeding", label: "出血" },
+                { tag: "sedation", label: "鎮靜" },
+                { tag: "general", label: "一般" },
+              ].map(({ tag, label }) => (
+                <button
+                  key={label}
+                  onClick={() => setActiveTagFilter(tag)}
+                  className={`text-xs px-3 py-1 rounded-full border transition-colors ${
+                    activeTagFilter === tag
+                      ? "bg-cyan-600/30 border-cyan-500 text-cyan-300"
+                      : "bg-zinc-800 border-zinc-700 text-zinc-400 hover:border-zinc-500 hover:text-zinc-200"
+                  }`}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+          )}
+
           {/* Tab content */}
           <div className="max-h-[55vh] overflow-y-auto pr-1 space-y-2 scrollbar-thin scrollbar-thumb-zinc-700">
             {activeTab === "medication" && (
@@ -848,6 +876,8 @@ export default function OrderModal() {
                 {MED_SUBCATEGORIES.map((cat) => {
                   const filtered = filterRelevant && relevantTags.length > 0
                     ? cat.drugs.filter((d) => d.tags?.some((t) => relevantTags.includes(t)))
+                    : activeTagFilter
+                    ? cat.drugs.filter((d) => d.tags?.includes(activeTagFilter))
                     : cat.drugs;
                   if (filtered.length === 0) return null;
                   return (
@@ -868,6 +898,8 @@ export default function OrderModal() {
                 label="輸液 IV Fluids"
                 drugs={filterRelevant && relevantTags.length > 0
                   ? medicationCategories.fluids.filter((d) => d.tags?.some((t) => relevantTags.includes(t)))
+                  : activeTagFilter
+                  ? medicationCategories.fluids.filter((d) => d.tags?.includes(activeTagFilter))
                   : medicationCategories.fluids}
                 selectedId={selectedDrug?.id ?? null}
                 onSelect={handleSelectDrug}
@@ -886,6 +918,8 @@ export default function OrderModal() {
                 label="止血劑 Hemostatics"
                 drugs={filterRelevant && relevantTags.length > 0
                   ? medicationCategories.hemostatics.filter((d) => d.tags?.some((t) => relevantTags.includes(t)))
+                  : activeTagFilter
+                  ? medicationCategories.hemostatics.filter((d) => d.tags?.includes(activeTagFilter))
                   : medicationCategories.hemostatics}
                 selectedId={selectedDrug?.id ?? null}
                 onSelect={handleSelectDrug}
@@ -897,6 +931,8 @@ export default function OrderModal() {
                 label="電解質補充 Electrolytes"
                 drugs={filterRelevant && relevantTags.length > 0
                   ? medicationCategories.electrolytes.filter((d) => d.tags?.some((t) => relevantTags.includes(t)))
+                  : activeTagFilter
+                  ? medicationCategories.electrolytes.filter((d) => d.tags?.includes(activeTagFilter))
                   : medicationCategories.electrolytes}
                 selectedId={selectedDrug?.id ?? null}
                 onSelect={handleSelectDrug}

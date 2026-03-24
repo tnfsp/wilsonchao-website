@@ -60,7 +60,7 @@ export default function StandardGameLayout({
       )}
 
       {/* Header bar */}
-      <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-white/8 bg-[#00202e]" style={{ display: "flex" }}>
+      <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-white/8 bg-[#00202e]">
         <div className="flex items-center gap-2">
           <span className="text-lg">{"\uD83E\uDE7A"}</span>
           <span className="text-sm font-semibold text-white">
@@ -74,6 +74,8 @@ export default function StandardGameLayout({
           {"\u6A21\u64EC ICU"}
         </div>
       </div>
+      {/* Sticky mini vitals bar — visible on mobile only, mirrors Pro mode */}
+      <MiniVitalsBar />
 
       {/* Desktop: side-by-side */}
       <div className="hidden lg:flex flex-1 overflow-hidden">
@@ -98,7 +100,9 @@ export default function StandardGameLayout({
         </div>
       </div>
 
-      {/* Mobile: stacked */}
+      {/* Mobile: stacked — chat first so user sees conversation immediately;
+           MiniVitalsBar (sticky above) provides always-visible vitals summary.
+           Scroll down to reach the full vitals panel. */}
       <div
         className="lg:hidden flex-1 overflow-y-auto"
         style={{ scrollbarWidth: "thin", scrollbarColor: "#ffffff1a transparent" }}
@@ -110,8 +114,8 @@ export default function StandardGameLayout({
             onDismiss={onDismissGuidance}
           />
         </div>
-        <div className="p-3 space-y-3">{vitalsPanel}</div>
-        <div className="min-h-[40vh]">{chatTimeline}</div>
+        <div className="min-h-[50vh]" id="std-chat-area">{chatTimeline}</div>
+        <div className="p-3 space-y-3" id="vitals-panel">{vitalsPanel}</div>
       </div>
 
       {/* Bottom Action Bar */}

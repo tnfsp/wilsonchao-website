@@ -64,7 +64,10 @@ export default function MiniVitalsBar() {
   const hasCritical = items.some((i) => i.severity === "critical");
 
   function scrollToVitals() {
-    const el = document.getElementById("pro-vitals-panel");
+    // Try Pro panel first, then Standard panel, then generic fallback
+    const el =
+      document.getElementById("pro-vitals-panel") ??
+      document.getElementById("vitals-panel");
     el?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
