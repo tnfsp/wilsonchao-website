@@ -136,15 +136,31 @@ export function syncBioGearsToStore(bgState: BioGearsState): void {
     } : state.patient,
   }));
 
-  // 5. Death check from BioGears events
-  if (bgState.patient.event_cardiac_arrest) {
-    useProGameStore.getState().triggerDeath(
-      "心臟停止 — BioGears 模擬引擎偵測到 cardiac arrest event。"
-    );
-  } else if (bgState.vitals.map < 25) {
-    useProGameStore.getState().triggerDeath(
-      "MAP 過低（< 25 mmHg），器官灌流不足導致多重器官衰竭。"
-    );
+  // 5. Death check from BioGears events (scenario-aware messages)
+  if (bgState.patient.event_cardiac_arrest || bgState.vitals.map < 25) {
+    const scenarioId = useProGameStore.getState().scenario?.id ?? "";
+    const isArrest = !!bgState.patient.event_cardiac_arrest;
+
+    let cause: string;
+    if (scenarioId.includes("septic")) {
+      cause = isArrest
+        ? "敗血性休克導致心臟停止。"
+        : "敗血性休克致血管麻痺，MAP 崩潰（< 25 mmHg），多重器官衰竭。";
+    } else if (scenarioId.includes("tamponade")) {
+      cause = isArrest
+        ? "心包填塞壓迫心臟，心輸出量歸零，心臟停止。"
+        : "心包填塞致心輸出量歸零，MAP 崩潰（< 25 mmHg）。";
+    } else if (scenarioId.includes("bleeding")) {
+      cause = isArrest
+        ? "失血性休克導致心臟停止。"
+        : "失血性休克，MAP 過低（< 25 mmHg），器官灌流不足致多重器官衰竭。";
+    } else {
+      cause = isArrest
+        ? "心臟停止。"
+        : "MAP 過低（< 25 mmHg），器官灌流不足導致多重器官衰竭。";
+    }
+
+    useProGameStore.getState().triggerDeath(cause);
   }
 }
 
