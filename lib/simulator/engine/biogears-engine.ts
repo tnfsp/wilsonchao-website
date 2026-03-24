@@ -30,12 +30,35 @@ import type { VitalSigns, LethalTriadState } from "../types";
 let _client: BioGearsClient | null = null;
 let _lastState: BioGearsState | null = null;
 
+/**
+ * Resolve BioGears WebSocket URL based on environment:
+ * - env override: NEXT_PUBLIC_BIOGEARS_WS_URL
+ * - localhost dev: ws://localhost:8770
+ * - Vercel / remote: wss://zhaoyixiangdemac-mini.tail1416ee.ts.net (Tailscale Funnel)
+ */
+function resolveBioGearsUrl(): string {
+  // Allow explicit override
+  const envUrl = typeof process !== "undefined"
+    ? process.env.NEXT_PUBLIC_BIOGEARS_WS_URL
+    : undefined;
+  if (envUrl) return envUrl;
+
+  if (typeof window === "undefined") return "ws://localhost:8770";
+
+  const host = window.location.hostname;
+  const isLocal = host === "localhost" || host === "127.0.0.1" || host.endsWith(".local");
+
+  if (isLocal) {
+    return "ws://localhost:8770";
+  }
+
+  // Remote (Vercel, etc.) → Tailscale Funnel WSS
+  return "wss://zhaoyixiangdemac-mini.tail1416ee.ts.net";
+}
+
 export function getBioGearsClient(): BioGearsClient {
   if (!_client) {
-    const wsUrl = typeof window !== "undefined"
-      ? `ws://${window.location.hostname}:8770`
-      : "ws://localhost:8770";
-    _client = new BioGearsClient(wsUrl);
+    _client = new BioGearsClient(resolveBioGearsUrl());
   }
   return _client;
 }
