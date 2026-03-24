@@ -213,10 +213,16 @@ const events: ScriptedEvent[] = [
     severityChange: 5,
   },
 
-  // ── 30:00 ── 穩定或結束
+  // ── 30:00 ── 穩定或結束（需學長已到場）
   {
     id: "evt-30-resolution",
     triggerTime: 30,
+    triggerCondition: {
+      operator: "AND",
+      conditions: [
+        { field: "action_taken", op: "==", value: "call_senior" },
+      ],
+    },
     type: "escalation",
     message:
       "學長到場評估後：「這是 sternal wound infection 引起的 septic shock。抗生素開對了，vasopressor 用得好。明天一早安排 OR washout + debridement。先把他穩住。」→ 情境結束，進入 Debrief。",

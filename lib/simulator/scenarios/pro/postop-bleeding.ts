@@ -189,10 +189,16 @@ const events: ScriptedEvent[] = [
       "醫師，輸了不少血了，要不要追一下 ionized calcium？輸太多有時候 iCa 會掉。",
   },
 
-  // ── 20:00 ── 學長到場
+  // ── 20:00 ── 學長到場（只有玩家叫過學長才觸發）
   {
     id: "evt-20-senior-arrives",
     triggerTime: 20,
+    triggerCondition: {
+      operator: "AND",
+      conditions: [
+        { field: "action_taken", op: "==", value: "call_senior" },
+      ],
+    },
     type: "senior_arrives",
     message: "（學長推門進來）「怎麼了，跟我報告一下。」",
     severityChange: 0,
@@ -209,10 +215,16 @@ const events: ScriptedEvent[] = [
     severityChange: 30,
   },
 
-  // ── 25:00 ── 決定 re-explore → debrief 開始
+  // ── 25:00 ── 決定 re-explore → debrief 開始（需學長已到場）
   {
     id: "evt-25-reexplore",
     triggerTime: 25,
+    triggerCondition: {
+      operator: "AND",
+      conditions: [
+        { field: "action_taken", op: "==", value: "call_senior" },
+      ],
+    },
     type: "escalation",
     message:
       "學長評估後：「這個量、這個血壓、血還是鮮紅色有塊，surgical bleeding 機率很高。跟家屬說一下，我們準備回 OR re-explore。」→ 情境結束，進入 Debrief。",
