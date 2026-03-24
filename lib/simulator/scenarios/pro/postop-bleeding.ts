@@ -484,6 +484,7 @@ const availableImaging: Record<string, string> = {
 - 雙側肋膈角清晰，無 hemothorax
 - ET tube 位置正常，NG tube 尖端於胃
   `,
+  ecg_12lead: `Sinus tachycardia, rate 110-130. Normal axis. No ST changes. Low voltage in limb leads (post-sternotomy artifact).`,
 };
 
 // ============================================================

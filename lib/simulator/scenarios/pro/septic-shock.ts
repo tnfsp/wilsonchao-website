@@ -486,6 +486,7 @@ const availableImaging: Record<string, string> = {
 - 周圍皮膚 indurated、tender to touch
 - 未見 sternal instability（但需 CT scan 進一步評估）
   `,
+  ecg_12lead: `Sinus tachycardia, rate 120+. Normal axis. Non-specific ST-T changes. Possible prolonged QTc.`,
 };
 
 // ============================================================

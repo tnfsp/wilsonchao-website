@@ -4,10 +4,18 @@ import { useState } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { PendingEvent } from "@/lib/simulator/types";
 import { PocusCanvas } from "./PocusCanvas";
+import { CxrCanvas } from "./CxrCanvas";
+import { EcgCanvas } from "./EcgCanvas";
+import { selectCXR, buildCXRInput } from "@/lib/simulator/engine/cxr-selector";
+import { getLastBioGearsState } from "@/lib/simulator/engine/biogears-engine";
+import {
+  generateECGMorphology,
+  generateInterpretation,
+} from "@/lib/simulator/engine/ecg-generator";
 
 // ── Imaging options ──────────────────────────────────────────
 
-type ImagingType = "cxr_portable" | "bedside_echo" | "pocus";
+type ImagingType = "cxr_portable" | "bedside_echo" | "pocus" | "ecg_12lead";
 
 interface ImagingOption {
   key: ImagingType;
@@ -47,6 +55,15 @@ const IMAGING_OPTIONS: ImagingOption[] = [
     turnaroundLabel: "即時結果",
     note: "Focused echo + IVC + Lung — 快速評估",
   },
+  {
+    key: "ecg_12lead",
+    emoji: "📊",
+    title: "12-Lead ECG",
+    subtitle: "十二導程心電圖",
+    turnaround: 5,
+    turnaroundLabel: "結果約 5 分鐘",
+    note: "叫心電圖技師 → 貼片 → 做完上傳",
+  },
 ];
 
 // ── CXR result map (scenario key → scenario availableImaging key) ──────────
@@ -55,6 +72,7 @@ const IMAGING_KEY_MAP: Record<ImagingType, string> = {
   cxr_portable: "cxr_portable",
   bedside_echo: "bedside_echo",   // may not be in every scenario
   pocus: "pocus",
+  ecg_12lead: "ecg_12lead",
 };
 
 // ── Component ────────────────────────────────────────────────
@@ -64,11 +82,13 @@ export function ImagingModal() {
   const { scenario, clock, closeModal, addTimelineEntry, addPendingEvent, advanceTime } =
     useProGameStore();
 
-  const [selected, setSelected]   = useState<ImagingType | null>(null);
-  const [ordered, setOrdered]     = useState<Set<ImagingType>>(new Set());
+  const [selected, setSelected]     = useState<ImagingType | null>(null);
+  const [ordered, setOrdered]       = useState<Set<ImagingType>>(new Set());
   const [showResult, setShowResult] = useState<ImagingType | null>(null);
   const [pendingCXR, setPendingCXR] = useState(false);
-  const [cxrReady, setCxrReady]   = useState(false);
+  const [cxrReady, setCxrReady]     = useState(false);
+  const [pendingECG, setPendingECG] = useState(false);
+  const [ecgReady, setEcgReady]     = useState(false);
 
   if (activeModal !== "imaging" || !scenario) return null;
 
@@ -103,19 +123,22 @@ export function ImagingModal() {
       setSelected(opt.key);
       setTimeout(() => setShowResult(opt.key), 400);
     } else {
-      // CXR — deferred result
+      // Deferred result (CXR or ECG)
       const turnaroundMinutes = opt.turnaround as number;
+      const isECG = opt.key === "ecg_12lead";
 
       addTimelineEntry({
         gameTime: clock.currentTime,
         type: "player_action",
-        content: `📷 開了 ${opt.title}（結果約 ${turnaroundMinutes} 分鐘後回來）`,
+        content: `${opt.emoji} 開了 ${opt.title}（結果約 ${turnaroundMinutes} 分鐘後回來）`,
         sender: "player",
       });
       addTimelineEntry({
         gameTime: clock.currentTime,
         type: "nurse_message",
-        content: `${nurseName}：好，我打電話給 X 光室。`,
+        content: isECG
+          ? `${nurseName}：好，我打電話叫心電圖技師過來。`
+          : `${nurseName}：好，我打電話給 X 光室。`,
         sender: "nurse",
       });
 
@@ -130,7 +153,7 @@ export function ImagingModal() {
         type: "lab_result",
         data: {
           imagingKey: opt.key,
-          imagingType: "cxr",
+          imagingType: isECG ? "ecg" : "cxr",
           label: opt.title,
         },
         fired: false,
@@ -147,21 +170,29 @@ export function ImagingModal() {
       });
 
       setOrdered((prev) => new Set(prev).add(opt.key));
-      setPendingCXR(true);
+      if (isECG) {
+        setPendingECG(true);
+      } else {
+        setPendingCXR(true);
+      }
       setSelected(opt.key);
 
       // For demo: simulate time advance and then show result
-      // In real engine, this would fire via pendingEvent handler
       setTimeout(() => {
         addTimelineEntry({
           gameTime: clock.currentTime + turnaroundMinutes,
           type: "lab_result",
-          content: `📷 ${opt.title} 結果已上傳 PACS`,
+          content: `${opt.emoji} ${opt.title} 結果已回`,
           sender: "system",
           isImportant: true,
         });
-        setCxrReady(true);
-        setPendingCXR(false);
+        if (isECG) {
+          setEcgReady(true);
+          setPendingECG(false);
+        } else {
+          setCxrReady(true);
+          setPendingCXR(false);
+        }
       }, 1500); // short delay for UX; real advance triggered separately
     }
   }
@@ -170,9 +201,85 @@ export function ImagingModal() {
     setShowResult("cxr_portable");
   }
 
+  function handleViewECG() {
+    setShowResult("ecg_12lead");
+  }
+
   // ── Render helpers ───────────────────────────────────────────
 
   function renderResult(key: ImagingType) {
+    // 12-Lead ECG: render canvas + interpretation + text report
+    if (key === "ecg_12lead") {
+      const bgState = getLastBioGearsState();
+      const morphology = generateECGMorphology(bgState, {
+        pathology: scenario?.pathology,
+        tamponade: scenario?.pathology === "cardiac_tamponade",
+      });
+      const autoInterp = generateInterpretation(morphology);
+      const scenarioText = availableImaging["ecg_12lead"];
+
+      return (
+        <div
+          className="rounded-lg border border-teal-800/30 overflow-hidden"
+          style={{ backgroundColor: "#001e2e" }}
+        >
+          {/* Header */}
+          <div className="px-4 py-2.5 border-b border-teal-900/30 flex items-center gap-2">
+            <span className="text-lg">📊</span>
+            <span className="text-teal-200 font-medium text-sm">12-Lead ECG</span>
+            <span className="ml-auto text-xs text-teal-500/50 uppercase tracking-widest">
+              十二導程
+            </span>
+          </div>
+
+          {/* ECG Canvas */}
+          <div className="p-3">
+            <EcgCanvas
+              morphology={morphology}
+              width={672}
+              height={504}
+              showGrid
+              showLabels
+              interpretation={autoInterp}
+            />
+          </div>
+
+          {/* Auto interpretation */}
+          <div className="px-4 pb-2">
+            <p className="text-xs text-teal-500/60 uppercase tracking-widest mb-1">
+              Auto Interpretation
+            </p>
+            <p className="text-teal-300/80 text-xs leading-relaxed">{autoInterp}</p>
+          </div>
+
+          {/* Scenario text report (if available) */}
+          {scenarioText && (
+            <div className="px-4 py-3 border-t border-teal-900/20">
+              <p className="text-xs text-teal-500/60 uppercase tracking-widest mb-2">
+                Report
+              </p>
+              <div
+                className="text-teal-100 text-sm leading-relaxed whitespace-pre-line"
+                dangerouslySetInnerHTML={{
+                  __html: scenarioText
+                    .trim()
+                    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
+                    .replace(/- /g, "• "),
+                }}
+              />
+            </div>
+          )}
+
+          {/* Teaching note */}
+          <div className="mx-4 mb-4 px-3 py-2 rounded bg-teal-900/20 border border-teal-700/25">
+            <p className="text-teal-300/70 text-xs leading-relaxed">
+              💡 12-Lead ECG 在 ICU 的關鍵應用：低電壓 + 電交替 → 心包填塞；peaked T + wide QRS → 高鉀；Osborn J wave → 低體溫。
+            </p>
+          </div>
+        </div>
+      );
+    }
+
     // POCUS renders the live canvas instead of text
     if (key === "pocus") {
       return (
@@ -217,6 +324,56 @@ export function ImagingModal() {
 
     const opt = IMAGING_OPTIONS.find((o) => o.key === key)!;
 
+    // ── CXR: build canvas selection ────────────────────────────
+    let cxrCanvas: React.ReactNode = null;
+    if (key === "cxr_portable") {
+      const bgState = getLastBioGearsState();
+      const firedEventIds = useProGameStore.getState().firedEvents.map((e) => e.id);
+      const placedOrderIds = useProGameStore.getState().placedOrders.map((o) => o.id);
+      const cxrInput = buildCXRInput({
+        bgState,
+        scenarioPathology: scenario?.pathology,
+        firedEventIds,
+        placedOrderIds,
+        isPostop: true,
+        hemorrhageActive: undefined,
+        bloodVolumeLossFraction: undefined,
+      });
+      const cxrSelection = selectCXR(cxrInput);
+
+      cxrCanvas = (
+        <div className="px-4 pt-4 pb-2">
+          <p className="text-xs text-teal-500/60 uppercase tracking-widest mb-2">
+            Imaging
+          </p>
+          <div className="rounded-lg overflow-hidden border border-teal-900/30">
+            <CxrCanvas
+              cxrType={cxrSelection.type}
+              severity={cxrSelection.severity}
+              affectedSide={cxrSelection.affectedSide}
+              isIntubated={cxrInput.isIntubated}
+              isPostop={cxrInput.isPostop}
+              showAnnotations
+              animated
+            />
+          </div>
+          {/* Key findings pills */}
+          {cxrSelection.keyFindings.length > 0 && (
+            <div className="flex flex-wrap gap-1 mt-2">
+              {cxrSelection.keyFindings.map((f, i) => (
+                <span
+                  key={i}
+                  className="text-xs px-2 py-0.5 rounded-full border border-teal-700/30 text-teal-400/80 bg-teal-900/15"
+                >
+                  {f}
+                </span>
+              ))}
+            </div>
+          )}
+        </div>
+      );
+    }
+
     return (
       <div
         className="rounded-lg border border-teal-800/30 overflow-hidden"
@@ -230,6 +387,9 @@ export function ImagingModal() {
             {opt.turnaround === "immediate" ? "即時" : "Portable"}
           </span>
         </div>
+
+        {/* CXR Canvas (shown above report for cxr_portable) */}
+        {cxrCanvas}
 
         {/* Result text */}
         <div className="px-4 py-4">
@@ -286,7 +446,7 @@ export function ImagingModal() {
                 影像檢查
               </h2>
               <p className="text-teal-400/60 text-xs">
-                Portable CXR / Bedside Echo / POCUS
+                Portable CXR / Bedside Echo / POCUS / 12-Lead ECG
               </p>
             </div>
           </div>
@@ -306,6 +466,8 @@ export function ImagingModal() {
             const isSelected = selected === opt.key;
             const showingResult = showResult === opt.key;
             const isCXRPending = opt.key === "cxr_portable" && pendingCXR;
+            const isECGPending = opt.key === "ecg_12lead" && pendingECG;
+            const isAnyPending = isCXRPending || isECGPending;
 
             return (
               <div key={opt.key}>
@@ -348,7 +510,7 @@ export function ImagingModal() {
                   /* Ordered state */
                   <div
                     className={`rounded-lg border px-4 py-3 flex items-center gap-3 ${
-                      isCXRPending
+                      isAnyPending
                         ? "border-amber-800/30 bg-amber-950/10"
                         : "border-teal-800/30 bg-teal-950/10"
                     }`}
@@ -358,21 +520,22 @@ export function ImagingModal() {
                       <div className="text-teal-200 text-sm font-medium">
                         {opt.title}
                       </div>
-                      {isCXRPending ? (
+                      {isAnyPending ? (
                         <div className="text-amber-400/70 text-xs mt-0.5 flex items-center gap-1">
                           <span className="animate-pulse">⏳</span>
-                          結果準備中...（約 15 分鐘）
+                          結果準備中...（約 {opt.turnaround} 分鐘）
                         </div>
                       ) : (
                         <div className="text-teal-400/60 text-xs mt-0.5">
                           ✓ 已開單
                           {cxrReady && opt.key === "cxr_portable" && " — 結果已回"}
+                          {ecgReady && opt.key === "ecg_12lead" && " — 結果已回"}
                         </div>
                       )}
                     </div>
 
                     {/* View result button */}
-                    {!isCXRPending && (
+                    {!isAnyPending && (
                       <button
                         onClick={() =>
                           setShowResult(showingResult ? null : opt.key)
@@ -390,6 +553,16 @@ export function ImagingModal() {
                         className="text-xs text-amber-400 hover:text-amber-200 px-2 py-1 rounded border border-amber-800/30 hover:border-amber-700/50 transition-colors"
                       >
                         查看 CXR
+                      </button>
+                    )}
+
+                    {/* ECG ready — view button */}
+                    {opt.key === "ecg_12lead" && ecgReady && !showingResult && (
+                      <button
+                        onClick={handleViewECG}
+                        className="text-xs text-amber-400 hover:text-amber-200 px-2 py-1 rounded border border-amber-800/30 hover:border-amber-700/50 transition-colors"
+                      >
+                        查看 ECG
                       </button>
                     )}
                   </div>
@@ -415,6 +588,7 @@ export function ImagingModal() {
                 💡 <strong className="text-teal-400/50">臨床提示：</strong>
                 Portable CXR 排影像技師需要等，Bedside Echo 即時。
                 急性出血情境下，POCUS（cardiac）比等 CXR 更快排除 tamponade。
+                12-Lead ECG 可偵測 tamponade 特徵（低電壓 + 電交替）。
               </p>
             </div>
           )}

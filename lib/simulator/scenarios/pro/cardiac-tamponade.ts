@@ -402,6 +402,7 @@ const availableImaging: Record<string, string> = {
 - Sternotomy wires intact
 - Bilateral chest tubes in situ
   `,
+  ecg_12lead: `Low voltage QRS. Electrical alternans (alternating QRS amplitude). Sinus tachycardia. No acute ST changes.`,
 };
 
 // ============================================================
