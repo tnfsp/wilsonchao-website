@@ -19,6 +19,10 @@ const vitalsPanelStyle = `
   0%, 100% { border-color: rgba(239, 68, 68, 0.4); }
   50% { border-color: rgba(239, 68, 68, 0.9); }
 }
+@keyframes vital-pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.7; }
+}
 .vital-flash-green {
   animation: border-flash-green 1.2s ease-out forwards;
 }
@@ -27,6 +31,9 @@ const vitalsPanelStyle = `
 }
 .severity-pulse {
   animation: severity-pulse 2s ease-in-out infinite;
+}
+.vital-critical-pulse {
+  animation: vital-pulse 2s ease-in-out infinite;
 }
 `;
 
@@ -48,6 +55,46 @@ function trendColor(arrow: "↑" | "↓" | "→"): string {
   if (arrow === "↓") return "text-blue-400";
   return "text-gray-400";
 }
+
+type AlertLevel = "normal" | "warning" | "critical";
+
+function getVitalLevel(
+  key: "hr" | "sbp" | "spo2" | "cvp" | "map" | "temp",
+  value: number,
+): AlertLevel {
+  switch (key) {
+    case "hr":
+      if (value > 130 || value < 45) return "critical";
+      if (value > 100 || value < 60) return "warning";
+      return "normal";
+    case "sbp":
+      if (value < 80) return "critical";
+      if (value < 95) return "warning";
+      return "normal";
+    case "spo2":
+      if (value < 90) return "critical";
+      if (value < 95) return "warning";
+      return "normal";
+    case "cvp":
+      if (value < 2 || value > 16) return "critical";
+      if (value < 4 || value > 14) return "warning";
+      return "normal";
+    case "map":
+      if (value < 55) return "critical";
+      if (value < 65) return "warning";
+      return "normal";
+    case "temp":
+      if (value < 35 || value > 38.5) return "critical";
+      if (value < 35.5 || value > 38) return "warning";
+      return "normal";
+  }
+}
+
+const ALERT_LEVEL_STYLES: Record<AlertLevel, string> = {
+  normal: "border-white/8 bg-white/5",
+  warning: "border-yellow-500/40 bg-yellow-500/10",
+  critical: "border-red-500/60 bg-red-500/15 vital-critical-pulse",
+};
 
 const aLineLabels: Record<ALineWaveform, string> = {
   normal: "Normal",
@@ -109,7 +156,7 @@ interface VitalCardProps {
   value: string | number;
   unit?: string;
   valueColor: string;
-  alert?: boolean;
+  alertLevel?: AlertLevel;
   trendArrow?: "↑" | "↓" | "→";
   subValue?: string;
   flashClass?: string;
@@ -120,7 +167,7 @@ function VitalCard({
   value,
   unit,
   valueColor,
-  alert = false,
+  alertLevel = "normal",
   trendArrow,
   subValue,
   flashClass = "",
@@ -130,9 +177,7 @@ function VitalCard({
       className={[
         "relative rounded-xl p-3 border flex flex-col gap-0.5 transition-colors duration-300",
         flashClass,
-        alert
-          ? "border-red-500/60 bg-red-950/30 animate-pulse"
-          : "border-white/8 bg-white/5",
+        ALERT_LEVEL_STYLES[alertLevel],
       ].join(" ")}
     >
       <div className="text-[10px] uppercase tracking-widest text-gray-500 font-medium">
@@ -152,7 +197,7 @@ function VitalCard({
       {subValue && (
         <div className="text-xs text-gray-500 font-mono">{subValue}</div>
       )}
-      {alert && (
+      {alertLevel === "critical" && (
         <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
       )}
     </div>
@@ -186,10 +231,13 @@ export default function ProVitalsPanel({
   }
 
   const mapVal = vitals.map ?? calcMAP(vitals.sbp, vitals.dbp);
-  const hrAlert = vitals.hr > 120 || vitals.hr < 50;
-  const bpAlert = vitals.sbp < 90;
-  const spo2Alert = vitals.spo2 < 92;
-  const tempAlert = vitals.temperature < 36;
+
+  const hrLevel = getVitalLevel("hr", vitals.hr);
+  const bpLevel = getVitalLevel("sbp", vitals.sbp);
+  const spo2Level = getVitalLevel("spo2", vitals.spo2);
+  const cvpLevel = getVitalLevel("cvp", vitals.cvp);
+  const mapLevel = getVitalLevel("map", mapVal);
+  const tempLevel = getVitalLevel("temp", vitals.temperature);
 
   const hrArrow = trend(vitals.hr, prevVitals?.hr, 5);
   const bpArrow = trend(vitals.sbp, prevVitals?.sbp, 5);
@@ -234,8 +282,8 @@ export default function ProVitalsPanel({
             label="HR"
             value={vitals.hr}
             unit="bpm"
-            valueColor={hrAlert ? "text-red-400" : vitals.hr > 100 ? "text-yellow-400" : "text-red-300"}
-            alert={hrAlert}
+            valueColor={hrLevel === "critical" ? "text-red-400" : hrLevel === "warning" ? "text-yellow-400" : "text-red-300"}
+            alertLevel={hrLevel}
             trendArrow={hrArrow}
             flashClass={hrFlash}
           />
@@ -243,8 +291,8 @@ export default function ProVitalsPanel({
             label="BP (A-line)"
             value={`${vitals.sbp}/${vitals.dbp}`}
             unit="mmHg"
-            valueColor={bpAlert ? "text-red-400" : vitals.sbp < 100 ? "text-yellow-400" : "text-white"}
-            alert={bpAlert}
+            valueColor={bpLevel === "critical" ? "text-red-400" : bpLevel === "warning" ? "text-yellow-400" : "text-white"}
+            alertLevel={mapLevel !== "normal" ? mapLevel : bpLevel}
             trendArrow={bpArrow}
             subValue={`MAP ${mapVal} mmHg`}
             flashClass={bpFlash}
@@ -253,8 +301,8 @@ export default function ProVitalsPanel({
             label="SpO₂"
             value={vitals.spo2}
             unit="%"
-            valueColor={spo2Alert ? "text-red-400" : "text-blue-400"}
-            alert={spo2Alert}
+            valueColor={spo2Level !== "normal" ? "text-red-400" : "text-blue-400"}
+            alertLevel={spo2Level}
             trendArrow={spo2Arrow}
             flashClass={spo2Flash}
           />
@@ -262,7 +310,8 @@ export default function ProVitalsPanel({
             label="CVP"
             value={vitals.cvp}
             unit="mmHg"
-            valueColor="text-yellow-400"
+            valueColor={cvpLevel === "critical" ? "text-red-400" : cvpLevel === "warning" ? "text-yellow-400" : "text-yellow-400"}
+            alertLevel={cvpLevel}
             trendArrow={cvpArrow}
             flashClass={cvpFlash}
           />
@@ -270,8 +319,8 @@ export default function ProVitalsPanel({
             label="Temp"
             value={vitals.temperature.toFixed(1)}
             unit="°C"
-            valueColor={tempAlert ? "text-red-400" : vitals.temperature < 36.5 ? "text-orange-400" : "text-orange-300"}
-            alert={tempAlert}
+            valueColor={tempLevel === "critical" ? "text-red-400" : tempLevel === "warning" ? "text-orange-400" : "text-orange-300"}
+            alertLevel={tempLevel}
             flashClass={tempFlash}
           />
           <VitalCard

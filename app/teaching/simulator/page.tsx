@@ -1,6 +1,21 @@
+"use client";
+
+import { useEffect, useState } from "react";
 import { scenarioList } from "@/lib/simulator/scenarios";
 import { proScenarioList } from "@/lib/simulator/scenarios/pro";
 import Link from "next/link";
+
+const PROGRESS_KEY = "icu-sim-progress";
+
+interface CaseProgress {
+  bestScore: number;
+  lastPlayed: string;
+  rating: number;
+}
+
+function ratingStars(rating: number): string {
+  return "⭐".repeat(rating);
+}
 
 const difficultyColors: Record<string, string> = {
   beginner: "bg-green-500/10 text-green-400 border-green-500/20",
@@ -15,6 +30,14 @@ const difficultyLabels: Record<string, string> = {
 };
 
 export default function SimulatorPage() {
+  const [progress, setProgress] = useState<Record<string, CaseProgress>>({});
+
+  useEffect(() => {
+    try {
+      const raw = localStorage.getItem(PROGRESS_KEY);
+      if (raw) setProgress(JSON.parse(raw));
+    } catch { /* ignore */ }
+  }, []);
   return (
     <div className="min-h-screen bg-[#001219] text-white">
       <div className="max-w-4xl mx-auto px-4 py-12">
@@ -36,7 +59,9 @@ export default function SimulatorPage() {
               護理師打來 → 評估 → 開 order → 看結果 → 叫學長 → SBAR 交班 → Debrief 評分
             </p>
             <div className="grid gap-4">
-              {proScenarioList.map((s) => (
+              {proScenarioList.map((s) => {
+                const p = progress[s.id];
+                return (
                 <Link
                   key={s.id}
                   href={`/teaching/simulator/${s.id}/pro`}
@@ -51,6 +76,15 @@ export default function SimulatorPage() {
                         <h3 className="text-xl font-bold text-white group-hover:text-cyan-300 transition">
                           {s.title}
                         </h3>
+                        {p ? (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-500/15 text-yellow-400 border border-yellow-500/20 font-mono">
+                            {ratingStars(p.rating)} {p.bestScore}/100
+                          </span>
+                        ) : (
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-white/5 text-gray-500">
+                            未玩
+                          </span>
+                        )}
                       </div>
                       <p className="text-gray-400 mt-1">{s.subtitle}</p>
                       <div className="flex flex-wrap gap-2 mt-3">
@@ -77,7 +111,8 @@ export default function SimulatorPage() {
                     </span>
                   </div>
                 </Link>
-              ))}
+                );
+              })}
             </div>
           </div>
         )}

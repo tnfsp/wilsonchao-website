@@ -15,7 +15,7 @@ const SECTION_CONFIG = [
     focusBorder: "focus:ring-red-500",
     bgHover: "bg-red-900/10",
     placeholder:
-      "我是住院醫師，bed 3 的 65 歲男性，CABG POD#0，目前 chest tube 持續大量引流，血壓持續下降，需要您評估是否需要緊急處置。",
+      "在此輸入：你是誰、病人是誰、目前什麼問題...",
   },
   {
     key: "background" as const,
@@ -26,7 +26,7 @@ const SECTION_CONFIG = [
     focusBorder: "focus:ring-amber-500",
     bgHover: "bg-amber-900/10",
     placeholder:
-      "病人接受 CABG × 3（LIMA-LAD、SVG-RCA、SVG-OM），有 HTN、DM、CKD stage 3，baseline Cr 1.6。回 ICU 時 Hb 10.5，INR 1.1。目前在 Levophed 0.02 mcg/kg/min。",
+      "在此輸入：手術資訊、相關病史...",
   },
   {
     key: "assessment" as const,
@@ -37,7 +37,7 @@ const SECTION_CONFIG = [
     focusBorder: "focus:ring-teal-500",
     bgHover: "bg-teal-900/10",
     placeholder:
-      "我判斷是 surgical bleeding。CT output 280-320 cc/hr、鮮紅色有血塊，累計 1100cc。Hb 掉到 8.2，INR 1.3，Fib 195（borderline）。Lactate 3.1，BE -5.2，出現 lethal triad 早期表現。",
+      "在此輸入：你的判斷和評估...",
   },
   {
     key: "recommendation" as const,
@@ -48,7 +48,7 @@ const SECTION_CONFIG = [
     focusBorder: "focus:ring-violet-500",
     bgHover: "bg-violet-900/10",
     placeholder:
-      "建議 re-explore。我已輸了 2U pRBC、正在跑 2U FFP，備了 4U pRBC crossmatch。已通知學長準備回 OR 評估。建議同時準備 Cryo 6U（Fib 接近 150 閾值）並追 iCa。",
+      "在此輸入：你建議的處置方案...",
   },
 ] as const;
 
@@ -170,6 +170,9 @@ export default function SBARModal() {
                 </div>
 
                 {/* Textarea */}
+                <div className="text-gray-500 text-[10px] mb-1 tracking-wide">
+                  ✍️ 請自行填寫
+                </div>
                 <textarea
                   value={value}
                   onChange={(e) => handleChange(section.key, e.target.value)}
@@ -177,8 +180,8 @@ export default function SBARModal() {
                   rows={4}
                   disabled={submitted}
                   className={`
-                    w-full rounded-lg bg-black/30 border border-white/10 
-                    text-white text-sm placeholder:text-gray-600
+                    w-full rounded-lg bg-black/30 border border-white/10
+                    text-white text-sm placeholder:text-gray-700 placeholder:italic
                     px-3 py-2.5 resize-none outline-none
                     focus:ring-1 ${section.focusBorder} focus:border-transparent
                     transition-all disabled:opacity-60

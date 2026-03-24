@@ -1,9 +1,31 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { TimelineEntry, CriticalAction, WhatIfBranch } from "@/lib/simulator/types";
 import type { GameScore } from "@/lib/simulator/types";
+
+// ─── Progress persistence ────────────────────────────────────────────────────
+
+const PROGRESS_KEY = "icu-sim-progress";
+
+interface CaseProgress {
+  bestScore: number;
+  lastPlayed: string;
+  rating: number; // 1, 2, or 3 stars
+}
+
+function saveProgress(caseId: string, totalScore: number, stars: number) {
+  try {
+    const raw = localStorage.getItem(PROGRESS_KEY);
+    const data: Record<string, CaseProgress> = raw ? JSON.parse(raw) : {};
+    const existing = data[caseId];
+    const best = existing ? Math.max(existing.bestScore, totalScore) : totalScore;
+    const rating = best >= 80 ? 3 : best >= 55 ? 2 : 1;
+    data[caseId] = { bestScore: best, lastPlayed: new Date().toISOString(), rating };
+    localStorage.setItem(PROGRESS_KEY, JSON.stringify(data));
+  } catch { /* localStorage unavailable */ }
+}
 
 // ─── Section toggle header ─────────────────────────────────────────────────────
 
@@ -410,6 +432,13 @@ function GuidelinesSection({ guidelines }: { guidelines: string[] }) {
 
 export default function DebriefPanel() {
   const { score, scenario, timeline, resetGame, deathCause } = useProGameStore();
+
+  // Save progress to localStorage when debrief is shown
+  useEffect(() => {
+    if (score && scenario) {
+      saveProgress(scenario.id, score.totalScore ?? 0, score.stars ?? 1);
+    }
+  }, [score, scenario]);
 
   if (!score || !scenario) {
     return (

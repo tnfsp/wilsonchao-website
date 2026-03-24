@@ -66,13 +66,14 @@ interface ActionBtnProps {
   label: string;
   onClick: () => void;
   disabled?: boolean;
+  disabledReason?: string;
   variant?: "default" | "danger" | "muted";
   highlighted?: boolean;
   small?: boolean;
   shortcut?: string;
 }
 
-function ActionBtn({ icon, label, onClick, disabled, variant, highlighted, small, shortcut }: ActionBtnProps) {
+function ActionBtn({ icon, label, onClick, disabled, disabledReason, variant, highlighted, small, shortcut }: ActionBtnProps) {
   let base = small
     ? "flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all select-none"
     : "flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-2.5 text-xs font-medium transition-all select-none";
@@ -92,7 +93,7 @@ function ActionBtn({ icon, label, onClick, disabled, variant, highlighted, small
       className={base}
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
-      title={label}
+      title={disabled && disabledReason ? disabledReason : label}
       style={highlighted && !disabled ? { animation: "guidancePulse 2s ease-in-out infinite" } : undefined}
     >
       <span className={small ? "text-base" : "text-xl leading-none"}>{icon}</span>
@@ -196,12 +197,14 @@ export default function ActionBar() {
               icon="🚨" label={mtpState.activated ? "MTP中" : "MTP"}
               onClick={() => { setShowMTPConfirm(true); setShowSubMenu(false); }}
               disabled={mtpState.activated}
+              disabledReason="大量輸血 Protocol 已啟動中"
               variant="danger" small
             />
             <ActionBtn
               icon="🔧" label="通CT"
               onClick={() => { handleOpenCT(); setShowSubMenu(false); }}
               disabled={patient?.chestTube.isPatent === true}
+              disabledReason="胸管目前通暢，無需處理"
               small
             />
             <ActionBtn icon="🫁" label="POCUS" onClick={() => { openModal("pocus"); setShowSubMenu(false); }} small />
