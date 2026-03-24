@@ -208,6 +208,7 @@ export default function ActionBar() {
               small
             />
             <ActionBtn icon="🫁" label="POCUS" onClick={() => { openModal("pocus"); setShowSubMenu(false); }} small />
+            <ActionBtn icon="🌬️" label="呼吸器" onClick={() => { sessionStorage.setItem("sim-order-tab", "ventilator"); openModal("order"); setShowSubMenu(false); }} small />
             <ActionBtn icon="🩻" label="影像" onClick={() => { openModal("imaging"); setShowSubMenu(false); }} small />
           </div>
         )}

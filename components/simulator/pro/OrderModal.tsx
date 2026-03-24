@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import { medicationCategories } from "@/lib/simulator/data/medications";
 import { transfusionCategories, MTP_ACTIVATION_CRITERIA } from "@/lib/simulator/data/transfusions";
@@ -688,6 +688,17 @@ export default function OrderModal() {
   const [lastResult, setLastResult] = useState<{ ok: boolean; message: string } | null>(null);
 
   const isOpen = activeModal === "order";
+
+  // Auto-switch to ventilator tab when opened from ActionBar vent button
+  useEffect(() => {
+    if (isOpen) {
+      const hint = sessionStorage.getItem("sim-order-tab");
+      if (hint === "ventilator") {
+        setActiveTab("ventilator");
+        sessionStorage.removeItem("sim-order-tab");
+      }
+    }
+  }, [isOpen]);
 
   const handleSelectDrug = useCallback((drug: OrderDefinition) => {
     setSelectedDrug(drug);
