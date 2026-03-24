@@ -33,7 +33,7 @@ const identities = [
     labelColor: "text-amber-400",
     badge: "STANDARD",
     badgeClass: "bg-amber-500/20 text-amber-300 border-amber-500/30",
-    comingSoon: true,
+    comingSoon: false,
   },
   {
     key: "pro" as const,
