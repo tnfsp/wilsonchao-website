@@ -2,6 +2,7 @@
 
 import React from "react";
 import IOBalanceBar from "./IOBalanceBar";
+import MiniVitalsBar from "./MiniVitalsBar";
 import { useProGameStore } from "@/lib/simulator/store";
 
 interface ProGameLayoutProps {
@@ -50,6 +51,7 @@ export default function ProGameLayout({
 
       {/* Top bar */}
       <IOBalanceBar />
+      <MiniVitalsBar />
 
       {/* Desktop: side-by-side */}
       <div className="hidden lg:flex flex-1 overflow-hidden">

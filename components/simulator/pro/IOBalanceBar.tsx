@@ -1,5 +1,6 @@
 "use client";
 
+import { useState, useRef, useEffect } from "react";
 import { useRouter } from "next/navigation";
 import { useProGameStore } from "@/lib/simulator/store";
 
@@ -23,12 +24,27 @@ export default function IOBalanceBar() {
   const scenario = useProGameStore((s) => s.scenario);
   const clock = useProGameStore((s) => s.clock);
   const ioBalance = useProGameStore((s) => s.patient?.ioBalance);
+  const [showPopover, setShowPopover] = useState(false);
+  const popoverRef = useRef<HTMLDivElement>(null);
 
   const gameTime = formatGameTime(clock.currentTime, clock.startHour);
   const totalInput = ioBalance?.totalInput ?? 0;
   const totalOutput = ioBalance?.totalOutput ?? 0;
   const net = ioBalance?.netBalance ?? 0;
   const netColor = net >= 0 ? "text-green-400" : "text-red-400";
+  const breakdown = ioBalance?.breakdown;
+
+  // Close popover on outside click
+  useEffect(() => {
+    if (!showPopover) return;
+    function handleClick(e: MouseEvent) {
+      if (popoverRef.current && !popoverRef.current.contains(e.target as Node)) {
+        setShowPopover(false);
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [showPopover]);
 
   return (
     <div
@@ -71,15 +87,70 @@ export default function IOBalanceBar() {
       </div>
 
       {/* Right: I/O balance */}
-      <div className="flex items-center gap-1.5 text-sm font-mono">
-        <span className="text-green-400 hidden sm:inline">+{totalInput}</span>
-        <span className="text-gray-500 hidden sm:inline">/</span>
-        <span className="text-red-400 hidden sm:inline">-{totalOutput}</span>
-        <span className="text-gray-500 hidden sm:inline">=</span>
-        <span className={`font-bold ${netColor}`}>
-          I/O {formatNet(net)}
-        </span>
-        <span className="text-gray-500 text-xs">mL</span>
+      <div className="relative" ref={popoverRef}>
+        {/* Desktop: full breakdown inline */}
+        <div className="hidden sm:flex items-center gap-1.5 text-sm font-mono">
+          <span className="text-green-400">+{totalInput}</span>
+          <span className="text-gray-500">/</span>
+          <span className="text-red-400">-{totalOutput}</span>
+          <span className="text-gray-500">=</span>
+          <span className={`font-bold ${netColor}`}>
+            I/O {formatNet(net)}
+          </span>
+          <span className="text-gray-500 text-xs">mL</span>
+        </div>
+
+        {/* Mobile: compact net only, tappable */}
+        <button
+          onClick={() => setShowPopover((v) => !v)}
+          className="sm:hidden flex items-center gap-1 text-sm font-mono"
+        >
+          <span className={`font-bold ${netColor}`}>
+            I/O {formatNet(net)}
+          </span>
+          <span className="text-gray-500 text-xs">mL</span>
+        </button>
+
+        {/* Popover with full I/O details */}
+        {showPopover && (
+          <div
+            className="absolute right-0 top-full mt-2 z-[60] w-56 rounded-lg border border-white/10 bg-[#001a25] shadow-xl p-3 text-xs font-mono"
+          >
+            <p className="text-gray-500 uppercase tracking-widest text-[9px] mb-2">I/O Breakdown</p>
+            <div className="space-y-1">
+              <div className="flex justify-between">
+                <span className="text-gray-400">IV</span>
+                <span className="text-green-400">+{breakdown?.input.iv ?? 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Blood</span>
+                <span className="text-green-400">+{breakdown?.input.blood ?? 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Oral</span>
+                <span className="text-green-400">+{breakdown?.input.oral ?? 0}</span>
+              </div>
+              <div className="border-t border-white/8 my-1.5" />
+              <div className="flex justify-between">
+                <span className="text-gray-400">Chest Tube</span>
+                <span className="text-red-400">-{breakdown?.output.chestTube ?? 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Urine</span>
+                <span className="text-red-400">-{breakdown?.output.urine ?? 0}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">NGO</span>
+                <span className="text-red-400">-{breakdown?.output.ngo ?? 0}</span>
+              </div>
+              <div className="border-t border-white/8 my-1.5" />
+              <div className="flex justify-between font-bold">
+                <span className="text-gray-300">Net</span>
+                <span className={netColor}>{formatNet(net)} mL</span>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

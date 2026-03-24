@@ -82,7 +82,7 @@ export default function VentilatorPanel() {
   const updateVentilator = useProGameStore((s) => s.updateVentilator);
   const phase = useProGameStore((s) => s.phase);
 
-  const [collapsed, setCollapsed] = useState(false);
+  const [collapsed, setCollapsed] = useState(true);
 
   const isActive = phase === "playing";
 

@@ -212,6 +212,7 @@ export default function ProVitalsPanel({
     <>
       <style>{vitalsPanelStyle}</style>
       <div
+        id="pro-vitals-panel"
         className={`rounded-xl border bg-[#001a25] p-4 space-y-3 transition-colors duration-500 ${severityBorderClass}`}
       >
         {/* Header */}
