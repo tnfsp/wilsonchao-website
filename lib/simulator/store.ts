@@ -772,7 +772,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
           // 同時立即重算 vitals（用新 severity）讓 STEP 2 讀到最新數字
           const newPatient = updatePatientState(
             { ...state.patient, severity: newSeverity, chestTube: newChestTube, ioBalance: newIO },
-            { minutesPassed: 0, currentGameMinutes: newTime }
+            { minutesPassed: 0, currentGameMinutes: newTime, ventilator: state.ventilator }
           );
 
           return { patient: newPatient };
@@ -1535,6 +1535,11 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
   updateVentilator: (changes: Partial<VentilatorState>) => {
     set((state) => ({
       ventilator: { ...state.ventilator, ...changes },
+      playerActions: [...state.playerActions, {
+        action: `vent:${Object.entries(changes).map(([k, v]) => `${k}=${v}`).join(',')}`,
+        gameTime: state.clock.currentTime,
+        category: 'ventilator',
+      }],
     }));
   },
 

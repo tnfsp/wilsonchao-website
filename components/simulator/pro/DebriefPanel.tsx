@@ -429,11 +429,17 @@ export default function DebriefPanel() {
     >
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-8">
 
-        {/* ── Title ── */}
+        {/* ── Title with diagnosis reveal ── */}
         <div className="text-center">
           <h1 className="text-white text-2xl font-bold tracking-tight">Debrief</h1>
+          {scenario.hiddenTitle && (
+            <div className="mt-4 mb-2">
+              <div className="text-sm text-gray-500 mb-1">最終診斷</div>
+              <h2 className="text-2xl font-bold text-cyan-300">{scenario.title}</h2>
+            </div>
+          )}
           <p className="text-gray-500 text-sm mt-1">
-            {scenario.title} — {scenario.patient.bed} · {scenario.patient.age}M
+            {scenario.title} — {scenario.patient.bed} · {scenario.patient.age}{scenario.patient.sex === "M" ? "M" : "F"}
           </p>
         </div>
 

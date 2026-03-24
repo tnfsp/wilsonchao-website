@@ -579,6 +579,8 @@ export const septicShock: SimScenario = {
   id: "pro-septic-shock-01",
   title: "術後敗血性休克",
   subtitle: "CABG POD#3 — 夜班的發燒電話",
+  hiddenTitle: "術後急變 Case C",
+  hiddenSubtitle: "CABG POD#3 — 夜班的發燒電話",
   difficulty: "intermediate",
   duration: "30min",
   tags: [
@@ -617,11 +619,11 @@ export const septicShock: SimScenario = {
   initialChestTube,
 
   initialVentilator: {
-    mode: 'VC',
-    fio2: 0.5,
+    mode: 'SIMV',
+    fio2: 0.6,
     peep: 8,
-    rrSet: 16,
-    tvSet: 480,
+    rrSet: 12,
+    tvSet: 500,
     ieRatio: '1:2',
   },
 

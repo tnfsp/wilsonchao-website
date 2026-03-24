@@ -29,12 +29,15 @@ export async function generateMetadata({
     advanced: "高階",
   }[scenario.difficulty];
 
+  const displayTitle = scenario.hiddenTitle ?? scenario.title;
+  const displaySubtitle = scenario.hiddenSubtitle ?? scenario.subtitle;
+
   return {
-    title: `${scenario.title} | ICU 模擬器 Pro`,
-    description: `${scenario.subtitle}。難度：${difficultyLabel}，時長 ${scenario.duration}。${scenario.tags.slice(0, 4).join("・")}`,
+    title: `${displayTitle} | ICU 模擬器 Pro`,
+    description: `${displaySubtitle}。難度：${difficultyLabel}，時長 ${scenario.duration}。${scenario.tags.slice(0, 4).join("・")}`,
     openGraph: {
-      title: `${scenario.title} — ICU 模擬器 Pro`,
-      description: scenario.subtitle,
+      title: `${displayTitle} — ICU 模擬器 Pro`,
+      description: displaySubtitle,
       type: "website",
     },
   };
@@ -57,8 +60,10 @@ export default async function ProModePage({
     <ProPageClient
       id={id}
       scenarioMeta={{
-        title: scenario.title,
-        subtitle: scenario.subtitle,
+        title: scenario.hiddenTitle ?? scenario.title,
+        realTitle: scenario.title,
+        subtitle: scenario.hiddenSubtitle ?? scenario.subtitle,
+        realSubtitle: scenario.subtitle,
         difficulty: scenario.difficulty,
         duration: scenario.duration,
         tags: scenario.tags,

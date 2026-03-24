@@ -49,6 +49,12 @@ function DifficultyBadge({ difficulty }: { difficulty: SimScenario["difficulty"]
   );
 }
 
+// Diagnostic tags to hide from pre-game display (would reveal the answer)
+const DIAGNOSTIC_TAGS = new Set([
+  "hemorrhage", "tamponade", "beck-triad", "re-exploration",
+  "re-sternotomy", "sepsis", "septic-shock", "wound-infection",
+]);
+
 // ─── Not-started intro screen ─────────────────────────────────────────────────
 
 function IntroScreen({ scenario }: { scenario: SimScenario }) {
@@ -69,9 +75,9 @@ function IntroScreen({ scenario }: { scenario: SimScenario }) {
             <span className="text-gray-500 text-xs">{scenario.duration}</span>
           </div>
           <h1 className="text-white text-2xl font-bold tracking-tight">
-            {scenario.title}
+            {scenario.hiddenTitle ?? scenario.title}
           </h1>
-          <p className="text-gray-400 text-sm mt-1">{scenario.subtitle}</p>
+          <p className="text-gray-400 text-sm mt-1">{scenario.hiddenSubtitle ?? scenario.subtitle}</p>
         </div>
 
         {/* Patient card */}
@@ -130,10 +136,10 @@ function IntroScreen({ scenario }: { scenario: SimScenario }) {
           </p>
         </div>
 
-        {/* Tags */}
+        {/* Tags (filtered to hide diagnostic spoilers) */}
         {scenario.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-7">
-            {scenario.tags.map((tag) => (
+            {scenario.tags.filter((t) => !DIAGNOSTIC_TAGS.has(t)).map((tag) => (
               <span
                 key={tag}
                 className="text-xs bg-white/5 text-gray-500 px-2.5 py-1 rounded-full border border-white/8"
@@ -406,13 +412,18 @@ function ErrorScreen({ error }: { error: string }) {
 
 // ─── Main ProPageClient ───────────────────────────────────────────────────────
 
+interface ScenarioMeta extends Pick<SimScenario, "title" | "subtitle" | "difficulty" | "duration" | "tags"> {
+  realTitle?: string;
+  realSubtitle?: string;
+}
+
 interface ProPageClientProps {
   id: string;
   /**
    * Optional: pass initial scenario metadata for SEO / SSR hydration.
    * The store will still fetch full scenario data from API.
    */
-  scenarioMeta?: Pick<SimScenario, "title" | "subtitle" | "difficulty" | "duration" | "tags">;
+  scenarioMeta?: ScenarioMeta;
 }
 
 export default function ProPageClient({ id }: ProPageClientProps) {

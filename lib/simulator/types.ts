@@ -360,6 +360,8 @@ export interface SimScenario {
   id: string;
   title: string;
   subtitle: string;
+  hiddenTitle?: string;       // Title shown before completion (e.g., "術後急變 Case A")
+  hiddenSubtitle?: string;    // Subtitle shown before completion
   difficulty: "beginner" | "intermediate" | "advanced";
   duration: "15min" | "30min";
   tags: string[];

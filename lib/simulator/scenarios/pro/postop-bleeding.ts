@@ -588,6 +588,8 @@ export const postopBleeding: SimScenario = {
   id: "pro-postop-bleeding-01",
   title: "術後出血",
   subtitle: "CABG POD#0 — 凌晨的呼叫",
+  hiddenTitle: "術後急變 Case A",
+  hiddenSubtitle: "CABG POD#0 — 凌晨的呼叫",
   difficulty: "intermediate",
   duration: "30min",
   tags: [
@@ -624,10 +626,10 @@ export const postopBleeding: SimScenario = {
   initialChestTube,
 
   initialVentilator: {
-    mode: 'VC',
-    fio2: 0.4,
+    mode: 'SIMV',
+    fio2: 0.5,
     peep: 5,
-    rrSet: 14,
+    rrSet: 12,
     tvSet: 500,
     ieRatio: '1:2',
   },

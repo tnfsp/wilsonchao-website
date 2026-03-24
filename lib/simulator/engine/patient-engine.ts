@@ -331,6 +331,17 @@ export function computeVentilatorVitalModifier(
     result.spo2 = (result.spo2 ?? 0) + peepBonus;
   }
 
+  // ── High PEEP → BP drop (hypovolemia / high severity) ─────
+  // High PEEP decreases venous return → drops BP, especially in
+  // hypovolemic or severely compromised patients
+  const bleedingPathologies: Pathology[] = ['surgical_bleeding', 'coagulopathy', 'cardiac_tamponade', 'tamponade'];
+  const isHypovolemic = bleedingPathologies.includes(pathology);
+  if (vent.peep > 10 && (isHypovolemic || (baseSpO2 !== undefined && baseSpO2 < 90))) {
+    const bpDrop = (vent.peep - 10) * 2; // 2 mmHg per cmH2O above 10
+    result.sbp = (result.sbp ?? 0) - bpDrop;
+    result.map = (result.map ?? 0) - bpDrop * 0.5;
+  }
+
   // ── RR × TV → PaCO2 → EtCO2 ───────────────────────────────
   // minuteVent (L/min) = rrSet * tvSet / 1000 (rough approximation)
   const minuteVent = (vent.rrSet * vent.tvSet) / 1000;

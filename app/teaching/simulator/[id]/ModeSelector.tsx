@@ -63,7 +63,24 @@ export default function ModeSelector({
           </button>
         </div>
 
-        <div className="text-center mt-8">
+        {/* Classic mode note */}
+        <div className="mt-8 bg-purple-500/5 border border-purple-500/20 rounded-xl p-4">
+          <p className="text-purple-300 text-sm">
+            💡 這是分支敘事模式 — 你可以選擇不同的劇情路徑。
+          </p>
+          <p className="text-gray-400 text-sm mt-2">
+            如果想要自由開 order 的模擬體驗，請試試{" "}
+            <a
+              href="/teaching/simulator"
+              className="text-cyan-400 hover:text-cyan-300 underline transition"
+            >
+              Pro 模式
+            </a>
+            。
+          </p>
+        </div>
+
+        <div className="text-center mt-6">
           <a
             href="/teaching/simulator"
             className="text-gray-500 hover:text-white transition text-sm"

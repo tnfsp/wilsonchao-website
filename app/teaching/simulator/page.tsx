@@ -82,24 +82,32 @@ export default function SimulatorPage() {
           </div>
         )}
 
-        {/* Legacy Teacher/Self-study Scenarios */}
+        {/* Legacy Classic Branching Scenarios */}
         {scenarioList.length > 0 && (
           <div>
-            <h2 className="text-lg font-semibold text-gray-400 mb-4 flex items-center gap-2">
-              <span>👨‍🏫</span> 教師 / 自學模式
+            <h2 className="text-lg font-semibold text-purple-400 mb-4 flex items-center gap-2">
+              <span>📖</span> 劇情分支模式（Classic）
             </h2>
+            <p className="text-gray-500 text-sm mb-4">
+              分支敘事 — 教師選擇劇情走向，探索不同臨床路徑。適合小組教學。
+            </p>
             <div className="grid gap-4">
               {scenarioList.map((s) => (
                 <Link
                   key={s.id}
                   href={`/teaching/simulator/${s.id}`}
-                  className="group block bg-white/[0.02] hover:bg-white/[0.05] border border-white/5 hover:border-cyan-500/20 rounded-xl p-6 transition-all"
+                  className="group block bg-purple-500/[0.03] hover:bg-purple-500/[0.08] border border-purple-500/10 hover:border-purple-500/30 rounded-xl p-6 transition-all"
                 >
                   <div className="flex items-start justify-between">
                     <div>
-                      <h3 className="text-xl font-bold text-white group-hover:text-cyan-300 transition">
-                        {s.title}
-                      </h3>
+                      <div className="flex items-center gap-2 mb-1">
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 border border-purple-500/30 font-medium">
+                          CLASSIC
+                        </span>
+                        <h3 className="text-xl font-bold text-white group-hover:text-purple-300 transition">
+                          {s.title}
+                        </h3>
+                      </div>
                       <p className="text-gray-400 mt-1">{s.subtitle}</p>
                       <div className="flex flex-wrap gap-2 mt-3">
                         <span

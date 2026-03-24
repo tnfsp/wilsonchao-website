@@ -495,6 +495,8 @@ export const cardiacTamponade: SimScenario = {
   id: "pro-cardiac-tamponade-01",
   title: "術後心包填塞",
   subtitle: "MVR + CABG POD#0 — 凌晨的急變",
+  hiddenTitle: "術後急變 Case B",
+  hiddenSubtitle: "MVR + CABG POD#0 — 凌晨的急變",
   difficulty: "advanced",
   duration: "30min",
   tags: [
@@ -533,10 +535,10 @@ export const cardiacTamponade: SimScenario = {
   initialChestTube,
 
   initialVentilator: {
-    mode: 'VC',
-    fio2: 0.4,
+    mode: 'SIMV',
+    fio2: 0.5,
     peep: 5,
-    rrSet: 14,
+    rrSet: 12,
     tvSet: 500,
     ieRatio: '1:2',
   },
