@@ -273,53 +273,103 @@ setDifficulty(d: DifficultyLevel): void;
 
 ---
 
-## 完整待辦（按優先序）
+## 完整待辦清單（ALL — 按優先序）
 
-### 🔴 現在要做（Phase 0 — 基礎架構）
+---
+
+### 🔴 P0 — Bug / 必修（立即）
+
+| # | 項目 | 狀態 | 備註 |
+|---|------|------|------|
+| 1 | 護理師對話重複 bug（02:00/02:01） | ✅ 已修 | |
+| 2 | 系統訊息外洩（debug text in timeline） | ✅ 已修 | |
+| 3 | 標題爆雷（左上角顯示診斷） | ✅ 已修 | hiddenTitle |
+| 4 | 護理師台詞直接給答案（cardiac tamponade CT+CVP 同句） | ✅ 已修 | 拆成 5min/7min 兩段 |
+| 5 | **手機版 Vitals 不可見** | ❌ 未修 | 需 Mini Vitals Bar 固定 Header |
+| 6 | **缺乏 Onboarding / Tutorial** | ❌ 未修 | 3-5 步互動式 overlay，首次自動觸發 |
+
+### 🟠 P1 — UX 改善（重要）
+
+| # | 項目 | 狀態 | 備註 |
+|---|------|------|------|
+| 7 | PE Modal 手機版 finding 不可見 | ❌ 未修 | 改上下堆疊 accordion |
+| 8 | Vital 異常標示太小（6px 紅點） | ❌ 未修 | 整個 tile 半透明紅 + 脈衝 |
+| 9 | Ventilator 預設展開佔空間 | ❌ 未修 | 預設收合，只顯示摘要行 |
+| 10 | I/O Balance 手機版截斷 | ❌ 未修 | 只顯示 net balance |
+| 11 | SBAR placeholder 太像真實輸入 | ❌ 未修 | 加「✍️ 請自行填寫」標記 |
+| 12 | Debrief 紅色 ✗ 無解釋 | ❌ 未修 | 展開按鈕 + 正確做法 + 臨床依據 |
+
+### 🔴 Phase 0 — 難度系統基礎架構（1 week）
+
 - [ ] 路由重構：DifficultySelect 頁 `/teaching/simulator/[id]`
 - [ ] 新路由：`/[id]/standard`、`/[id]/lite`
 - [ ] Store 新增 `difficulty` field + `setDifficulty()`
 - [ ] Types 新增 `DifficultyLevel`, `StandardOverlay`, `LiteScenario`
-- [ ] Landing page 改版（三級模式說明卡）
+- [ ] Landing page 改版（三級模式身份選擇卡）
 
-### 🟡 接著做（Phase 1 — Standard 模式）
+### 🟡 Phase 1 — Standard 教學模式（2 weeks）
+
 - [ ] `StandardGameLayout.tsx`（簡化 UI）
 - [ ] 護理師引導系統 `GuidanceEngine`（5 種 trigger：idle / 做錯 / 漏掉 / vitals 臨界 / phase 轉換）
-- [ ] Preset order 系統（一鍵下單）
+- [ ] Preset order 系統（一鍵下單，不用自選劑量）
 - [ ] 不死機制（stabilize at threshold）
 - [ ] Color-coded vitals（綠/黃/紅 + 正常值顯示）
 - [ ] 0.5x 時間速度
 - [ ] 簡化 checklist 評分 + guideline inline feedback
 - [ ] Standard overlay × 3 scenarios
 
-### 🟢 再來（Phase 2 — Lite 模式）
+### 🟢 Phase 2 — Lite 互動故事（2 weeks）
+
 - [ ] `LiteGameLayout.tsx`（StoryReader UI）
 - [ ] Story beat engine（state machine）
 - [ ] 3 個 Lite scenarios（auto-derive 60% + 手寫 40%）
 - [ ] End screen：share card + email capture（source=`simulator-lite`）+ CTA
 - [ ] OG image 動態生成
 
-### 🔵 持續（Phase 3 — 擴充）
-- [ ] 音效系統
-- [ ] Tier 2 scenarios：Acute AF, CHB, ACLS Megacode, HTN Crisis, PE, Aortic Dissection, ACS, Acute Abdomen, LCOS, Massive Transfusion
-- [ ] Tier 3 scenarios：VA-ECMO, RV Failure, Aortic Dissection Postop
-- [ ] Basic scenarios：Postop Routine, Chest Tube Management, Ventilator Teaching
-- [ ] Analytics（流失率追蹤）
+### 🔵 Phase 3 — 擴充 + 打磨（ongoing）
+
+**UX 加分項（P2）：**
+- [ ] 波形細節（dicrotic notch）+ 數值跳動效果
+- [ ] 進度追蹤（localStorage 儲存完成狀態）
+- [ ] 快轉 toast 反饋（「⏩ 已快轉至 02:10 AM」）
+- [ ] Disabled 按鈕 tooltip（「CT 目前通暢，無需處理」）
+- [ ] 隱藏網站主 nav bar（遊戲中只保留遊戲 header）
+- [ ] What-If 按鈕（debrief 跳到時間點重玩）
+- [ ] 音效系統（Web Audio API, < 50KB）
+
+**新 Scenarios：**
+
+| Tier | Scenarios | 狀態 |
+|------|-----------|------|
+| Tier 2 值班 | Acute AF, CHB, ACLS Megacode, HTN Crisis, PE, Aortic Dissection, ACS, Acute Abdomen, LCOS, Massive Transfusion | ❌ |
+| Tier 3 心外 Senior | VA-ECMO, RV Failure, Aortic Dissection Postop | ❌ |
+| Basic/Lite | Postop Routine Monitoring, Chest Tube Management, Ventilator Teaching | ❌ |
+
+**其他：**
+- [ ] Analytics（哪些人在哪一步放棄、流失率）
+- [ ] Standard/Lite debrief 的 guideline 呈現
+- [ ] 新 scenario 各自的 GuidelineBundle
 
 ### ✅ 已完成
+
 - [x] BioGears C++ engine + WSS tunnel
 - [x] 3 Pro scenarios（Postop Bleeding, Cardiac Tamponade, Septic Shock）
 - [x] 36 medications + guardRail + drug interactions
-- [x] Ventilator OrderModal
+- [x] Ventilator OrderModal（read-only panel + OrderModal 🫁 tab）
 - [x] Score engine + GuidelineBundle（SSC 2026, STS, Pericardiocentesis）
-- [x] Debrief UI（diagnostic accuracy + guideline compliance）
+- [x] Debrief UI（diagnostic accuracy + guideline compliance % + item status）
 - [x] Hint system（3/session）
-- [x] Chest tube milking（3 cases）
-- [x] ACLS defibrillator（120/150/200/360J）
-- [x] Medication filter by tags
+- [x] Chest tube milking（3 cases with clot-burst）
+- [x] ACLS defibrillator（120/150/200/360J, sync/async）
+- [x] Medication filter by scenario tags
 - [x] Scenario-aware death messages
 - [x] hiddenTitle（遊戲中不爆雷）
 - [x] 護理師台詞拆開（cardiac tamponade — CT/CVP 分開報）
+- [x] Type narrowing（PendingEventData discriminated union）
+- [x] Diagnostic accuracy panel（6-step checklist + weighted scoring）
+- [x] 鍵盤快捷鍵（1-5, Space, F, Esc）
+- [x] SSC 2026 guideline 更新（MAP age-specific, qSOFA downgrade, peripheral vasopressor）
+- [x] 護理師行為 refactor（numbers only, no escalation suggestions）
 
 ---
 
