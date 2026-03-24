@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
-import type { TimelineEntry, CriticalAction, WhatIfBranch } from "@/lib/simulator/types";
+import type { TimelineEntry, CriticalAction, WhatIfBranch, ExpectedAction } from "@/lib/simulator/types";
 import type { GameScore } from "@/lib/simulator/types";
 
 // ─── Progress persistence ────────────────────────────────────────────────────
@@ -229,7 +229,90 @@ function TimelineSection({ timeline }: { timeline: TimelineEntry[] }) {
 
 // ─── Section 3: Critical Actions ─────────────────────────────────────────────
 
-function CriticalActionsTable({ actions }: { actions: CriticalAction[] }) {
+function CriticalActionRow({
+  ca,
+  expected,
+}: {
+  ca: CriticalAction;
+  expected?: ExpectedAction;
+}) {
+  const [open, setOpen] = useState(false);
+  const hasDetail = expected && (expected.rationale || expected.howTo);
+
+  return (
+    <>
+      <tr
+        onClick={() => hasDetail && setOpen(!open)}
+        className={`border-b border-white/5 last:border-0 transition-colors ${
+          hasDetail ? "cursor-pointer hover:bg-white/5" : "hover:bg-white/3"
+        }`}
+      >
+        <td className="px-3 py-2.5 text-gray-300">
+          <div className="flex items-center gap-1.5">
+            {hasDetail && (
+              <span className="text-gray-600 text-xs shrink-0">{open ? "▼" : "▶"}</span>
+            )}
+            <span>{ca.description}</span>
+          </div>
+        </td>
+        <td className="px-3 py-2.5 text-center">
+          {ca.met ? (
+            <span className="text-green-400 font-bold">✅</span>
+          ) : (
+            <span className="text-red-400 font-bold">❌</span>
+          )}
+        </td>
+        <td className="px-3 py-2.5 text-center text-gray-500 font-mono">
+          {ca.timeToComplete !== null ? `${ca.timeToComplete}m` : "—"}
+        </td>
+        <td className="px-3 py-2.5 text-center">
+          {ca.critical ? (
+            <span className="bg-red-900/40 text-red-400 px-1.5 py-0.5 rounded text-xs">必做</span>
+          ) : (
+            <span className="bg-blue-900/30 text-blue-400 px-1.5 py-0.5 rounded text-xs">加分</span>
+          )}
+        </td>
+      </tr>
+      {open && hasDetail && (
+        <tr>
+          <td colSpan={4} className="px-3 pb-3 pt-0">
+            <div className="bg-slate-800 rounded-lg p-4 space-y-3 text-sm leading-relaxed">
+              {ca.met && (
+                <p className="text-green-400/80 text-xs font-medium">Well done — 你做到了這個動作</p>
+              )}
+              {expected.rationale && (
+                <div>
+                  <p className={`font-medium text-xs mb-1 ${ca.met ? "text-gray-500" : "text-amber-400"}`}>
+                    為什麼重要？
+                  </p>
+                  <p className={ca.met ? "text-gray-500" : "text-gray-300"}>{expected.rationale}</p>
+                </div>
+              )}
+              {expected.howTo && (
+                <div>
+                  <p className={`font-medium text-xs mb-1 ${ca.met ? "text-gray-500" : "text-cyan-400"}`}>
+                    正確做法
+                  </p>
+                  <p className={ca.met ? "text-gray-500" : "text-gray-300"}>{expected.howTo}</p>
+                </div>
+              )}
+            </div>
+          </td>
+        </tr>
+      )}
+    </>
+  );
+}
+
+function CriticalActionsTable({
+  actions,
+  expectedActions,
+}: {
+  actions: CriticalAction[];
+  expectedActions?: ExpectedAction[];
+}) {
+  const expectedMap = new Map(expectedActions?.map((ea) => [ea.id, ea]));
+
   return (
     <div className="overflow-x-auto rounded-xl border border-white/10">
       <table className="w-full text-xs">
@@ -243,29 +326,11 @@ function CriticalActionsTable({ actions }: { actions: CriticalAction[] }) {
         </thead>
         <tbody>
           {actions.map((ca) => (
-            <tr
+            <CriticalActionRow
               key={ca.id}
-              className="border-b border-white/5 last:border-0 hover:bg-white/3 transition-colors"
-            >
-              <td className="px-3 py-2.5 text-gray-300">{ca.description}</td>
-              <td className="px-3 py-2.5 text-center">
-                {ca.met ? (
-                  <span className="text-green-400 font-bold">✅</span>
-                ) : (
-                  <span className="text-red-400 font-bold">❌</span>
-                )}
-              </td>
-              <td className="px-3 py-2.5 text-center text-gray-500 font-mono">
-                {ca.timeToComplete !== null ? `${ca.timeToComplete}m` : "—"}
-              </td>
-              <td className="px-3 py-2.5 text-center">
-                {ca.critical ? (
-                  <span className="bg-red-900/40 text-red-400 px-1.5 py-0.5 rounded text-xs">必做</span>
-                ) : (
-                  <span className="bg-blue-900/30 text-blue-400 px-1.5 py-0.5 rounded text-xs">加分</span>
-                )}
-              </td>
-            </tr>
+              ca={ca}
+              expected={expectedMap.get(ca.id)}
+            />
           ))}
         </tbody>
       </table>
@@ -499,7 +564,7 @@ export default function DebriefPanel() {
             title="關鍵動作"
             subtitle="必做項目與加分項目"
           />
-          <CriticalActionsTable actions={score.criticalActions} />
+          <CriticalActionsTable actions={score.criticalActions} expectedActions={scenario.expectedActions} />
 
           {score.harmfulOrders.length > 0 && (
             <div className="mt-3 rounded-xl border border-red-500/30 bg-red-900/10 p-4">

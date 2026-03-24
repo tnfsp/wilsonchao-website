@@ -78,11 +78,14 @@ export default function IOBalanceBar() {
         )}
       </div>
 
-      {/* Center: Sim time */}
+      {/* Center: Sim time + elapsed */}
       <div className="flex items-center gap-1.5 text-white">
         <span className="text-yellow-400">⏰</span>
         <span className="font-mono font-bold text-base tracking-wider">
           {gameTime}
+        </span>
+        <span className="text-gray-500 text-xs font-mono ml-0.5">
+          ({clock.currentTime} min elapsed)
         </span>
       </div>
 

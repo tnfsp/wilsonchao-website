@@ -230,6 +230,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 5,
     critical: true,
     hint: "出血情況下，第一步是量化失血：CBC stat 看 Hb。",
+    rationale: "Hb 趨勢是判斷出血速度和輸血時機的核心指標。單次數值不夠，需要 serial follow-up 才能看出 trajectory。術後初始 Hb 可能被 hemodilution 影響，但趨勢下降是確切的出血證據。",
+    howTo: "Order CBC stat → 抽完後標記時間。30 分鐘後再追一次 CBC 看趨勢。Hb drop > 1 g/dL/hr 代表活動性出血。Transfusion trigger 一般 Hb < 7（心外可考慮 < 8）。",
   },
   {
     id: "act-coag-panel",
@@ -238,6 +240,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 5,
     critical: true,
     hint: "光補血不夠，要知道有沒有 coagulopathy — Coag panel 幫你區分。",
+    rationale: "心臟外科術後出血有兩種：surgical（需要回 OR）和 coagulopathy（可以用藥矯正）。Coag panel 是區分的關鍵。INR > 1.5、Fibrinogen < 150、Plt < 100 都指向 coagulopathy。不做這個檢查就無法做出正確決策。",
+    howTo: "Order PT/INR, aPTT, Fibrinogen, Platelet count。同時考慮 ACT（心外特有）。結果判讀：INR > 1.5 → FFP；Fibrinogen < 150 → Cryo；Plt < 100 → Platelet transfusion。",
   },
   {
     id: "act-type-screen",
@@ -246,6 +250,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 10,
     critical: true,
     hint: "備血越早越好，配血需要時間。",
+    rationale: "Blood bank 配血需要 30-45 分鐘。在出血進行中，提前備血可以縮短 'decision to transfusion' 的時間。如果等到 Hb 掉到 critical 才送，來不及。",
+    howTo: "立即抽紅頭管送 blood bank：Type & Screen + Crossmatch pRBC 至少 4U。告知 blood bank 預期可能大量用血。如果已有之前的 T&S 結果（< 72hr），可直接 crossmatch。",
   },
   {
     id: "act-volume-resuscitation",
@@ -254,6 +260,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 10,
     critical: true,
     hint: "血壓 95，CVP 低，先給 volume — 可以是晶體液或開始輸血。",
+    rationale: "低血壓 + 低 CVP = 容積不足。不管最終是要輸血還是回 OR，先穩住血壓維持 organ perfusion 是第一優先。腎臟和大腦對低灌流最敏感，每分鐘的低血壓都在造成 end-organ damage。",
+    howTo: "LR 或 NS 500mL bolus（pressure bag），同時備血。如果 Hb 已知偏低 → 直接 O-negative pRBC 先輸再等 crossmatch。目標 MAP > 65。輸完 reassess CVP 和 BP。",
   },
   {
     id: "act-call-senior",
@@ -262,6 +270,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 20,
     critical: true,
     hint: "CT output 趨勢持續上升、血壓在掉 — 叫學長不丟臉，叫太晚才丟臉。",
+    rationale: "持續出血合併血流動力學不穩定 = 可能需要 re-exploration。這個決定需要 VS 來做。過晚 escalate 是住院醫師最常見的錯誤之一，也是 M&M conference 最常檢討的問題。",
+    howTo: "電話通知 Senior/VS：'POD1 CABG，CT output 趨勢上升（目前 Xcc/hr），BP dropping to X/X，已 bolus volume，Hb X → 可能需要 re-exploration'。準備好所有數據讓 VS 快速決策。",
   },
   {
     id: "act-abg-lactate",
@@ -270,6 +280,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 10,
     critical: false,
     hint: "知道血壓低還不夠，ABG + Lactate 告訴你灌流夠不夠、dead space 多不多。",
+    rationale: "血壓只告訴你 'pressure'，不告訴你 'flow'。Lactate 和 base deficit 反映組織是否真的有在灌流。Lactate 上升趨勢代表 resuscitation 不足，需要加速處理。",
+    howTo: "Arterial line 抽 ABG（或 VBG + lactate）。重點看：pH（< 7.3 = 嚴重）、Base deficit（< -6 = Lethal triad 之一）、Lactate（> 2 代表開始缺氧，> 4 代表嚴重）。",
   },
   {
     id: "act-act",
@@ -278,6 +290,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 15,
     critical: false,
     hint: "心臟外科術中用 heparin，ACT 可以告訴你還有多少殘留，是否需要 protamine 追加。",
+    rationale: "心臟外科術中使用大量 heparin（300-400 U/kg）。雖然術末會用 protamine 逆轉，但可能逆轉不完全。ACT 是快速評估 residual heparin effect 的方法，如果延長 → protamine 追加可能就能止住 'medical bleeding'。",
+    howTo: "床邊 ACT 機器（point-of-care），取 whole blood sample。正常 ACT < 130 sec。如果 > 130 → 考慮 Protamine 25-50mg slow IV push。注意 protamine 過量也會造成 coagulopathy。",
   },
   {
     id: "act-cardiac-pocus",
@@ -286,6 +300,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 15,
     critical: false,
     hint: "Cardiac POCUS 可以在床邊快速排除 tamponade — 尤其 CT output 突然減少時。",
+    rationale: "Postop bleeding 和 tamponade 可以同時存在。CT output 突然減少不一定是改善，可能是 clot 堵塞引流 → 血積在 pericardium → tamponade。POCUS 30 秒可以排除這個致命鑑別診斷。",
+    howTo: "Subxiphoid view 優先（術後 parasternal window 可能被 dressing 擋住）。看 pericardial space 有無積液、RV 有無 collapse。同時看 LV function 評估 cardiac output。",
   },
   {
     id: "act-protamine",
@@ -294,6 +310,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 15,
     critical: false,
     hint: "心外術後標配：ACT > 130，考慮 Protamine 追加。注意要慢慢推，太快會低血壓。",
+    rationale: "如果 ACT 延長（> 130 sec），代表 heparin 還有殘留效果。Protamine 是 heparin 的 specific antidote，1mg 中和約 100U heparin。在 surgical bleeding 前先排除 heparin effect 是 systematic approach 的一部分。",
+    howTo: "Protamine 25-50mg dilute in 50mL NS，IV slow push over 10 min（太快會造成低血壓和過敏反應）。給完後 15 分鐘再測 ACT。注意：protamine 過量本身也會延長 aPTT。",
   },
   {
     id: "act-ica-monitoring",
@@ -302,6 +320,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 999, // after 4U blood, no strict deadline
     critical: false,
     hint: "每輸 4U blood 追一次 iCa，< 1.0 mmol/L 需要補 Calcium gluconate。",
+    rationale: "每袋 pRBC 含 citrate 防腐劑。Citrate 會螯合 ionized calcium → 大量輸血後 iCa 下降 → 心肌收縮力變差 → 低血壓惡化。這是 massive transfusion 最容易被忽略的併發症。",
+    howTo: "每輸 4U blood product 後 check iCa（ABG 機器可測）。iCa < 1.0 mmol/L → Calcium Gluconate 1g IV over 10 min 或 CaCl2 500mg central line。目標 iCa > 1.1。",
   },
 ];
 

@@ -234,6 +234,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 10,
     critical: true,
     hint: "Sepsis bundle 第一條：在抗生素之前抽 blood culture × 2。先抽再打！順序很重要。",
+    rationale: "Blood culture 是確認致病菌和調整抗生素的唯一方法。一旦給了抗生素，培養的陽性率會顯著下降（30-50% reduction）。'先抽再打' 是 Surviving Sepsis Campaign 的核心原則之一。兩套不同部位可以區分 true bacteremia vs contamination。",
+    howTo: "兩套 blood culture（不同部位抽）：一套 peripheral venipuncture + 一套 central line（如果有的話）。每套含 aerobic + anaerobic bottle。消毒 > 30 sec 減少 contamination。然後立刻給抗生素，不要等結果。",
   },
   {
     id: "act-antibiotics",
@@ -242,6 +244,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 10,
     critical: true,
     hint: "Sternal wound infection + septic shock → 要蓋 MRSA + Gram-negative。Vancomycin + Tazocin 是標準組合。",
+    rationale: "Septic shock 每延遲 1 小時給抗生素，死亡率增加約 7.6%（Kumar et al. 2006）。Hour-1 bundle 是 SSC 2021 最高等級建議。Sternal wound infection 需要蓋 MRSA（Vancomycin）+ Gram-negative（Piperacillin-Tazobactam），因為術後感染可能是 polymicrobial。",
+    howTo: "Vancomycin 25-30mg/kg IV loading dose（90kg → 約 2g）over 1-2hr + Piperacillin-Tazobactam 4.5g IV q6h。先打 Tazocin（快），Vancomycin 需要 infuse 較久。如果 PCN allergy → 改 Meropenem + Vancomycin。",
   },
   {
     id: "act-fluid-resuscitation",

@@ -17,7 +17,7 @@ function formatGameTime(elapsedMinutes: number, startHour = 2): string {
 export default function FastForwardToast() {
   const [toast, setToast] = useState<string | null>(null);
   const prevTimeRef = useRef<number | null>(null);
-  const timerRef = useRef<ReturnType<typeof setTimeout>>();
+  const timerRef = useRef<ReturnType<typeof setTimeout>>(undefined);
 
   const currentTime = useProGameStore((s) => s.clock.currentTime);
   const startHour = useProGameStore((s) => s.clock.startHour);

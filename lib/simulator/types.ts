@@ -423,6 +423,8 @@ export interface ExpectedAction {
   deadline: number;             // within X game minutes
   critical: boolean;
   hint: string;
+  rationale?: string;           // 為什麼重要？+ 臨床依據
+  howTo?: string;               // 正確做法
 }
 
 export interface DebriefData {

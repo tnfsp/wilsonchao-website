@@ -195,6 +195,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 5,
     critical: true,
     hint: "CT output 從 150 掉到 50 → 不是改善，最可能是 clot 堵住。先試 milk/strip！",
+    rationale: "CT output 突降常代表 clot 堵塞而非出血停止。若未及時處理，可能遺漏 tamponade 的早期線索，延誤診斷。Strip/milk 是 CVSICU 標準床邊操作，零風險且能立即區分堵塞 vs 真正的低輸出。",
+    howTo: "雙手戴手套 → 從 chest tube 近端向遠端依序 strip，再反向 milk。觀察是否有 clot 排出、output 是否恢復。若無恢復 → 高度懷疑 tamponade。",
   },
   {
     id: "act-cardiac-pocus",
@@ -203,6 +205,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 5,
     critical: true,
     hint: "CVP 升 + BP 降 + 心音變悶 → Beck triad。POCUS 30 秒就可以確認 tamponade。",
+    rationale: "Beck triad（低血壓 + JVD + muffled heart sounds）的敏感度不高，POCUS 是床邊確認 tamponade 最快最準的工具。Subxiphoid view 30 秒即可看到 pericardial effusion 和 RV diastolic collapse。延遲診斷 = 延遲治療 = 死亡率上升。",
+    howTo: "Subxiphoid view 為首選：探頭放劍突下，朝左肩方向。看 pericardial space 有無積液、RV 是否有 diastolic collapse。如果畫面不佳，改用 parasternal long axis。",
   },
   {
     id: "act-call-senior",
@@ -211,6 +215,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 10,
     critical: true,
     hint: "這是急症中的急症。需要 VS 來決定是否 bedside re-open 或回 OR。越早通知越好。",
+    rationale: "Cardiac tamponade 需要 emergent surgical intervention（re-sternotomy），這不是住院醫師或值班醫師能獨立決定的手術。早期通知讓 VS 有時間準備 OR、通知麻醉科。每延遲 10 分鐘通知，patient deterioration 風險顯著增加。",
+    howTo: "直接打 VS 手機（不是 pager）：簡述 'POD1 CABG，CT output 突降，POCUS 見 pericardial effusion，BP dropping，需要評估 re-sternotomy'。同時通知 OR 可能需要 emergent case。",
   },
   {
     id: "act-volume-challenge",
@@ -219,6 +225,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 10,
     critical: true,
     hint: "Tamponade 時心臟充盈受限。給 volume 可以暫時提高 preload 維持 CO，爭取時間。",
+    rationale: "Tamponade 時心臟被外壓限制充盈，但提高靜脈回流壓可部分克服 → 暫時維持 cardiac output。這是 bridging therapy，爭取手術準備時間。SSC 和 EACTS guideline 都建議 volume loading 作為 tamponade 的暫時處置。",
+    howTo: "Crystalloid（LR 或 NS）500mL bolus，用 pressure bag 快速灌注。給完後評估 BP/CVP 反應。可重複一次，但若無反應不要繼續灌 → 改用 vasopressor bridge。",
   },
   {
     id: "act-vasopressor",
@@ -227,6 +235,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 10,
     critical: false,
     hint: "Levophed 如果已經在跑就加速；或 push Phenylephrine 100-200mcg PRN 維持 MAP > 60。",
+    rationale: "Vasopressor 在 tamponade 中是 bridge therapy：維持 coronary perfusion pressure 等待 definitive surgical treatment。但不能取代解除 tamponade 本身。",
+    howTo: "Levophed 如果已在跑 → 調高速率。如果沒有 → Phenylephrine 100-200mcg IV push PRN 維持 MAP > 60，同時準備 Levophed drip。注意 Epinephrine 也可用但心律不整風險較高。",
   },
   {
     id: "act-prepare-resternotomy",
@@ -235,6 +245,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 15,
     critical: true,
     hint: "Tamponade 的 definitive treatment 是解除壓迫。備好：開胸器械、pRBC、外科團隊。",
+    rationale: "Re-sternotomy 是 cardiac tamponade 的 definitive treatment。準備工作需要時間（通知 OR、備血、開胸器械），越早開始準備越能縮短 door-to-incision time。在極端情況下，bedside re-sternotomy 可能是唯一選項。",
+    howTo: "三件事同步進行：(1) 通知 OR team + 麻醉科準備 emergent case (2) 備血：pRBC 4U + FFP 4U + Plt 1 dose (3) 床邊準備開胸器械包（sternal wire cutter、retractor）。",
   },
   {
     id: "act-type-screen",
@@ -243,6 +255,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 10,
     critical: false,
     hint: "Re-open 一定需要血。提前備好 pRBC 至少 4U。",
+    rationale: "Re-sternotomy 術中出血量可觀，沒有備血就上手術是非常危險的。Type & Screen 和 crossmatch 需要 30-45 分鐘，提前送可以省下關鍵時間。",
+    howTo: "抽紅頭管（EDTA tube）送 blood bank：Type & Screen + Crossmatch pRBC 4U。如果已有 MTP protocol → 直接啟動。通知 blood bank 可能需要大量用血。",
   },
   {
     id: "act-abg-lactate",
@@ -251,6 +265,8 @@ const expectedActions: ExpectedAction[] = [
     deadline: 10,
     critical: false,
     hint: "Lactate 和 base deficit 告訴你灌流夠不夠。Tamponade 的低心輸出 → 會有 lactic acidosis。",
+    rationale: "Lactate 和 base deficit 反映組織灌流狀態。Tamponade 造成的低心輸出會導致 lactic acidosis。追蹤數值可以客觀評估 resuscitation 效果和手術急迫性。",
+    howTo: "從 arterial line 抽 ABG（如果有的話），或做 venous blood gas + lactate。重點看 pH、base deficit、lactate。Lactate > 4 mmol/L 代表嚴重組織低灌流。",
   },
 ];
 
