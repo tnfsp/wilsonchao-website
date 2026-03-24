@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useCallback } from "react";
+import React from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import GuidanceBubble from "./GuidanceBubble";
 import type { GuidanceMessage } from "./GuidanceBubble";
@@ -20,21 +20,18 @@ interface StandardGameLayoutProps {
   vitalsPanel: React.ReactNode;
   chatTimeline: React.ReactNode;
   actionBar: React.ReactNode;
+  guidanceMessages: GuidanceMessage[];
+  onDismissGuidance: (id: string) => void;
 }
 
 export default function StandardGameLayout({
   vitalsPanel,
   chatTimeline,
   actionBar,
+  guidanceMessages,
+  onDismissGuidance,
 }: StandardGameLayoutProps) {
   const severity = useProGameStore((s) => s.patient?.severity ?? 0);
-
-  // Guidance bubble queue
-  const [guidanceMessages, setGuidanceMessages] = useState<GuidanceMessage[]>([]);
-
-  const handleDismissGuidance = useCallback((id: string) => {
-    setGuidanceMessages((prev) => prev.filter((m) => m.id !== id));
-  }, []);
 
   // Danger vignette
   const showDanger = severity > 60;
@@ -93,7 +90,7 @@ export default function StandardGameLayout({
           <div className="flex-shrink-0 px-3 pt-2">
             <GuidanceBubble
               messages={guidanceMessages}
-              onDismiss={handleDismissGuidance}
+              onDismiss={onDismissGuidance}
             />
           </div>
           <div className="flex-1 overflow-hidden">{chatTimeline}</div>
@@ -109,7 +106,7 @@ export default function StandardGameLayout({
         <div className="px-3 pt-2">
           <GuidanceBubble
             messages={guidanceMessages}
-            onDismiss={handleDismissGuidance}
+            onDismiss={onDismissGuidance}
           />
         </div>
         <div className="p-3 space-y-3">{vitalsPanel}</div>

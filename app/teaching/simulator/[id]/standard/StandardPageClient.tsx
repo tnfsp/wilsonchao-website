@@ -1,40 +1,81 @@
 "use client";
 
-import { useEffect, useRef, useCallback } from "react";
+import { useEffect, useRef, useCallback, useState } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
-import type { SimScenario, VitalSigns } from "@/lib/simulator/types";
+import type { SimScenario, StandardOverlay } from "@/lib/simulator/types";
 import { updatePatientState } from "@/lib/simulator/engine/patient-engine";
+import { evaluateGuidance } from "@/lib/simulator/engine/guidance-engine";
+import {
+  computeStandardScore,
+  type StandardScore,
+} from "@/lib/simulator/engine/standard-score-engine";
+import type { PlayerAction } from "@/lib/simulator/engine/score-engine";
+import { standardOverlays } from "@/lib/simulator/scenarios/standard";
+import type { StandardPresetOrder } from "@/lib/simulator/scenarios/standard/types";
+import { getMedicationById } from "@/lib/simulator/data/medications";
+import { getLabById } from "@/lib/simulator/data/labs";
+import { getTransfusionById } from "@/lib/simulator/data/transfusions";
+import type { GuidanceMessage as GuidanceBubbleMessage } from "@/components/simulator/standard/GuidanceBubble";
+import type { OrderDefinition } from "@/lib/simulator/types";
 
 // Standard components
 import StandardGameLayout from "@/components/simulator/standard/StandardGameLayout";
 import ColorVitalsPanel from "@/components/simulator/standard/ColorVitalsPanel";
 import SimplifiedActionBar from "@/components/simulator/standard/SimplifiedActionBar";
+import PresetOrderPanel from "@/components/simulator/standard/PresetOrderPanel";
+import RescueCountdown from "@/components/simulator/standard/RescueCountdown";
+import StandardDebriefPanel from "@/components/simulator/standard/StandardDebriefPanel";
 
 // Re-use Pro components where appropriate
 import ChatTimeline from "@/components/simulator/pro/ChatTimeline";
 import SBARModal from "@/components/simulator/pro/SBARModal";
-import DebriefPanel from "@/components/simulator/pro/DebriefPanel";
 import DeathScreen from "@/components/simulator/pro/DeathScreen";
-import OrderModal from "@/components/simulator/pro/OrderModal";
 import LabOrderModal from "@/components/simulator/pro/LabOrderModal";
 import { ConsultModal } from "@/components/simulator/pro/ConsultModal";
 import { PauseThinkModal } from "@/components/simulator/pro/PauseThinkModal";
 
-// ── Difficulty badge ────────────────────────────────────────────────────────
+// ── Tags to hide from pre-game display ───────────────────────────────────────
 
-const DIFFICULTY_CONFIG = {
-  beginner:     { label: "\u521D\u968E", color: "bg-green-900/40 text-green-400 border-green-500/30" },
-  intermediate: { label: "\u4E2D\u968E", color: "bg-amber-900/40 text-amber-400 border-amber-500/30" },
-  advanced:     { label: "\u9AD8\u968E", color: "bg-red-900/40 text-red-400 border-red-500/30" },
-} as const;
-
-// Tags to hide from pre-game display
 const DIAGNOSTIC_TAGS = new Set([
   "hemorrhage", "tamponade", "beck-triad", "re-exploration",
   "re-sternotomy", "sepsis", "septic-shock", "wound-infection",
 ]);
 
-// ── Intro Screen (simplified) ───────────────────────────────────────────────
+// ── Order Definition Resolver ────────────────────────────────────────────────
+
+function resolveOrderDefinition(
+  definitionId: string,
+  dose: string,
+): OrderDefinition | null {
+  // Exact match across all catalogs
+  const med = getMedicationById(definitionId);
+  if (med) return med;
+  const lab = getLabById(definitionId);
+  if (lab) return lab;
+  const trans = getTransfusionById(definitionId);
+  if (trans) return trans;
+
+  // Fuzzy matching for transfusions (e.g., "prbc" + dose "2" → "prbc_2u")
+  const doseInt = parseInt(dose, 10);
+  if (doseInt > 0) {
+    if (definitionId.startsWith("prbc")) {
+      return getTransfusionById(`prbc_${doseInt}u`) ?? null;
+    }
+    if (definitionId.startsWith("ffp")) {
+      return getTransfusionById(`ffp_${doseInt}u`) ?? null;
+    }
+    if (definitionId.startsWith("platelet")) {
+      return getTransfusionById(`platelet_${doseInt}dose`) ?? null;
+    }
+    if (definitionId.startsWith("cryo")) {
+      return getTransfusionById(`cryo_${doseInt}u`) ?? null;
+    }
+  }
+
+  return null;
+}
+
+// ── Intro Screen ─────────────────────────────────────────────────────────────
 
 function InfoRow({ label, value, highlight }: { label: string; value: string; highlight?: boolean }) {
   return (
@@ -142,11 +183,16 @@ function IntroScreen({ scenario }: { scenario: SimScenario }) {
 
 // ── Game tick (simplified: no BioGears, standard uses formula engine only) ──
 
-function useStandardGameTick() {
+function useStandardGameTick(
+  overlay: StandardOverlay | null,
+  pushGuidance: (msgs: GuidanceBubbleMessage[]) => void,
+) {
   const phase = useProGameStore((s) => s.phase);
   const activeModal = useProGameStore((s) => s.activeModal);
   const advanceTime = useProGameStore((s) => s.advanceTime);
   const difficultyConfig = useProGameStore((s) => s.difficultyConfig);
+
+  const lastGuidanceRef = useRef<Set<string>>(new Set());
 
   const tickPatient = useCallback((minutes = 1) => {
     const state = useProGameStore.getState();
@@ -160,7 +206,37 @@ function useStandardGameTick() {
 
     useProGameStore.setState({ patient: newPatient });
 
-    // Death check with rescue window support
+    // Guidance engine: evaluate all 7 triggers
+    if (overlay && state.scenario) {
+      const guidanceMsgs = evaluateGuidance(
+        newPatient,
+        state.playerActions,
+        state.scenario,
+        state.difficultyConfig,
+        state.clock.currentTime,
+      );
+
+      if (guidanceMsgs.length > 0) {
+        // Dedup: only push messages not seen recently (by trigger+relatedAction)
+        const newMsgs: GuidanceBubbleMessage[] = [];
+        for (const gm of guidanceMsgs) {
+          const key = `${gm.trigger}:${gm.relatedAction ?? ""}`;
+          if (!lastGuidanceRef.current.has(key)) {
+            lastGuidanceRef.current.add(key);
+            newMsgs.push({
+              id: `guide-${gm.trigger}-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+              text: gm.message,
+              severity: gm.severity,
+            });
+          }
+        }
+        if (newMsgs.length > 0) {
+          pushGuidance(newMsgs);
+        }
+      }
+    }
+
+    // Death check with rescue window support (store.triggerDeath intercepts for Standard)
     const vitals = newPatient.vitals;
     const severity = newPatient.severity ?? 0;
     const threshold = difficultyConfig.rescueThreshold;
@@ -189,7 +265,7 @@ function useStandardGameTick() {
       }
       useProGameStore.getState().triggerDeath(cause);
     }
-  }, [difficultyConfig]);
+  }, [difficultyConfig, overlay, pushGuidance]);
 
   // Expose for action handlers
   useEffect(() => {
@@ -211,10 +287,133 @@ function useStandardGameTick() {
   }, [phase, activeModal, advanceTime, tickPatient]);
 }
 
+// ── Preset Order Modal ──────────────────────────────────────────────────────
+
+function PresetOrderModal({
+  presets,
+  executedIds,
+  onExecute,
+  onClose,
+}: {
+  presets: StandardPresetOrder[];
+  executedIds: Set<string>;
+  onExecute: (preset: StandardPresetOrder) => void;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
+      {/* Backdrop */}
+      <div
+        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+        onClick={onClose}
+      />
+      {/* Panel */}
+      <div className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-white/10 bg-[#0a1929] shadow-2xl">
+        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0a1929]">
+          <h2 className="text-white font-bold text-sm">
+            {"\u8655\u7F6E\u9078\u55AE"}
+          </h2>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white text-lg leading-none"
+          >
+            {"\u2715"}
+          </button>
+        </div>
+        <PresetOrderPanel
+          presets={presets}
+          onExecuteOrder={onExecute}
+          executedOrderIds={executedIds}
+        />
+      </div>
+    </div>
+  );
+}
+
 // ── Game Screen ─────────────────────────────────────────────────────────────
 
-function GameScreen() {
-  useStandardGameTick();
+function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
+  const [guidanceMessages, setGuidanceMessages] = useState<GuidanceBubbleMessage[]>([]);
+  const [executedPresetIds, setExecutedPresetIds] = useState<Set<string>>(new Set());
+  const activeModal = useProGameStore((s) => s.activeModal);
+  const closeModal = useProGameStore((s) => s.closeModal);
+
+  const pushGuidance = useCallback((msgs: GuidanceBubbleMessage[]) => {
+    setGuidanceMessages((prev) => [...prev, ...msgs]);
+  }, []);
+
+  useStandardGameTick(overlay, pushGuidance);
+
+  const handleDismissGuidance = useCallback((id: string) => {
+    setGuidanceMessages((prev) => prev.filter((m) => m.id !== id));
+  }, []);
+
+  const handlePresetOrder = useCallback((preset: StandardPresetOrder) => {
+    const state = useProGameStore.getState();
+
+    if (!preset.isCorrect) {
+      // Wrong order: push guidance feedback, don't execute
+      if (preset.feedbackIfWrong) {
+        setGuidanceMessages((prev) => [
+          ...prev,
+          {
+            id: `preset-wrong-${preset.id}-${Date.now()}`,
+            text: preset.feedbackIfWrong!,
+            severity: "warning" as const,
+          },
+        ]);
+      }
+      // Track wrong action for scoring
+      useProGameStore.setState({
+        playerActions: [
+          ...state.playerActions,
+          {
+            action: `preset:wrong:${preset.id}`,
+            gameTime: state.clock.currentTime,
+            category: "preset",
+          },
+        ],
+      });
+      return;
+    }
+
+    // Correct order: execute each sub-order
+    for (const order of preset.orders) {
+      const def = resolveOrderDefinition(order.definitionId, order.dose);
+
+      if (def) {
+        // Regular order through the store
+        useProGameStore.getState().placeOrder({
+          definition: def,
+          dose: order.dose,
+          frequency: order.frequency,
+        });
+      } else {
+        // Special action (call_senior, pocus_cardiac, etc.) — track directly
+        const current = useProGameStore.getState();
+        useProGameStore.setState({
+          playerActions: [
+            ...current.playerActions,
+            {
+              action: order.definitionId,
+              gameTime: current.clock.currentTime,
+              category: "preset",
+            },
+          ],
+        });
+        current.addTimelineEntry({
+          gameTime: current.clock.currentTime,
+          type: "player_action",
+          content: preset.label,
+          sender: "player",
+        });
+      }
+    }
+
+    setExecutedPresetIds((prev) => new Set([...prev, preset.id]));
+  }, []);
+
+  const presets = (overlay?.presetOrders ?? []) as StandardPresetOrder[];
 
   return (
     <>
@@ -228,9 +427,24 @@ function GameScreen() {
           </div>
         }
         actionBar={<SimplifiedActionBar />}
+        guidanceMessages={guidanceMessages}
+        onDismissGuidance={handleDismissGuidance}
       />
-      {/* Re-use Pro modals — they read from the same store */}
-      <OrderModal />
+
+      {/* Rescue countdown overlay — reads from store, self-manages visibility */}
+      <RescueCountdown />
+
+      {/* Preset order modal (replaces OrderModal for Standard mode) */}
+      {activeModal === "order" && presets.length > 0 && (
+        <PresetOrderModal
+          presets={presets}
+          executedIds={executedPresetIds}
+          onExecute={handlePresetOrder}
+          onClose={closeModal}
+        />
+      )}
+
+      {/* Re-use Pro modals for lab, consult, pause */}
       <LabOrderModal />
       <ConsultModal />
       <PauseThinkModal />
@@ -271,6 +485,52 @@ function ErrorScreen({ error }: { error: string }) {
   );
 }
 
+// ── Standard Debrief Wrapper ────────────────────────────────────────────────
+
+function StandardDebriefWrapper({
+  scenario,
+  overlay,
+}: {
+  scenario: SimScenario;
+  overlay: StandardOverlay | null;
+}) {
+  const placedOrders = useProGameStore((s) => s.placedOrders);
+
+  // Convert PlacedOrder[] → PlayerAction[] for the score engine
+  const playerActionsForScore: PlayerAction[] = placedOrders.map((o) => ({
+    orderId: o.definition.id,
+    orderName: o.definition.name,
+    category: o.definition.category,
+    placedAt: o.placedAt,
+    dose: o.dose,
+  }));
+
+  const score: StandardScore = computeStandardScore(
+    playerActionsForScore,
+    scenario,
+    overlay ?? undefined,
+  );
+
+  return (
+    <StandardDebriefPanel
+      score={score}
+      scenario={scenario}
+      onRestart={() => {
+        useProGameStore.getState().resetGame();
+        window.location.reload();
+      }}
+      onBackToList={() => {
+        useProGameStore.getState().resetGame();
+        window.location.href = "/teaching/simulator";
+      }}
+      onUpgradeToPro={() => {
+        useProGameStore.getState().resetGame();
+        window.location.href = window.location.pathname.replace("/standard", "/pro");
+      }}
+    />
+  );
+}
+
 // ── Main Client Component ───────────────────────────────────────────────────
 
 export default function StandardPageClient({ id }: { id: string }) {
@@ -285,8 +545,10 @@ export default function StandardPageClient({ id }: { id: string }) {
 
   const loaded = useRef(false);
 
+  // Load Standard overlay for this scenario
+  const overlay: StandardOverlay | null = standardOverlays[id] ?? null;
+
   useEffect(() => {
-    // Set difficulty to standard before loading
     setDifficulty("standard");
   }, [setDifficulty]);
 
@@ -308,12 +570,14 @@ export default function StandardPageClient({ id }: { id: string }) {
   if (!scenario) return <LoadingScreen />;
 
   if (phase === "death") return <DeathScreen />;
-  if (phase === "debrief") return <DebriefPanel />;
+  if (phase === "debrief") {
+    return <StandardDebriefWrapper scenario={scenario} overlay={overlay} />;
+  }
 
   if (phase === "sbar" || phase === "playing") {
     return (
       <>
-        <GameScreen />
+        <GameScreen overlay={overlay} />
         <SBARModal />
       </>
     );
