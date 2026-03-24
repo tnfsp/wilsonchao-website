@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef } from "react";
+import Image from "next/image";
 import { useProGameStore } from "@/lib/simulator/store";
 
 // ── Imaging findings per pathology ────────────────────────────────────────────
@@ -363,6 +364,47 @@ const IMAGING_OPTIONS: ImagingOption[] = [
   },
 ];
 
+// ── Real image/video assets per pathology ─────────────────────────────────────
+
+const CXR_IMAGES: Record<string, { src: string; alt: string; attribution: string }> = {
+  cardiac_tamponade: {
+    src: "/assets/cxr/cardiac-tamponade/water-bottle-sign.png",
+    alt: "Water-bottle sign — 心包積液典型 CXR",
+    attribution: "Wikimedia Commons, CC-BY-SA 4.0",
+  },
+  tamponade: {
+    src: "/assets/cxr/cardiac-tamponade/water-bottle-sign.png",
+    alt: "Water-bottle sign — 心包積液典型 CXR",
+    attribution: "Wikimedia Commons, CC-BY-SA 4.0",
+  },
+  lcos: {
+    src: "/assets/cxr/cardiogenic-shock/pulmonary-edema.png",
+    alt: "Pulmonary edema — 心因性肺水腫 CXR",
+    attribution: "Wikimedia Commons, CC-BY-SA 3.0",
+  },
+};
+
+interface EchoClip {
+  src: string;
+  label: string;
+}
+
+const ECHO_VIDEOS: Record<string, EchoClip[]> = {
+  cardiac_tamponade: [
+    { src: "/assets/echo/cardiac-tamponade/a4c.mp4", label: "A4C — 心包積液" },
+    { src: "/assets/echo/cardiac-tamponade/plax.mp4", label: "PLAX — 心包積液" },
+    { src: "/assets/echo/cardiac-tamponade/psax.mp4", label: "PSAX" },
+    { src: "/assets/echo/cardiac-tamponade/subcostal.mp4", label: "Subcostal" },
+    { src: "/assets/echo/cardiac-tamponade/ivc.mp4", label: "IVC — 擴張無塌陷" },
+    { src: "/assets/echo/cardiac-tamponade/posterior.mp4", label: "Posterior effusion" },
+  ],
+  tamponade: [
+    { src: "/assets/echo/cardiac-tamponade/a4c.mp4", label: "A4C — 心包積液" },
+    { src: "/assets/echo/cardiac-tamponade/subcostal.mp4", label: "Subcostal" },
+    { src: "/assets/echo/cardiac-tamponade/ivc.mp4", label: "IVC — 擴張無塌陷" },
+  ],
+};
+
 // ── Component ─────────────────────────────────────────────────────────────────
 
 export default function StandardImagingModal() {
@@ -477,6 +519,47 @@ export default function StandardImagingModal() {
                 {/* Findings */}
                 {state === "revealed" && (
                   <div className="px-4 py-3 space-y-2">
+                    {/* Real CXR image */}
+                    {opt.id === "cxr" && CXR_IMAGES[pathology] && (
+                      <div className="mb-3 rounded-lg overflow-hidden border border-white/10">
+                        <Image
+                          src={CXR_IMAGES[pathology].src}
+                          alt={CXR_IMAGES[pathology].alt}
+                          width={400}
+                          height={400}
+                          className="w-full h-auto"
+                          style={{ filter: "brightness(1.1)" }}
+                        />
+                        <p className="text-gray-600 text-[10px] px-2 py-1 bg-black/40">
+                          📷 {CXR_IMAGES[pathology].attribution}
+                        </p>
+                      </div>
+                    )}
+
+                    {/* Real Echo videos */}
+                    {opt.id === "pocus" && ECHO_VIDEOS[pathology] && (
+                      <div className="mb-3 space-y-2">
+                        {ECHO_VIDEOS[pathology].map((clip, ci) => (
+                          <div key={ci} className="rounded-lg overflow-hidden border border-white/10">
+                            <video
+                              src={clip.src}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              className="w-full h-auto"
+                            />
+                            <p className="text-gray-400 text-xs px-2 py-1 bg-black/40">
+                              🎬 {clip.label}
+                            </p>
+                          </div>
+                        ))}
+                        <p className="text-gray-600 text-[10px]">
+                          📷 LITFL ECG Library, CC-BY-NC-SA 4.0
+                        </p>
+                      </div>
+                    )}
+
                     <p className="text-gray-500 text-xs uppercase tracking-widest mb-2">
                       點擊項目查看詳細
                     </p>
