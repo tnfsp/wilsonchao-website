@@ -1,64 +1,74 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 
 const STORAGE_KEY = "icu-sim-tutorial-done";
 
+type TargetId = "pro-vitals-panel" | "action-bar" | "time-controls" | "sbar-btn" | "none";
+
 interface TutorialStep {
-  /** CSS selector-like target region id */
-  target: "left-panel" | "right-panel" | "action-bar" | "io-bar";
+  target: TargetId;
+  title: string;
   message: string;
 }
 
 const STEPS: TutorialStep[] = [
   {
-    target: "left-panel",
-    message: "Vitals Monitor 顯示即時生命徵象，紅色 = 異常",
-  },
-  {
-    target: "right-panel",
-    message: "護理師會在這裡報告情況",
+    target: "pro-vitals-panel",
+    title: "Vitals Monitor",
+    message: "Vitals Monitor shows patient status. Red = danger, yellow = warning.",
   },
   {
     target: "action-bar",
-    message: "用這些按鈕執行動作：PE、抽血、處置、叫人、SBAR",
+    title: "Action Buttons",
+    message: "Use these buttons to take actions: PE, labs, imaging, orders, and consults.",
   },
   {
-    target: "io-bar",
-    message: "時間自動推進，適當時機叫學長並用 SBAR 交班",
+    target: "time-controls",
+    title: "Fast Forward",
+    message: "Fast forward time with the \u23E9 button or press F on your keyboard.",
+  },
+  {
+    target: "sbar-btn",
+    title: "Call for Help",
+    message: "Call for help with SBAR when you\u2019re ready to escalate to the senior.",
+  },
+  {
+    target: "none",
+    title: "Good luck, Dr!",
+    message: "You\u2019re on your own now. Trust your instincts and act fast.",
   },
 ];
 
-/**
- * Spotlight region positions for each step.
- * Returns inset CSS values for the spotlight "window" based on target.
- */
-function getSpotlightStyle(target: TutorialStep["target"]): React.CSSProperties {
-  switch (target) {
-    case "left-panel":
-      // Left vitals panel — desktop: left 380px column; mobile: top section
-      return { top: "48px", left: "0", width: "380px", bottom: "0" };
-    case "right-panel":
-      // Right chat area — desktop: right of 380px
-      return { top: "48px", left: "380px", right: "0", bottom: "120px" };
-    case "action-bar":
-      // Bottom action bar
-      return { left: "0", right: "0", bottom: "0", height: "120px" };
-    case "io-bar":
-      // Top header/clock bar
-      return { top: "0", left: "0", right: "0", height: "48px" };
-  }
+function useTargetRect(targetId: TargetId): DOMRect | null {
+  const [rect, setRect] = useState<DOMRect | null>(null);
+
+  useEffect(() => {
+    if (targetId === "none") { setRect(null); return; }
+    const el = document.getElementById(targetId);
+    if (!el) { setRect(null); return; }
+
+    const update = () => setRect(el.getBoundingClientRect());
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, [targetId]);
+
+  return rect;
 }
 
 export default function TutorialOverlay() {
   const [visible, setVisible] = useState(false);
   const [step, setStep] = useState(0);
   const [fading, setFading] = useState(false);
+  const overlayRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!localStorage.getItem(STORAGE_KEY)) {
-      setVisible(true);
+      // Small delay so game elements mount first
+      const t = setTimeout(() => setVisible(true), 600);
+      return () => clearTimeout(t);
     }
   }, []);
 
@@ -76,31 +86,43 @@ export default function TutorialOverlay() {
     }
   }, [step, dismiss]);
 
+  const current = STEPS[step];
+  const rect = useTargetRect(current.target);
+
   if (!visible) return null;
 
-  const current = STEPS[step];
-  const spotlight = getSpotlightStyle(current.target);
+  // Spotlight inset with padding
+  const pad = 8;
+  const spotStyle: React.CSSProperties | null = rect
+    ? {
+        top: rect.top - pad,
+        left: rect.left - pad,
+        width: rect.width + pad * 2,
+        height: rect.height + pad * 2,
+      }
+    : null;
 
   return (
     <div
+      ref={overlayRef}
       className={`fixed inset-0 z-[100] transition-opacity duration-300 ${fading ? "opacity-0" : "opacity-100"}`}
     >
-      {/* Dark overlay with spotlight cutout using CSS mask */}
+      {/* Dark overlay with spotlight cutout */}
       <div className="absolute inset-0 pointer-events-none">
-        {/* Full dark overlay */}
         <div className="absolute inset-0 bg-black/70" />
-        {/* Spotlight cutout — transparent window */}
-        <div
-          className="absolute border-2 border-white/40 shadow-[0_0_30px_8px_rgba(255,255,255,0.15)]"
-          style={{
-            ...spotlight,
-            boxShadow: "0 0 0 9999px rgba(0,0,0,0.7), 0 0 30px 8px rgba(255,255,255,0.15)",
-            background: "transparent",
-          }}
-        />
+        {spotStyle && (
+          <div
+            className="absolute rounded-xl border-2 border-teal-400/60"
+            style={{
+              ...spotStyle,
+              boxShadow: "0 0 0 9999px rgba(0,0,0,0.7), 0 0 30px 8px rgba(94,234,212,0.15)",
+              background: "transparent",
+            }}
+          />
+        )}
       </div>
 
-      {/* Message card — positioned near center */}
+      {/* Message card */}
       <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
         <div
           className="pointer-events-auto max-w-sm w-full mx-4 rounded-2xl p-5 border border-white/20"
@@ -121,8 +143,11 @@ export default function TutorialOverlay() {
             </span>
           </div>
 
+          {/* Title */}
+          <h3 className="text-teal-300 text-base font-semibold mb-1">{current.title}</h3>
+
           {/* Message */}
-          <p className="text-white text-sm leading-relaxed mb-4">
+          <p className="text-white/90 text-sm leading-relaxed mb-4">
             {current.message}
           </p>
 
@@ -132,13 +157,13 @@ export default function TutorialOverlay() {
               onClick={dismiss}
               className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
             >
-              跳過
+              Skip
             </button>
             <button
               onClick={next}
               className="ml-auto px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-sm font-medium transition-colors"
             >
-              {step < STEPS.length - 1 ? "下一步" : "開始"}
+              {step < STEPS.length - 1 ? "Next" : "Start!"}
             </button>
           </div>
         </div>

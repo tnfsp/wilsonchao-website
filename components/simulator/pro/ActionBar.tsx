@@ -185,7 +185,7 @@ export default function ActionBar() {
         />
       )}
 
-      <div className="w-full px-2 py-2 border-t border-slate-700/60 space-y-2" style={{ background: "#0d1f3c" }}>
+      <div id="action-bar" className="w-full px-2 py-2 border-t border-slate-700/60 space-y-2" style={{ background: "#0d1f3c" }}>
         {/* Main Row — 5 buttons */}
         <div className="grid grid-cols-5 gap-1.5">
           <ActionBtn
@@ -216,13 +216,15 @@ export default function ActionBar() {
             highlighted={guidanceHighlight === "consult"}
             shortcut="4"
           />
-          <ActionBtn
-            icon="📋" label="SBAR"
-            onClick={() => openModal("sbar")}
-            disabled={!isPlaying}
-            highlighted={guidanceHighlight === "sbar"}
-            shortcut="5"
-          />
+          <span id="sbar-btn">
+            <ActionBtn
+              icon="📋" label="SBAR"
+              onClick={() => openModal("sbar")}
+              disabled={!isPlaying}
+              highlighted={guidanceHighlight === "sbar"}
+              shortcut="5"
+            />
+          </span>
         </div>
 
         {/* Sub Menu — expandable */}
@@ -252,7 +254,7 @@ export default function ActionBar() {
         )}
 
         {/* Bottom Row — utility */}
-        <div className="flex gap-1.5">
+        <div id="time-controls" className="flex gap-1.5">
           <ActionBtn
             icon="⏸" label="暫停思考"
             onClick={() => openModal("pause_think")}

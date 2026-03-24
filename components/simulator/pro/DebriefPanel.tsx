@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
-import type { TimelineEntry, CriticalAction, WhatIfBranch, ExpectedAction, TrackedAction, GuidelineBundleScore } from "@/lib/simulator/types";
+import type { TimelineEntry, CriticalAction, WhatIfBranch, ExpectedAction, TrackedAction, GuidelineBundleScore, GuidelineBundle } from "@/lib/simulator/types";
 import type { GameScore } from "@/lib/simulator/types";
 
 // ─── Progress persistence ────────────────────────────────────────────────────
@@ -498,7 +498,83 @@ const DIAGNOSTIC_STEPS: DiagnosticStep[] = [
 
 // ─── Guideline Bundle Compliance Section ─────────────────────────────────────
 
-function GuidelineBundleSection({ bundles }: { bundles: GuidelineBundleScore[] }) {
+function GuidelineBundleItemRow({
+  item,
+  rationale,
+}: {
+  item: GuidelineBundleScore["items"][number];
+  rationale?: string;
+}) {
+  const [open, setOpen] = useState(false);
+  const canExpand = !item.completed && !!rationale;
+
+  return (
+    <div className="border-b border-white/5 last:border-0">
+      <div
+        onClick={() => canExpand && setOpen(!open)}
+        className={`px-4 py-2.5 flex items-start gap-3 ${canExpand ? "cursor-pointer hover:bg-white/5" : ""}`}
+      >
+        <div className="mt-0.5">
+          {item.completed ? (
+            item.withinTimeWindow ? (
+              <span className="text-emerald-400 text-sm">✅</span>
+            ) : (
+              <span className="text-yellow-400 text-sm">⚠️</span>
+            )
+          ) : (
+            <span className="text-red-400 text-sm">❌</span>
+          )}
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-center gap-1.5">
+            {canExpand && (
+              <span className="text-gray-600 text-xs shrink-0">{open ? "▼" : "▶"}</span>
+            )}
+            <p className={`text-xs ${item.completed ? "text-gray-300" : "text-gray-500"}`}>
+              {item.description}
+            </p>
+          </div>
+          <div className="flex gap-3 mt-0.5">
+            {item.completedAt !== null && (
+              <span className="text-[10px] text-gray-600">
+                {item.withinTimeWindow ? "⏱" : "⏱ 延遲"} {item.completedAt}min
+              </span>
+            )}
+            {item.evidenceLevel && (
+              <span className="text-[10px] text-cyan-700">{item.evidenceLevel}</span>
+            )}
+          </div>
+        </div>
+      </div>
+      {open && rationale && (
+        <div className="px-4 pb-3 pt-0 ml-8">
+          <div className="bg-slate-800 rounded-lg p-3 space-y-2 text-sm leading-relaxed">
+            <p className="font-medium text-xs text-amber-400 mb-1">為什麼重要？</p>
+            <p className="text-gray-300 text-xs">{rationale}</p>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
+function GuidelineBundleSection({
+  bundles,
+  sourceBundles,
+}: {
+  bundles: GuidelineBundleScore[];
+  sourceBundles?: GuidelineBundle[];
+}) {
+  // Build rationale lookup: bundleId -> itemId -> rationale
+  const rationaleMap = new Map<string, Map<string, string>>();
+  sourceBundles?.forEach((b) => {
+    const itemMap = new Map<string, string>();
+    b.items.forEach((item) => {
+      if (item.rationale) itemMap.set(item.id, item.rationale);
+    });
+    rationaleMap.set(b.id, itemMap);
+  });
+
   return (
     <div className="space-y-4">
       {bundles.map((bundle) => {
@@ -515,6 +591,8 @@ function GuidelineBundleSection({ bundles }: { bundles: GuidelineBundleScore[] }
             : bundle.compliancePercent >= 50
             ? "bg-yellow-500"
             : "bg-red-500";
+
+        const bundleRationales = rationaleMap.get(bundle.bundleId);
 
         return (
           <div
@@ -554,39 +632,13 @@ function GuidelineBundleSection({ bundles }: { bundles: GuidelineBundleScore[] }
             </div>
 
             {/* Checklist items */}
-            <div className="divide-y divide-white/5">
+            <div>
               {bundle.items.map((item) => (
-                <div
+                <GuidelineBundleItemRow
                   key={item.id}
-                  className="px-4 py-2.5 flex items-start gap-3"
-                >
-                  <div className="mt-0.5">
-                    {item.completed ? (
-                      item.withinTimeWindow ? (
-                        <span className="text-emerald-400 text-sm">✅</span>
-                      ) : (
-                        <span className="text-yellow-400 text-sm">⚠️</span>
-                      )
-                    ) : (
-                      <span className="text-red-400 text-sm">❌</span>
-                    )}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <p className={`text-xs ${item.completed ? "text-gray-300" : "text-gray-500"}`}>
-                      {item.description}
-                    </p>
-                    <div className="flex gap-3 mt-0.5">
-                      {item.completedAt !== null && (
-                        <span className="text-[10px] text-gray-600">
-                          {item.withinTimeWindow ? "⏱" : "⏱ 延遲"} {item.completedAt}min
-                        </span>
-                      )}
-                      {item.evidenceLevel && (
-                        <span className="text-[10px] text-cyan-700">{item.evidenceLevel}</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
+                  item={item}
+                  rationale={bundleRationales?.get(item.id)}
+                />
               ))}
             </div>
 
@@ -840,7 +892,7 @@ export default function DebriefPanel() {
                 title="Guideline 遵循度"
                 subtitle="根據國際指引評估你的處置"
               />
-              <GuidelineBundleSection bundles={score.guidelineBundleScores} />
+              <GuidelineBundleSection bundles={score.guidelineBundleScores} sourceBundles={scenario.guidelineBundles} />
             </section>
             <div className="border-t border-white/8" />
           </>

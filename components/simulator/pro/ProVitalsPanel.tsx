@@ -23,6 +23,10 @@ const vitalsPanelStyle = `
   0%, 100% { opacity: 1; }
   50% { opacity: 0.7; }
 }
+@keyframes vital-bg-pulse {
+  0%, 100% { background-color: rgba(239, 68, 68, 0.12); }
+  50% { background-color: rgba(239, 68, 68, 0.28); }
+}
 .vital-flash-green {
   animation: border-flash-green 1.2s ease-out forwards;
 }
@@ -33,7 +37,7 @@ const vitalsPanelStyle = `
   animation: severity-pulse 2s ease-in-out infinite;
 }
 .vital-critical-pulse {
-  animation: vital-pulse 2s ease-in-out infinite;
+  animation: vital-bg-pulse 1.5s ease-in-out infinite, vital-pulse 1.5s ease-in-out infinite;
 }
 `;
 
@@ -197,8 +201,15 @@ function VitalCard({
       {subValue && (
         <div className="text-xs text-gray-500 font-mono">{subValue}</div>
       )}
+      {alertLevel === "warning" && (
+        <span className="absolute top-1.5 right-1.5 text-[10px] text-yellow-400" aria-label="Warning">
+          ⚠️
+        </span>
+      )}
       {alertLevel === "critical" && (
-        <div className="absolute top-1.5 right-1.5 w-1.5 h-1.5 rounded-full bg-red-500 animate-ping" />
+        <span className="absolute top-1.5 right-1.5 text-[10px] text-red-400 animate-pulse" aria-label="Critical">
+          🔴
+        </span>
       )}
     </div>
   );
