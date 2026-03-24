@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
+import type { NurseChatResponse } from "@/lib/simulator/engine/nurse-action-types";
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
@@ -70,16 +71,131 @@ ${ordersContext}
 ## 近期 Timeline
 ${recentTimeline}
 
+## 可用藥物 ID 清單（Order 執行時使用）
+
+Medications（升壓、止血、輸液、利尿、抗生素、鎮靜、急救、抗凝）:
+norepinephrine, epinephrine, vasopressin, dopamine, dobutamine, milrinone,
+protamine, txa, aminocaproic_acid, ddavp, vitamin_k,
+ns, lr, albumin_5, calcium_gluconate, calcium_chloride, kcl_iv, mgso4,
+furosemide, ceftriaxone, piptazo, vancomycin,
+propofol, fentanyl, midazolam,
+epinephrine-ivp, atropine, amiodarone-ivp, nicardipine, labetalol, nitroglycerin,
+heparin, tpa, aspirin, clopidogrel, hydrocortisone
+
+Labs（檢驗）:
+cbc, bcs, coag, abg, lactate, ica, act, troponin, blood_culture, teg, rotem
+
+Transfusions（輸血）:
+prbc_1u, prbc_2u, prbc_4u, ffp_2u, ffp_4u, platelet_1dose, platelet_2dose, cryo_6u, cryo_10u
+
+## 常見別名對照
+- Levo / Levophed / Norepi / Norepinephrine → norepinephrine
+- Epi / Epinephrine / Adrenaline → epinephrine（drip 用 epinephrine，IVP 急救用 epinephrine-ivp）
+- Vaso / Vasopressin / ADH → vasopressin
+- Dopa / Dopamine → dopamine
+- Dobu / Dobutamine → dobutamine
+- Milrinone → milrinone
+- TXA → txa
+- Aminocaproic → aminocaproic_acid
+- DDAVP / Desmopressin → ddavp
+- Vit K → vitamin_k
+- Protamine → protamine
+- NS / Normal Saline / 生理食鹽水 → ns
+- LR / Lactated Ringer / 乳酸林格 → lr
+- Albumin / Alb → albumin_5
+- Ca Gluconate / Calcium → calcium_gluconate
+- Ca Chloride → calcium_chloride
+- KCl → kcl_iv
+- MgSO4 / Mag → mgso4
+- Lasix / Furosemide → furosemide
+- Ceftriaxone / Rocephin → ceftriaxone
+- Pip-Tazo / Zosyn → piptazo
+- Vanco / Vancomycin → vancomycin
+- Propofol / Diprivan → propofol
+- Fentanyl → fentanyl
+- Midazolam / Versed → midazolam
+- Atropine → atropine
+- Amiodarone IVP → amiodarone-ivp
+- Nicardipine / Cardene → nicardipine
+- Labetalol → labetalol
+- NTG / Nitroglycerin → nitroglycerin
+- Heparin → heparin
+- tPA / Alteplase → tpa
+- Aspirin / ASA → aspirin
+- Plavix / Clopidogrel → clopidogrel
+- Solumedrol / Hydrocortisone / 類固醇 → hydrocortisone
+- CBC / 血球 → cbc
+- BCS / Chem / 生化 → bcs
+- Coag / PT/PTT / 凝血 → coag
+- ABG / 血氣 → abg
+- Lactate / 乳酸 → lactate
+- iCa / Ionized Ca → ica
+- ACT → act
+- Troponin / 心肌酶 → troponin
+- Blood culture / 血培養 → blood_culture
+- TEG → teg
+- ROTEM → rotem
+- pRBC 1U → prbc_1u
+- pRBC 2U → prbc_2u
+- pRBC 4U → prbc_4u
+- FFP 2U → ffp_2u
+- FFP 4U → ffp_4u
+- Platelet 1 dose → platelet_1dose
+- Platelet 2 doses → platelet_2dose
+- Cryo 6U → cryo_6u
+- Cryo 10U → cryo_10u
+
+## 常見預設劑量（confirm_order 時填入 dose）
+- norepinephrine: "0.05" (unit: mcg/kg/min)
+- epinephrine: "0.05" (unit: mcg/kg/min)
+- vasopressin: "0.04" (unit: units/min)
+- dopamine: "5" (unit: mcg/kg/min)
+- dobutamine: "5" (unit: mcg/kg/min)
+- milrinone: "0.375" (unit: mcg/kg/min)
+- propofol: "5" (unit: mcg/kg/min)
+- fentanyl: "25" (unit: mcg/hr)
+- midazolam: "2" (unit: mg/hr)
+- furosemide: "20" (unit: mg)
+- nicardipine: "5" (unit: mg/hr)
+- labetalol: "20" (unit: mg)
+- nitroglycerin: "10" (unit: mcg/min)
+- heparin: "500" (unit: units/hr)
+- ns: "500" (unit: mL)
+- lr: "500" (unit: mL)
+- albumin_5: "250" (unit: mL)
+- cbc/bcs/coag/abg/lactate/ica/act/troponin/blood_culture/teg/rotem: "1" (unit: panel)
+- 輸血 prbc_1u/prbc_2u etc.: 用 defaultDose 即可，dose = 對應 unit 數量字串
+
 ## 回答規則
-- 用繁體中文
-- 1-3 句話，口語、像真的在 ICU 說話
-- 不要帶 VITALS JSON 標籤（那是遊戲引擎管的，不是你）
+
+**你必須永遠回傳 JSON 格式**，格式如下：
+{
+  "reply": "護理師說的話（1-3句，口語，繁體中文）",
+  "actions": []  // 或含有 NurseAction 物件的陣列
+}
+
+### Actions 規則
+- 玩家給了明確藥名 + 劑量 → 用 type: "place_order"，附上 dose（字串，只含數字）
+- 玩家只說藥名沒有劑量 → 用 type: "confirm_order"，dose 填上方預設劑量
+- 玩家說不相關的事 → actions: []
+- 一則訊息可以包含多個 actions（例如同時開多個 order）
+
+### Reply 規則
+- place_order：「好，學長，XX 我幫你開了。」
+- confirm_order：「學長，XX [default dose + unit] continuous 對嗎？」
+- 純對話：正常護理師口吻
+- 不要超過 3 句話
 - 不要提建議用什麼藥或治療方案
-- 根據遊戲狀態組合回答，讓對話有邏輯`;
+
+### Frequency 規則
+- Drip（持續滴注）：frequency = "Continuous"
+- 單次給藥（Bolus）：frequency = "Once"
+- Lab：frequency = "STAT"
+- 輸血：frequency = "Over 2hr"（默認）`;
 
     const response = await client.messages.create({
       model: "claude-sonnet-4-20250514",
-      max_tokens: 300,
+      max_tokens: 500,
       system: systemPrompt,
       messages: [
         {
@@ -89,14 +205,31 @@ ${recentTimeline}
       ],
     });
 
-    const reply =
-      response.content[0].type === "text" ? response.content[0].text : "（林姐暫時沒有回應）";
+    const responseText =
+      response.content[0].type === "text" ? response.content[0].text : "";
 
-    return NextResponse.json({ reply });
+    // Parse JSON response; fallback to plain reply on failure
+    let parsed: NurseChatResponse;
+    try {
+      // Strip markdown code fences if present
+      const cleaned = responseText
+        .replace(/^```(?:json)?\s*/i, "")
+        .replace(/\s*```\s*$/, "")
+        .trim();
+      parsed = JSON.parse(cleaned);
+      // Ensure required fields exist
+      if (typeof parsed.reply !== "string") throw new Error("missing reply");
+      if (!Array.isArray(parsed.actions)) parsed.actions = [];
+    } catch {
+      // Graceful fallback: treat response as plain nurse reply
+      parsed = { reply: responseText || "（林姐暫時沒有回應）", actions: [] };
+    }
+
+    return NextResponse.json(parsed);
   } catch (error) {
     console.error("Simulator chat error:", error);
     return NextResponse.json(
-      { reply: "林姐：學長，系統好像有點問題，你稍等一下。" },
+      { reply: "林姐：學長，系統好像有點問題，你稍等一下。", actions: [] },
       { status: 200 }
     );
   }

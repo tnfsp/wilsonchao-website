@@ -2,10 +2,28 @@
 
 import { useState, useRef, KeyboardEvent } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
+import { getMedicationById } from "@/lib/simulator/data/medications";
+import { getLabById } from "@/lib/simulator/data/labs";
+import { getTransfusionById } from "@/lib/simulator/data/transfusions";
+import type { NurseAction } from "@/lib/simulator/engine/nurse-action-types";
+
+// Helper: resolve order definition from any category
+function getOrderDefinitionById(id: string) {
+  return getMedicationById(id) ?? getLabById(id) ?? getTransfusionById(id);
+}
+
+// Words that mean "yes / confirm / go ahead"
+const CONFIRM_WORDS = ["好", "對", "確認", "ok", "yes", "run", "開", "沒錯", "正確", "go"];
+
+function isConfirmReply(text: string): boolean {
+  const normalized = text.trim().toLowerCase();
+  return CONFIRM_WORDS.some((w) => normalized === w || normalized === w + "啊" || normalized === w + "啦");
+}
 
 export default function MessageInput() {
   const sendMessage = useProGameStore((s) => s.sendMessage);
   const addTimelineEntry = useProGameStore((s) => s.addTimelineEntry);
+  const placeOrder = useProGameStore((s) => s.placeOrder);
   const phase = useProGameStore((s) => s.phase);
   const patient = useProGameStore((s) => s.patient);
   const clock = useProGameStore((s) => s.clock);
@@ -15,21 +33,109 @@ export default function MessageInput() {
 
   const [text, setText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+
+  // Pending confirmation state for confirm_order flow
+  const [pendingConfirm, setPendingConfirm] = useState<{
+    medicationId: string;
+    dose: string;
+    frequency: string;
+  } | null>(null);
+
   const inputRef = useRef<HTMLInputElement>(null);
 
   const isPlaying = phase === "playing";
   const canSend = isPlaying && text.trim().length > 0 && !isLoading;
 
+  const nurseName = scenario?.nurseProfile?.name ?? "林姐";
+
+  // Execute a single place_order action
+  const executePlaceOrder = (action: NurseAction) => {
+    const definition = getOrderDefinitionById(action.medicationId);
+    if (!definition) {
+      console.warn(`[NurseAI] Unknown medicationId: ${action.medicationId}`);
+      return;
+    }
+
+    const result = placeOrder({
+      definition,
+      dose: action.dose ?? definition.defaultDose,
+      frequency: action.frequency ?? (definition.category === "lab" ? "STAT" : "Continuous"),
+    });
+
+    if (result.warning) {
+      addTimelineEntry({
+        gameTime: clock.currentTime + 1,
+        type: "system_event",
+        content: `⚠️ ${result.warning}`,
+        sender: "system",
+      });
+    }
+
+    if (result.rejected && result.rejectMessage) {
+      addTimelineEntry({
+        gameTime: clock.currentTime + 1,
+        type: "system_event",
+        content: `❌ ${result.rejectMessage}`,
+        sender: "system",
+      });
+    }
+  };
+
   const handleSend = async () => {
     if (!canSend) return;
     const msgText = text.trim();
+
+    // ── Pending confirmation flow ──────────────────────────────
+    if (pendingConfirm && isConfirmReply(msgText)) {
+      setText("");
+      // Show player message
+      sendMessage(msgText);
+
+      const definition = getOrderDefinitionById(pendingConfirm.medicationId);
+      const displayName = definition?.name ?? pendingConfirm.medicationId;
+
+      const result = placeOrder({
+        definition: definition!,
+        dose: pendingConfirm.dose,
+        frequency: pendingConfirm.frequency,
+      });
+
+      // Nurse confirms
+      addTimelineEntry({
+        gameTime: clock.currentTime + 1,
+        type: "nurse_message",
+        content: `${nurseName}：好，${displayName} 我幫你開了。`,
+        sender: "nurse",
+      });
+
+      if (result.warning) {
+        addTimelineEntry({
+          gameTime: clock.currentTime + 1,
+          type: "system_event",
+          content: `⚠️ ${result.warning}`,
+          sender: "system",
+        });
+      }
+
+      if (result.rejected && result.rejectMessage) {
+        addTimelineEntry({
+          gameTime: clock.currentTime + 1,
+          type: "system_event",
+          content: `❌ ${result.rejectMessage}`,
+          sender: "system",
+        });
+      }
+
+      setPendingConfirm(null);
+      inputRef.current?.focus();
+      return;
+    }
+
+    // ── Normal flow ────────────────────────────────────────────
     setText("");
-
-    // 1. Add player message
     sendMessage(msgText);
-
-    // 2. Call nurse AI
     setIsLoading(true);
+
     try {
       // Build game state for API
       const labResults = placedOrders
@@ -65,20 +171,35 @@ export default function MessageInput() {
 
       if (res.ok) {
         const data = await res.json();
-        const nurseName = scenario?.nurseProfile?.name ?? "林姐";
 
-        // 3. Add nurse reply
+        // Add nurse reply to timeline
         addTimelineEntry({
-          gameTime: clock.currentTime + 1, // +1 min for conversation
+          gameTime: clock.currentTime + 1,
           type: "nurse_message",
           content: `${nurseName}：${data.reply}`,
           sender: "nurse",
         });
+
+        // Process actions
+        const actions: NurseAction[] = Array.isArray(data.actions) ? data.actions : [];
+
+        for (const action of actions) {
+          if (action.type === "place_order") {
+            executePlaceOrder(action);
+          } else if (action.type === "confirm_order") {
+            // Store pending confirmation so next "好" triggers placeOrder
+            const definition = getOrderDefinitionById(action.medicationId);
+            setPendingConfirm({
+              medicationId: action.medicationId,
+              dose: action.dose ?? definition?.defaultDose ?? "1",
+              frequency: action.frequency ?? (definition?.category === "lab" ? "STAT" : "Continuous"),
+            });
+            // Note: nurse already asked in reply, no extra timeline entry needed
+          }
+        }
       }
     } catch (err) {
       console.error("Nurse AI error:", err);
-      // Fallback nurse message
-      const nurseName = scenario?.nurseProfile?.name ?? "林姐";
       addTimelineEntry({
         gameTime: clock.currentTime + 1,
         type: "nurse_message",
@@ -110,7 +231,13 @@ export default function MessageInput() {
         value={text}
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
-        placeholder={isPlaying ? "跟林姐說話..." : "等待情境開始..."}
+        placeholder={
+          pendingConfirm
+            ? "回「好」確認，或輸入其他指令..."
+            : isPlaying
+            ? "跟林姐說話..."
+            : "等待情境開始..."
+        }
         disabled={!isPlaying || isLoading}
         maxLength={300}
         className={[

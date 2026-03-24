@@ -28,6 +28,7 @@ import StandardDebriefPanel from "@/components/simulator/standard/StandardDebrie
 
 // Re-use Pro components where appropriate
 import ChatTimeline from "@/components/simulator/pro/ChatTimeline";
+import MessageInput from "@/components/simulator/pro/MessageInput";
 import SBARModal from "@/components/simulator/pro/SBARModal";
 import DeathScreen from "@/components/simulator/pro/DeathScreen";
 import LabOrderModal from "@/components/simulator/pro/LabOrderModal";
@@ -425,6 +426,7 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
             <div className="flex-1 overflow-hidden">
               <ChatTimeline />
             </div>
+            <MessageInput />
           </div>
         }
         actionBar={<SimplifiedActionBar />}
