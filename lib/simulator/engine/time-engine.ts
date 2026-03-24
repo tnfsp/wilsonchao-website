@@ -213,6 +213,10 @@ function evaluateSingleCondition(
   } else if (field.startsWith("lethalTriad.")) {
     const key = field.slice(12) as keyof typeof state.patient.lethalTriad;
     actual = state.patient.lethalTriad[key] as number | boolean;
+  } else if (field === "action_not_taken") {
+    return !matchAction(state.actionsTaken, String(value));
+  } else if (field === "action_taken") {
+    return matchAction(state.actionsTaken, String(value));
   } else if (field.startsWith("action_taken:")) {
     const actionKey = field.slice(13);
     return matchAction(state.actionsTaken, actionKey);
