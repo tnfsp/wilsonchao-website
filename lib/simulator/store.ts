@@ -45,6 +45,8 @@ import type {
   OrderEffectData,
   DefibrillatorState,
   ShockResult,
+  DifficultyLevel,
+  DifficultyConfig,
 } from "./types";
 
 // ============================================================
@@ -67,6 +69,11 @@ function formatGameTime(elapsedMinutes: number, startHour = 2): string {
 // ============================================================
 
 export interface ProGameStore {
+  // 難度
+  difficulty: DifficultyLevel;
+  difficultyConfig: DifficultyConfig;
+  setDifficulty: (d: DifficultyLevel) => void;
+
   // 情境
   scenario: SimScenario | null;
   isLoading: boolean;
@@ -284,7 +291,29 @@ const initialDefibrillatorState: DefibrillatorState = {
   lastShockAt: null,
 };
 
+const DIFFICULTY_CONFIGS: Record<DifficultyLevel, DifficultyConfig> = {
+  lite: {
+    canDie: false,
+    timeScale: 0,
+    hintLimit: Infinity,
+  },
+  standard: {
+    canDie: true,
+    rescueThreshold: { sbp: 60, hr: 30, spo2: 70 },
+    rescueWindowSeconds: 60,
+    timeScale: 0.75,
+    hintLimit: Infinity,
+  },
+  pro: {
+    canDie: true,
+    timeScale: 1,
+    hintLimit: 3,
+  },
+};
+
 const initialState = {
+  difficulty: "pro" as DifficultyLevel,
+  difficultyConfig: DIFFICULTY_CONFIGS.pro,
   scenario: null as SimScenario | null,
   isLoading: false,
   loadError: null as string | null,
@@ -616,6 +645,13 @@ function computeSBARScore(
 
 export const useProGameStore = create<ProGameStore>((set, get) => ({
   ...initialState,
+
+  // ----------------------------------------------------------
+  // setDifficulty
+  // ----------------------------------------------------------
+  setDifficulty: (d: DifficultyLevel) => {
+    set({ difficulty: d, difficultyConfig: DIFFICULTY_CONFIGS[d] });
+  },
 
   // ----------------------------------------------------------
   // loadScenario

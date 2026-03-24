@@ -1,5 +1,74 @@
-// ICU 值班模擬器 Pro — 核心型別
+// ICU 值班模擬器 — 核心型別
 // 所有 engine / store / component 共用
+
+// ============================================================
+// Difficulty System
+// ============================================================
+
+export type DifficultyLevel = "lite" | "standard" | "pro";
+
+export interface DifficultyConfig {
+  canDie: boolean;
+  rescueThreshold?: { sbp: number; hr: number; spo2: number };
+  rescueWindowSeconds?: number;
+  timeScale: number;
+  hintLimit: number;
+}
+
+/** Standard mode overlay — simplifies Pro scenario with guidance */
+export interface StandardOverlay {
+  eventOverrides: Record<string, Partial<ScriptedEvent>>;
+  presetOrders: PresetOrder[];
+  guidanceSteps: GuidanceStep[];
+  timeScale: number;
+  rescueThreshold: { sbp: number; hr: number; spo2: number };
+  rescueWindowSeconds: number;
+}
+
+export interface PresetOrder {
+  id: string;
+  label: string;
+  orders: { definitionId: string; dose: string; frequency: string }[];
+}
+
+export interface GuidanceStep {
+  id: string;
+  trigger: "idle" | "wrong_action" | "missed_critical" | "vitals_critical" | "phase_change" | "duplicate_order" | "absurd_dose";
+  message: string;
+  highlightAction?: string;
+}
+
+/** Lite mode — interactive story (visual-novel style) */
+export interface LiteScenario {
+  id: string;
+  title: string;
+  beats: StoryBeat[];
+  choices: StoryChoice[];
+  endings: StoryEnding[];
+  shareCard: { template: string; dynamicFields: string[] };
+}
+
+export interface StoryBeat {
+  id: string;
+  type: "narration" | "dialogue" | "choice" | "vital_change" | "reveal";
+  speaker?: "narrator" | "nurse" | "patient" | "senior";
+  text: string;
+  duration?: number;
+}
+
+export interface StoryChoice {
+  id: string;
+  prompt: string;
+  options: { text: string; score: number; feedback: string }[];
+}
+
+export interface StoryEnding {
+  id: "hero" | "lesson" | "close_call";
+  title: string;
+  description: string;
+  guidelineNote: string;
+  minScore: number;
+}
 
 // ============================================================
 // Vital Signs
@@ -511,6 +580,7 @@ export interface PatientInfo {
 export interface NurseProfile {
   name: string;
   experience: "senior" | "junior";
+  role?: "reporter" | "guide";
 }
 
 export interface ScriptedEvent {

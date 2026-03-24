@@ -53,10 +53,10 @@ export default function SimulatorPage() {
         {proScenarioList.length > 0 && (
           <div className="mb-12">
             <h2 className="text-lg font-semibold text-cyan-400 mb-4 flex items-center gap-2">
-              <span>🩺</span> 值班模擬器 Pro
+              <span>🩺</span> ICU 值班模擬
             </h2>
             <p className="text-gray-500 text-sm mb-4">
-              護理師打來 → 評估 → 開 order → 看結果 → 叫學長 → SBAR 交班 → Debrief 評分
+              三種身份、三種體驗 — 一般民眾、醫學生、住院醫師各有專屬模式。
             </p>
             <div className="grid gap-4">
               {proScenarioList.map((s) => {
@@ -64,15 +64,12 @@ export default function SimulatorPage() {
                 return (
                 <Link
                   key={s.id}
-                  href={`/teaching/simulator/${s.id}/pro`}
+                  href={`/teaching/simulator/${s.id}`}
                   className="group block bg-cyan-500/[0.03] hover:bg-cyan-500/[0.08] border border-cyan-500/10 hover:border-cyan-500/30 rounded-xl p-6 transition-all"
                 >
                   <div className="flex items-start justify-between">
                     <div>
                       <div className="flex items-center gap-2 mb-1">
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-medium">
-                          PRO
-                        </span>
                         <h3 className="text-xl font-bold text-white group-hover:text-cyan-300 transition">
                           {s.title}
                         </h3>
