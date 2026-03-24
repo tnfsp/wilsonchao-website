@@ -20,6 +20,11 @@ const TAG_CONFIG: Record<string, { emoji: string; label: string }> = {
   digest: { emoji: "📚", label: "摘要" },
 };
 
+/** Tags that should be treated as the same category for filtering */
+const TAG_ALIASES: Record<string, string> = {
+  readwise: "digest",
+};
+
 const PAGE_SIZE = 10;
 
 function getDateKey(dateStr?: string): string {
@@ -51,14 +56,17 @@ export function StreamList({ entries }: { entries: Entry[] }) {
   const [activeTag, setActiveTag] = useState<string | null>(null);
   const [visibleCount, setVisibleCount] = useState(PAGE_SIZE);
 
+  /** Resolve tag aliases (e.g. readwise → digest) */
+  const resolveTag = (tag: string) => TAG_ALIASES[tag] ?? tag;
+
   const availableTags = useMemo(() => {
     const tagSet = new Set<string>();
     for (const entry of entries) {
       for (const tag of entry.tags ?? []) {
-        tagSet.add(tag);
+        tagSet.add(resolveTag(tag));
       }
     }
-    const ordered = ["murmur", "blog", "video", "music"];
+    const ordered = ["murmur", "blog", "video", "music", "digest"];
     const known = ordered.filter((t) => tagSet.has(t));
     const unknown = [...tagSet].filter((t) => !ordered.includes(t));
     return [...known, ...unknown];
@@ -66,7 +74,7 @@ export function StreamList({ entries }: { entries: Entry[] }) {
 
   const filtered = useMemo(() => {
     if (!activeTag) return entries;
-    return entries.filter((e) => e.tags?.includes(activeTag));
+    return entries.filter((e) => e.tags?.some((t) => resolveTag(t) === activeTag));
   }, [entries, activeTag]);
 
   const visible = filtered.slice(0, visibleCount);
