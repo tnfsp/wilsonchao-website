@@ -4,6 +4,7 @@ import React from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import GuidanceBubble from "./GuidanceBubble";
 import type { GuidanceMessage } from "./GuidanceBubble";
+import MiniVitalsBar from "../pro/MiniVitalsBar";
 
 // ── CSS ─────────────────────────────────────────────────────────────────────
 
@@ -59,7 +60,7 @@ export default function StandardGameLayout({
       )}
 
       {/* Header bar */}
-      <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-white/8 bg-[#00202e]">
+      <div className="flex-shrink-0 flex items-center justify-between px-4 py-2 border-b border-white/8 bg-[#00202e]" style={{ display: "flex" }}>
         <div className="flex items-center gap-2">
           <span className="text-lg">{"\uD83E\uDE7A"}</span>
           <span className="text-sm font-semibold text-white">

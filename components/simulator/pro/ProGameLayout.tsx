@@ -66,10 +66,12 @@ export default function ProGameLayout({
         </div>
       </div>
 
-      {/* Mobile: stacked */}
+      {/* Mobile: stacked — chat first so user sees conversation immediately;
+           MiniVitalsBar (sticky above) provides always-visible vitals summary.
+           Scroll down to reach the full vitals panel. */}
       <div className="lg:hidden flex-1 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "#ffffff1a transparent" }}>
+        <div className="min-h-[50vh]">{rightPanel}</div>
         <div className="p-3 space-y-3">{leftPanel}</div>
-        <div className="min-h-[40vh]">{rightPanel}</div>
       </div>
 
       {/* Bottom Action Bar */}
