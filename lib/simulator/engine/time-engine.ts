@@ -131,6 +131,51 @@ export function markEventFired(
 // ============================================================
 
 /**
+ * Action key 彈性匹配
+ * scenario 條件用簡化 key（如 "call_senior", "cardiac_pocus", "order_antibiotics"）
+ * 但 playerActions 記錄格式多樣（如 "call_senior", "pocus:cardiac:A4C", "order:medication:Vancomycin:1g"）
+ * 
+ * 匹配規則：
+ * 1. 精確匹配
+ * 2. actionKey 包含在某個 playerAction 內
+ * 3. 特殊映射（snake_case ↔ colon-separated）
+ */
+function matchAction(actionsTaken: string[], actionKey: string): boolean {
+  // 直接匹配
+  if (actionsTaken.includes(actionKey)) return true;
+
+  // 特殊 alias 匹配（抗生素、blood culture 等需要 category-level 判斷）
+  const aliasFn = ACTION_ALIASES[actionKey];
+  if (aliasFn && actionsTaken.some(aliasFn)) return true;
+
+  // 拆解 actionKey 的 segments（e.g. "cardiac_pocus" → ["cardiac", "pocus"]）
+  const segments = actionKey.split("_");
+
+  return actionsTaken.some((a) => {
+    // actionKey 出現在 playerAction 裡
+    if (a.includes(actionKey)) return true;
+
+    // 所有 segments 都出現在同一個 playerAction 裡（順序無關）
+    // e.g. "cardiac_pocus" matches "pocus:cardiac:A4C 心臟"
+    const aLower = a.toLowerCase();
+    if (segments.length > 1 && segments.every((s) => aLower.includes(s))) return true;
+
+    return false;
+  });
+}
+
+// 抗生素 / blood culture 等需要 category-level 匹配的特殊 key
+// 由 scenario condition 使用
+const ACTION_ALIASES: Record<string, (action: string) => boolean> = {
+  order_antibiotics: (a) => /order:medication:.*(vancomycin|tazocin|piperacillin|meropenem|cef|antibiotic)/i.test(a),
+  order_blood_culture: (a) => /order:.*(blood.?culture|bcx|b\/c)/i.test(a),
+  order_cbc: (a) => /order:.*(cbc|complete.?blood)/i.test(a),
+  order_ica: (a) => /order:.*(ica|ionized.?calcium|calcium)/i.test(a),
+  strip_milk_ct: (a) => /strip|milk|ct.*通|通.*ct/i.test(a),
+  cardiac_pocus: (a) => /pocus.*cardiac|pocus:cardiac|imaging:pocus/i.test(a),
+};
+
+/**
  * 判斷單一條件是否成立
  * field 支援：
  *   - "severity"
@@ -170,10 +215,10 @@ function evaluateSingleCondition(
     actual = state.patient.lethalTriad[key] as number | boolean;
   } else if (field.startsWith("action_taken:")) {
     const actionKey = field.slice(13);
-    return state.actionsTaken.includes(actionKey);
+    return matchAction(state.actionsTaken, actionKey);
   } else if (field.startsWith("action_not_taken:")) {
     const actionKey = field.slice(17);
-    return !state.actionsTaken.includes(actionKey);
+    return !matchAction(state.actionsTaken, actionKey);
   } else {
     // 未知欄位，條件不成立
     return false;

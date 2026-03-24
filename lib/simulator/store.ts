@@ -13,6 +13,8 @@
 import { create } from "zustand";
 import { getOrderEffect, getMTPRoundEffect } from "@/lib/simulator/engine/order-engine";
 import { updatePatientState } from "@/lib/simulator/engine/patient-engine";
+import { evaluateCondition } from "@/lib/simulator/engine/time-engine";
+import type { GameStateSnapshot } from "@/lib/simulator/engine/time-engine";
 import { computeLabSnapshot, buildLabContext } from "@/lib/simulator/engine/lab-engine";
 import { getLastBioGearsState } from "@/lib/simulator/engine/biogears-engine";
 import type { LabPanelId } from "@/lib/simulator/engine/lab-engine";
@@ -658,11 +660,26 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     const updatedClock: GameClock = { ...clock, currentTime: newTime };
 
     // 找出所有應在 newTime 前觸發、且尚未觸發的事件
-    // 注意：條件型事件（triggerCondition）由 component/engine 層判斷，
-    // 這裡只處理純時間觸發（無 condition）
-    const toFire = pendingEvents.filter(
-      (e) => !e.fired && e.triggerAt <= newTime && !e.triggerCondition
-    );
+    // 同時處理條件型事件：時間到 AND 條件成立才觸發
+    const currentState = get();
+    const snapshot: GameStateSnapshot = {
+      clock: { ...clock, currentTime: newTime },
+      patient: currentState.patient!,
+      orders: currentState.placedOrders as PlacedOrder[],
+      mtp: currentState.mtpState,
+      severity: currentState.patient?.severity ?? 0,
+      elapsedMinutes: newTime,
+      actionsTaken: currentState.playerActions,
+      hintsUsed: currentState.hintsUsed ?? 0,
+    };
+
+    const toFire = pendingEvents.filter((e) => {
+      if (e.fired || e.triggerAt > newTime) return false;
+      // 無條件事件：時間到就觸發
+      if (!e.triggerCondition) return true;
+      // 條件事件：時間到 + 條件成立才觸發
+      return evaluateCondition(e.triggerCondition, snapshot);
+    });
 
     const nowFiredIds = new Set(toFire.map((e) => e.id));
 
