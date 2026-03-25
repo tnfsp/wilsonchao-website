@@ -144,7 +144,7 @@ function ChecklistCard({
     ? "bg-emerald-900/5"
     : "bg-red-900/5";
 
-  const canExpand = !item.completed && expectedAction && (expectedAction.rationale || expectedAction.howTo);
+  const canExpand = expectedAction && (expectedAction.rationale || expectedAction.howTo);
 
   return (
     <div

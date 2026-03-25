@@ -246,7 +246,7 @@ export default function ColorVitalsPanel({
         <div className="flex items-center gap-2 px-1">
           <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
           <span className="text-[11px] uppercase tracking-widest text-gray-500 font-medium">
-            Vital Signs
+            生命徵象
           </span>
         </div>
         <div className="grid grid-cols-2 gap-2">

@@ -462,16 +462,17 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
       return;
     }
 
-    // Correct order: execute each sub-order
+    // Correct order: execute each sub-order (batch — skip per-order time advance)
     for (const order of preset.orders) {
       const def = resolveOrderDefinition(order.definitionId, order.dose);
 
       if (def) {
-        // Regular order through the store
+        // Regular order through the store (skipAdvance to avoid +N minutes for N orders)
         useProGameStore.getState().placeOrder({
           definition: def,
           dose: order.dose,
           frequency: order.frequency,
+          skipAdvance: true,
         });
       } else {
         // Special action (call_senior, pocus_cardiac, etc.) — track directly
@@ -495,6 +496,9 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
         });
       }
     }
+
+    // Advance time once for the entire preset batch (not per sub-order)
+    useProGameStore.getState().actionAdvance(1);
 
     setExecutedPresetIds((prev) => new Set([...prev, preset.id]));
   }, []);

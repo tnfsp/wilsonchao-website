@@ -100,7 +100,7 @@ export default function MiniVitalsBar() {
         })}
         {hasCritical && (
           <span className="text-red-400 text-[10px] animate-pulse flex-shrink-0" aria-hidden="true">
-            ALERT
+            警報
           </span>
         )}
       </button>

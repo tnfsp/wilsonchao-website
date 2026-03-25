@@ -63,7 +63,7 @@ export default function StandardGameLayout({
             {"\u6559\u5B78\u6A21\u5F0F"}
           </span>
           <span className="text-[10px] px-2 py-0.5 rounded-full bg-amber-900/40 text-amber-400 border border-amber-500/30">
-            Standard
+            標準模式
           </span>
         </div>
         <div className="text-xs text-gray-500 font-mono tabular-nums">

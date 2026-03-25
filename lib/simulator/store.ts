@@ -260,6 +260,8 @@ export interface PlaceOrderParams {
   definition: OrderDefinition;
   dose: string;
   frequency: string;
+  /** Skip the automatic 1-minute time advance (for batch preset orders) */
+  skipAdvance?: boolean;
 }
 
 export interface PlaceOrderResult {
@@ -1232,8 +1234,10 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       playerActions: [...state.playerActions, { action: actionLabel, gameTime: clock.currentTime, category: params.definition.category }],
     }));
 
-    // Placing an order takes ~1 game-minute
-    get().actionAdvance(1);
+    // Placing an order takes ~1 game-minute (skip for batch preset orders)
+    if (!params.skipAdvance) {
+      get().actionAdvance(1);
+    }
 
     return {
       success: true,
@@ -1626,8 +1630,9 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     const remaining = state.rescueState.remainingSeconds - 1;
     if (remaining <= 0) {
       // Rescue window expired → actual death
+      const cause = state.rescueState.cause;
       set({ rescueState: null });
-      get().triggerDeath(state.rescueState.cause);
+      get().triggerDeath(cause);
       return;
     }
 
