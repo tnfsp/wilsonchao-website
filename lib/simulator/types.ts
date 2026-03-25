@@ -686,3 +686,15 @@ export interface TrackedAction {
   gameTime: number;     // game minutes when action was recorded
   category?: string;    // "order" | "pocus" | "lab" | "mtp" | "message" | "consult" | etc.
 }
+
+// ============================================================
+// POCUS
+// ============================================================
+
+export type POCUSViewType =
+  | "plax"
+  | "psax"
+  | "a4c"
+  | "subcostal"
+  | "ivc"
+  | "lung";
