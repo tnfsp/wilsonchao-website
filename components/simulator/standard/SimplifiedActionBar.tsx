@@ -116,15 +116,23 @@ export default function SimplifiedActionBar() {
           <span>{"\u23F8"}</span>
           <span>{"\u66AB\u505C\u601D\u8003"}</span>
         </button>
-        <button
-          className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 bg-slate-800/60 border border-slate-700/40 text-slate-300 text-sm font-medium hover:bg-slate-700/60 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
-          onClick={() => actionAdvance(5)}
-          disabled={fastForwardDisabled}
-          title={severity > 60 ? "病人狀況不穩定，無法快轉" : "快轉5分"}
-        >
-          <span>{"\u23E9"}</span>
-          <span>{severity > 60 ? "\u75C5\u60C5\u4E0D\u7A69" : "\u5FEB\u8F495\u5206"}</span>
-        </button>
+        <div className="flex-1 relative group">
+          <button
+            className="w-full flex items-center justify-center gap-2 rounded-xl py-2.5 bg-slate-800/60 border border-slate-700/40 text-slate-300 text-sm font-medium hover:bg-slate-700/60 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
+            onClick={() => actionAdvance(5)}
+            disabled={fastForwardDisabled}
+            title={severity > 60 ? "病人狀況不穩定，無法快轉" : "快轉5分"}
+          >
+            <span>{"\u23E9"}</span>
+            <span>{severity > 60 ? "\u75C5\u60C5\u4E0D\u7A69" : "\u5FEB\u8F495\u5206"}</span>
+          </button>
+          {severity > 60 && (
+            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 px-3 py-1.5 rounded-lg bg-red-900/90 border border-red-500/50 text-xs text-red-200 whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+              ⚠️ 病情不穩定時無法快轉
+              <div className="absolute top-full left-1/2 -translate-x-1/2 w-0 h-0 border-l-4 border-r-4 border-t-4 border-transparent border-t-red-900/90" />
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );

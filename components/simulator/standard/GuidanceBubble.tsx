@@ -82,15 +82,38 @@ export default function GuidanceBubble({
     }, 260);
   }, [current, onDismiss]);
 
-  // Pick next message from queue
+  // Pick next message from queue — critical messages jump ahead of info/warning
   useEffect(() => {
     if (current) return;
-    const next = messages.find((m) => !shownRef.current.has(m.id));
+    const pending = messages.filter((m) => !shownRef.current.has(m.id));
+    // Priority order: critical > warning > info
+    const SEVERITY_PRIORITY: Record<GuidanceSeverity, number> = {
+      critical: 0,
+      warning: 1,
+      info: 2,
+    };
+    const next = pending.sort(
+      (a, b) => SEVERITY_PRIORITY[a.severity] - SEVERITY_PRIORITY[b.severity],
+    )[0];
     if (next) {
       shownRef.current.add(next.id);
       setCurrent(next);
     }
   }, [messages, current]);
+
+  // Interrupt current info/warning message if a critical message is waiting
+  useEffect(() => {
+    if (!current) return;
+    if (current.severity === "critical") return; // already showing critical
+    const hasPendingCritical = messages.some(
+      (m) => !shownRef.current.has(m.id) && m.severity === "critical",
+    );
+    if (hasPendingCritical) {
+      // Fast-dismiss current non-critical to show critical ASAP
+      if (dismissTimer.current) clearTimeout(dismissTimer.current);
+      dismiss();
+    }
+  }, [messages, current, dismiss]);
 
   // Auto-dismiss for info severity
   useEffect(() => {

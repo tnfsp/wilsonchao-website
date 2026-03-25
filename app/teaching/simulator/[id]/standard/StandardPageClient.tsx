@@ -618,16 +618,25 @@ function StandardDebriefWrapper({
     dose: o.dose,
   }));
 
-  // Convert special TrackedActions (call_senior, pocus_cardiac, etc.)
+  // Convert special TrackedActions (call_senior, sbar, pocus, consult, etc.)
   // that were tracked directly in playerActions but NOT in placedOrders.
-  // These have category "preset" and an action string matching the definitionId.
+  // Include all non-order categories: preset, consult, message, sbar, ventilator, mtp, etc.
   const placedOrderIds = new Set(placedOrders.map((o) => o.definition.id));
   const fromSpecialActions: PlayerAction[] = trackedActions
     .filter(
-      (ta) =>
-        ta.category === "preset" &&
-        !ta.action.startsWith("preset:wrong:") &&
-        !placedOrderIds.has(ta.action),
+      (ta) => {
+        // Skip system/game events
+        if (!ta.category) return false;
+        if (ta.action.startsWith("preset:wrong:")) return false;
+        if (ta.action.startsWith("game_start:")) return false;
+        if (ta.action.startsWith("event_fired:")) return false;
+        // Skip pause_think (not a clinical action)
+        if (ta.action.startsWith("pause_think:")) return false;
+        // Skip if already covered by placedOrders
+        if (placedOrderIds.has(ta.action)) return false;
+        // Include non-order tracked actions: consult, message, sbar, ventilator, mtp, preset
+        return true;
+      },
     )
     .map((ta) => ({
       orderId: ta.action,
