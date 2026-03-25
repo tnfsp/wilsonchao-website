@@ -135,7 +135,7 @@ const events: ScriptedEvent[] = [
       hasClots: true,
       isPatent: true,
     },
-    severityChange: 20,
+    severityChange: 15,
   },
 
   // ── 10:00 ── 第一套 Lab 結果回來

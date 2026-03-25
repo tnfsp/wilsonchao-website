@@ -281,8 +281,12 @@ function useGameTick() {
         const scenarioId = useProGameStore.getState().scenario?.id ?? "";
         if (scenarioId.includes("septic")) {
           severityCause = "病人因敗血性休克惡化，多重器官衰竭。";
-        } else if (scenarioId.includes("tamponade")) {
-          severityCause = "心包填塞未及時處理，心輸出量衰竭。";
+        } else if (scenarioId.includes("tamponade") || scenarioId.includes("bleeding-to-tamponade")) {
+          // Multi-phase: 根據當前 pathology 判斷死因
+          const currentPathology = useProGameStore.getState().patient?.pathology;
+          severityCause = currentPathology === "cardiac_tamponade"
+            ? "心包填塞未及時處理，心輸出量衰竭。"
+            : "病人因持續出血未控制，血流動力學衰竭。";
         } else {
           severityCause = "病人因持續出血未控制，血流動力學衰竭。";
         }
