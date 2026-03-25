@@ -252,22 +252,36 @@ export default function ActionBar() {
     }
 
     if (ct.hasClots) {
-      updateChestTube({ isPatent: true, totalOutput: ct.totalOutput + 50 });
-      finding = "\u64e0\u51fa\u6578\u500b\u8840\u584a\uff0c\u5f15\u6d41\u6062\u5fa9\u901a\u66a2\u3002Burst output +50cc\uff0c\u5f15\u6d41\u6db2\u70ba\u9bae\u7d05\u8272\u3002";
-      addTimelineEntry({
-        gameTime: clock.currentTime,
-        type: "player_action",
-        content: "\ud83d\udd27 Milk CT \u2014 \u64e0\u51fa\u8840\u584a\uff0c\u5f15\u6d41\u6062\u5fa9",
-        sender: "player",
-        isImportant: true,
-      });
+      // Tamponade: 管路可以通但引流量不會恢復（血在心包腔凝固，不是單純管路阻塞）
+      const isTamponade = patient.pathology === "cardiac_tamponade" || patient.pathology === "tamponade";
+      if (isTamponade) {
+        updateChestTube({ isPatent: true, currentRate: Math.max(ct.currentRate, 15), totalOutput: ct.totalOutput + 20 });
+        finding = "擠出少量暗紅色血塊，管路暫時通了。但引流量仍然很少（只多出 20cc），不像是單純的管路阻塞⋯⋯有點不對勁。";
+        addTimelineEntry({
+          gameTime: clock.currentTime,
+          type: "player_action",
+          content: "🔧 Milk CT — 通了但引流量仍極少，不像單純阻塞",
+          sender: "player",
+          isImportant: true,
+        });
+      } else {
+        updateChestTube({ isPatent: true, totalOutput: ct.totalOutput + 50 });
+        finding = "擠出數個血塊，引流恢復通暢。Burst output +50cc，引流液為鮮紅色。";
+        addTimelineEntry({
+          gameTime: clock.currentTime,
+          type: "player_action",
+          content: "🔧 Milk CT — 擠出血塊，引流恢復",
+          sender: "player",
+          isImportant: true,
+        });
+      }
     } else {
       updateChestTube({ isPatent: true });
-      finding = "\u7ba1\u8def\u6062\u5fa9\u901a\u66a2\uff0c\u4f46\u672a\u64e0\u51fa\u660e\u986f\u8840\u584a\u3002\u5f15\u6d41\u91cf\u4e0d\u591a\uff0c\u963b\u585e\u539f\u56e0\u53ef\u80fd\u975e\u8840\u584a\u3002";
+      finding = "管路恢復通暢，但未擠出明顯血塊。引流量不多，阻塞原因可能非血塊。";
       addTimelineEntry({
         gameTime: clock.currentTime,
         type: "player_action",
-        content: "\ud83d\udd27 Milk CT \u2014 \u7ba1\u8def\u901a\u66a2\uff0c\u7121\u8840\u584a",
+        content: "🔧 Milk CT — 管路通暢，無血塊",
         sender: "player",
         isImportant: false,
       });

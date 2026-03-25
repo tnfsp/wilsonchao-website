@@ -53,6 +53,8 @@ export function SeniorDialogModal() {
   const activeModal = useProGameStore((s) => s.activeModal);
   const closeModal = useProGameStore((s) => s.closeModal);
   const addTimelineEntry = useProGameStore((s) => s.addTimelineEntry);
+  const updatePatientSeverity = useProGameStore((s) => s.updatePatientSeverity);
+  const patient = useProGameStore((s) => s.patient);
   const clock = useProGameStore((s) => s.clock);
   const [stage, setStage] = useState(0);
 
@@ -63,7 +65,10 @@ export function SeniorDialogModal() {
 
   function handleNext() {
     if (isLast) {
-      // 學長離開 → 加 timeline entry + 關閉 modal
+      // 學長離開 → severity -5（安定效果）+ timeline entry + 關閉 modal
+      if (patient) {
+        updatePatientSeverity(Math.max(0, patient.severity - 5));
+      }
       addTimelineEntry({
         gameTime: clock.currentTime,
         type: "system_event",

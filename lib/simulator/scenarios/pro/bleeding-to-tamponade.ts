@@ -187,25 +187,9 @@ const events: ScriptedEvent[] = [
     severityChange: 10,
   },
 
-  // ── 16:00 ── 學長到場（條件：已叫學長）
-  {
-    id: "evt-16-senior-arrives",
-    triggerTime: 16,
-    triggerCondition: conditionSeniorCalled,
-    type: "senior_arrives",
-    message: "（學長推門進來）「怎麼了，跟我報告一下。」",
-    severityChange: 0,
-  },
-
-  // ── 18:00 ── 學長評估後離開（條件：已叫學長）
-  // 對話由 SeniorDialogModal 處理，這裡只做 severity 調整（學長在場的安定效果）
-  {
-    id: "evt-18-senior-leaves",
-    triggerTime: 18,
-    triggerCondition: conditionSeniorCalled,
-    type: "vitals_change",
-    severityChange: -5,
-  },
+  // ── 學長到場/離開 ──
+  // 由 ConsultModal 處理（玩家點「叫學長」→ 排程 senior_arrives event → SeniorDialogModal 彈出）
+  // 不用 scripted event，避免學長在沒被叫的情況下自動出現
 
   // ── 18:00 ── 第二套 Lab（有追蹤才出現）
   {
@@ -260,7 +244,7 @@ const events: ScriptedEvent[] = [
     chestTubeChanges: {
       currentRate: 40,
       hasClots: true,
-      isPatent: true,
+      isPatent: false,
     },
   },
 
