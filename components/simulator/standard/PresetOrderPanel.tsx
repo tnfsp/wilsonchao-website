@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import type { StandardPresetOrder, PresetCategory } from "@/lib/simulator/scenarios/standard/types";
 
 // ─── Category config ────────────────────────────────────────────────────────
@@ -36,6 +36,14 @@ export default function PresetOrderPanel({
   executedOrderIds,
 }: PresetOrderPanelProps) {
   const [flash, setFlash] = useState<FlashState | null>(null);
+  const flashTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  // Clean up flash timer on unmount
+  useEffect(() => {
+    return () => {
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+    };
+  }, []);
 
   const handleClick = useCallback(
     (preset: StandardPresetOrder) => {
@@ -54,7 +62,8 @@ export default function PresetOrderPanel({
       }
 
       const duration = preset.isCorrect ? 1200 : 3000;
-      setTimeout(() => setFlash(null), duration);
+      if (flashTimerRef.current) clearTimeout(flashTimerRef.current);
+      flashTimerRef.current = setTimeout(() => setFlash(null), duration);
     },
     [onExecuteOrder, executedOrderIds],
   );

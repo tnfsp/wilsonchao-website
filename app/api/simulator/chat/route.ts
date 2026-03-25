@@ -57,7 +57,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = await request.json();
-    const { message, gameState } = body;
+    const { message, gameState, conversationHistory } = body;
 
     // Input validation
     if (!message || typeof message !== "string" || message.length > 1000) {
@@ -250,16 +250,25 @@ prbc_1u, prbc_2u, prbc_4u, ffp_2u, ffp_4u, platelet_1dose, platelet_2dose, cryo_
 - Lab：frequency = "STAT"
 - 輸血：frequency = "Over 2hr"（默認）`;
 
+    // Build multi-turn messages: include recent conversation history for context
+    const messages: Array<{ role: "user" | "assistant"; content: string }> = [];
+    if (Array.isArray(conversationHistory)) {
+      // Include last 5 exchanges (10 messages max) for context
+      const recent = conversationHistory.slice(-10);
+      for (const entry of recent) {
+        if (entry.role === "user" || entry.role === "assistant") {
+          messages.push({ role: entry.role, content: String(entry.content).slice(0, 500) });
+        }
+      }
+    }
+    // Always end with the current user message
+    messages.push({ role: "user", content: message });
+
     const response = await client.messages.create({
       model: "claude-sonnet-4-20250514",
       max_tokens: 500,
       system: systemPrompt,
-      messages: [
-        {
-          role: "user",
-          content: message,
-        },
-      ],
+      messages,
     });
 
     const responseText =

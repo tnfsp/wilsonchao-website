@@ -42,16 +42,22 @@ function matchAction(
   playerActions: PlayerAction[],
 ): { matched: boolean; time?: number } {
   const match = playerActions.find((pa) => {
-    const paName = pa.orderName.toLowerCase();
-    const eaAction = expected.action.toLowerCase();
-    const eaDesc = expected.description.toLowerCase();
+    // 1. Exact ID match (most reliable)
+    if (pa.orderId === expected.id) return true;
 
-    return (
-      pa.orderId === expected.id ||
-      paName.includes(eaAction) ||
-      eaAction.includes(paName) ||
-      paName.includes(eaDesc.split(" ")[0])
-    );
+    const paName = pa.orderName.toLowerCase().trim();
+    const eaAction = expected.action.toLowerCase().trim();
+
+    // 2. Exact name match
+    if (paName === eaAction) return true;
+
+    // 3. Substring match — only for strings >= 4 chars to avoid
+    //    false positives like "epi" matching "norepinephrine"
+    if (paName.length >= 4 && eaAction.length >= 4) {
+      if (paName.includes(eaAction) || eaAction.includes(paName)) return true;
+    }
+
+    return false;
   });
 
   if (!match) return { matched: false };

@@ -99,7 +99,7 @@ export const septicShockPresets: StandardPresetOrder[] = [
     category: "medication",
     isCorrect: false,
     feedbackIfWrong:
-      "學長，septic shock 首選不是用 Dopamine 喔...",
+      "學長，Dopamine 可以升壓，但 SSC 指引建議 septic shock 首選 Norepinephrine——Dopamine 比較容易引起心律不整（tachyarrhythmia），通常留在 bradycardia-related hypotension 才用。",
     orders: [
       { definitionId: "dopamine", dose: "5", frequency: "Continuous" },
     ],
@@ -110,7 +110,7 @@ export const septicShockPresets: StandardPresetOrder[] = [
       startTime: 0,
       duration: 10,
       vitalChanges: { hr: 20 },
-      severityChange: 3,
+      severityChange: 2,
       isCorrectTreatment: false,
     },
   },
@@ -121,7 +121,7 @@ export const septicShockPresets: StandardPresetOrder[] = [
     category: "medication",
     isCorrect: false,
     feedbackIfWrong:
-      "學長，高劑量 Dexamethasone 不是 septic shock 的第一線，先給抗生素和輸液才對，類固醇要拖到 vasopressor refractory 才考慮。",
+      "學長，高劑量 Dexamethasone 不適合 septic shock。SSC 指引建議在 vasopressor refractory 時用 Hydrocortisone 200mg/day（50mg Q6H），不是 Dexamethasone。而且要先處理抗生素和輸液。",
     orders: [
       { definitionId: "dexamethasone", dose: "10", frequency: "STAT" },
     ],

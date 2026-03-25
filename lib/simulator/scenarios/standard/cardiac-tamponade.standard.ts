@@ -60,6 +60,16 @@ export const cardiacTamponadePresets: StandardPresetOrder[] = [
     ],
   },
   {
+    id: "preset-norepinephrine",
+    label: "Norepinephrine 升壓（暫時撐住）",
+    icon: "⬆️",
+    category: "medication",
+    isCorrect: true,
+    orders: [
+      { definitionId: "norepinephrine", dose: "0.05", frequency: "Continuous" },
+    ],
+  },
+  {
     id: "preset-type-screen",
     label: "備血 Type & Screen",
     icon: "🧪",

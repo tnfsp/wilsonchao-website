@@ -61,6 +61,26 @@ export const postopBleedingPresets: StandardPresetOrder[] = [
     ],
   },
   {
+    id: "preset-ffp-2u",
+    label: "輸 FFP 2U（補凝血因子）",
+    icon: "🩸",
+    category: "medication",
+    isCorrect: true,
+    orders: [
+      { definitionId: "ffp", dose: "2", frequency: "Over 30min" },
+    ],
+  },
+  {
+    id: "preset-cryo-10u",
+    label: "輸 Cryo 10U（補 Fibrinogen）",
+    icon: "🩸",
+    category: "medication",
+    isCorrect: true,
+    orders: [
+      { definitionId: "cryo", dose: "10", frequency: "Over 30min" },
+    ],
+  },
+  {
     id: "preset-call-senior",
     label: "叫外科學長",
     icon: "📞",

@@ -182,10 +182,22 @@ export default function MessageInput() {
         pathology: patient?.pathology,
       };
 
+      // Build conversation history from timeline (last 5 exchanges)
+      const chatEntries = timeline
+        .filter((t) => t.type === "player_message" || t.type === "nurse_message")
+        .slice(-10); // last 10 entries ≈ 5 exchanges
+
+      const conversationHistory = chatEntries.map((t) => ({
+        role: t.type === "player_message" ? "user" as const : "assistant" as const,
+        content: t.type === "nurse_message"
+          ? t.content.replace(/^[^：]+：/, "") // strip nurse name prefix
+          : t.content.replace(/^[^：]+：/, ""), // strip player prefix if any
+      }));
+
       const res = await fetch("/api/simulator/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ message: msgText, gameState }),
+        body: JSON.stringify({ message: msgText, gameState, conversationHistory }),
       });
 
       if (res.ok) {

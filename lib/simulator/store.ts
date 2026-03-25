@@ -1503,7 +1503,6 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       const rescueState: RescueState = {
         active: true,
         startedAt: state.clock.currentTime,
-        expiresAt: state.clock.currentTime + (state.difficultyConfig.rescueWindowSeconds / 60),
         remainingSeconds: state.difficultyConfig.rescueWindowSeconds,
         requiredActions: [],
         cause,

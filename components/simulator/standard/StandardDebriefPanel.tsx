@@ -114,7 +114,7 @@ function ScoreHeader({ score }: { score: StandardScore }) {
 
       {/* Completion stats */}
       <div className="mt-4 text-gray-500 text-xs">
-        {score.completedItems} / {score.totalItems} items completed
+        {score.completedItems} / {score.totalItems} 項完成
       </div>
     </div>
   );
@@ -190,7 +190,7 @@ function ChecklistCard({
               )}
               {item.completed && (
                 <span className="text-xs text-emerald-500/80">
-                  {item.importance === "bonus" ? "Bonus!" : "done"}
+                  {item.importance === "bonus" ? "加分！" : "完成"}
                 </span>
               )}
               {item.guidelineRef && (
@@ -207,10 +207,10 @@ function ChecklistCard({
                 }`}
               >
                 {item.importance === "critical"
-                  ? "critical"
+                  ? "關鍵"
                   : item.importance === "important"
-                  ? "important"
-                  : "bonus"}
+                  ? "重要"
+                  : "加分"}
               </span>
             </div>
           </div>
@@ -224,7 +224,7 @@ function ChecklistCard({
             {expectedAction.rationale && (
               <div>
                 <p className="font-medium text-xs text-amber-400 mb-1">
-                  Why is this important?
+                  為什麼重要？
                 </p>
                 <p className="text-gray-300 text-xs">{expectedAction.rationale}</p>
               </div>
@@ -232,7 +232,7 @@ function ChecklistCard({
             {expectedAction.howTo && (
               <div>
                 <p className="font-medium text-xs text-cyan-400 mb-1">
-                  Correct action
+                  正確做法
                 </p>
                 <p className="text-gray-300 text-xs">{expectedAction.howTo}</p>
               </div>
@@ -486,7 +486,7 @@ function MicroSurvey({ caseId }: { caseId: string }) {
   if (submitted) {
     return (
       <div className="rounded-xl border border-white/10 bg-white/[0.02] p-4 text-center">
-        <p className="text-teal-400 text-sm">Thanks for your feedback!</p>
+        <p className="text-teal-400 text-sm">感謝你的回饋！</p>
       </div>
     );
   }
@@ -496,7 +496,7 @@ function MicroSurvey({ caseId }: { caseId: string }) {
       {/* Q1: Helpful? */}
       <div>
         <p className="text-gray-300 text-sm mb-2">
-          Was this scenario helpful?
+          這個情境對你有幫助嗎？
         </p>
         <div className="flex gap-2">
           {[1, 2, 3, 4, 5].map((n) => (
@@ -518,14 +518,14 @@ function MicroSurvey({ caseId }: { caseId: string }) {
       {/* Q2: Difficulty */}
       <div>
         <p className="text-gray-300 text-sm mb-2">
-          How was the difficulty?
+          難度如何？
         </p>
         <div className="flex gap-2">
           {(
             [
-              ["too_easy", "Too easy"],
-              ["just_right", "Just right"],
-              ["too_hard", "Too hard"],
+              ["too_easy", "太簡單"],
+              ["just_right", "剛剛好"],
+              ["too_hard", "太難"],
             ] as const
           ).map(([val, label]) => (
             <button
@@ -548,7 +548,7 @@ function MicroSurvey({ caseId }: { caseId: string }) {
         disabled={helpful === null || difficulty === null}
         className="w-full py-2 rounded-lg bg-white/10 text-gray-300 text-sm hover:bg-white/15 transition-colors disabled:opacity-30 disabled:cursor-not-allowed"
       >
-        Submit
+        送出
       </button>
     </div>
   );
@@ -592,11 +592,11 @@ export default function StandardDebriefPanel({
         {/* Title */}
         <div className="text-center">
           <h1 className="text-white text-xl font-bold tracking-tight">
-            Debrief
+            回顧報告
           </h1>
           {scenario.hiddenTitle && (
             <div className="mt-3">
-              <div className="text-xs text-gray-500 mb-1">Final Diagnosis</div>
+              <div className="text-xs text-gray-500 mb-1">最終診斷</div>
               <h2 className="text-lg font-bold text-cyan-300">
                 {scenario.title}
               </h2>
@@ -613,7 +613,7 @@ export default function StandardDebriefPanel({
         {criticalItems.length > 0 && (
           <section>
             <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
-              <span className="text-red-400">{"\u26A1"}</span> Critical Steps
+              <span className="text-red-400">{"\u26A1"}</span> 關鍵步驟
             </h3>
             <div className="space-y-2">
               {criticalItems.map((item) => (
@@ -631,8 +631,7 @@ export default function StandardDebriefPanel({
         {importantItems.length > 0 && (
           <section>
             <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
-              <span className="text-blue-400">{"\u2139\uFE0F"}</span> Important
-              Steps
+              <span className="text-blue-400">{"\u2139\uFE0F"}</span> 重要步驟
             </h3>
             <div className="space-y-2">
               {importantItems.map((item) => (
@@ -650,7 +649,7 @@ export default function StandardDebriefPanel({
         {bonusItems.length > 0 && (
           <section>
             <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
-              <span className="text-amber-400">{"\u2B50"}</span> Bonus
+              <span className="text-amber-400">{"\u2B50"}</span> 額外加分
             </h3>
             <div className="space-y-2">
               {bonusItems.map((item) => (
@@ -670,7 +669,7 @@ export default function StandardDebriefPanel({
         {scenario.expectedActions.length > 0 && (
           <section>
             <h3 className="text-white font-bold text-sm mb-1 flex items-center gap-2">
-              <span className="text-cyan-400">🎓</span> Guided Review — 正確處置流程
+              <span className="text-cyan-400">{"\uD83C\uDF93"}</span> 逐步回顧 — 正確處置流程
             </h3>
             <p className="text-gray-500 text-xs mb-3">
               點擊「為什麼？」查看每步驟的臨床理由
@@ -683,7 +682,7 @@ export default function StandardDebriefPanel({
         {hasKeyPoints && (
           <section>
             <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
-              <span className="text-amber-400">💡</span> Key Learning Points
+              <span className="text-amber-400">{"\uD83D\uDCA1"}</span> 重點學習
             </h3>
             <KeyLearningPoints keyPoints={scenario.debrief.keyPoints} />
           </section>
@@ -694,8 +693,7 @@ export default function StandardDebriefPanel({
         {/* Guideline Summary */}
         <section>
           <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
-            <span className="text-teal-400">{"\uD83D\uDCD6"}</span> Guideline
-            Reference
+            <span className="text-teal-400">{"\uD83D\uDCD6"}</span> 指引參考
           </h3>
           <GuidelineSummarySection
             summary={score.guidelineSummary}
@@ -708,8 +706,7 @@ export default function StandardDebriefPanel({
         {/* Micro-survey */}
         <section>
           <h3 className="text-white font-bold text-sm mb-3 flex items-center gap-2">
-            <span className="text-gray-400">{"\uD83D\uDCDD"}</span> Quick
-            Feedback
+            <span className="text-gray-400">{"\uD83D\uDCDD"}</span> 快速回饋
           </h3>
           <MicroSurvey caseId={scenario.id} />
         </section>
@@ -722,20 +719,20 @@ export default function StandardDebriefPanel({
             onClick={onRestart}
             className="w-full py-3 rounded-xl bg-cyan-700 hover:bg-cyan-600 text-white font-bold transition-colors"
           >
-            {"\uD83D\uDD04"} Try Again
+            {"\uD83D\uDD04"} 再試一次
           </button>
           <button
             onClick={onBackToList}
             className="w-full py-3 rounded-xl border border-slate-600 text-slate-300 hover:bg-slate-800 transition-colors"
           >
-            {"\u2190"} Choose Another Scenario
+            {"\u2190"} 選擇其他情境
           </button>
           {onUpgradeToPro && (
             <button
               onClick={onUpgradeToPro}
               className="w-full py-3 rounded-xl border border-amber-600/50 bg-amber-900/20 text-amber-300 hover:bg-amber-900/40 transition-colors font-medium"
             >
-              {"\u2694\uFE0F"} Challenge Pro Mode
+              {"\u2694\uFE0F"} 挑戰進階模式
             </button>
           )}
         </div>

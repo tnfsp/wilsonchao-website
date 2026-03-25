@@ -101,7 +101,7 @@ export default function StandardGameLayout({
         className="lg:hidden flex-1 overflow-y-auto"
         style={{ scrollbarWidth: "thin", scrollbarColor: "#ffffff1a transparent" }}
       >
-        <div className="min-h-[50vh]" id="std-chat-area">{chatTimeline}</div>
+        <div className="h-[55vh] shrink-0" id="std-chat-area">{chatTimeline}</div>
         <div className="p-3 space-y-3" id="vitals-panel">{vitalsPanel}</div>
       </div>
 

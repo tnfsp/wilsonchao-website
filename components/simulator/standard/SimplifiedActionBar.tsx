@@ -71,7 +71,9 @@ export default function SimplifiedActionBar() {
   const phase = useProGameStore((s) => s.phase);
   const guidanceHighlight = useProGameStore((s) => s.guidanceHighlight);
   const actionAdvance = useProGameStore((s) => s.actionAdvance);
+  const severity = useProGameStore((s) => s.patient?.severity ?? 0);
   const isPlaying = phase === "playing";
+  const fastForwardDisabled = !isPlaying || severity > 60;
 
   return (
     <div
@@ -117,10 +119,11 @@ export default function SimplifiedActionBar() {
         <button
           className="flex-1 flex items-center justify-center gap-2 rounded-xl py-2.5 bg-slate-800/60 border border-slate-700/40 text-slate-300 text-sm font-medium hover:bg-slate-700/60 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
           onClick={() => actionAdvance(5)}
-          disabled={!isPlaying}
+          disabled={fastForwardDisabled}
+          title={severity > 60 ? "病人狀況不穩定，無法快轉" : "快轉5分"}
         >
           <span>{"\u23E9"}</span>
-          <span>{"\u5FEB\u8F495\u5206"}</span>
+          <span>{severity > 60 ? "\u75C5\u60C5\u4E0D\u7A69" : "\u5FEB\u8F495\u5206"}</span>
         </button>
       </div>
     </div>

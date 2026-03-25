@@ -102,7 +102,6 @@ export function checkRescueActivation(
   return {
     active: true,
     startedAt: gameTime,
-    expiresAt: gameTime + windowSeconds / 60, // convert seconds to game minutes
     remainingSeconds: windowSeconds,
     requiredActions: scenarioConfig?.requiredActions ?? [],
     cause: scenarioConfig?.cause ?? "病人生命徵象急速惡化！",

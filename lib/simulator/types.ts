@@ -670,7 +670,6 @@ export type ShockResult = {
 export interface RescueState {
   active: boolean;
   startedAt: number;             // game minutes when rescue window started
-  expiresAt: number;             // game minutes when window expires
   remainingSeconds: number;      // real-time countdown seconds remaining
   requiredActions: string[];     // action patterns that would rescue the patient
   cause: string;                 // what triggered the rescue window
