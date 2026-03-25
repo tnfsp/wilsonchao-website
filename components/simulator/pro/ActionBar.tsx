@@ -255,12 +255,13 @@ export default function ActionBar() {
       // Tamponade: 管路可以通但引流量不會恢復（血在心包腔凝固，不是單純管路阻塞）
       const isTamponade = patient.pathology === "cardiac_tamponade" || patient.pathology === "tamponade";
       if (isTamponade) {
-        updateChestTube({ isPatent: true, currentRate: Math.max(ct.currentRate, 15), totalOutput: ct.totalOutput + 20 });
-        finding = "擠出少量暗紅色血塊，管路暫時通了。但引流量仍然很少（只多出 20cc），不像是單純的管路阻塞⋯⋯有點不對勁。";
+        // Tamponade: milk 後管路感覺有通，但沒有血塊出來，引流量也沒恢復
+        updateChestTube({ isPatent: true, currentRate: Math.max(ct.currentRate, 10), totalOutput: ct.totalOutput + 5 });
+        finding = "用力 milk 了好幾次，管路感覺有通，但沒有擠出血塊。引流量幾乎沒有增加——管路本身好像不是問題⋯⋯那血去哪了？";
         addTimelineEntry({
           gameTime: clock.currentTime,
           type: "player_action",
-          content: "🔧 Milk CT — 通了但引流量仍極少，不像單純阻塞",
+          content: "🔧 Milk CT — 管路通了但無血塊排出，引流量未恢復。管路不是問題？",
           sender: "player",
           isImportant: true,
         });
