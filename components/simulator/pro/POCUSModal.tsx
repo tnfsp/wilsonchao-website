@@ -4,6 +4,72 @@ import { useState } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { POCUSView } from "@/lib/simulator/types";
 
+// ── Real echo video clips per pathology + view ───────────────
+
+interface EchoClip {
+  src: string;
+  label: string;
+}
+
+/** Map: pathology → pocus view key → clips */
+const ECHO_CLIPS: Record<string, Record<string, EchoClip[]>> = {
+  cardiac_tamponade: {
+    cardiac: [
+      { src: "/assets/echo/cardiac-tamponade/a4c.mp4", label: "A4C — 心包積液 + RV collapse" },
+      { src: "/assets/echo/cardiac-tamponade/plax.mp4", label: "PLAX — 心包積液" },
+      { src: "/assets/echo/cardiac-tamponade/psax.mp4", label: "PSAX" },
+      { src: "/assets/echo/cardiac-tamponade/subcostal.mp4", label: "Subcostal" },
+    ],
+    ivc: [
+      { src: "/assets/echo/cardiac-tamponade/ivc.mp4", label: "IVC — 擴張無塌陷（plethora）" },
+    ],
+    lung: [],
+  },
+  tamponade: {
+    cardiac: [
+      { src: "/assets/echo/cardiac-tamponade/a4c.mp4", label: "A4C — 心包積液" },
+      { src: "/assets/echo/cardiac-tamponade/subcostal.mp4", label: "Subcostal" },
+    ],
+    ivc: [
+      { src: "/assets/echo/cardiac-tamponade/ivc.mp4", label: "IVC — 擴張無塌陷" },
+    ],
+    lung: [],
+  },
+  surgical_bleeding: {
+    cardiac: [],
+    ivc: [
+      { src: "/assets/echo/hypovolemia/ivc-long.mp4", label: "IVC Long Axis — 塌陷（低血容）" },
+      { src: "/assets/echo/hypovolemia/ivc-trans.mp4", label: "IVC Trans — 呼吸變化明顯" },
+    ],
+    lung: [],
+  },
+  lcos: {
+    cardiac: [
+      { src: "/assets/echo/takotsubo/a4c.mp4", label: "A4C — LV dysfunction" },
+      { src: "/assets/echo/takotsubo/plax.mp4", label: "PLAX — 收縮功能下降" },
+    ],
+    ivc: [],
+    lung: [
+      { src: "/assets/echo/lung-b-lines/b-lines.mp4", label: "Lung B-lines — 肺水腫" },
+    ],
+  },
+  septic_shock: {
+    cardiac: [],
+    ivc: [],
+    lung: [
+      { src: "/assets/echo/lung-b-lines/b-lines.mp4", label: "Lung B-lines — ARDS/肺水腫" },
+      { src: "/assets/echo/lung-b-lines/confluent-b-lines.mp4", label: "Confluent B-lines — 嚴重肺浸潤" },
+    ],
+  },
+  tension_pneumothorax: {
+    cardiac: [],
+    ivc: [],
+    lung: [
+      { src: "/assets/echo/lung-pneumothorax/absent-sliding.mp4", label: "Lung — 肺滑動消失（Absent sliding）" },
+    ],
+  },
+};
+
 // ── POCUS view definitions ───────────────────────────────────
 
 interface POCUSOption {
@@ -193,6 +259,40 @@ export function POCUSModal() {
                     Bedside
                   </span>
                 </div>
+
+                {/* Real echo video clips */}
+                {(() => {
+                  const pathology = scenario?.pathology ?? "";
+                  const clips = ECHO_CLIPS[pathology]?.[selected] ?? [];
+                  if (clips.length === 0) return null;
+                  return (
+                    <div className="px-4 py-3 border-b border-cyan-900/20">
+                      <p className="text-xs text-cyan-500/60 uppercase tracking-widest mb-2">
+                        Echo Clips
+                      </p>
+                      <div className="space-y-2">
+                        {clips.map((clip, ci) => (
+                          <div key={ci} className="rounded-lg overflow-hidden border border-cyan-900/30">
+                            <video
+                              src={clip.src}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              className="w-full h-auto"
+                            />
+                            <p className="text-cyan-400/70 text-xs px-2 py-1 bg-black/40">
+                              🎬 {clip.label}
+                            </p>
+                          </div>
+                        ))}
+                        <p className="text-cyan-600/40 text-[10px]">
+                          📷 LITFL ECG Library / Wikimedia Commons, CC-BY-NC-SA 4.0
+                        </p>
+                      </div>
+                    </div>
+                  );
+                })()}
 
                 {/* Finding */}
                 <div className="px-4 py-3 border-b border-cyan-900/20">

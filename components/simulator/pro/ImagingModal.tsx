@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import Image from "next/image";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { PendingEvent } from "@/lib/simulator/types";
 import { PocusCanvas } from "./PocusCanvas";
@@ -12,6 +13,59 @@ import {
   generateECGMorphology,
   generateInterpretation,
 } from "@/lib/simulator/engine/ecg-generator";
+
+// ── Real CXR images per pathology ─────────────────────────────
+
+const CXR_REAL_IMAGES: Record<string, { src: string; alt: string; attribution: string }> = {
+  cardiac_tamponade: {
+    src: "/assets/cxr/cardiac-tamponade/water-bottle-sign.png",
+    alt: "Water-bottle sign — 心包積液典型 CXR",
+    attribution: "Wikimedia Commons, CC-BY-SA 4.0",
+  },
+  tamponade: {
+    src: "/assets/cxr/cardiac-tamponade/water-bottle-sign.png",
+    alt: "Water-bottle sign — 心包積液典型 CXR",
+    attribution: "Wikimedia Commons, CC-BY-SA 4.0",
+  },
+  lcos: {
+    src: "/assets/cxr/cardiogenic-shock/pulmonary-edema.png",
+    alt: "Pulmonary edema — 心因性肺水腫 CXR",
+    attribution: "Wikimedia Commons, CC-BY-SA 3.0",
+  },
+  septic_shock: {
+    src: "/assets/cxr/cardiogenic-shock/pulmonary-edema.png",
+    alt: "Bilateral infiltrates — ARDS/Sepsis 相關肺浸潤",
+    attribution: "Wikimedia Commons, CC-BY-SA 3.0",
+  },
+};
+
+// ── Real echo video clips for POCUS (ImagingModal version) ───
+
+interface EchoClip { src: string; label: string; }
+
+const POCUS_ECHO_CLIPS: Record<string, EchoClip[]> = {
+  cardiac_tamponade: [
+    { src: "/assets/echo/cardiac-tamponade/a4c.mp4", label: "A4C — 心包積液 + RV collapse" },
+    { src: "/assets/echo/cardiac-tamponade/subcostal.mp4", label: "Subcostal" },
+    { src: "/assets/echo/cardiac-tamponade/ivc.mp4", label: "IVC — 擴張無塌陷" },
+  ],
+  tamponade: [
+    { src: "/assets/echo/cardiac-tamponade/a4c.mp4", label: "A4C — 心包積液" },
+    { src: "/assets/echo/cardiac-tamponade/ivc.mp4", label: "IVC — 擴張無塌陷" },
+  ],
+  surgical_bleeding: [
+    { src: "/assets/echo/hypovolemia/ivc-long.mp4", label: "IVC Long Axis — 塌陷（低血容）" },
+    { src: "/assets/echo/hypovolemia/ivc-trans.mp4", label: "IVC Trans — 呼吸變化明顯" },
+  ],
+  lcos: [
+    { src: "/assets/echo/takotsubo/a4c.mp4", label: "A4C — LV dysfunction" },
+    { src: "/assets/echo/lung-b-lines/b-lines.mp4", label: "Lung B-lines — 肺水腫" },
+  ],
+  septic_shock: [
+    { src: "/assets/echo/lung-b-lines/b-lines.mp4", label: "Lung B-lines — ARDS" },
+    { src: "/assets/echo/lung-b-lines/confluent-b-lines.mp4", label: "Confluent B-lines — 嚴重肺浸潤" },
+  ],
+};
 
 // ── Imaging options ──────────────────────────────────────────
 
@@ -270,8 +324,11 @@ export function ImagingModal() {
       );
     }
 
-    // POCUS renders the live canvas instead of text
+    // POCUS renders the live canvas + real echo clips
     if (key === "pocus") {
+      const pathology = scenario?.pathology ?? "";
+      const pocusClips = POCUS_ECHO_CLIPS[pathology] ?? [];
+
       return (
         <div
           className="rounded-lg border border-teal-800/30 overflow-hidden"
@@ -287,6 +344,36 @@ export function ImagingModal() {
           <div className="p-3">
             <PocusCanvas />
           </div>
+
+          {/* Real echo video clips */}
+          {pocusClips.length > 0 && (
+            <div className="px-4 pb-3">
+              <p className="text-xs text-teal-500/60 uppercase tracking-widest mb-2">
+                Echo Clips
+              </p>
+              <div className="space-y-2">
+                {pocusClips.map((clip, ci) => (
+                  <div key={ci} className="rounded-lg overflow-hidden border border-teal-900/30">
+                    <video
+                      src={clip.src}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-auto"
+                    />
+                    <p className="text-teal-400/70 text-xs px-2 py-1 bg-black/40">
+                      🎬 {clip.label}
+                    </p>
+                  </div>
+                ))}
+                <p className="text-teal-600/40 text-[10px]">
+                  📷 LITFL ECG Library / Wikimedia Commons, CC-BY-NC-SA 4.0
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="mx-4 mb-4 px-3 py-2 rounded bg-teal-900/20 border border-teal-700/25">
             <p className="text-teal-300/70 text-xs leading-relaxed">
               💡 POCUS 提供即時床邊評估：Cardiac A4C 看心臟功能與 tamponade，IVC 評估 volume status，Lung 看 B-lines（肺水腫）。
@@ -396,6 +483,28 @@ export function ImagingModal() {
             }}
           />
         </div>
+
+        {/* Real CXR reference image (when available for this pathology) */}
+        {key === "cxr_portable" && CXR_REAL_IMAGES[scenario?.pathology ?? ""] && (
+          <div className="px-4 pb-2">
+            <p className="text-xs text-teal-500/60 uppercase tracking-widest mb-2">
+              Reference Image
+            </p>
+            <div className="rounded-lg overflow-hidden border border-teal-900/30">
+              <Image
+                src={CXR_REAL_IMAGES[scenario!.pathology].src}
+                alt={CXR_REAL_IMAGES[scenario!.pathology].alt}
+                width={400}
+                height={400}
+                className="w-full h-auto"
+                style={{ filter: "brightness(1.1)" }}
+              />
+              <p className="text-teal-600/50 text-[10px] px-2 py-1 bg-black/40">
+                📷 {CXR_REAL_IMAGES[scenario!.pathology].attribution}
+              </p>
+            </div>
+          </div>
+        )}
 
         {/* Clinical relevance note */}
         {key === "cxr_portable" && (
