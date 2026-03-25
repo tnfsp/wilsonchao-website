@@ -824,6 +824,7 @@ function useAIDebrief(
   deathCause: string | null,
 ) {
   const [state, setState] = useState<AIDebriefState>({ status: "idle" });
+  const patient = useProGameStore((s) => s.patient);
 
   const fetchDebrief = useCallback(async () => {
     if (!score || !scenario) return;
