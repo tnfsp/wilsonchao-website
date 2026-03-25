@@ -214,22 +214,27 @@ export default function ActionBar() {
 
   const isPlaying = phase === "playing";
 
-  // 通報交班: track call_senior -> auto-open SBAR
+  // 通報交班: 所有 phase 都開 SBAR，但 Phase 1 提交後不結束遊戲
   const handleCallAndSBAR = () => {
     if (!isPlaying) return;
+
+    // Record call_senior action
     useProGameStore.setState((state) => ({
       playerActions: [
         ...state.playerActions,
         { action: "call_senior", gameTime: clock.currentTime, category: "consult" },
       ],
     }));
+
     addTimelineEntry({
       gameTime: clock.currentTime,
       type: "player_action",
-      content: "\ud83d\udcde \u4f60\u6253\u96fb\u8a71\u901a\u77e5\u5b78\u9577\uff0c\u6e96\u5099 SBAR \u4ea4\u73ed",
+      content: "📞 你打電話通知學長，準備 SBAR 報告",
       sender: "player",
       isImportant: true,
     });
+
+    // 開 SBAR modal（Phase 1 = 給學長的報告；Phase 2 = 最終交班）
     openModal("sbar");
   };
 
@@ -257,6 +262,11 @@ export default function ActionBar() {
       if (isTamponade) {
         // Tamponade: milk 後管路感覺有通，但沒有血塊出來，引流量也沒恢復
         updateChestTube({ isPatent: true, currentRate: Math.max(ct.currentRate, 10), totalOutput: ct.totalOutput + 5 });
+        // Milk CT 暫時緩解：部分恢復引流，降低心包壓力
+        // 效果：severity -8，但 tamponade 的 base rate (2.5/min) 會很快追回來
+        useProGameStore.getState().updatePatientSeverity(
+          Math.max(0, (patient.severity ?? 0) - 8)
+        );
         finding = "用力 milk 了好幾次，管路感覺有通，但沒有擠出血塊。引流量幾乎沒有增加——管路本身好像不是問題⋯⋯那血去哪了？";
         addTimelineEntry({
           gameTime: clock.currentTime,
@@ -267,6 +277,10 @@ export default function ActionBar() {
         });
       } else {
         updateChestTube({ isPatent: true, totalOutput: ct.totalOutput + 50 });
+        // 成功擠出血塊，恢復引流 → severity -5
+        useProGameStore.getState().updatePatientSeverity(
+          Math.max(0, (patient.severity ?? 0) - 5)
+        );
         finding = "擠出數個血塊，引流恢復通暢。Burst output +50cc，引流液為鮮紅色。";
         addTimelineEntry({
           gameTime: clock.currentTime,
@@ -389,6 +403,13 @@ export default function ActionBar() {
 
         {/* ── Right group: utility ── */}
         <div className="flex items-center gap-0.5">
+          <IconBtn
+            icon="📊" label="Lab 總覽"
+            onClick={() => openModal("lab_overview")}
+            disabled={!isPlaying}
+            variant="muted"
+            shortcut="L"
+          />
           <IconBtn
             icon="⏸" label="暫停思考"
             onClick={() => openModal("pause_think")}

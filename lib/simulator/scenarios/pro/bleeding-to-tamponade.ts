@@ -76,6 +76,22 @@ const conditionSeniorCalled: EventCondition = {
   ],
 };
 
+// Phase 2: CVP 真的升了（狀態驅動，取代固定時間觸發）
+const conditionCvpRising: EventCondition = {
+  operator: "AND",
+  conditions: [
+    { field: "vitals.cvp", op: ">", value: 12 },
+  ],
+};
+
+// Phase 2: severity > 80（瀕臨 arrest，狀態驅動）
+const conditionPreArrest: EventCondition = {
+  operator: "AND",
+  conditions: [
+    { field: "severity", op: ">", value: 80 },
+  ],
+};
+
 // Phase 2: 沒有 strip/milk CT 且 CT output 掉下來
 const conditionNoStripCTLowOutput: EventCondition = {
   operator: "AND",
@@ -127,7 +143,8 @@ const events: ScriptedEvent[] = [
       hasClots: true,
       isPatent: true,
     },
-    severityChange: 15,
+    // severityChange 移除 — severity 由 patient-engine base rate (surgical_bleeding) 驅動
+    // 治療（輸血、volume）可以有效對抗 base rate，讓玩家感受到處置有效
   },
 
   // ── 10:00 ── 第一套 Lab 結果回來
@@ -164,7 +181,7 @@ const events: ScriptedEvent[] = [
       currentRate: 320,
       totalOutput: 1100,
     },
-    severityChange: 10,
+    // severityChange 移除 — state-driven
   },
 
   // ── 15:00 ── 正常推進（無條件）
@@ -176,7 +193,7 @@ const events: ScriptedEvent[] = [
       currentRate: 310,
       totalOutput: 1150,
     },
-    severityChange: 10,
+    // severityChange 移除 — state-driven
   },
 
   // ── 學長到場/離開 ──
@@ -236,17 +253,17 @@ const events: ScriptedEvent[] = [
     severityChange: 0,
   },
 
-  // ── 23:00 ── CVP 上升
+  // ── 23:00 ── CVP 上升（狀態驅動：CVP > 12 才觸發）
   {
     id: "evt-23-cvp-rising",
     triggerTime: 23,
+    triggerCondition: conditionCvpRising,
     type: "nurse_call",
     message:
       "醫師，跟你報一下，CVP 現在 {{cvp}}，比剛剛高了一些。血壓 {{sbp}}/{{dbp}}。",
-    severityChange: 10,
   },
 
-  // ── 25:00 ── CT 幾乎停了
+  // ── 25:00 ── CT 幾乎停了（保留 narrative + chestTubeChanges，severity 由 patient engine 驅動）
   {
     id: "evt-25-ct-nearly-zero",
     triggerTime: 25,
@@ -259,7 +276,6 @@ const events: ScriptedEvent[] = [
       hasClots: true,
       isPatent: false,
     },
-    severityChange: 15,
   },
 
   // ── 27:00 ── 沒有通 CT → 護理師提醒 strip/milk（條件觸發）
@@ -282,25 +298,17 @@ const events: ScriptedEvent[] = [
       "醫師，超音波機就在旁邊——你要不要照個心臟看看有沒有積液？",
   },
 
-  // ── 30:00 ── 瀕臨 PEA arrest
+  // ── 25:00+ ── 瀕臨 PEA arrest（狀態驅動：severity > 80 才觸發，最早 min 25）
   {
     id: "evt-30-pre-arrest",
-    triggerTime: 30,
+    triggerTime: 25,
+    triggerCondition: conditionPreArrest,
     type: "escalation",
     message:
       "\u26A0\uFE0F 血壓 {{sbp}}/{{dbp}}，心跳 {{hr}}，意識下降。病人呈現 near-PEA 狀態——心臟在跳但幾乎沒有 output。必須立即行動！",
-    severityChange: 20,
   },
 
-  // ── 33:00 ── 死亡
-  {
-    id: "evt-33-death",
-    triggerTime: 33,
-    type: "escalation",
-    message:
-      "\u26A0\uFE0F PEA arrest！心跳從 {{hr}} 突然掉 \u2192 asystole。Tamponade 導致心臟完全無法舒張充盈。\u2192 情境結束。",
-    severityChange: 100,
-  },
+  // 死亡由 auto-death 機制處理（ProPageClient.tsx）— 未來接 ACLS mini-game
 ];
 
 // ============================================================
@@ -485,16 +493,29 @@ const availableLabs: Record<string, LabPanel> = {
       mch: { value: 28,   unit: "pg",     normal: "27-33" },
     },
   },
-  coag: {
-    id: "coag",
-    name: "Coagulation Panel (PT/INR/aPTT/Fibrinogen)",
+  pt_inr: {
+    id: "pt_inr",
+    name: "PT / INR",
     turnaroundTime: 10,
     results: {
-      pt:  { value: 14.2, unit: "sec",   normal: "11-13",   flag: "H" },
-      inr: { value: 1.3,  unit: "",      normal: "0.9-1.1", flag: "H" },
-      aptt:{ value: 38,   unit: "sec",   normal: "25-35",   flag: "H" },
-      fib: { value: 195,  unit: "mg/dL", normal: "200-400", flag: "L" },
-      tt:  { value: 18,   unit: "sec",   normal: "14-21" },
+      pt:  { value: 14.2, unit: "sec", normal: "11-13",   flag: "H" },
+      inr: { value: 1.3,  unit: "",    normal: "0.9-1.1", flag: "H" },
+    },
+  },
+  aptt: {
+    id: "aptt",
+    name: "aPTT",
+    turnaroundTime: 10,
+    results: {
+      aptt: { value: 38, unit: "sec", normal: "25-35", flag: "H" },
+    },
+  },
+  fibrinogen: {
+    id: "fibrinogen",
+    name: "Fibrinogen",
+    turnaroundTime: 10,
+    results: {
+      fib: { value: 195, unit: "mg/dL", normal: "200-400", flag: "L" },
     },
   },
   abg: {
@@ -535,21 +556,65 @@ const availableLabs: Record<string, LabPanel> = {
       act: { value: 145, unit: "sec", normal: "< 130", flag: "H" },
     },
   },
-  bcs: {
-    id: "bcs",
-    name: "Basic Chemistry (BCS)",
+  na: {
+    id: "na",
+    name: "Na (Sodium)",
     turnaroundTime: 10,
     results: {
-      na:  { value: 138, unit: "mEq/L", normal: "136-145" },
-      k:   { value: 3.8, unit: "mEq/L", normal: "3.5-5.0" },
-      bun: { value: 28,  unit: "mg/dL", normal: "7-20",    flag: "H" },
-      cr:  { value: 1.6, unit: "mg/dL", normal: "0.6-1.2", flag: "H" },
+      na: { value: 138, unit: "mEq/L", normal: "136-145" },
+    },
+  },
+  k: {
+    id: "k",
+    name: "K (Potassium)",
+    turnaroundTime: 10,
+    results: {
+      k: { value: 3.8, unit: "mEq/L", normal: "3.5-5.0" },
+    },
+  },
+  cl: {
+    id: "cl",
+    name: "Cl (Chloride)",
+    turnaroundTime: 10,
+    results: {
+      cl: { value: 102, unit: "mEq/L", normal: "98-106" },
+    },
+  },
+  co2: {
+    id: "co2",
+    name: "CO₂ (Total CO₂)",
+    turnaroundTime: 10,
+    results: {
+      co2: { value: 20, unit: "mEq/L", normal: "23-29", flag: "L" },
+    },
+  },
+  bun: {
+    id: "bun",
+    name: "BUN (Blood Urea Nitrogen)",
+    turnaroundTime: 10,
+    results: {
+      bun: { value: 28, unit: "mg/dL", normal: "7-20", flag: "H" },
+    },
+  },
+  cr: {
+    id: "cr",
+    name: "Cr (Creatinine)",
+    turnaroundTime: 10,
+    results: {
+      cr: { value: 1.6, unit: "mg/dL", normal: "0.6-1.2", flag: "H" },
+    },
+  },
+  glucose: {
+    id: "glucose",
+    name: "Glucose (血糖)",
+    turnaroundTime: 10,
+    results: {
       glucose: { value: 145, unit: "mg/dL", normal: "70-110", flag: "H" },
     },
   },
-  cardiac_markers: {
-    id: "cardiac_markers",
-    name: "Cardiac Markers (Troponin)",
+  troponin: {
+    id: "troponin",
+    name: "Troponin I",
     turnaroundTime: 12,
     results: {
       troponin_i: {

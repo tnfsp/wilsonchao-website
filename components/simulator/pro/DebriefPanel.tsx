@@ -825,6 +825,7 @@ function useAIDebrief(
 ) {
   const [state, setState] = useState<AIDebriefState>({ status: "idle" });
   const patient = useProGameStore((s) => s.patient);
+  const sbarPhase1 = useProGameStore((s) => s.sbarPhase1);
 
   const fetchDebrief = useCallback(async () => {
     if (!score || !scenario) return;
@@ -886,6 +887,14 @@ function useAIDebrief(
               background: sbarReport.background ?? "",
               assessment: sbarReport.assessment ?? "",
               recommendation: sbarReport.recommendation ?? "",
+            }
+          : null,
+        playerSBARPhase1: sbarPhase1
+          ? {
+              situation: sbarPhase1.situation ?? "",
+              background: sbarPhase1.background ?? "",
+              assessment: sbarPhase1.assessment ?? "",
+              recommendation: sbarPhase1.recommendation ?? "",
             }
           : null,
         patientOutcome: {

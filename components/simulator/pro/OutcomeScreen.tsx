@@ -35,7 +35,7 @@ const DEFAULT_OUTCOMES: ScenarioOutcome[] = [
 function selectOutcome(
   outcomes: ScenarioOutcome[] | undefined,
   patientDied: boolean,
-  criticalActionsMetRatio: number,
+  calledSenior: boolean,
 ): ScenarioOutcome {
   const pool = outcomes && outcomes.length > 0 ? outcomes : DEFAULT_OUTCOMES;
 
@@ -43,7 +43,8 @@ function selectOutcome(
     return pool.find((o) => o.condition === "died") ?? DEFAULT_OUTCOMES[2];
   }
 
-  if (criticalActionsMetRatio >= 0.7) {
+  // 核心判定：有叫學長 = survived_good（學長是 definitive treatment 的關鍵）
+  if (calledSenior) {
     return pool.find((o) => o.condition === "survived_good") ?? DEFAULT_OUTCOMES[0];
   }
 
@@ -82,21 +83,14 @@ export default function OutcomeScreen() {
   const playerActions = useProGameStore((s) => s.playerActions);
   const endGame = useProGameStore((s) => s.endGame);
 
-  // Calculate critical actions met ratio
-  const expectedActions = scenario?.expectedActions ?? [];
-  const criticalExpected = expectedActions.filter((ea) => ea.critical);
-  const criticalMet = criticalExpected.filter((ea) => {
-    const eaAction = ea.action.toLowerCase();
-    return playerActions.some((pa) => {
-      const paAction = (pa.action ?? "").toLowerCase();
-      const paOrderId = (pa.action ?? "").split(":")[1]?.toLowerCase() ?? "";
-      return paOrderId === ea.id || paAction.includes(eaAction) || eaAction.includes(paAction);
-    });
+  // 判定是否有叫學長（outcome 核心條件）
+  const calledSenior = playerActions.some((pa) => {
+    const a = (pa.action ?? "").toLowerCase();
+    return a.includes("consult") || a.includes("叫學長") || a.includes("call_senior") || a.includes("通知學長") || a.includes("通知vs");
   });
-  const criticalRatio = criticalExpected.length > 0 ? criticalMet.length / criticalExpected.length : 0;
 
   const patientDied = !!deathCause;
-  const outcome = selectOutcome(scenario?.outcomes, patientDied, criticalRatio);
+  const outcome = selectOutcome(scenario?.outcomes, patientDied, calledSenior);
 
   const { displayed, done } = useTypewriter(outcome.narrative, 25);
 
@@ -117,7 +111,7 @@ export default function OutcomeScreen() {
         {/* Title */}
         <h1
           className={`text-3xl font-bold tracking-tight ${
-            patientDied ? "text-red-400" : criticalRatio >= 0.7 ? "text-emerald-400" : "text-amber-400"
+            patientDied ? "text-red-400" : calledSenior ? "text-emerald-400" : "text-amber-400"
           }`}
         >
           {outcome.title}

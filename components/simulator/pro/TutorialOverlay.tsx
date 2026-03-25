@@ -125,10 +125,37 @@ export default function TutorialOverlay() {
     cardStyle.width = cardWidth;
     cardStyle.position = "absolute";
 
+    const cardHeight = 220; // approximate max card height
+    const margin = 16;
+
     if (current.placement === "below") {
-      cardStyle.top = rect.bottom + pad + 16;
+      const proposedTop = rect.bottom + pad + margin;
+      if (proposedTop + cardHeight > window.innerHeight - margin) {
+        // Won't fit below — try above
+        const proposedAboveTop = rect.top - pad - margin - cardHeight;
+        if (proposedAboveTop < margin) {
+          // Won't fit above either — just place at top of viewport
+          cardStyle.top = margin;
+        } else {
+          cardStyle.top = proposedAboveTop;
+        }
+      } else {
+        cardStyle.top = proposedTop;
+      }
     } else {
-      cardStyle.bottom = window.innerHeight - rect.top + pad + 16;
+      // "above" placement
+      const proposedAboveTop = rect.top - pad - margin - cardHeight;
+      if (proposedAboveTop < margin) {
+        // Won't fit above — place below or clamp to top
+        const proposedBelowTop = rect.bottom + pad + margin;
+        if (proposedBelowTop + cardHeight > window.innerHeight - margin) {
+          cardStyle.top = margin;
+        } else {
+          cardStyle.top = proposedBelowTop;
+        }
+      } else {
+        cardStyle.top = proposedAboveTop;
+      }
     }
   }
 

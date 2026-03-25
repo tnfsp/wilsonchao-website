@@ -311,7 +311,14 @@ function spo2ToPaO2(spo2Fraction: number): number {
 // Main: computeLabSnapshot
 // ============================================================
 
-export type LabPanelId = "cbc" | "coag" | "abg" | "lactate" | "bcs" | "ica" | "act" | "teg" | "rotem" | "troponin" | "blood_culture";
+export type LabPanelId =
+  | "cbc" | "abg"                                             // bundles
+  | "na" | "k" | "cl" | "co2" | "bun" | "cr" | "glucose"     // individual chemistry
+  | "pt_inr" | "aptt" | "fibrinogen"                          // individual coag
+  | "lactate" | "ica" | "act"                                  // individual others
+  | "troponin" | "type_screen" | "blood_culture"               // individual
+  | "teg" | "rotem"                                            // special
+  | "coag" | "bcs";                                            // legacy (other scenarios)
 
 /**
  * Compute a lab panel from BioGears state + game context.
@@ -442,6 +449,60 @@ export function computeLabSnapshot(
           flag: undefined,
         },
       };
+    }
+
+    // ── Individual chemistry (split from BCS) ──
+    case "na": {
+      const elec = computeElectrolytes(labs.pH, bloodVolumeFraction);
+      return { Na: labVal(elec.na, "na", 0) };
+    }
+    case "k": {
+      const elec = computeElectrolytes(labs.pH, bloodVolumeFraction);
+      return { K: labVal(elec.k, "k") };
+    }
+    case "cl": {
+      const elec = computeElectrolytes(labs.pH, bloodVolumeFraction);
+      return { Cl: labVal(elec.cl, "cl", 0) };
+    }
+    case "co2": {
+      const hco3 = computeHCO3(labs.pH, paCO2);
+      return { "CO₂": labVal(hco3 + 1, "co2", 0) }; // Total CO₂ ≈ HCO₃ + 1
+    }
+    case "bun": {
+      const renal = computeRenalFunction(labs.urine_production_mL_per_min, bloodVolumeFraction, ctx.gameTimeMinutes);
+      return { BUN: labVal(renal.bun, "bun", 0) };
+    }
+    case "cr": {
+      const renal = computeRenalFunction(labs.urine_production_mL_per_min, bloodVolumeFraction, ctx.gameTimeMinutes);
+      return { Cr: labVal(renal.cr, "cr", 2) };
+    }
+    case "glucose": {
+      const elec = computeElectrolytes(labs.pH, bloodVolumeFraction);
+      return { Glucose: labVal(elec.glucose, "glucose", 0) };
+    }
+
+    // ── Individual coagulation (split from Coag) ──
+    case "pt_inr": {
+      const inr = computeINR(bloodVolumeFraction, temp, ctx.ffpUnits, ctx.prbcUnits);
+      const pt = clamp(12 * inr, 8, 60);
+      return {
+        PT: labVal(pt, "pt"),
+        INR: labVal(inr, "inr", 2),
+      };
+    }
+    case "aptt": {
+      const inr = computeINR(bloodVolumeFraction, temp, ctx.ffpUnits, ctx.prbcUnits);
+      const apttVal = computeAPTT(inr);
+      return { aPTT: labVal(apttVal, "aptt", 0) };
+    }
+    case "fibrinogen": {
+      const fibVal = computeFibrinogen(bloodVolumeFraction, ctx.cryoDoses, ctx.prbcUnits);
+      return { Fibrinogen: labVal(fibVal, "fibrinogen", 0) };
+    }
+
+    // ── Type & Screen ──
+    case "type_screen": {
+      return null; // No dynamic computation — always use scenario static data
     }
 
     default:

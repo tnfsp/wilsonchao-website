@@ -1,12 +1,14 @@
-// ICU 模擬器 — Lab Panel 定義
-// 每個 lab 用 OrderDefinition 型別，turnaroundTime = timeToResult
+// ICU 模擬器 — Lab 定義
+// 設計原則：CBC / ABG 保持 bundle，其他全部拆成個別 item
+// 教學目的：訓練學員思考「我到底需要看什麼 lab」
 
 import type { OrderDefinition } from "../types";
 
 // ============================================================
-// CBC / DC (Complete Blood Count + Differential)
+// BUNDLES — 臨床上一定一起出的 panel
 // ============================================================
 
+/** CBC/DC (Complete Blood Count) — bundle */
 export const cbcLab: OrderDefinition = {
   id: "cbc",
   name: "CBC/DC (Complete Blood Count)",
@@ -17,7 +19,7 @@ export const cbcLab: OrderDefinition = {
   route: "Blood draw",
   frequencies: ["STAT", "Q6H", "Q8H", "Q12H", "Q24H"],
   timeToEffect: 0,
-  timeToResult: 30, // 30 game minutes
+  timeToResult: 30,
   effect: {
     type: "procedure",
     duration: 0,
@@ -26,57 +28,7 @@ export const cbcLab: OrderDefinition = {
   },
 };
 
-// ============================================================
-// BCS (Basic Chemistry / Metabolic Panel)
-// ============================================================
-
-export const bcsLab: OrderDefinition = {
-  id: "bcs",
-  name: "BCS (Basic Chemistry — Na/K/Cl/BUN/Cr/Glucose)",
-  category: "lab",
-  subcategory: "chemistry",
-  defaultDose: "1",
-  unit: "panel",
-  route: "Blood draw",
-  frequencies: ["STAT", "Q6H", "Q8H", "Q12H", "Q24H"],
-  timeToEffect: 0,
-  timeToResult: 35,
-  effect: {
-    type: "procedure",
-    duration: 0,
-    isCorrectTreatment: true,
-    severityChange: 0,
-  },
-};
-
-// ============================================================
-// Coagulation Panel
-// PT / INR / aPTT / Fibrinogen
-// ============================================================
-
-export const coagLab: OrderDefinition = {
-  id: "coag",
-  name: "Coag Panel (PT / INR / aPTT / Fibrinogen)",
-  category: "lab",
-  subcategory: "coagulation",
-  defaultDose: "1",
-  unit: "panel",
-  route: "Blood draw",
-  frequencies: ["STAT", "Q6H", "Q8H", "Q12H"],
-  timeToEffect: 0,
-  timeToResult: 45, // Coag takes a bit longer
-  effect: {
-    type: "procedure",
-    duration: 0,
-    isCorrectTreatment: true,
-    severityChange: 0,
-  },
-};
-
-// ============================================================
-// ABG (Arterial Blood Gas)
-// ============================================================
-
+/** ABG (Arterial Blood Gas) — bundle (pH/pCO₂/pO₂/HCO₃/BE/Lactate/SaO₂) */
 export const abgLab: OrderDefinition = {
   id: "abg",
   name: "ABG (Arterial Blood Gas)",
@@ -85,52 +37,6 @@ export const abgLab: OrderDefinition = {
   defaultDose: "1",
   unit: "draw",
   route: "Arterial line",
-  frequencies: ["STAT", "Q2H", "Q4H", "Q6H"],
-  timeToEffect: 0,
-  timeToResult: 10, // POC — 快速
-  effect: {
-    type: "procedure",
-    duration: 0,
-    isCorrectTreatment: true,
-    severityChange: 0,
-  },
-};
-
-// ============================================================
-// Lactate
-// ============================================================
-
-export const lactateLab: OrderDefinition = {
-  id: "lactate",
-  name: "Lactate",
-  category: "lab",
-  subcategory: "blood_gas",
-  defaultDose: "1",
-  unit: "draw",
-  route: "Venous or arterial",
-  frequencies: ["STAT", "Q2H", "Q4H"],
-  timeToEffect: 0,
-  timeToResult: 15,
-  effect: {
-    type: "procedure",
-    duration: 0,
-    isCorrectTreatment: true,
-    severityChange: 0,
-  },
-};
-
-// ============================================================
-// iCa (Ionized Calcium)
-// ============================================================
-
-export const iCaLab: OrderDefinition = {
-  id: "ica",
-  name: "iCa (Ionized Calcium)",
-  category: "lab",
-  subcategory: "blood_gas",
-  defaultDose: "1",
-  unit: "draw",
-  route: "Arterial or venous",
   frequencies: ["STAT", "Q2H", "Q4H", "Q6H"],
   timeToEffect: 0,
   timeToResult: 10, // POC
@@ -143,9 +49,188 @@ export const iCaLab: OrderDefinition = {
 };
 
 // ============================================================
-// ACT (Activated Clotting Time) — 心外特有！
+// INDIVIDUAL CHEMISTRY — 原 BCS panel 拆開
 // ============================================================
 
+export const naLab: OrderDefinition = {
+  id: "na",
+  name: "Na (Sodium)",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q6H", "Q8H", "Q12H"],
+  timeToEffect: 0,
+  timeToResult: 35,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+export const kLab: OrderDefinition = {
+  id: "k",
+  name: "K (Potassium)",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q6H", "Q8H", "Q12H"],
+  timeToEffect: 0,
+  timeToResult: 35,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+export const clLab: OrderDefinition = {
+  id: "cl",
+  name: "Cl (Chloride)",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q6H", "Q8H", "Q12H"],
+  timeToEffect: 0,
+  timeToResult: 35,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+export const co2Lab: OrderDefinition = {
+  id: "co2",
+  name: "CO₂ (Total CO₂)",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q6H", "Q8H", "Q12H"],
+  timeToEffect: 0,
+  timeToResult: 35,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+export const bunLab: OrderDefinition = {
+  id: "bun",
+  name: "BUN (Blood Urea Nitrogen)",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q6H", "Q8H", "Q12H"],
+  timeToEffect: 0,
+  timeToResult: 35,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+export const crLab: OrderDefinition = {
+  id: "cr",
+  name: "Cr (Creatinine)",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q6H", "Q8H", "Q12H"],
+  timeToEffect: 0,
+  timeToResult: 35,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+export const glucoseLab: OrderDefinition = {
+  id: "glucose",
+  name: "Glucose (血糖)",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw / Fingerstick",
+  frequencies: ["STAT", "Q4H", "Q6H", "Q8H"],
+  timeToEffect: 0,
+  timeToResult: 10, // Fingerstick POC
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+// ============================================================
+// INDIVIDUAL COAGULATION — 原 Coag panel 拆開
+// ============================================================
+
+export const ptInrLab: OrderDefinition = {
+  id: "pt_inr",
+  name: "PT / INR",
+  category: "lab",
+  subcategory: "coagulation",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw (blue-top)",
+  frequencies: ["STAT", "Q6H", "Q8H", "Q12H"],
+  timeToEffect: 0,
+  timeToResult: 45,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+export const apttLab: OrderDefinition = {
+  id: "aptt",
+  name: "aPTT",
+  category: "lab",
+  subcategory: "coagulation",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw (blue-top)",
+  frequencies: ["STAT", "Q6H", "Q8H", "Q12H"],
+  timeToEffect: 0,
+  timeToResult: 45,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+export const fibrinogenLab: OrderDefinition = {
+  id: "fibrinogen",
+  name: "Fibrinogen",
+  category: "lab",
+  subcategory: "coagulation",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw (blue-top)",
+  frequencies: ["STAT", "Q6H", "Q8H", "Q12H"],
+  timeToEffect: 0,
+  timeToResult: 45,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+// ============================================================
+// INDIVIDUAL — 其他檢驗
+// ============================================================
+
+/** Lactate（可以獨立開，也含在 ABG 裡） */
+export const lactateLab: OrderDefinition = {
+  id: "lactate",
+  name: "Lactate",
+  category: "lab",
+  subcategory: "blood_gas",
+  defaultDose: "1",
+  unit: "draw",
+  route: "Venous or arterial",
+  frequencies: ["STAT", "Q2H", "Q4H"],
+  timeToEffect: 0,
+  timeToResult: 15,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** iCa (Ionized Calcium) */
+export const iCaLab: OrderDefinition = {
+  id: "ica",
+  name: "iCa (Ionized Calcium)",
+  category: "lab",
+  subcategory: "blood_gas",
+  defaultDose: "1",
+  unit: "draw",
+  route: "Arterial or venous",
+  frequencies: ["STAT", "Q2H", "Q4H", "Q6H"],
+  timeToEffect: 0,
+  timeToResult: 10, // POC
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** ACT (Activated Clotting Time) — 心外特有 */
 export const actLab: OrderDefinition = {
   id: "act",
   name: "ACT (Activated Clotting Time)",
@@ -156,42 +241,41 @@ export const actLab: OrderDefinition = {
   route: "Whole blood (bedside POC)",
   frequencies: ["STAT", "Q1H", "Q2H"],
   timeToEffect: 0,
-  timeToResult: 10, // Bedside POC — 最快
-  effect: {
-    type: "procedure",
-    duration: 0,
-    isCorrectTreatment: true,
-    severityChange: 0,
-  },
+  timeToResult: 10,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
 };
 
-// ============================================================
-// Cardiac Markers — Troponin I/T
-// ============================================================
-
+/** Troponin I */
 export const troponinLab: OrderDefinition = {
   id: "troponin",
-  name: "Cardiac Markers (Troponin I/T + CK-MB)",
+  name: "Troponin I",
   category: "lab",
   subcategory: "cardiac",
   defaultDose: "1",
-  unit: "panel",
+  unit: "test",
   route: "Blood draw",
   frequencies: ["STAT", "Serial Q6H", "Q12H"],
   timeToEffect: 0,
   timeToResult: 60,
-  effect: {
-    type: "procedure",
-    duration: 0,
-    isCorrectTreatment: true,
-    severityChange: 0,
-  },
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
 };
 
-// ============================================================
-// Blood Culture
-// ============================================================
+/** Type & Screen / Crossmatch */
+export const typeScreenLab: OrderDefinition = {
+  id: "type_screen",
+  name: "Type & Screen / Crossmatch",
+  category: "lab",
+  subcategory: "blood_bank",
+  defaultDose: "1",
+  unit: "set",
+  route: "Blood draw (red-top)",
+  frequencies: ["STAT", "Once"],
+  timeToEffect: 0,
+  timeToResult: 30, // Blood bank 配血時間
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
 
+/** Blood Culture × 2 sets */
 export const bloodCultureLab: OrderDefinition = {
   id: "blood_culture",
   name: "Blood Culture × 2 sets",
@@ -202,20 +286,11 @@ export const bloodCultureLab: OrderDefinition = {
   route: "Peripheral venipuncture",
   frequencies: ["Once", "Q24H"],
   timeToEffect: 0,
-  timeToResult: 2880, // 48 hours (game minutes) — prelim results
-  effect: {
-    type: "procedure",
-    duration: 0,
-    isCorrectTreatment: true,
-    severityChange: 0,
-  },
+  timeToResult: 2880, // 48 hours
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
 };
 
-// ============================================================
-// TEG / ROTEM (Thromboelastography / Rotational Thromboelastometry)
-// 心外 ICU 特有！
-// ============================================================
-
+/** TEG (Thromboelastography) — 心外 ICU 特有 */
 export const tegLab: OrderDefinition = {
   id: "teg",
   name: "TEG (Thromboelastography)",
@@ -226,15 +301,11 @@ export const tegLab: OrderDefinition = {
   route: "Whole blood (bedside)",
   frequencies: ["STAT", "Once"],
   timeToEffect: 0,
-  timeToResult: 20, // ~20 min for basic profile
-  effect: {
-    type: "procedure",
-    duration: 0,
-    isCorrectTreatment: true,
-    severityChange: 0,
-  },
+  timeToResult: 20,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
 };
 
+/** ROTEM (Rotational Thromboelastometry) */
 export const rotemLab: OrderDefinition = {
   id: "rotem",
   name: "ROTEM (Rotational Thromboelastometry)",
@@ -246,12 +317,7 @@ export const rotemLab: OrderDefinition = {
   frequencies: ["STAT", "Once"],
   timeToEffect: 0,
   timeToResult: 20,
-  effect: {
-    type: "procedure",
-    duration: 0,
-    isCorrectTreatment: true,
-    severityChange: 0,
-  },
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
 };
 
 // ============================================================
@@ -259,14 +325,27 @@ export const rotemLab: OrderDefinition = {
 // ============================================================
 
 export const allLabs: OrderDefinition[] = [
+  // Bundles
   cbcLab,
-  bcsLab,
-  coagLab,
   abgLab,
+  // Individual chemistry
+  naLab,
+  kLab,
+  clLab,
+  co2Lab,
+  bunLab,
+  crLab,
+  glucoseLab,
+  // Individual coagulation
+  ptInrLab,
+  apttLab,
+  fibrinogenLab,
+  // Individual others
   lactateLab,
   iCaLab,
   actLab,
   troponinLab,
+  typeScreenLab,
   bloodCultureLab,
   tegLab,
   rotemLab,
@@ -274,10 +353,11 @@ export const allLabs: OrderDefinition[] = [
 
 export const labCategories = {
   hematology: [cbcLab],
-  chemistry: [bcsLab],
-  coagulation: [coagLab, actLab, tegLab, rotemLab],
   blood_gas: [abgLab, lactateLab, iCaLab],
+  chemistry: [naLab, kLab, clLab, co2Lab, bunLab, crLab, glucoseLab],
+  coagulation: [ptInrLab, apttLab, fibrinogenLab, actLab, tegLab, rotemLab],
   cardiac: [troponinLab],
+  blood_bank: [typeScreenLab],
   microbiology: [bloodCultureLab],
 };
 
@@ -286,7 +366,9 @@ export const labCategories = {
  */
 export const CRITICAL_LABS_POSTOP_BLEEDING = [
   "cbc",
-  "coag",
+  "pt_inr",
+  "aptt",
+  "fibrinogen",
   "abg",
   "lactate",
   "ica",

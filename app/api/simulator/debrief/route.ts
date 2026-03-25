@@ -93,6 +93,12 @@ interface DebriefRequestBody {
     assessment: string;
     recommendation: string;
   } | null;
+  playerSBARPhase1?: {
+    situation: string;
+    background: string;
+    assessment: string;
+    recommendation: string;
+  } | null;
   patientOutcome: {
     survived: boolean;
     deathCause: string | null;
@@ -189,10 +195,15 @@ function buildUserMessage(body: DebriefRequestBody): string {
     .map((ea) => `- ${ea.description} (deadline: ${ea.deadline}min) ${ea.critical ? "[CRITICAL]" : "[BONUS]"}`)
     .join("\n");
 
-  // Player SBAR
+  // Player SBAR (Phase 2 / final)
   const sbarText = playerSBAR
     ? `S: ${playerSBAR.situation}\nB: ${playerSBAR.background}\nA: ${playerSBAR.assessment}\nR: ${playerSBAR.recommendation}`
-    : "(Player did not submit SBAR)";
+    : "(Player did not submit final SBAR)";
+
+  // Player SBAR Phase 1 (if multi-phase scenario)
+  const sbarPhase1Text = body.playerSBARPhase1
+    ? `S: ${body.playerSBARPhase1.situation}\nB: ${body.playerSBARPhase1.background}\nA: ${body.playerSBARPhase1.assessment}\nR: ${body.playerSBARPhase1.recommendation}`
+    : null;
 
   // Example SBAR
   const exampleSbarText = scenarioMeta.exampleSBAR
@@ -219,8 +230,14 @@ ${expectedText}
 ## Patient Outcome
 ${patientOutcome.survived ? "Survived" : `Died: ${patientOutcome.deathCause ?? "Unknown"}`}
 
-## Player's SBAR
+${sbarPhase1Text ? `## Player's SBAR — Phase 1（給學長的初始報告）
+${sbarPhase1Text}
+
+## Player's SBAR — Phase 2（最終交班）
 ${sbarText}
+
+注意：比較兩份 SBAR 的差異。Phase 1 的 SBAR 反映玩家在出血階段的判斷；Phase 2 應該更新為包含 tamponade 的診斷。如果 Phase 2 的 SBAR 沒有提到 tamponade/心包填塞，這是一個需要改進的地方。` : `## Player's SBAR
+${sbarText}`}
 
 ## Example SBAR (Gold Standard)
 ${exampleSbarText}

@@ -721,6 +721,7 @@ export type ModalType =
   | "order"
   | "lab_order"
   | "lab_results"
+  | "lab_overview"
   | "pe"
   | "pocus"
   | "imaging"

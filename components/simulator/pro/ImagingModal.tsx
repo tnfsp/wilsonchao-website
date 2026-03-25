@@ -331,12 +331,33 @@ export function ImagingModal() {
     return null;
   }
 
+  // ── Severity-based echo clip selection ─────────────────────
+  // Phase 1 (surgical_bleeding):
+  //   severity < 40 → normal cardiac (surgical_bleeding clips)
+  //   severity >= 40 → mild pericardial effusion (use tamponade clips as "early sign")
+  // Phase 2 (tamponade) → full tamponade clips (RV collapse, D-shape when available)
+
+  function getEffectiveEchoPathology(tab: ImagingTab): string {
+    // Only apply severity-based override for cardiac echo and IVC
+    if (tab !== "echo" && tab !== "ivc") return pathology;
+
+    const severity = patient?.severity ?? 0;
+
+    // Phase 1: surgical_bleeding with rising severity → show early effusion
+    if (pathology === "surgical_bleeding" && severity >= 40) {
+      return "tamponade"; // use tamponade clips (pericardial effusion) as "early sign"
+    }
+
+    return pathology;
+  }
+
   // ── Render video clips ─────────────────────────────────────
 
   function renderClips(tab: ImagingTab) {
     const clipsKey = getClipsKey(tab);
     if (!clipsKey) return null;
-    const clips = ECHO_CLIPS[pathology]?.[clipsKey] ?? [];
+    const effectivePathology = getEffectiveEchoPathology(tab);
+    const clips = ECHO_CLIPS[effectivePathology]?.[clipsKey] ?? [];
     if (clips.length === 0) return null;
 
     return (
@@ -379,13 +400,28 @@ export function ImagingModal() {
     }
 
     const clipsKey = getClipsKey(tab);
-    const clips = clipsKey ? (ECHO_CLIPS[pathology]?.[clipsKey] ?? []) : [];
+    const effectivePathology = getEffectiveEchoPathology(tab);
+    const clips = clipsKey ? (ECHO_CLIPS[effectivePathology]?.[clipsKey] ?? []) : [];
     const hasClips = clips.length > 0;
+
+    // Severity-based finding description for Phase 1 early effusion
+    const isEarlyEffusion = pathology === "surgical_bleeding" && effectivePathology !== pathology;
 
     return (
       <div className="space-y-3">
         {/* Video clips — primary display */}
         {renderClips(tab)}
+
+        {/* Early effusion annotation */}
+        {isEarlyEffusion && hasClips && (
+          <div className="rounded-lg border border-amber-700/30 bg-amber-900/10 px-3 py-2">
+            <p className="text-amber-400/80 text-xs">
+              {tab === "ivc"
+                ? "IVC 看起來比預期飽滿⋯⋯跟出血的低血容量不太一致？"
+                : "咦？似乎有一些 pericardial effusion⋯⋯出血的病人怎麼會有積液？"}
+            </p>
+          </div>
+        )}
 
         {/* If no video clips, show a brief one-liner (not detailed finding) */}
         {!hasClips && (
@@ -567,21 +603,69 @@ export function ImagingModal() {
 
     // Ready — show result
     if (ready) {
-      switch (activeTab) {
-        case "cxr":
-          return renderCXR();
-        case "ecg":
-          return renderECG();
-        case "echo":
-        case "lung_pocus":
-        case "ivc":
-          return renderPocusFinding(activeTab);
-        default:
-          return null;
-      }
+      const isPocusTab = activeTab === "echo" || activeTab === "lung_pocus" || activeTab === "ivc";
+
+      return (
+        <div>
+          {activeTab === "cxr" && renderCXR()}
+          {activeTab === "ecg" && renderECG()}
+          {isPocusTab && renderPocusFinding(activeTab)}
+
+          {/* Redo POCUS button — 重新掃描看最新狀態 */}
+          {isPocusTab && (
+            <div className="mt-4 flex justify-center">
+              <button
+                onClick={() => handleRescan(activeTab)}
+                className="text-xs text-teal-500/60 hover:text-teal-300 transition-colors border border-teal-800/30 hover:border-teal-600/50 rounded-lg px-4 py-2"
+              >
+                🔄 重新掃描（看最新狀態）
+              </button>
+            </div>
+          )}
+        </div>
+      );
     }
 
     return null;
+  }
+
+  // ── Rescan handler (POCUS only) ─────────────────────────────
+
+  function handleRescan(tab: ImagingTab) {
+    const tabDef = TABS.find((t) => t.key === tab)!;
+    const pocusKey = getPocusViewKey(tab);
+
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: `${tabDef.emoji} 重新掃描 POCUS — ${tabDef.label}`,
+      sender: "player",
+    });
+
+    useProGameStore.setState((state) => ({
+      playerActions: [
+        ...state.playerActions,
+        {
+          action: `pocus:${pocusKey ?? tab}:${tabDef.label}:rescan`,
+          gameTime: clock.currentTime,
+          category: "pocus",
+        },
+      ],
+    }));
+
+    // Advance 2 game-minutes (rescan is faster than first scan)
+    actionAdvance(2);
+
+    // Force re-render by toggling ready state (clips will re-evaluate with current severity)
+    setReadyTabs((prev) => {
+      const next = new Set(prev);
+      next.delete(tab);
+      return next;
+    });
+    // Re-add after a brief delay so React re-renders the clips
+    setTimeout(() => {
+      setReadyTabs((prev) => new Set(prev).add(tab));
+    }, 100);
   }
 
   // ── Main render ────────────────────────────────────────────

@@ -36,6 +36,7 @@ import { ConsultModal } from "@/components/simulator/pro/ConsultModal";
 import { PauseThinkModal } from "@/components/simulator/pro/PauseThinkModal";
 import { SeniorDialogModal } from "@/components/simulator/pro/SeniorDialogModal";
 import DefibrillatorModal from "@/components/simulator/pro/DefibrillatorModal";
+import LabOverviewPanel from "@/components/simulator/pro/LabOverviewPanel";
 import TutorialOverlay from "@/components/simulator/pro/TutorialOverlay";
 import FastForwardToast from "@/components/simulator/pro/FastForwardToast";
 import { useKeyboardShortcuts } from "@/lib/simulator/useKeyboardShortcuts";
@@ -273,19 +274,20 @@ function useGameTick() {
     const vitals = newPatient.vitals;
     const severity = newPatient.severity ?? 0;
 
+    // Thresholds account for +/-5% noise in patient-engine vitals
     if (
       severity >= 95 ||
-      vitals.map < 30 ||
-      vitals.hr > 180 ||
-      vitals.hr < 30
+      vitals.map < 25 ||
+      vitals.hr > 190 ||
+      vitals.hr < 25
     ) {
       const scenarioId = scenario?.id ?? "";
       const pathology = newPatient.pathology ?? "";
       let cause: string;
 
-      if (vitals.map < 30) {
+      if (vitals.map < 25) {
         cause = "MAP 過低，器官灌流不足導致多重器官衰竭。";
-      } else if (vitals.hr > 180 || vitals.hr < 30) {
+      } else if (vitals.hr > 190 || vitals.hr < 25) {
         cause = "致死性心律不整。";
       } else if (pathology.includes("tamponade")) {
         cause = "心包填塞未及時處理，心輸出量衰竭。";
@@ -393,6 +395,7 @@ function GameScreen() {
       <PauseThinkModal />
       <SeniorDialogModal />
       <DefibrillatorModal />
+      <LabOverviewPanel />
     </>
   );
 }

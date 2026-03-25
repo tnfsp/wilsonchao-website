@@ -44,7 +44,10 @@ const VALID_MEDICATION_IDS = new Set([
   "epinephrine-ivp", "atropine", "amiodarone-ivp", "nicardipine", "labetalol", "nitroglycerin",
   "heparin", "tpa", "aspirin", "clopidogrel", "hydrocortisone",
   // Labs
-  "cbc", "bcs", "coag", "abg", "lactate", "ica", "act", "troponin", "blood_culture", "teg", "rotem",
+  "cbc", "abg",
+  "na", "k", "cl", "co2", "bun", "cr", "glucose",
+  "pt_inr", "aptt", "fibrinogen",
+  "lactate", "ica", "act", "troponin", "type_screen", "blood_culture", "teg", "rotem",
   // Transfusions
   "prbc_1u", "prbc_2u", "prbc_4u", "ffp_2u", "ffp_4u", "platelet_1dose", "platelet_2dose", "cryo_6u", "cryo_10u",
 ]);

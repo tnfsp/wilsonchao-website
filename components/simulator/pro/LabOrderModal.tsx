@@ -6,7 +6,7 @@ import { allLabs } from "@/lib/simulator/data/labs";
 import type { OrderDefinition } from "@/lib/simulator/types";
 
 // ============================================================
-// Lab display metadata
+// Lab display metadata — 每個 lab item 一條
 // ============================================================
 
 interface LabMeta {
@@ -15,24 +15,45 @@ interface LabMeta {
 }
 
 const LAB_META: Record<string, LabMeta> = {
-  cbc: { emoji: "🩸", desc: "Hb / Hct / Plt / WBC" },
-  coag: { emoji: "🧬", desc: "PT / INR / aPTT / Fibrinogen" },
-  abg: { emoji: "💨", desc: "pH / PaO₂ / PaCO₂ / BE / Lactate" },
-  lactate: { emoji: "⚗️", desc: "Lactate" },
-  bcs: { emoji: "🧪", desc: "Na / K / Cl / BUN / Cr / Glucose" },
+  // Bundles
+  cbc: { emoji: "🩸", desc: "Hb / Hct / Plt / WBC / MCV / MCH" },
+  abg: { emoji: "💨", desc: "pH / PaO₂ / PaCO₂ / HCO₃ / BE / Lactate / SaO₂" },
+  // Individual chemistry
+  na: { emoji: "🧪", desc: "Sodium" },
+  k: { emoji: "🧪", desc: "Potassium" },
+  cl: { emoji: "🧪", desc: "Chloride" },
+  co2: { emoji: "🧪", desc: "Total CO₂ (Bicarb)" },
+  bun: { emoji: "🧪", desc: "Blood Urea Nitrogen" },
+  cr: { emoji: "🧪", desc: "Creatinine" },
+  glucose: { emoji: "🩸", desc: "Blood Glucose" },
+  // Individual coagulation
+  pt_inr: { emoji: "🧬", desc: "Prothrombin Time / INR" },
+  aptt: { emoji: "🧬", desc: "Activated Partial Thromboplastin Time" },
+  fibrinogen: { emoji: "🧬", desc: "Fibrinogen level" },
+  act: { emoji: "⏱️", desc: "Activated Clotting Time (bedside)" },
+  // Blood gas individual
+  lactate: { emoji: "⚗️", desc: "Serum / Arterial Lactate" },
   ica: { emoji: "🦴", desc: "Ionized Ca²⁺" },
-  act: { emoji: "⏱️", desc: "Activated Clotting Time" },
-  troponin: { emoji: "❤️", desc: "Troponin I/T + CK-MB" },
-  blood_culture: { emoji: "🦠", desc: "Blood Culture × 2 sets" },
+  // Cardiac
+  troponin: { emoji: "❤️", desc: "Troponin I" },
+  // Blood bank
+  type_screen: { emoji: "🅰️", desc: "Type & Screen / Crossmatch / 備血" },
+  // Special
   teg: { emoji: "📊", desc: "Thromboelastography" },
   rotem: { emoji: "📈", desc: "ROTEM" },
+  blood_culture: { emoji: "🦠", desc: "Blood Culture × 2 sets" },
 };
 
-// Group display order — simple categories like a real HIS
+// ============================================================
+// Group display order — 臨床分類
+// ============================================================
+
 const LAB_GROUPS: { label: string; ids: string[] }[] = [
-  { label: "血液", ids: ["cbc", "coag", "abg", "lactate"] },
-  { label: "生化", ids: ["bcs", "ica", "troponin"] },
-  { label: "特殊", ids: ["act", "teg", "rotem", "blood_culture"] },
+  { label: "血液 / 血庫", ids: ["cbc", "type_screen"] },
+  { label: "Blood Gas", ids: ["abg", "lactate", "ica"] },
+  { label: "生化", ids: ["na", "k", "cl", "co2", "bun", "cr", "glucose", "troponin"] },
+  { label: "凝血", ids: ["pt_inr", "aptt", "fibrinogen", "act"] },
+  { label: "特殊", ids: ["teg", "rotem", "blood_culture"] },
 ];
 
 // Build lookup
@@ -82,11 +103,12 @@ export default function LabOrderModal() {
   const handleSelectGroup = (ids: string[]) => {
     setSelected((prev) => {
       const next = new Set(prev);
-      const allSelected = ids.every((id) => next.has(id));
+      const validIds = ids.filter((id) => labById[id]);
+      const allSelected = validIds.every((id) => next.has(id));
       if (allSelected) {
-        ids.forEach((id) => next.delete(id));
+        validIds.forEach((id) => next.delete(id));
       } else {
-        ids.forEach((id) => next.add(id));
+        validIds.forEach((id) => next.add(id));
       }
       return next;
     });
@@ -187,21 +209,23 @@ export default function LabOrderModal() {
 
         {/* Lab list */}
         <div className="px-6 pb-4 max-h-[60vh] overflow-y-auto space-y-5 scrollbar-thin scrollbar-thumb-zinc-700">
-          {LAB_GROUPS.map((group) => (
-            <div key={group.label}>
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs uppercase tracking-widest text-zinc-500">{group.label}</p>
-                <button
-                  onClick={() => handleSelectGroup(group.ids.filter((id) => labById[id]))}
-                  className="text-xs text-cyan-500 hover:text-cyan-300 transition"
-                >
-                  {group.ids.every((id) => selected.has(id)) ? "取消全選" : "全選"}
-                </button>
-              </div>
-              <div className="space-y-2">
-                {group.ids
-                  .filter((id) => labById[id])
-                  .map((id) => {
+          {LAB_GROUPS.map((group) => {
+            const validIds = group.ids.filter((id) => labById[id]);
+            if (validIds.length === 0) return null;
+
+            return (
+              <div key={group.label}>
+                <div className="flex items-center justify-between mb-2">
+                  <p className="text-xs uppercase tracking-widest text-zinc-500">{group.label}</p>
+                  <button
+                    onClick={() => handleSelectGroup(validIds)}
+                    className="text-xs text-cyan-500 hover:text-cyan-300 transition"
+                  >
+                    {validIds.every((id) => selected.has(id)) ? "取消全選" : "全選"}
+                  </button>
+                </div>
+                <div className="space-y-1.5">
+                  {validIds.map((id) => {
                     const def = labById[id];
                     const meta = LAB_META[id];
                     const isChecked = selected.has(id);
@@ -211,7 +235,7 @@ export default function LabOrderModal() {
                       <button
                         key={id}
                         onClick={() => toggleLab(id)}
-                        className={`w-full flex items-start gap-3 px-4 py-3 rounded-lg border text-left transition ${
+                        className={`w-full flex items-start gap-3 px-4 py-2.5 rounded-lg border text-left transition ${
                           isChecked
                             ? "bg-cyan-600/20 border-cyan-500"
                             : "bg-zinc-800 border-zinc-700 hover:border-zinc-500"
@@ -239,7 +263,6 @@ export default function LabOrderModal() {
                             <span className={`font-semibold text-sm ${isChecked ? "text-cyan-200" : "text-white"}`}>
                               {def.name}
                             </span>
-                            {/* No hints — player decides what to order */}
                           </div>
                           {meta?.desc && (
                             <p className="text-zinc-500 text-xs mt-0.5 leading-snug">{meta.desc}</p>
@@ -256,9 +279,10 @@ export default function LabOrderModal() {
                       </button>
                     );
                   })}
+                </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
 
         {/* Footer */}

@@ -6,6 +6,7 @@ import { useProGameStore } from "@/lib/simulator/store";
 /**
  * Keyboard shortcuts for the Pro simulator:
  *   1 = PE, 2 = 抽血, 3 = 處置, 4 = 通報交班(SBAR), 5 = 電擊
+ *   L = Lab Overview
  *   Space = toggle pause (open/close pause_think modal)
  *   F = fast forward 5 min
  *   Escape = close any open modal
@@ -76,6 +77,10 @@ export function useKeyboardShortcuts() {
         case " ":
           e.preventDefault();
           state.openModal("pause_think");
+          break;
+        case "l":
+          e.preventDefault();
+          state.openModal("lab_overview");
           break;
         case "f":
           e.preventDefault();

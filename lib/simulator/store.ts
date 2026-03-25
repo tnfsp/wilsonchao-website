@@ -89,9 +89,10 @@ const ACTION_PATTERNS: Record<string, RegExp> = {
   // ── Bleeding-to-Tamponade (Phase 2) ──
   "act-strip-milk-ct-p2": /procedure:.*(?:chest.?tube.?milk|strip|milk)|milk.*ct/i,
   "act-cardiac-pocus-p2": /pocus:cardiac/i,
-  "act-recall-senior": /consult:.*senior|recall_senior|message:.*再.*叫.*學長|message:.*叫學長|message:.*通知|call_senior/i,
+  // Phase 2 recall: 只 match「再」叫學長或 recall_senior action（不能被 Phase 1 的 call_senior 滿足）
+  "act-recall-senior": /recall_senior|message:.*再.*叫.*學長|message:.*再.*通知.*學長|message:.*學長.*回來/i,
   "act-volume-challenge-p2": /order:fluid:.*(?:ns|lr|normal.?saline|lactated|albumin)|order:transfusion/i,
-  "act-prepare-resternotomy": /message:.*(?:resternotomy|re.?sternotomy|開胸|開刀房|通知.*OR|準備.*手術)|consult:.*(?:or|手術)|order:procedure:.*resternotomy/i,
+  "act-prepare-resternotomy": /senior_call_correct_plan|message:.*(?:tamponade|心包填塞|pericardial|resternotomy|re.?sternotomy|開胸|開刀房|準備.*手術|送手術)|order:procedure:.*resternotomy/i,
   "act-abg-lactate-p2": /order:lab:.*(?:abg|blood.?gas|lactate)/i,
   "act-vent-fio2": /vent:.*fio2=/i,
 
@@ -176,7 +177,8 @@ export interface ProGameStore {
   pauseThinkUsed: boolean;
 
   // SBAR
-  sbarReport: any | null;
+  sbarReport: Record<string, string> | null;
+  sbarPhase1: Record<string, string> | null;  // Phase 1 SBAR（給學長的報告）
 
   // Score
   score: GameScore | null;
@@ -424,6 +426,7 @@ const initialState = {
   hintsUsed: 0,
   pauseThinkUsed: false,
   sbarReport: null as Record<string, string> | null,
+  sbarPhase1: null as Record<string, string> | null,
   score: null as GameScore | null,
   deathCause: null as string | null,
   rescueState: null as RescueState | null,
@@ -1489,9 +1492,26 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       sender: "player",
     };
 
+    // 檢查訊息是否提到正確診斷或手術計畫（用於 prepare-resternotomy 評分）
+    const mentionsDiagnosis = /tamponade|心包填塞|pericardial|cardiac.?tamponade|填塞/i.test(text);
+    const mentionsSurgery = /resternotomy|re.?sternotomy|開胸|手術|開刀|送\s*OR|通知\s*OR|準備\s*OR|去\s*OR|回\s*OR/i.test(text);
+    const mentionsCorrectPlan = mentionsDiagnosis || mentionsSurgery;
+
+    const newActions: TrackedAction[] = [
+      { action: `message:${text.slice(0, 50)}`, gameTime: clock.currentTime, category: "message" },
+    ];
+    if (mentionsCorrectPlan) {
+      // 叫學長時有提到診斷或手術計畫
+      newActions.push({
+        action: "senior_call_correct_plan",
+        gameTime: clock.currentTime,
+        category: "consult",
+      });
+    }
+
     set((state) => ({
       timeline: [...state.timeline, playerEntry],
-      playerActions: [...state.playerActions, { action: `message:${text.slice(0, 50)}`, gameTime: clock.currentTime, category: "message" }],
+      playerActions: [...state.playerActions, ...newActions],
     }));
 
     // Talking to nurse takes ~1 game-minute
@@ -1533,27 +1553,71 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
   },
 
   // ----------------------------------------------------------
-  // submitSBAR
+  // submitSBAR — Phase 1: 報告給學長（不結束）；Phase 2/單phase: 最終交班（結束）
   // ----------------------------------------------------------
   submitSBAR: (report: Record<string, string>) => {
-    const { clock } = get();
+    const { clock, scenario, patient } = get();
+    const isMultiPhase = !!scenario?.phasedFindings;
+    const isStillPhase1 = isMultiPhase && patient?.pathology === scenario?.pathology;
 
-    const entry: TimelineEntry = {
-      id: nextId("tl"),
-      gameTime: clock.currentTime,
-      type: "player_action",
-      content: "📝 提交 SBAR 交班報告",
-      sender: "player",
-      isImportant: true,
-    };
+    if (isStillPhase1) {
+      // ── Phase 1: SBAR 是給學長的報告，遊戲繼續 ──
+      const entry: TimelineEntry = {
+        id: nextId("tl"),
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "📝 你向學長報告 SBAR",
+        sender: "player",
+        isImportant: true,
+      };
 
-    set((state) => ({
-      sbarReport: report,
-      phase: "outcome",
-      timeline: [...state.timeline, entry],
-      playerActions: [...state.playerActions, { action: "sbar:submitted", gameTime: get().clock.currentTime }],
-      activeModal: null,
-    }));
+      // 記錄 Phase 1 SBAR（獨立保存，Phase 2 的 SBAR 存到 sbarReport）
+      set((state) => ({
+        sbarPhase1: report,
+        // phase 不變！遊戲繼續
+        timeline: [...state.timeline, entry],
+        playerActions: [...state.playerActions, { action: "sbar:submitted:phase1", gameTime: clock.currentTime }],
+        activeModal: null,
+      }));
+
+      // 排程學長 3 分鐘後到場
+      const seniorEvent: PendingEvent = {
+        id: `ev_senior_arrives_${Date.now()}`,
+        triggerAt: clock.currentTime + 3,
+        type: "senior_arrives",
+        data: {
+          message: "（學長推門進來）「怎麼了，跟我報告一下。」",
+        },
+        fired: false,
+        priority: 0,
+      };
+      get().addPendingEvent(seniorEvent);
+
+      get().addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "system_event",
+        content: "⏳ 學長約 3 分鐘後到場",
+        sender: "system",
+      });
+    } else {
+      // ── Phase 2 或單 phase: 最終交班，遊戲結束 ──
+      const entry: TimelineEntry = {
+        id: nextId("tl"),
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "📝 提交 SBAR 交班報告",
+        sender: "player",
+        isImportant: true,
+      };
+
+      set((state) => ({
+        sbarReport: report,
+        phase: "outcome",
+        timeline: [...state.timeline, entry],
+        playerActions: [...state.playerActions, { action: "sbar:submitted", gameTime: clock.currentTime }],
+        activeModal: null,
+      }));
+    }
   },
 
   // ----------------------------------------------------------

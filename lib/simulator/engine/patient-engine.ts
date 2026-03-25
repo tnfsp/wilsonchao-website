@@ -71,15 +71,18 @@ export function computeSeverityDelta(
   // With event-driven time (~30 game-min scenario over ~10 real-min),
   // we want severity to rise from 30→70 in ~25 min without treatment.
   // Target: ~1.6 pts/min → use 0.4 for surgical bleeding (was 1.2).
+  // Base severity rates: pts/min when UNTREATED.
+  // State-driven design: treatment effects (~-2.0/min combined) can overcome Phase 1 rates,
+  // but NOT Phase 2 tamponade — forcing player to recognize that tamponade needs surgery, not fluids.
   const baseRates: Record<Pathology, number> = {
-    surgical_bleeding: 0.4,
+    surgical_bleeding: 1.5,   // Phase 1: 治療可逆（treatment ~-2.0 > +1.5 → severity 下降）
     coagulopathy: 0.3,
-    tamponade: 2.5,           // 術後 tamponade（Phase 2 轉換後）— 未治療 ~12 分鐘死亡
+    tamponade: 5.0,           // Phase 2: 治療不可逆（treatment ~-2.0 < +5.0 → 持續惡化）— ~14 min 死亡
     lcos: 0.25,
     vasoplegia: 0.3,
     tension_pneumothorax: 0.8,
     postop_af: 0.1,
-    cardiac_tamponade: 2.5,   // 獨立 tamponade scenario — 與 tamponade 相同
+    cardiac_tamponade: 5.0,   // 獨立 tamponade scenario — 同上
     septic_shock: 0.35,
   };
 
