@@ -176,6 +176,7 @@ const ACTION_ALIASES: Record<string, (action: string) => boolean> = {
   order_ica: (a) => /order:.*(ica|ionized.?calcium|calcium)/i.test(a),
   strip_milk_ct: (a) => /strip|milk|ct.*通|通.*ct/i.test(a),
   cardiac_pocus: (a) => /pocus.*cardiac|pocus:cardiac|imaging:pocus/i.test(a),
+  recall_senior: (a) => /recall.*senior|call.*senior.*back|再.*叫.*學長|再.*通知.*學長|再.*call/i.test(a),
 };
 
 /**

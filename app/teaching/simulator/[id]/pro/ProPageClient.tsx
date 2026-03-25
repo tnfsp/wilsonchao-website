@@ -34,6 +34,7 @@ import { PEModal } from "@/components/simulator/pro/PEModal";
 import { ImagingModal } from "@/components/simulator/pro/ImagingModal";
 import { ConsultModal } from "@/components/simulator/pro/ConsultModal";
 import { PauseThinkModal } from "@/components/simulator/pro/PauseThinkModal";
+import { SeniorDialogModal } from "@/components/simulator/pro/SeniorDialogModal";
 import DefibrillatorModal from "@/components/simulator/pro/DefibrillatorModal";
 import TutorialOverlay from "@/components/simulator/pro/TutorialOverlay";
 import FastForwardToast from "@/components/simulator/pro/FastForwardToast";
@@ -390,6 +391,7 @@ function GameScreen() {
       <ImagingModal />
       <ConsultModal />
       <PauseThinkModal />
+      <SeniorDialogModal />
       <DefibrillatorModal />
     </>
   );

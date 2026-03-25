@@ -855,7 +855,7 @@ function useAIDebrief(
           patientDied: score.patientDied,
         },
         scenarioMeta: {
-          pathology: scenario.pathology,
+          pathology: patient?.pathology ?? scenario.pathology,
           correctDiagnosis: scenario.debrief.correctDiagnosis,
           keyPoints: scenario.debrief.keyPoints,
           pitfalls: scenario.debrief.pitfalls,
@@ -1137,7 +1137,7 @@ function AIKeyLessonsSection({ lessons }: { lessons: string[] }) {
 // ============================================================
 
 export default function DebriefPanel() {
-  const { score, scenario, timeline, resetGame, deathCause, playerActions, sbarReport } = useProGameStore();
+  const { score, scenario, patient, timeline, resetGame, deathCause, playerActions, sbarReport } = useProGameStore();
 
   // AI debrief
   const aiDebrief = useAIDebrief(score, scenario, timeline, sbarReport, deathCause);

@@ -56,11 +56,7 @@ const CXR_REAL_IMAGES: Record<string, { src: string; alt: string; attribution: s
     alt: "Bilateral infiltrates — ARDS/Sepsis 相關肺浸潤",
     attribution: "Wikimedia Commons, CC-BY-SA 3.0",
   },
-  surgical_bleeding: {
-    src: "/assets/cxr/surgical-bleeding/hemothorax.png",
-    alt: "Hemothorax — 術後出血 CXR",
-    attribution: "R. Amin & B.H. Waibel, Wikimedia Commons, CC-BY 4.0",
-  },
+  // surgical_bleeding: temporarily disabled to preview CxrCanvas fallback
 };
 
 // ── Real echo video clips per pathology + view ───────────────
@@ -154,7 +150,7 @@ function getClipsKey(tab: ImagingTab): string | null {
 
 export function ImagingModal() {
   const activeModal = useProGameStore((s) => s.activeModal);
-  const { scenario, clock, closeModal, addTimelineEntry, addPendingEvent } =
+  const { scenario, patient, clock, closeModal, addTimelineEntry, addPendingEvent } =
     useProGameStore();
   const actionAdvance = useProGameStore((s) => s.actionAdvance);
 
@@ -173,9 +169,12 @@ export function ImagingModal() {
 
   if (activeModal !== "imaging" || !scenario) return null;
 
-  const availableImaging = scenario.availableImaging as Record<string, string>;
-  const availablePOCUS = scenario.availablePOCUS as Record<string, POCUSView>;
-  const pathology = scenario.pathology ?? "";
+  // Dynamic pathology: follows patient state (multi-phase scenario support)
+  const currentPathology = patient?.pathology ?? scenario.pathology ?? "";
+  const phased = scenario.phasedFindings?.[currentPathology];
+  const availableImaging = (phased?.availableImaging ?? scenario.availableImaging) as Record<string, string>;
+  const availablePOCUS = (phased?.availablePOCUS ?? scenario.availablePOCUS) as Record<string, POCUSView>;
+  const pathology = currentPathology;
   const nurseName = scenario.nurseProfile.name ?? "護理師";
 
   // ── Helpers ──
@@ -414,7 +413,7 @@ export function ImagingModal() {
     const placedOrderIds = useProGameStore.getState().placedOrders.map((o) => o.id);
     const cxrInput = buildCXRInput({
       bgState,
-      scenarioPathology: scenario?.pathology,
+      scenarioPathology: currentPathology || scenario?.pathology,
       firedEventIds,
       placedOrderIds,
       isPostop: true,
@@ -475,8 +474,8 @@ export function ImagingModal() {
 
     const bgState = getLastBioGearsState();
     const morphology = generateECGMorphology(bgState, {
-      pathology: scenario?.pathology,
-      tamponade: scenario?.pathology === "cardiac_tamponade",
+      pathology: currentPathology || scenario?.pathology,
+      tamponade: currentPathology === "cardiac_tamponade" || currentPathology === "tamponade",
     });
     const autoInterp = generateInterpretation(morphology);
 

@@ -55,6 +55,29 @@ import type {
 // Helpers
 // ============================================================
 
+/**
+ * Pathology 轉換時，判斷已有 effect 對新 pathology 是否仍 "correct treatment"。
+ * 保守策略：bleeding 的止血藥（protamine, TXA, 輸血）對 tamponade 無效但也無害，
+ * 標記為 false 讓它們不再減少 severity，但 severityChange 也被 set 為 0 避免 worsening。
+ */
+function isEffectCorrectForNewPathology(
+  effect: ActiveEffect,
+  newPathology: Pathology,
+): boolean {
+  // 通用處置（volume, vasopressor）在多數 pathology 都算 correct
+  const universalTypes: ActiveEffect["type"][] = ["fluid", "vasopressor", "inotrope"];
+  if (universalTypes.includes(effect.type)) return true;
+
+  // 止血類（hemostatic, blood products）只對 bleeding/coagulopathy 有效
+  const hemostaticTypes: ActiveEffect["type"][] = ["hemostatic", "blood_product"];
+  if (hemostaticTypes.includes(effect.type)) {
+    return newPathology === "surgical_bleeding" || newPathology === "coagulopathy";
+  }
+
+  // 其他（warming, electrolyte, procedure）保持原樣
+  return effect.isCorrectTreatment;
+}
+
 /** Format elapsed game-minutes + startHour into "HH:MM AM" */
 function formatGameTime(elapsedMinutes: number, startHour = 2): string {
   const totalMin = startHour * 60 + elapsedMinutes;
@@ -536,7 +559,10 @@ function computeBasicScore(
     .map((o) => o.definition.name);
 
   // 4. Correct diagnosis（pathology match）
-  const correctDiagnosis = scenario.pathology === patient?.pathology;
+  // Multi-phase scenario: 玩家活到 Phase 2 (pathology 已轉換) 才算正確
+  const correctDiagnosis = scenario.phasedFindings
+    ? patient?.pathology !== scenario.pathology  // pathology 有轉換 = 活到了 Phase 2
+    : scenario.pathology === patient?.pathology;
 
   // 5. Escalation timing (now using actual gameTime from TrackedAction)
   const escalationAction = playerActions.find((pa) =>
@@ -775,6 +801,8 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         temperatureChange: e.temperatureChange,
         severityChange: e.severityChange,
         newLabResults: e.newLabResults,
+        pathologyChange: e.pathologyChange,
+        severitySet: e.severitySet,
       } as ScriptedEventData,
       fired: false,
       priority: 0,
@@ -855,23 +883,42 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
 
       const chestTubeChanges = data.chestTubeChanges;
       const severityChange = data.severityChange;
+      const pathologyChange = data.pathologyChange;
+      const severitySet = data.severitySet;
 
-      if (chestTubeChanges || severityChange) {
+      if (chestTubeChanges || severityChange || pathologyChange || severitySet !== undefined) {
         set((state) => {
           if (!state.patient) return {};
 
-          let newSeverity = state.patient.severity;
-          if (severityChange) {
+          let patientUpdate = { ...state.patient };
+
+          // ── pathologyChange 先套用（影響後續 severity curve + vitals） ──
+          if (pathologyChange) {
+            patientUpdate.pathology = pathologyChange;
+            // 重算 activeEffects 的 isCorrectTreatment：Phase 1 的藥在 Phase 2 可能不再 correct
+            patientUpdate.activeEffects = patientUpdate.activeEffects.map(eff => ({
+              ...eff,
+              isCorrectTreatment: eff.isCorrectTreatment
+                ? isEffectCorrectForNewPathology(eff, pathologyChange)
+                : false,
+            }));
+          }
+
+          // ── severity: severitySet（絕對值）優先於 severityChange（delta） ──
+          let newSeverity = patientUpdate.severity;
+          if (severitySet !== undefined) {
+            newSeverity = Math.max(0, Math.min(100, severitySet));
+          } else if (severityChange) {
             newSeverity = Math.max(0, Math.min(100, newSeverity + severityChange));
           }
 
-          let newChestTube = state.patient.chestTube;
+          let newChestTube = patientUpdate.chestTube;
           if (chestTubeChanges) {
             newChestTube = { ...newChestTube, ...chestTubeChanges };
           }
 
-          const ctOutputDiff = newChestTube.totalOutput - state.patient.chestTube.totalOutput;
-          let newIO = state.patient.ioBalance;
+          const ctOutputDiff = newChestTube.totalOutput - patientUpdate.chestTube.totalOutput;
+          let newIO = patientUpdate.ioBalance;
           if (ctOutputDiff !== 0) {
             newIO = {
               ...newIO,
@@ -887,9 +934,9 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
             };
           }
 
-          // 同時立即重算 vitals（用新 severity）讓 STEP 2 讀到最新數字
+          // 同時立即重算 vitals（用新 pathology + severity）讓 STEP 2 讀到最新數字
           const newPatient = updatePatientState(
-            { ...state.patient, severity: newSeverity, chestTube: newChestTube, ioBalance: newIO },
+            { ...patientUpdate, severity: newSeverity, chestTube: newChestTube, ioBalance: newIO },
             { minutesPassed: 0, currentGameMinutes: newTime, ventilator: state.ventilator }
           );
 
@@ -1035,6 +1082,10 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
           sender: "senior",
           isImportant: true,
         });
+        // Auto-open senior dialog modal (multi-phase scenarios use this for immersive cutscenes)
+        if (scenario?.phasedFindings) {
+          set({ activeModal: "senior_dialog" });
+        }
       }
     }
 

@@ -250,6 +250,10 @@ export interface ScriptedEventData {
   temperatureChange?: number;
   severityChange?: number;
   newLabResults?: Record<string, unknown>;
+  /** 觸發 pathology 轉換（multi-phase scenario 用） */
+  pathologyChange?: Pathology;
+  /** 絕對值設定 severity（不是 delta），用於 pathology 轉換時 reset */
+  severitySet?: number;
 }
 
 export interface SeniorArrivesData {
@@ -603,6 +607,13 @@ export interface SimScenario {
 
   debrief: DebriefData;
   outcomes?: ScenarioOutcome[];
+
+  /** Multi-phase scenario: findings that change when pathology transitions */
+  phasedFindings?: Partial<Record<Pathology, {
+    availablePOCUS?: Record<string, POCUSView>;
+    physicalExam?: Record<string, PEFinding>;
+    availableImaging?: Record<string, string>;
+  }>>;
 }
 
 export interface PatientInfo {
@@ -634,6 +645,10 @@ export interface ScriptedEvent {
   temperatureChange?: number;
   severityChange?: number;
   newLabResults?: Record<string, any>;
+  /** 觸發 pathology 轉換（multi-phase scenario 用） */
+  pathologyChange?: Pathology;
+  /** 絕對值設定 severity（不是 delta），用於 pathology 轉換時 reset */
+  severitySet?: number;
 }
 
 export interface ExpectedAction {
@@ -713,7 +728,8 @@ export type ModalType =
   | "debrief"
   | "pause_think"
   | "consult"
-  | "defibrillator";
+  | "defibrillator"
+  | "senior_dialog";
 
 // ============================================================
 // Defibrillator (ACLS)

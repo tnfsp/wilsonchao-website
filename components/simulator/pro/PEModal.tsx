@@ -74,7 +74,7 @@ const SILHOUETTE_BACK =
 
 export function PEModal() {
   const activeModal = useProGameStore((s) => s.activeModal);
-  const { scenario, closeModal, addTimelineEntry } = useProGameStore();
+  const { scenario, patient, closeModal, addTimelineEntry } = useProGameStore();
   const [selected, setSelected] = useState<string | null>(null);
   const [examined, setExamined] = useState<Set<string>>(new Set());
   const [showFinding, setShowFinding] = useState(false);
@@ -121,7 +121,8 @@ export function PEModal() {
 
   if (activeModal !== "pe" || !scenario) return null;
 
-  const physicalExam = scenario.physicalExam as Record<string, PEFinding>;
+  const phased = scenario.phasedFindings?.[patient?.pathology ?? ""];
+  const physicalExam = (phased?.physicalExam ?? scenario.physicalExam) as Record<string, PEFinding>;
   const currentFinding: PEFinding | undefined = selected ? physicalExam[selected] : undefined;
   const currentRegion = selected ? PE_REGIONS.find((r) => r.key === selected) : undefined;
   const frontRegions = PE_REGIONS.filter((r) => r.view === "front");

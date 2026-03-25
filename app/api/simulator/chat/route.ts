@@ -29,7 +29,7 @@ function checkRateLimit(ip: string): boolean {
 const DANGEROUS_ORDERS: Record<string, Set<string>> = {
   surgical_bleeding: new Set(["heparin", "tpa", "warfarin", "aspirin", "clopidogrel"]),
   coagulopathy: new Set(["heparin", "tpa", "warfarin", "aspirin", "clopidogrel"]),
-  cardiac_tamponade: new Set(["nitroglycerin", "morphine", "metoprolol", "labetalol", "furosemide"]),
+  cardiac_tamponade: new Set(["nitroglycerin", "morphine", "metoprolol", "labetalol", "furosemide", "heparin"]),
   septic_shock: new Set(["metoprolol", "labetalol", "propofol"]),
 };
 
