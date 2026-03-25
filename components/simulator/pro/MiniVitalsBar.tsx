@@ -77,7 +77,7 @@ export default function MiniVitalsBar() {
       <button
         onClick={scrollToVitals}
         aria-label="Vitals summary - tap to expand"
-        className="md:hidden sticky top-0 z-[60] w-full flex items-center justify-center gap-3 overflow-x-auto py-1.5 px-3 bg-slate-900/95 backdrop-blur border-b border-white/8 text-xs"
+        className="lg:hidden sticky top-0 z-[60] w-full flex items-center justify-center gap-3 overflow-x-auto py-1.5 px-3 bg-slate-900/95 backdrop-blur border-b border-white/8 text-xs"
         style={{ WebkitOverflowScrolling: "touch" }}
       >
         {items.map((item) => {

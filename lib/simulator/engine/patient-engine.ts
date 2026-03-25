@@ -25,12 +25,15 @@ function addNoise(value: number, noiseFraction: number = 0.05): number {
 
 /** 對整組 VitalSigns 加噪音（排除 aLineWaveform、spo2 特殊限制） */
 function applyVitalNoise(vitals: VitalSigns): VitalSigns {
+  const noisedSbp = Math.round(addNoise(vitals.sbp));
+  const noisedDbp = Math.round(addNoise(vitals.dbp));
   return {
     ...vitals,
     hr: Math.round(addNoise(vitals.hr)),
-    sbp: Math.round(addNoise(vitals.sbp)),
-    dbp: Math.round(addNoise(vitals.dbp)),
-    map: Math.round(addNoise(vitals.map)),
+    sbp: noisedSbp,
+    dbp: noisedDbp,
+    // Recalculate MAP from noised SBP/DBP for physiological consistency
+    map: Math.round((noisedSbp + 2 * noisedDbp) / 3),
     // spo2 噪音小一點，且不超過 100
     spo2: Math.min(100, Math.round(addNoise(vitals.spo2, 0.01))),
     cvp: Math.round(addNoise(vitals.cvp) * 10) / 10,

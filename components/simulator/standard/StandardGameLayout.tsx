@@ -28,6 +28,7 @@ export default function StandardGameLayout({
   actionBar,
 }: StandardGameLayoutProps) {
   const severity = useProGameStore((s) => s.patient?.severity ?? 0);
+  const gameMinutes = useProGameStore((s) => s.clock.currentTime);
 
   // Danger vignette
   const showDanger = severity > 60;
@@ -44,7 +45,7 @@ export default function StandardGameLayout({
         <>
           <style dangerouslySetInnerHTML={{ __html: dangerPulseCSS }} />
           <div
-            className="pointer-events-none fixed inset-0 z-[55]"
+            className="pointer-events-none fixed inset-0 z-[45]"
             style={{
               boxShadow: `inset 0 0 ${60 + dangerOpacity * 80}px ${10 + dangerOpacity * 30}px rgba(220, 38, 38, ${dangerOpacity * 0.4})`,
               animation: dangerPulse ? "stdDangerVignette 2s ease-in-out infinite" : undefined,
@@ -65,8 +66,8 @@ export default function StandardGameLayout({
             Standard
           </span>
         </div>
-        <div className="text-xs text-gray-500 font-mono">
-          {"\u6A21\u64EC ICU"}
+        <div className="text-xs text-gray-500 font-mono tabular-nums">
+          {"\u904A\u6232\u6642\u9593"} {gameMinutes} {"\u5206"}
         </div>
       </div>
       {/* Sticky mini vitals bar — visible on mobile only, mirrors Pro mode */}

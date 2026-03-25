@@ -17,6 +17,7 @@ import { getMedicationById } from "@/lib/simulator/data/medications";
 import { getLabById } from "@/lib/simulator/data/labs";
 import { getTransfusionById } from "@/lib/simulator/data/transfusions";
 import type { OrderDefinition } from "@/lib/simulator/types";
+import type { GuidanceMessage } from "@/lib/simulator/engine/guidance-engine";
 
 // Standard components
 import StandardGameLayout from "@/components/simulator/standard/StandardGameLayout";
@@ -27,6 +28,8 @@ import RescueCountdown from "@/components/simulator/standard/RescueCountdown";
 import StandardDebriefPanel from "@/components/simulator/standard/StandardDebriefPanel";
 import StandardPEModal from "@/components/simulator/standard/StandardPEModal";
 import StandardImagingModal from "@/components/simulator/standard/StandardImagingModal";
+import GuidanceBubble from "@/components/simulator/standard/GuidanceBubble";
+import type { GuidanceMessage as BubbleMessage } from "@/components/simulator/standard/GuidanceBubble";
 
 // Re-use Pro components where appropriate
 import ChatTimeline from "@/components/simulator/pro/ChatTimeline";
@@ -189,6 +192,7 @@ function IntroScreen({ scenario }: { scenario: SimScenario }) {
 
 function useStandardGameTick(
   overlay: StandardOverlay | null,
+  onGuidance?: (msg: GuidanceMessage) => void,
 ) {
   const phase = useProGameStore((s) => s.phase);
   const activeModal = useProGameStore((s) => s.activeModal);
@@ -247,6 +251,10 @@ function useStandardGameTick(
               content: gm.message,
               gameTime: state.clock.currentTime,
             });
+            // Also push to GuidanceBubble overlay
+            if (onGuidance) {
+              onGuidance(gm);
+            }
           }
         }
       }
@@ -377,10 +385,36 @@ function PresetOrderModal({
 
 function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
   const [executedPresetIds, setExecutedPresetIds] = useState<Set<string>>(new Set());
+  const [triedWrongIds, setTriedWrongIds] = useState<Set<string>>(new Set());
+  const [bubbleMessages, setBubbleMessages] = useState<BubbleMessage[]>([]);
   const activeModal = useProGameStore((s) => s.activeModal);
   const closeModal = useProGameStore((s) => s.closeModal);
+  const phase = useProGameStore((s) => s.phase);
 
-  useStandardGameTick(overlay);
+  // GuidanceBubble callback: convert engine messages to bubble format
+  const handleGuidance = useCallback((gm: GuidanceMessage) => {
+    const id = `${gm.trigger}:${gm.relatedAction ?? ""}:${Date.now()}`;
+    setBubbleMessages((prev) => [...prev, { id, text: gm.message, severity: gm.severity }]);
+  }, []);
+
+  useStandardGameTick(overlay, handleGuidance);
+
+  // Initial onboarding hint when game starts
+  useEffect(() => {
+    if (phase === "playing") {
+      const timer = setTimeout(() => {
+        setBubbleMessages((prev) => [
+          ...prev,
+          {
+            id: "onboarding-start",
+            text: "先讀護理師的訊息，再看 Vitals，然後用下方按鈕處置。",
+            severity: "info",
+          },
+        ]);
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [phase]);
 
   const handlePresetOrder = useCallback((preset: StandardPresetOrder) => {
     const state = useProGameStore.getState();
@@ -423,6 +457,8 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
           });
         }
       }
+      // Disable the wrong order button to prevent re-clicks
+      setTriedWrongIds((prev) => new Set([...prev, preset.id]));
       return;
     }
 
@@ -465,6 +501,9 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
 
   const presets = (overlay?.presetOrders ?? []) as StandardPresetOrder[];
 
+  // Merge executed + tried-wrong IDs so both are disabled in the panel
+  const allDisabledIds = new Set([...executedPresetIds, ...triedWrongIds]);
+
   return (
     <>
       <StandardGameLayout
@@ -480,6 +519,16 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
         actionBar={<SimplifiedActionBar />}
       />
 
+      {/* Guidance bubble overlay — floats above action bar */}
+      <div className="fixed bottom-20 left-4 right-4 z-[52] pointer-events-auto max-w-md">
+        <GuidanceBubble
+          messages={bubbleMessages}
+          onDismiss={(id) =>
+            setBubbleMessages((prev) => prev.filter((m) => m.id !== id))
+          }
+        />
+      </div>
+
       {/* Rescue countdown overlay — reads from store, self-manages visibility */}
       <RescueCountdown />
 
@@ -487,7 +536,7 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
       {activeModal === "order" && presets.length > 0 && (
         <PresetOrderModal
           presets={presets}
-          executedIds={executedPresetIds}
+          executedIds={allDisabledIds}
           onExecute={handlePresetOrder}
           onClose={closeModal}
         />
