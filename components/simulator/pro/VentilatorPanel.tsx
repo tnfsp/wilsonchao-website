@@ -63,7 +63,7 @@ export default function VentilatorPanel() {
   const plateauPressure = Math.round(peakPressure - 5);
 
   // Color coding
-  const fio2Color = ventilator.fio2 > 0.6 ? "text-yellow-400" : ventilator.fio2 > 0.8 ? "text-red-400" : "text-green-400";
+  const fio2Color = ventilator.fio2 > 0.8 ? "text-red-400" : ventilator.fio2 > 0.6 ? "text-yellow-400" : "text-green-400";
   const peepColor = valueColor(ventilator.peep, [4, 10], [3, 15]);
   const rrColor = valueColor(rrActual, [10, 20], [8, 25]);
   const mvColor = valueColor(parseFloat(minuteVent), [4, 8], [3, 10]);
@@ -113,12 +113,7 @@ export default function VentilatorPanel() {
             <ReadingRow label="Plateau P" value={plateauPressure} unit="cmH₂O" colorClass={valueColor(plateauPressure, [0, 28], [0, 35])} />
           </div>
 
-          {/* Teaching note */}
-          <div className="rounded border border-blue-900/30 bg-blue-950/10 px-3 py-2">
-            <p className="text-blue-400/60 text-[10px] leading-relaxed">
-              💡 術後標準：FiO₂ 0.4, PEEP 5。肺水腫/ARDS → 提高 PEEP ≥ 8 改善氧合。高 PEEP 會升高 CVP，注意血壓。調整呼吸器請至「開 Order → 呼吸器」。
-            </p>
-          </div>
+          {/* TODO: Move ventilator teaching to Debrief */}
         </div>
       )}
     </div>

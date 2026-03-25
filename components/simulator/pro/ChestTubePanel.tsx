@@ -167,14 +167,14 @@ export default function ChestTubePanel() {
         </span>
       </div>
 
-      {/* Status rows */}
+      {/* Status rows — no obstruction hints; player must discover themselves */}
       <div className="rounded-lg bg-black/30 border border-white/8 px-3 py-2 space-y-1.5">
         <StatusRow
           label="Patent"
           ok={chestTube.isPatent}
           okLabel="✓ Patent"
-          badLabel="✗ Obstructed"
-          alert={!chestTube.isPatent}
+          badLabel="Not patent"
+          alert={false}
         />
         <StatusRow
           label="Air Leak"
@@ -182,28 +182,7 @@ export default function ChestTubePanel() {
           okLabel="✓ None"
           badLabel="✗ Present"
         />
-        {chestTube.hasClots && (
-          <div className="flex items-center justify-between text-sm">
-            <span className="text-gray-400">血塊</span>
-            <span className="text-red-400 font-bold animate-pulse">
-              ⚠ 有血塊
-            </span>
-          </div>
-        )}
       </div>
-
-      {/* Not-patent warning */}
-      {!chestTube.isPatent && (
-        <div className="rounded-lg bg-red-950/50 border border-red-500/60 px-3 py-2">
-          <p className="text-red-300 text-xs font-semibold leading-snug">
-            ⚠ Chest tube 可能阻塞！
-            <br />
-            <span className="font-normal text-red-400">
-              Output 假性減少 → Tamponade risk！考慮 Milk/Strip CT。
-            </span>
-          </p>
-        </div>
-      )}
     </div>
   );
 }

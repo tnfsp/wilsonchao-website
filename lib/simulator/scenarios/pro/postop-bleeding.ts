@@ -246,6 +246,7 @@ const expectedActions: ExpectedAction[] = [
     hint: "出血情況下，第一步是量化失血：CBC stat 看 Hb。",
     rationale: "Hb 趨勢是判斷出血速度和輸血時機的核心指標。單次數值不夠，需要 serial follow-up 才能看出 trajectory。術後初始 Hb 可能被 hemodilution 影響，但趨勢下降是確切的出血證據。",
     howTo: "Order CBC stat → 抽完後標記時間。30 分鐘後再追一次 CBC 看趨勢。Hb drop > 1 g/dL/hr 代表活動性出血。Transfusion trigger 一般 Hb < 7（心外可考慮 < 8）。",
+    diagnosticCategory: "lab",
   },
   {
     id: "act-coag-panel",
@@ -256,6 +257,7 @@ const expectedActions: ExpectedAction[] = [
     hint: "光補血不夠，要知道有沒有 coagulopathy — Coag panel 幫你區分。",
     rationale: "心臟外科術後出血有兩種：surgical（需要回 OR）和 coagulopathy（可以用藥矯正）。Coag panel 是區分的關鍵。INR > 1.5、Fibrinogen < 150、Plt < 100 都指向 coagulopathy。不做這個檢查就無法做出正確決策。",
     howTo: "Order PT/INR, aPTT, Fibrinogen, Platelet count。同時考慮 ACT（心外特有）。結果判讀：INR > 1.5 → FFP；Fibrinogen < 150 → Cryo；Plt < 100 → Platelet transfusion。",
+    diagnosticCategory: "lab",
   },
   {
     id: "act-type-screen",
@@ -266,6 +268,7 @@ const expectedActions: ExpectedAction[] = [
     hint: "備血越早越好，配血需要時間。",
     rationale: "Blood bank 配血需要 30-45 分鐘。在出血進行中，提前備血可以縮短 'decision to transfusion' 的時間。如果等到 Hb 掉到 critical 才送，來不及。",
     howTo: "立即抽紅頭管送 blood bank：Type & Screen + Crossmatch pRBC 至少 4U。告知 blood bank 預期可能大量用血。如果已有之前的 T&S 結果（< 72hr），可直接 crossmatch。",
+    diagnosticCategory: "lab",
   },
   {
     id: "act-volume-resuscitation",
@@ -276,6 +279,7 @@ const expectedActions: ExpectedAction[] = [
     hint: "血壓 95，CVP 低，先給 volume — 可以是晶體液或開始輸血。",
     rationale: "低血壓 + 低 CVP = 容積不足。不管最終是要輸血還是回 OR，先穩住血壓維持 organ perfusion 是第一優先。腎臟和大腦對低灌流最敏感，每分鐘的低血壓都在造成 end-organ damage。",
     howTo: "LR 或 NS 500mL bolus（pressure bag），同時備血。如果 Hb 已知偏低 → 直接 O-negative pRBC 先輸再等 crossmatch。目標 MAP > 65。輸完 reassess CVP 和 BP。",
+    diagnosticCategory: "treatment",
   },
   {
     id: "act-call-senior",
@@ -286,6 +290,7 @@ const expectedActions: ExpectedAction[] = [
     hint: "CT output 趨勢持續上升、血壓在掉 — 叫學長不丟臉，叫太晚才丟臉。",
     rationale: "持續出血合併血流動力學不穩定 = 可能需要 re-exploration。這個決定需要 VS 來做。過晚 escalate 是住院醫師最常見的錯誤之一，也是 M&M conference 最常檢討的問題。",
     howTo: "電話通知 Senior/VS：'POD1 CABG，CT output 趨勢上升（目前 Xcc/hr），BP dropping to X/X，已 bolus volume，Hb X → 可能需要 re-exploration'。準備好所有數據讓 VS 快速決策。",
+    diagnosticCategory: "consult",
   },
   {
     id: "act-abg-lactate",
@@ -296,6 +301,7 @@ const expectedActions: ExpectedAction[] = [
     hint: "知道血壓低還不夠，ABG + Lactate 告訴你灌流夠不夠、dead space 多不多。",
     rationale: "血壓只告訴你 'pressure'，不告訴你 'flow'。Lactate 和 base deficit 反映組織是否真的有在灌流。Lactate 上升趨勢代表 resuscitation 不足，需要加速處理。",
     howTo: "Arterial line 抽 ABG（或 VBG + lactate）。重點看：pH（< 7.3 = 嚴重）、Base deficit（< -6 = Lethal triad 之一）、Lactate（> 2 代表開始缺氧，> 4 代表嚴重）。",
+    diagnosticCategory: "lab",
   },
   {
     id: "act-act",
@@ -306,6 +312,7 @@ const expectedActions: ExpectedAction[] = [
     hint: "心臟外科術中用 heparin，ACT 可以告訴你還有多少殘留，是否需要 protamine 追加。",
     rationale: "心臟外科術中使用大量 heparin（300-400 U/kg）。雖然術末會用 protamine 逆轉，但可能逆轉不完全。ACT 是快速評估 residual heparin effect 的方法，如果延長 → protamine 追加可能就能止住 'medical bleeding'。",
     howTo: "床邊 ACT 機器（point-of-care），取 whole blood sample。正常 ACT < 130 sec。如果 > 130 → 考慮 Protamine 25-50mg slow IV push。注意 protamine 過量也會造成 coagulopathy。",
+    diagnosticCategory: "lab",
   },
   {
     id: "act-cardiac-pocus",
@@ -316,6 +323,7 @@ const expectedActions: ExpectedAction[] = [
     hint: "Cardiac POCUS 可以在床邊快速排除 tamponade — 尤其 CT output 突然減少時。",
     rationale: "Postop bleeding 和 tamponade 可以同時存在。CT output 突然減少不一定是改善，可能是 clot 堵塞引流 → 血積在 pericardium → tamponade。POCUS 30 秒可以排除這個致命鑑別診斷。",
     howTo: "Subxiphoid view 優先（術後 parasternal window 可能被 dressing 擋住）。看 pericardial space 有無積液、RV 有無 collapse。同時看 LV function 評估 cardiac output。",
+    diagnosticCategory: "pocus",
   },
   {
     id: "act-protamine",
@@ -531,20 +539,25 @@ const availablePOCUS: Record<string, POCUSView> = {
 // ============================================================
 
 const physicalExam: Record<string, PEFinding> = {
-  general: {
-    area: "General",
+  head_neck: {
+    area: "Head & Neck",
     finding:
-      "Drowsy but arousable。意識稍降低（hypoperfusion 表現）。四肢冰冷，皮膚蒼白濕冷。",
+      "Drowsy but arousable。意識稍降低（hypoperfusion 表現）。皮膚蒼白濕冷。JVD (-)。氣管置中。",
   },
   chest: {
-    area: "Chest / Respiratory",
+    area: "Chest",
     finding:
-      "雙側呼吸音清晰，無囉音。Sternotomy wound intact，無皮膚感染跡象。敷料稍有血跡滲出（少量）。",
+      "Sternotomy wound intact，無皮膚感染跡象。敷料稍有血跡滲出（少量）。胸廓起伏對稱。",
+  },
+  lungs: {
+    area: "Lungs",
+    finding:
+      "雙側呼吸音清晰，無囉音、無 wheezing。Base clear bilaterally。",
   },
   heart: {
-    area: "Cardiovascular",
+    area: "Heart",
     finding:
-      "Heart rate regular，心律整齊。無雜音。無 S3/S4 gallop。Peripheral pulse 微弱。",
+      "Heart rate regular，心律整齊。S1/S2 clear。無雜音。無 S3/S4 gallop。Heart sounds not muffled。",
   },
   abdomen: {
     area: "Abdomen",
@@ -553,12 +566,17 @@ const physicalExam: Record<string, PEFinding> = {
   extremities: {
     area: "Extremities",
     finding:
-      "Bilateral weak pedal pulses。四肢冰冷。Cap refill > 3 秒。無明顯水腫（術後第 0 天）。",
+      "Bilateral weak pedal pulses。四肢冰冷。Cap refill > 3 秒。Temp cool。無明顯水腫（術後第 0 天）。",
   },
-  ct_site: {
-    area: "Chest Tube Site",
+  tubes_lines: {
+    area: "Tubes & Lines",
     finding:
-      "CT dressing dry externally。雙側胸管 patent，可見鮮紅色引流液。Suction set at -20 cmH2O。",
+      "CT dressing dry externally。雙側胸管 patent，可見鮮紅色引流液。Suction set at -20 cmH2O。Right IJ central line in situ, site clean。A-line left radial functional。",
+  },
+  back: {
+    area: "Back",
+    finding:
+      "Sacrum intact，無壓瘡。Posterior lung fields clear bilaterally。",
   },
 };
 
@@ -568,6 +586,13 @@ const physicalExam: Record<string, PEFinding> = {
 
 const debrief: DebriefData = {
   correctDiagnosis: "Surgical bleeding requiring re-exploration",
+
+  exampleSBAR: {
+    situation: "床3的林先生，65歲男性，CABG x3 POD0。CT output 持續上升至 280cc/hr，BP 95/55 → 85/50，HR 從 90 升至 115。",
+    background: "今日 CABG x3，術中順利。術後初期穩定，但過去 2 小時 CT output 逐漸增加。目前已給 Volume 1000cc NS，Hb 從 10.2 降至 8.2。",
+    assessment: "高度懷疑術後出血需要 re-exploration。INR 1.3，Fibrinogen 195 偏低。死亡三角風險：低溫 35.8\u00B0C、凝血異常、酸鹼失衡 pH 7.32。",
+    recommendation: "建議通知主治醫師評估是否需要緊急 re-exploration。同時繼續輸血糾正貧血和凝血異常，保溫措施加強。",
+  },
 
   keyPoints: [
     "CT output 趨勢比單一時間點更重要：200 → 280 → 320 cc/hr，持續上升 = 外科止血點還在出血。",
@@ -731,6 +756,8 @@ export const postopBleeding: SimScenario = {
     peep: 5,
     rrSet: 12,
     tvSet: 500,
+    inspPressure: 15,
+    psLevel: 10,
     ieRatio: '1:2',
   },
 
@@ -762,6 +789,30 @@ export const postopBleeding: SimScenario = {
   physicalExam,
 
   debrief,
+
+  outcomes: [
+    {
+      condition: "survived_good",
+      emoji: "🌟",
+      title: "病人穩定轉回 ICU",
+      narrative:
+        "學長到場後聽完你的 SBAR 報告，迅速評估 CT output 趨勢和 vitals。他決定帶病人回 OR 進行 re-exploration。手術中發現一條 IMA branch 在出血，電燒止血後引流量明顯下降。病人輸了 4U pRBC + 2U FFP，術後穩定轉回 ICU。你的及時處置和清楚的交班，讓整個團隊能在黃金時間內做出正確決策。",
+    },
+    {
+      condition: "survived_poor",
+      emoji: "⚠️",
+      title: "病人存活，但過程驚險",
+      narrative:
+        "學長到場時，病人已經進入死亡三角的早期階段 — 體溫偏低、凝血功能惡化。由於部分關鍵處置延遲，病人在等待期間多失了將近 800cc 的血。學長緊急帶回 OR，手術比預期困難，最終勉強止血成功。病人術後需要延長加護病房住院，但最終存活。這次經驗提醒我們：每多等一分鐘，出血就多一分風險。",
+    },
+    {
+      condition: "died",
+      emoji: "💀",
+      title: "病人因失血性休克過世",
+      narrative:
+        "儘管團隊全力搶救，持續的出血加上死亡三角的惡性循環，病人最終因為不可逆的血流動力學衰竭而過世。累計失血量超過一個血液體積。每一次這樣的經歷都是沉重的。讓我們回顧整個過程，找出可以更早介入的時間點。",
+    },
+  ],
 };
 
 export default postopBleeding;

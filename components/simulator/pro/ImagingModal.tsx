@@ -3,18 +3,37 @@
 import { useState } from "react";
 import Image from "next/image";
 import { useProGameStore } from "@/lib/simulator/store";
-import type { PendingEvent } from "@/lib/simulator/types";
-import { PocusCanvas } from "./PocusCanvas";
-import { CxrCanvas } from "./CxrCanvas";
-import { EcgCanvas } from "./EcgCanvas";
+import type { PendingEvent, POCUSView } from "@/lib/simulator/types";
 import { selectCXR, buildCXRInput } from "@/lib/simulator/engine/cxr-selector";
 import { getLastBioGearsState } from "@/lib/simulator/engine/biogears-engine";
 import {
   generateECGMorphology,
   generateInterpretation,
 } from "@/lib/simulator/engine/ecg-generator";
+import { EcgCanvas } from "./EcgCanvas";
+import { CxrCanvas } from "./CxrCanvas";
 
-// ── Real CXR images per pathology ─────────────────────────────
+// ── Tab definitions ──────────────────────────────────────────
+
+type ImagingTab = "cxr" | "echo" | "lung_pocus" | "ivc" | "ecg";
+
+interface TabDef {
+  key: ImagingTab;
+  label: string;
+  emoji: string;
+  turnaroundLabel: string;
+  turnaround: "immediate" | number; // minutes or immediate
+}
+
+const TABS: TabDef[] = [
+  { key: "cxr",        label: "CXR",        emoji: "📷", turnaroundLabel: "~15 min", turnaround: 15 },
+  { key: "echo",       label: "Echo",       emoji: "🫀", turnaroundLabel: "即時",    turnaround: "immediate" },
+  { key: "lung_pocus", label: "Lung POCUS", emoji: "🫁", turnaroundLabel: "即時",    turnaround: "immediate" },
+  { key: "ivc",        label: "IVC",        emoji: "🩸", turnaroundLabel: "即時",    turnaround: "immediate" },
+  { key: "ecg",        label: "ECG",        emoji: "📊", turnaroundLabel: "~5 min",  turnaround: 5 },
+];
+
+// ── Real CXR images per pathology ────────────────────────────
 
 const CXR_REAL_IMAGES: Record<string, { src: string; alt: string; attribution: string }> = {
   cardiac_tamponade: {
@@ -39,144 +58,189 @@ const CXR_REAL_IMAGES: Record<string, { src: string; alt: string; attribution: s
   },
 };
 
-// ── Real echo video clips for POCUS (ImagingModal version) ───
+// ── Real echo video clips per pathology + view ───────────────
 
 interface EchoClip { src: string; label: string; }
 
-const POCUS_ECHO_CLIPS: Record<string, EchoClip[]> = {
-  cardiac_tamponade: [
-    { src: "/assets/echo/cardiac-tamponade/a4c.mp4", label: "A4C — 心包積液 + RV collapse" },
-    { src: "/assets/echo/cardiac-tamponade/subcostal.mp4", label: "Subcostal" },
-    { src: "/assets/echo/cardiac-tamponade/ivc.mp4", label: "IVC — 擴張無塌陷" },
-  ],
-  tamponade: [
-    { src: "/assets/echo/cardiac-tamponade/a4c.mp4", label: "A4C — 心包積液" },
-    { src: "/assets/echo/cardiac-tamponade/ivc.mp4", label: "IVC — 擴張無塌陷" },
-  ],
-  surgical_bleeding: [
-    { src: "/assets/echo/hypovolemia/ivc-long.mp4", label: "IVC Long Axis — 塌陷（低血容）" },
-    { src: "/assets/echo/hypovolemia/ivc-trans.mp4", label: "IVC Trans — 呼吸變化明顯" },
-  ],
-  lcos: [
-    { src: "/assets/echo/takotsubo/a4c.mp4", label: "A4C — LV dysfunction" },
-    { src: "/assets/echo/lung-b-lines/b-lines.mp4", label: "Lung B-lines — 肺水腫" },
-  ],
-  septic_shock: [
-    { src: "/assets/echo/lung-b-lines/b-lines.mp4", label: "Lung B-lines — ARDS" },
-    { src: "/assets/echo/lung-b-lines/confluent-b-lines.mp4", label: "Confluent B-lines — 嚴重肺浸潤" },
-  ],
+/** Map: pathology → pocus view key → clips */
+const ECHO_CLIPS: Record<string, Record<string, EchoClip[]>> = {
+  cardiac_tamponade: {
+    cardiac: [
+      { src: "/assets/echo/cardiac-tamponade/a4c.mp4", label: "A4C — 心包積液 + RV collapse" },
+      { src: "/assets/echo/cardiac-tamponade/plax.mp4", label: "PLAX — 心包積液" },
+      { src: "/assets/echo/cardiac-tamponade/psax.mp4", label: "PSAX" },
+      { src: "/assets/echo/cardiac-tamponade/subcostal.mp4", label: "Subcostal" },
+    ],
+    ivc: [
+      { src: "/assets/echo/cardiac-tamponade/ivc.mp4", label: "IVC — 擴張無塌陷（plethora）" },
+    ],
+    lung: [],
+  },
+  tamponade: {
+    cardiac: [
+      { src: "/assets/echo/cardiac-tamponade/a4c.mp4", label: "A4C — 心包積液" },
+      { src: "/assets/echo/cardiac-tamponade/subcostal.mp4", label: "Subcostal" },
+    ],
+    ivc: [
+      { src: "/assets/echo/cardiac-tamponade/ivc.mp4", label: "IVC — 擴張無塌陷" },
+    ],
+    lung: [],
+  },
+  surgical_bleeding: {
+    cardiac: [],
+    ivc: [
+      { src: "/assets/echo/hypovolemia/ivc-long.mp4", label: "IVC Long Axis — 塌陷（低血容）" },
+      { src: "/assets/echo/hypovolemia/ivc-trans.mp4", label: "IVC Trans — 呼吸變化明顯" },
+    ],
+    lung: [],
+  },
+  lcos: {
+    cardiac: [
+      { src: "/assets/echo/takotsubo/a4c.mp4", label: "A4C — LV dysfunction" },
+      { src: "/assets/echo/takotsubo/plax.mp4", label: "PLAX — 收縮功能下降" },
+    ],
+    ivc: [],
+    lung: [
+      { src: "/assets/echo/lung-b-lines/b-lines.mp4", label: "Lung B-lines — 肺水腫" },
+    ],
+  },
+  septic_shock: {
+    cardiac: [],
+    ivc: [],
+    lung: [
+      { src: "/assets/echo/lung-b-lines/b-lines.mp4", label: "Lung B-lines — ARDS/肺水腫" },
+      { src: "/assets/echo/lung-b-lines/confluent-b-lines.mp4", label: "Confluent B-lines — 嚴重肺浸潤" },
+    ],
+  },
+  tension_pneumothorax: {
+    cardiac: [],
+    ivc: [],
+    lung: [
+      { src: "/assets/echo/lung-pneumothorax/absent-sliding.mp4", label: "Lung — 肺滑動消失（Absent sliding）" },
+    ],
+  },
 };
 
-// ── Imaging options ──────────────────────────────────────────
+// ── Map tab key → POCUS view key (for availablePOCUS lookup) ─
 
-type ImagingType = "cxr_portable" | "pocus" | "ecg_12lead";
-
-interface ImagingOption {
-  key: ImagingType;
-  emoji: string;
-  title: string;
-  subtitle: string;
-  turnaround: "immediate" | number; // "immediate" or minutes
-  turnaroundLabel: string;
-  note?: string;
+function getPocusViewKey(tab: ImagingTab): string | null {
+  switch (tab) {
+    case "echo":       return "cardiac";
+    case "lung_pocus": return "lung";
+    case "ivc":        return "ivc";
+    default:           return null;
+  }
 }
 
-const IMAGING_OPTIONS: ImagingOption[] = [
-  {
-    key: "cxr_portable",
-    emoji: "📷",
-    title: "Portable CXR",
-    subtitle: "床邊胸部 X 光",
-    turnaround: 15,
-    turnaroundLabel: "結果約 15 分鐘後回來",
-    note: "排 X 光技師 → 照相 → 上傳 PACS — 需要等",
-  },
-  {
-    key: "pocus",
-    emoji: "📱",
-    title: "POCUS",
-    subtitle: "床邊即時超音波",
-    turnaround: "immediate",
-    turnaroundLabel: "即時結果",
-    note: "A4C cardiac + IVC + Lung — 快速床邊評估",
-  },
-  {
-    key: "ecg_12lead",
-    emoji: "📊",
-    title: "12-Lead ECG",
-    subtitle: "十二導程心電圖",
-    turnaround: 5,
-    turnaroundLabel: "結果約 5 分鐘",
-    note: "叫心電圖技師 → 貼片 → 做完上傳",
-  },
-];
+// ── Map tab key → echo clips key ─────────────────────────────
 
-// ── CXR result map (scenario key → scenario availableImaging key) ──────────
-
-const IMAGING_KEY_MAP: Record<ImagingType, string> = {
-  cxr_portable: "cxr_portable",
-  pocus: "pocus",
-  ecg_12lead: "ecg_12lead",
-};
+function getClipsKey(tab: ImagingTab): string | null {
+  switch (tab) {
+    case "echo":       return "cardiac";
+    case "lung_pocus": return "lung";
+    case "ivc":        return "ivc";
+    default:           return null;
+  }
+}
 
 // ── Component ────────────────────────────────────────────────
 
 export function ImagingModal() {
   const activeModal = useProGameStore((s) => s.activeModal);
-  const { scenario, clock, closeModal, addTimelineEntry, addPendingEvent, advanceTime } =
+  const { scenario, clock, closeModal, addTimelineEntry, addPendingEvent } =
     useProGameStore();
+  const actionAdvance = useProGameStore((s) => s.actionAdvance);
 
-  const [selected, setSelected]     = useState<ImagingType | null>(null);
-  const [ordered, setOrdered]       = useState<Set<ImagingType>>(new Set());
-  const [showResult, setShowResult] = useState<ImagingType | null>(null);
-  const [pendingCXR, setPendingCXR] = useState(false);
-  const [cxrReady, setCxrReady]     = useState(false);
-  const [pendingECG, setPendingECG] = useState(false);
-  const [ecgReady, setEcgReady]     = useState(false);
+  const [activeTab, setActiveTab] = useState<ImagingTab>("cxr");
+
+  // Track which tabs have been ordered / scanned
+  const [orderedTabs, setOrderedTabs] = useState<Set<ImagingTab>>(new Set());
+  // Deferred results pending (CXR, ECG)
+  const [pendingTabs, setPendingTabs] = useState<Set<ImagingTab>>(new Set());
+  // Deferred results ready
+  const [readyTabs, setReadyTabs] = useState<Set<ImagingTab>>(new Set());
+
+  // ECG auto-interp visibility
+  const [showEcgAutoInterp, setShowEcgAutoInterp] = useState(false);
+  // (CXR findings pills removed — moved to Debrief)
 
   if (activeModal !== "imaging" || !scenario) return null;
 
   const availableImaging = scenario.availableImaging as Record<string, string>;
+  const availablePOCUS = scenario.availablePOCUS as Record<string, POCUSView>;
+  const pathology = scenario.pathology ?? "";
   const nurseName = scenario.nurseProfile.name ?? "護理師";
 
-  // ── Order handler ────────────────────────────────────────────
+  // ── Helpers ──
 
-  function handleOrder(opt: ImagingOption) {
-    if (ordered.has(opt.key)) return;
+  const isTabOrdered = (tab: ImagingTab) => orderedTabs.has(tab);
+  const isTabPending = (tab: ImagingTab) => pendingTabs.has(tab);
+  const isTabReady = (tab: ImagingTab) => readyTabs.has(tab);
 
-    if (opt.turnaround === "immediate") {
-      // Show result right away
+  // Check if a tab has result data available in the scenario
+  function hasTabData(tab: ImagingTab): boolean {
+    switch (tab) {
+      case "cxr":
+        return !!availableImaging["cxr_portable"];
+      case "ecg":
+        return !!availableImaging["ecg_12lead"];
+      case "echo":
+      case "lung_pocus":
+      case "ivc": {
+        const pocusKey = getPocusViewKey(tab);
+        return pocusKey ? !!availablePOCUS[pocusKey] : false;
+      }
+      default:
+        return false;
+    }
+  }
+
+  // ── Order handler ──────────────────────────────────────────
+
+  function handleOrder(tab: ImagingTab) {
+    if (isTabOrdered(tab)) return;
+
+    const tabDef = TABS.find((t) => t.key === tab)!;
+
+    if (tabDef.turnaround === "immediate") {
+      // POCUS tabs: immediate result, advance 3 game-minutes
       addTimelineEntry({
         gameTime: clock.currentTime,
         type: "player_action",
-        content: `🫀 開了 ${opt.title}`,
+        content: `${tabDef.emoji} 你做了 POCUS — ${tabDef.label}`,
         sender: "player",
       });
-      addTimelineEntry({
-        gameTime: clock.currentTime,
-        type: "nurse_message",
-        content: `${nurseName}：好，馬上叫超音波過來。`,
-        sender: "nurse",
-      });
 
+      // Track player action
+      const pocusKey = getPocusViewKey(tab);
       useProGameStore.setState((state) => ({
-        playerActions: [...state.playerActions, { action: `imaging:${opt.key}`, gameTime: clock.currentTime, category: "imaging" }],
+        playerActions: [
+          ...state.playerActions,
+          {
+            action: `pocus:${pocusKey ?? tab}:${tabDef.label}`,
+            gameTime: clock.currentTime,
+            category: "pocus",
+          },
+        ],
       }));
 
-      setOrdered((prev) => new Set(prev).add(opt.key));
-      setSelected(opt.key);
-      setTimeout(() => setShowResult(opt.key), 400);
+      // Advance 3 game-minutes for POCUS scan
+      actionAdvance(3);
+
+      setOrderedTabs((prev) => new Set(prev).add(tab));
+      setReadyTabs((prev) => new Set(prev).add(tab));
     } else {
-      // Deferred result (CXR or ECG)
-      const turnaroundMinutes = opt.turnaround as number;
-      const isECG = opt.key === "ecg_12lead";
+      // Deferred: CXR or ECG
+      const turnaroundMinutes = tabDef.turnaround as number;
+      const isECG = tab === "ecg";
 
       addTimelineEntry({
         gameTime: clock.currentTime,
         type: "player_action",
-        content: `${opt.emoji} 開了 ${opt.title}（結果約 ${turnaroundMinutes} 分鐘後回來）`,
+        content: `${tabDef.emoji} 開了 ${tabDef.label}（結果約 ${turnaroundMinutes} 分鐘後回來）`,
         sender: "player",
       });
+
       addTimelineEntry({
         gameTime: clock.currentTime,
         type: "nurse_message",
@@ -187,242 +251,193 @@ export function ImagingModal() {
       });
 
       useProGameStore.setState((state) => ({
-        playerActions: [...state.playerActions, { action: `imaging:${opt.key}`, gameTime: clock.currentTime, category: "imaging" }],
+        playerActions: [
+          ...state.playerActions,
+          {
+            action: `imaging:${isECG ? "ecg_12lead" : "cxr_portable"}`,
+            gameTime: clock.currentTime,
+            category: "imaging",
+          },
+        ],
       }));
 
       // Schedule result event
       const resultEvent: PendingEvent = {
-        id: `ev_${opt.key}_result_${Date.now()}`,
+        id: `ev_${tab}_result_${Date.now()}`,
         triggerAt: clock.currentTime + turnaroundMinutes,
         type: "lab_result",
         data: {
-          imagingKey: opt.key,
+          imagingKey: isECG ? "ecg_12lead" : "cxr_portable",
           imagingType: isECG ? "ecg" : "cxr",
-          label: opt.title,
+          label: tabDef.label,
         },
         fired: false,
         priority: 1,
       };
       addPendingEvent(resultEvent);
 
-      // Timeline: system note about pending
       addTimelineEntry({
         gameTime: clock.currentTime,
         type: "system_event",
-        content: `⏳ ${opt.title} 已排程 — 結果將在 ${turnaroundMinutes} 分鐘內回來`,
+        content: `⏳ ${tabDef.label} 已排程 — 結果將在 ${turnaroundMinutes} 分鐘內回來`,
         sender: "system",
       });
 
-      setOrdered((prev) => new Set(prev).add(opt.key));
-      if (isECG) {
-        setPendingECG(true);
-      } else {
-        setPendingCXR(true);
-      }
-      setSelected(opt.key);
+      setOrderedTabs((prev) => new Set(prev).add(tab));
+      setPendingTabs((prev) => new Set(prev).add(tab));
 
-      // For demo: simulate time advance and then show result
+      // Simulate result arriving after short delay (UX)
       setTimeout(() => {
         addTimelineEntry({
           gameTime: clock.currentTime + turnaroundMinutes,
           type: "lab_result",
-          content: `${opt.emoji} ${opt.title} 結果已回`,
+          content: `${tabDef.emoji} ${tabDef.label} 結果已回`,
           sender: "system",
           isImportant: true,
         });
-        if (isECG) {
-          setEcgReady(true);
-          setPendingECG(false);
-        } else {
-          setCxrReady(true);
-          setPendingCXR(false);
-        }
-      }, 1500); // short delay for UX; real advance triggered separately
+        setPendingTabs((prev) => {
+          const next = new Set(prev);
+          next.delete(tab);
+          return next;
+        });
+        setReadyTabs((prev) => new Set(prev).add(tab));
+      }, 1500);
     }
   }
 
-  function handleViewCXR() {
-    setShowResult("cxr_portable");
-  }
+  // ── Tab badge ──────────────────────────────────────────────
 
-  function handleViewECG() {
-    setShowResult("ecg_12lead");
-  }
-
-  // ── Render helpers ───────────────────────────────────────────
-
-  function renderResult(key: ImagingType) {
-    // 12-Lead ECG: render canvas + interpretation + text report
-    if (key === "ecg_12lead") {
-      const bgState = getLastBioGearsState();
-      const morphology = generateECGMorphology(bgState, {
-        pathology: scenario?.pathology,
-        tamponade: scenario?.pathology === "cardiac_tamponade",
-      });
-      const autoInterp = generateInterpretation(morphology);
-      const scenarioText = availableImaging["ecg_12lead"];
-
+  function tabBadge(tab: ImagingTab): React.ReactNode {
+    if (isTabReady(tab)) {
       return (
-        <div
-          className="rounded-lg border border-teal-800/30 overflow-hidden"
-          style={{ backgroundColor: "#001e2e" }}
-        >
-          {/* Header */}
-          <div className="px-4 py-2.5 border-b border-teal-900/30 flex items-center gap-2">
-            <span className="text-lg">📊</span>
-            <span className="text-teal-200 font-medium text-sm">12-Lead ECG</span>
-            <span className="ml-auto text-xs text-teal-500/50 uppercase tracking-widest">
-              十二導程
-            </span>
-          </div>
+        <span className="ml-1.5 w-2 h-2 rounded-full bg-teal-400 inline-block" />
+      );
+    }
+    if (isTabPending(tab)) {
+      return (
+        <span className="ml-1.5 w-2 h-2 rounded-full bg-amber-400 animate-pulse inline-block" />
+      );
+    }
+    return null;
+  }
 
-          {/* ECG Canvas */}
-          <div className="p-3">
-            <EcgCanvas
-              morphology={morphology}
-              width={672}
-              height={504}
-              showGrid
-              showLabels
-              interpretation={autoInterp}
+  // ── Render video clips ─────────────────────────────────────
+
+  function renderClips(tab: ImagingTab) {
+    const clipsKey = getClipsKey(tab);
+    if (!clipsKey) return null;
+    const clips = ECHO_CLIPS[pathology]?.[clipsKey] ?? [];
+    if (clips.length === 0) return null;
+
+    return (
+      <div className="space-y-2 mb-3">
+        {clips.map((clip, ci) => (
+          <div key={ci} className="rounded-lg overflow-hidden border border-teal-900/30">
+            <video
+              src={clip.src}
+              autoPlay
+              loop
+              muted
+              playsInline
+              className="w-full h-auto"
             />
-          </div>
-
-          {/* Auto interpretation */}
-          <div className="px-4 pb-2">
-            <p className="text-xs text-teal-500/60 uppercase tracking-widest mb-1">
-              Auto Interpretation
-            </p>
-            <p className="text-teal-300/80 text-xs leading-relaxed">{autoInterp}</p>
-          </div>
-
-          {/* Scenario text report (if available) */}
-          {scenarioText && (
-            <div className="px-4 py-3 border-t border-teal-900/20">
-              <p className="text-xs text-teal-500/60 uppercase tracking-widest mb-2">
-                Report
-              </p>
-              <div
-                className="text-teal-100 text-sm leading-relaxed whitespace-pre-line"
-                dangerouslySetInnerHTML={{
-                  __html: scenarioText
-                    .trim()
-                    .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                    .replace(/- /g, "• "),
-                }}
-              />
-            </div>
-          )}
-
-          {/* Teaching note */}
-          <div className="mx-4 mb-4 px-3 py-2 rounded bg-teal-900/20 border border-teal-700/25">
-            <p className="text-teal-300/70 text-xs leading-relaxed">
-              💡 12-Lead ECG 在 ICU 的關鍵應用：低電壓 + 電交替 → 心包填塞；peaked T + wide QRS → 高鉀；Osborn J wave → 低體溫。
+            <p className="text-teal-400/70 text-xs px-2 py-1 bg-black/40">
+              {clip.label}
             </p>
           </div>
-        </div>
-      );
-    }
+        ))}
+        <p className="text-teal-600/40 text-[10px]">
+          LITFL ECG Library / Wikimedia Commons, CC-BY-NC-SA 4.0
+        </p>
+      </div>
+    );
+  }
 
-    // POCUS renders the live canvas + real echo clips
-    if (key === "pocus") {
-      const pathology = scenario?.pathology ?? "";
-      const pocusClips = POCUS_ECHO_CLIPS[pathology] ?? [];
+  // ── Render POCUS finding (echo / lung / ivc) ──────────────
 
+  function renderPocusFinding(tab: ImagingTab) {
+    const pocusKey = getPocusViewKey(tab);
+    if (!pocusKey) return null;
+
+    const view: POCUSView | undefined = availablePOCUS[pocusKey];
+    if (!view) {
       return (
-        <div
-          className="rounded-lg border border-teal-800/30 overflow-hidden"
-          style={{ backgroundColor: "#001e2e" }}
-        >
-          <div className="px-4 py-2.5 border-b border-teal-900/30 flex items-center gap-2">
-            <span className="text-lg">📱</span>
-            <span className="text-teal-200 font-medium text-sm">POCUS</span>
-            <span className="ml-auto text-xs text-teal-500/50 uppercase tracking-widest">
-              即時
-            </span>
-          </div>
-          <div className="p-3">
-            <PocusCanvas />
-          </div>
-
-          {/* Real echo video clips */}
-          {pocusClips.length > 0 && (
-            <div className="px-4 pb-3">
-              <p className="text-xs text-teal-500/60 uppercase tracking-widest mb-2">
-                Echo Clips
-              </p>
-              <div className="space-y-2">
-                {pocusClips.map((clip, ci) => (
-                  <div key={ci} className="rounded-lg overflow-hidden border border-teal-900/30">
-                    <video
-                      src={clip.src}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="w-full h-auto"
-                    />
-                    <p className="text-teal-400/70 text-xs px-2 py-1 bg-black/40">
-                      🎬 {clip.label}
-                    </p>
-                  </div>
-                ))}
-                <p className="text-teal-600/40 text-[10px]">
-                  📷 LITFL ECG Library / Wikimedia Commons, CC-BY-NC-SA 4.0
-                </p>
-              </div>
-            </div>
-          )}
-
-          <div className="mx-4 mb-4 px-3 py-2 rounded bg-teal-900/20 border border-teal-700/25">
-            <p className="text-teal-300/70 text-xs leading-relaxed">
-              💡 POCUS 提供即時床邊評估：Cardiac A4C 看心臟功能與 tamponade，IVC 評估 volume status，Lung 看 B-lines（肺水腫）。
-            </p>
-          </div>
-        </div>
+        <p className="text-teal-500/40 text-sm italic text-center py-4">
+          此項檢查在本情境中不可用
+        </p>
       );
     }
 
-    const scenarioKey = IMAGING_KEY_MAP[key];
-    const text = availableImaging[scenarioKey];
+    const clipsKey = getClipsKey(tab);
+    const clips = clipsKey ? (ECHO_CLIPS[pathology]?.[clipsKey] ?? []) : [];
+    const hasClips = clips.length > 0;
 
+    return (
+      <div className="space-y-3">
+        {/* Video clips — primary display */}
+        {renderClips(tab)}
+
+        {/* If no video clips, show a brief one-liner (not detailed finding) */}
+        {!hasClips && (
+          <div className="text-center py-6">
+            <p className="text-teal-400/60 text-sm">
+              超音波影像無明顯異常
+            </p>
+          </div>
+        )}
+      </div>
+    );
+  }
+
+  // ── Render CXR ─────────────────────────────────────────────
+
+  function renderCXR() {
+    const text = availableImaging["cxr_portable"];
     if (!text) {
       return (
-        <div
-          className="rounded-lg border border-teal-900/30 p-4 text-center"
-          style={{ backgroundColor: "#001a27" }}
-        >
-          <p className="text-teal-500/40 text-sm italic">
-            此項影像在本情境中不可用
-          </p>
-        </div>
+        <p className="text-teal-500/40 text-sm italic text-center py-4">
+          此項檢查在本情境中不可用
+        </p>
       );
     }
 
-    const opt = IMAGING_OPTIONS.find((o) => o.key === key)!;
+    // Build CXR canvas data
+    const bgState = getLastBioGearsState();
+    const firedEventIds = useProGameStore.getState().firedEvents.map((e) => e.id);
+    const placedOrderIds = useProGameStore.getState().placedOrders.map((o) => o.id);
+    const cxrInput = buildCXRInput({
+      bgState,
+      scenarioPathology: scenario?.pathology,
+      firedEventIds,
+      placedOrderIds,
+      isPostop: true,
+      hemorrhageActive: undefined,
+      bloodVolumeLossFraction: undefined,
+    });
+    const cxrSelection = selectCXR(cxrInput);
 
-    // ── CXR: build canvas selection ────────────────────────────
-    let cxrCanvas: React.ReactNode = null;
-    if (key === "cxr_portable") {
-      const bgState = getLastBioGearsState();
-      const firedEventIds = useProGameStore.getState().firedEvents.map((e) => e.id);
-      const placedOrderIds = useProGameStore.getState().placedOrders.map((o) => o.id);
-      const cxrInput = buildCXRInput({
-        bgState,
-        scenarioPathology: scenario?.pathology,
-        firedEventIds,
-        placedOrderIds,
-        isPostop: true,
-        hemorrhageActive: undefined,
-        bloodVolumeLossFraction: undefined,
-      });
-      const cxrSelection = selectCXR(cxrInput);
+    // Check for real reference image
+    const realImage = CXR_REAL_IMAGES[pathology];
 
-      cxrCanvas = (
-        <div className="px-4 pt-4 pb-2">
-          <p className="text-xs text-teal-500/60 uppercase tracking-widest mb-2">
-            Imaging
-          </p>
+    return (
+      <div className="space-y-3">
+        {/* Real CXR image (preferred) */}
+        {realImage ? (
+          <div className="rounded-lg overflow-hidden border border-teal-900/30">
+            <Image
+              src={realImage.src}
+              alt={realImage.alt}
+              width={400}
+              height={400}
+              className="w-full h-auto"
+              style={{ filter: "brightness(1.1)" }}
+            />
+            <p className="text-teal-600/50 text-[10px] px-2 py-1 bg-black/40">
+              {realImage.attribution}
+            </p>
+          </div>
+        ) : (
+          /* Canvas fallback if no real photo */
           <div className="rounded-lg overflow-hidden border border-teal-900/30">
             <CxrCanvas
               cxrType={cxrSelection.type}
@@ -434,92 +449,134 @@ export function ImagingModal() {
               animated
             />
           </div>
-          {/* Key findings pills */}
-          {cxrSelection.keyFindings.length > 0 && (
-            <div className="flex flex-wrap gap-1 mt-2">
-              {cxrSelection.keyFindings.map((f, i) => (
-                <span
-                  key={i}
-                  className="text-xs px-2 py-0.5 rounded-full border border-teal-700/30 text-teal-400/80 bg-teal-900/15"
-                >
-                  {f}
-                </span>
-              ))}
+        )}
+      </div>
+    );
+  }
+
+  // ── Render ECG ─────────────────────────────────────────────
+
+  function renderECG() {
+    const scenarioText = availableImaging["ecg_12lead"];
+    if (!scenarioText) {
+      return (
+        <p className="text-teal-500/40 text-sm italic text-center py-4">
+          此項檢查在本情境中不可用
+        </p>
+      );
+    }
+
+    const bgState = getLastBioGearsState();
+    const morphology = generateECGMorphology(bgState, {
+      pathology: scenario?.pathology,
+      tamponade: scenario?.pathology === "cardiac_tamponade",
+    });
+    const autoInterp = generateInterpretation(morphology);
+
+    return (
+      <div className="space-y-3">
+        {/* ECG Canvas */}
+        <div className="rounded-lg overflow-hidden border border-teal-900/30">
+          <EcgCanvas
+            morphology={morphology}
+            width={672}
+            height={504}
+            showGrid
+            showLabels
+            interpretation={autoInterp}
+          />
+        </div>
+
+        {/* Auto interpretation — collapsed by default */}
+        <div>
+          <button
+            onClick={() => setShowEcgAutoInterp(!showEcgAutoInterp)}
+            className="text-xs text-teal-400/70 hover:text-teal-300 transition-colors flex items-center gap-1"
+          >
+            <span className={`transition-transform ${showEcgAutoInterp ? "rotate-90" : ""}`}>&#9654;</span>
+            顯示機器判讀
+          </button>
+          {showEcgAutoInterp && (
+            <div className="mt-2 rounded-lg border border-teal-900/30 px-4 py-3" style={{ backgroundColor: "#001e2e" }}>
+              <p className="text-xs text-teal-500/60 uppercase tracking-widest mb-1">
+                Auto Interpretation
+              </p>
+              <p className="text-teal-300/80 text-xs leading-relaxed">{autoInterp}</p>
             </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── Render active tab content ──────────────────────────────
+
+  function renderTabContent() {
+    const tabDef = TABS.find((t) => t.key === activeTab)!;
+    const ordered = isTabOrdered(activeTab);
+    const pending = isTabPending(activeTab);
+    const ready = isTabReady(activeTab);
+    const hasData = hasTabData(activeTab);
+
+    // Not yet ordered — show order button
+    if (!ordered) {
+      return (
+        <div className="flex flex-col items-center justify-center py-8 gap-4">
+          <div className="text-center">
+            <span className="text-3xl">{tabDef.emoji}</span>
+            <h3 className="text-teal-200 font-medium text-sm mt-2">{tabDef.label}</h3>
+            <p className="text-teal-500/50 text-xs mt-1">{tabDef.turnaroundLabel}</p>
+          </div>
+          {hasData ? (
+            <button
+              onClick={() => handleOrder(activeTab)}
+              className="px-6 py-2.5 rounded-lg bg-teal-700 hover:bg-teal-600 text-white text-sm font-medium transition-colors border border-teal-600"
+            >
+              {tabDef.turnaround === "immediate" ? "開始掃描" : `開立 ${tabDef.label}`}
+            </button>
+          ) : (
+            <p className="text-teal-500/40 text-sm italic">
+              此項檢查在本情境中不可用
+            </p>
           )}
         </div>
       );
     }
 
-    return (
-      <div
-        className="rounded-lg border border-teal-800/30 overflow-hidden"
-        style={{ backgroundColor: "#001e2e" }}
-      >
-        {/* Header */}
-        <div className="px-4 py-2.5 border-b border-teal-900/30 flex items-center gap-2">
-          <span className="text-lg">{opt.emoji}</span>
-          <span className="text-teal-200 font-medium text-sm">{opt.title}</span>
-          <span className="ml-auto text-xs text-teal-500/50 uppercase tracking-widest">
-            {opt.turnaround === "immediate" ? "即時" : "Portable"}
-          </span>
-        </div>
-
-        {/* CXR Canvas (shown above report for cxr_portable) */}
-        {cxrCanvas}
-
-        {/* Result text */}
-        <div className="px-4 py-4">
-          <p className="text-xs text-teal-500/60 uppercase tracking-widest mb-2">
-            Report
+    // Pending — waiting for result
+    if (pending) {
+      return (
+        <div className="flex flex-col items-center justify-center py-8 gap-3">
+          <div className="text-3xl animate-pulse">⏳</div>
+          <p className="text-amber-400/70 text-sm">
+            結果準備中...（約 {tabDef.turnaround} 分鐘）
           </p>
-          <div
-            className="text-teal-100 text-sm leading-relaxed whitespace-pre-line"
-            dangerouslySetInnerHTML={{
-              __html: text
-                .trim()
-                .replace(/\*\*(.*?)\*\*/g, "<strong>$1</strong>")
-                .replace(/- /g, "• "),
-            }}
-          />
         </div>
+      );
+    }
 
-        {/* Real CXR reference image (when available for this pathology) */}
-        {key === "cxr_portable" && CXR_REAL_IMAGES[scenario?.pathology ?? ""] && (
-          <div className="px-4 pb-2">
-            <p className="text-xs text-teal-500/60 uppercase tracking-widest mb-2">
-              Reference Image
-            </p>
-            <div className="rounded-lg overflow-hidden border border-teal-900/30">
-              <Image
-                src={CXR_REAL_IMAGES[scenario!.pathology].src}
-                alt={CXR_REAL_IMAGES[scenario!.pathology].alt}
-                width={400}
-                height={400}
-                className="w-full h-auto"
-                style={{ filter: "brightness(1.1)" }}
-              />
-              <p className="text-teal-600/50 text-[10px] px-2 py-1 bg-black/40">
-                📷 {CXR_REAL_IMAGES[scenario!.pathology].attribution}
-              </p>
-            </div>
-          </div>
-        )}
+    // Ready — show result
+    if (ready) {
+      switch (activeTab) {
+        case "cxr":
+          return renderCXR();
+        case "ecg":
+          return renderECG();
+        case "echo":
+        case "lung_pocus":
+        case "ivc":
+          return renderPocusFinding(activeTab);
+        default:
+          return null;
+      }
+    }
 
-        {/* Clinical relevance note */}
-        {key === "cxr_portable" && (
-          <div className="mx-4 mb-4 px-3 py-2 rounded bg-teal-900/20 border border-teal-700/25">
-            <p className="text-teal-300/70 text-xs leading-relaxed">
-              💡 在術後出血情境下，CXR 主要用來排除 hemothorax、評估縱膈腔寬度（tamponade 早期徵象）、確認管路位置。
-            </p>
-          </div>
-        )}
-
-      </div>
-    );
+    return null;
   }
 
-  // ── Main render ──────────────────────────────────────────────
+  // ── Main render ────────────────────────────────────────────
+
+  const orderedCount = orderedTabs.size;
 
   return (
     <div
@@ -539,7 +596,7 @@ export function ImagingModal() {
                 影像檢查
               </h2>
               <p className="text-teal-400/60 text-xs">
-                Portable CXR / POCUS / 12-Lead ECG
+                CXR / Echo / Lung POCUS / IVC / ECG
               </p>
             </div>
           </div>
@@ -552,154 +609,43 @@ export function ImagingModal() {
           </button>
         </div>
 
-        {/* Options + results */}
-        <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-4">
-          {IMAGING_OPTIONS.map((opt) => {
-            const isOrdered = ordered.has(opt.key);
-            const isSelected = selected === opt.key;
-            const showingResult = showResult === opt.key;
-            const isCXRPending = opt.key === "cxr_portable" && pendingCXR;
-            const isECGPending = opt.key === "ecg_12lead" && pendingECG;
-            const isAnyPending = isCXRPending || isECGPending;
-
-            return (
-              <div key={opt.key}>
-                {/* Option card */}
-                {!isOrdered ? (
-                  <button
-                    onClick={() => handleOrder(opt)}
-                    className="w-full text-left rounded-lg px-4 py-3.5 border border-teal-800/30 hover:border-teal-600/50 hover:bg-teal-950/20 transition-all"
-                    style={{ backgroundColor: "transparent" }}
-                  >
-                    <div className="flex items-start gap-3">
-                      <span className="text-xl mt-0.5">{opt.emoji}</span>
-                      <div className="flex-1">
-                        <div className="text-teal-200 text-sm font-semibold">
-                          {opt.title}
-                        </div>
-                        <div className="text-teal-500/60 text-xs mt-0.5">
-                          {opt.subtitle}
-                        </div>
-                        <div className="flex items-center gap-2 mt-1.5">
-                          <span
-                            className={`text-xs px-2 py-0.5 rounded-full border ${
-                              opt.turnaround === "immediate"
-                                ? "text-teal-400 border-teal-700/40 bg-teal-900/20"
-                                : "text-amber-400 border-amber-700/40 bg-amber-900/20"
-                            }`}
-                          >
-                            {opt.turnaroundLabel}
-                          </span>
-                        </div>
-                        {opt.note && (
-                          <div className="text-teal-600/50 text-xs mt-1">
-                            {opt.note}
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </button>
-                ) : (
-                  /* Ordered state */
-                  <div
-                    className={`rounded-lg border px-4 py-3 flex items-center gap-3 ${
-                      isAnyPending
-                        ? "border-amber-800/30 bg-amber-950/10"
-                        : "border-teal-800/30 bg-teal-950/10"
-                    }`}
-                  >
-                    <span className="text-xl">{opt.emoji}</span>
-                    <div className="flex-1">
-                      <div className="text-teal-200 text-sm font-medium">
-                        {opt.title}
-                      </div>
-                      {isAnyPending ? (
-                        <div className="text-amber-400/70 text-xs mt-0.5 flex items-center gap-1">
-                          <span className="animate-pulse">⏳</span>
-                          結果準備中...（約 {opt.turnaround} 分鐘）
-                        </div>
-                      ) : (
-                        <div className="text-teal-400/60 text-xs mt-0.5">
-                          ✓ 已開單
-                          {cxrReady && opt.key === "cxr_portable" && " — 結果已回"}
-                          {ecgReady && opt.key === "ecg_12lead" && " — 結果已回"}
-                        </div>
-                      )}
-                    </div>
-
-                    {/* View result button */}
-                    {!isAnyPending && (
-                      <button
-                        onClick={() =>
-                          setShowResult(showingResult ? null : opt.key)
-                        }
-                        className="text-xs text-teal-400 hover:text-teal-200 px-2 py-1 rounded border border-teal-800/30 hover:border-teal-700/50 transition-colors"
-                      >
-                        {showingResult ? "收合" : "查看結果"}
-                      </button>
-                    )}
-
-                    {/* CXR ready — view button */}
-                    {opt.key === "cxr_portable" && cxrReady && !showingResult && (
-                      <button
-                        onClick={handleViewCXR}
-                        className="text-xs text-amber-400 hover:text-amber-200 px-2 py-1 rounded border border-amber-800/30 hover:border-amber-700/50 transition-colors"
-                      >
-                        查看 CXR
-                      </button>
-                    )}
-
-                    {/* ECG ready — view button */}
-                    {opt.key === "ecg_12lead" && ecgReady && !showingResult && (
-                      <button
-                        onClick={handleViewECG}
-                        className="text-xs text-amber-400 hover:text-amber-200 px-2 py-1 rounded border border-amber-800/30 hover:border-amber-700/50 transition-colors"
-                      >
-                        查看 ECG
-                      </button>
-                    )}
-                  </div>
-                )}
-
-                {/* Result panel */}
-                {showingResult && (
-                  <div className="mt-2">
-                    {renderResult(opt.key)}
-                  </div>
-                )}
-              </div>
-            );
-          })}
-
-          {/* Teaching note */}
-          {ordered.size === 0 && (
-            <div
-              className="rounded-lg border border-teal-900/20 px-4 py-3"
-              style={{ backgroundColor: "#001520" }}
+        {/* Tabs — sticky + horizontally scrollable for mobile */}
+        <div className="flex overflow-x-auto border-b border-teal-900/30 scrollbar-hide sticky top-0 z-10" style={{ backgroundColor: "#001219" }}>
+          {TABS.map((tab) => (
+            <button
+              key={tab.key}
+              onClick={() => setActiveTab(tab.key)}
+              className={`flex-shrink-0 flex items-center gap-1.5 px-4 py-2.5 text-sm font-medium transition border-b-2 ${
+                activeTab === tab.key
+                  ? "border-teal-400 text-teal-300"
+                  : "border-transparent text-teal-600/60 hover:text-teal-400/80"
+              }`}
             >
-              <p className="text-teal-500/40 text-xs leading-relaxed">
-                💡 <strong className="text-teal-400/50">臨床提示：</strong>
-                Portable CXR 排影像技師需要等，POCUS 即時床邊評估。
-                急性出血情境下，POCUS（A4C cardiac）比等 CXR 更快排除 tamponade 和評估 volume status。
-                12-Lead ECG 可偵測 tamponade 特徵（低電壓 + 電交替）。
-              </p>
-            </div>
-          )}
+              <span className="text-base">{tab.emoji}</span>
+              <span>{tab.label}</span>
+              {tabBadge(tab.key)}
+            </button>
+          ))}
+        </div>
+
+        {/* Tab content */}
+        <div className="flex-1 overflow-y-auto p-5">
+          {renderTabContent()}
         </div>
 
         {/* Footer */}
         <div className="border-t border-teal-900/30 px-5 py-3 flex items-center justify-between">
           <span className="text-teal-400/40 text-xs">
-            {ordered.size > 0
-              ? `已開 ${ordered.size} 項影像`
-              : "選擇影像項目"}
+            {orderedCount > 0
+              ? `已開 ${orderedCount} 項影像`
+              : "選擇 Tab 並開立影像檢查"}
           </span>
-          {ordered.size > 0 && (
+          {orderedCount > 0 && (
             <button
               onClick={closeModal}
               className="text-xs text-teal-400 hover:text-teal-200 transition-colors"
             >
-              關閉 →
+              關閉
             </button>
           )}
         </div>

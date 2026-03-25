@@ -13,6 +13,7 @@ import {
 
 // Pro components
 import SBARModal from "@/components/simulator/pro/SBARModal";
+import OutcomeScreen from "@/components/simulator/pro/OutcomeScreen";
 import DebriefPanel from "@/components/simulator/pro/DebriefPanel";
 import DeathScreen from "@/components/simulator/pro/DeathScreen";
 import RescueCountdown from "@/components/simulator/standard/RescueCountdown";
@@ -24,11 +25,12 @@ import ChatTimeline from "@/components/simulator/pro/ChatTimeline";
 import ActionBar from "@/components/simulator/pro/ActionBar";
 import MessageInput from "@/components/simulator/pro/MessageInput";
 import WaveformMonitor from "@/components/simulator/pro/WaveformMonitor";
+import MobileMonitorPanel from "@/components/simulator/pro/MobileMonitorPanel";
 // Modals
 import OrderModal from "@/components/simulator/pro/OrderModal";
 import LabOrderModal from "@/components/simulator/pro/LabOrderModal";
 import { PEModal } from "@/components/simulator/pro/PEModal";
-import { POCUSModal } from "@/components/simulator/pro/POCUSModal";
+// POCUSModal deprecated — merged into ImagingModal (2026-03-25)
 import { ImagingModal } from "@/components/simulator/pro/ImagingModal";
 import { ConsultModal } from "@/components/simulator/pro/ConsultModal";
 import { PauseThinkModal } from "@/components/simulator/pro/PauseThinkModal";
@@ -366,7 +368,8 @@ function GameScreen() {
       <TutorialOverlay />
       <FastForwardToast />
       <ProGameLayout
-        leftPanel={
+        monitorPanel={<MobileMonitorPanel />}
+        desktopLeftPanel={
           <>
             <WaveformMonitor height={280} />
             <ProVitalsPanel />
@@ -374,21 +377,15 @@ function GameScreen() {
             <ChestTubePanel />
           </>
         }
-        rightPanel={
-          <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-hidden">
-              <ChatTimeline />
-            </div>
-            <MessageInput />
-          </div>
-        }
+        chatPanel={<ChatTimeline />}
+        messageInput={<MessageInput />}
         actionBar={<ActionBar />}
       />
       {/* Modals — rendered as overlays, controlled by store.activeModal */}
       <OrderModal />
       <LabOrderModal />
       <PEModal />
-      <POCUSModal />
+      {/* POCUSModal removed — merged into ImagingModal */}
       <ImagingModal />
       <ConsultModal />
       <PauseThinkModal />
@@ -490,6 +487,10 @@ export default function ProPageClient({ id }: ProPageClientProps) {
   // ── Phase routing ──
   if (phase === "death") {
     return <DeathScreen />;
+  }
+
+  if (phase === "outcome") {
+    return <OutcomeScreen />;
   }
 
   if (phase === "debrief") {

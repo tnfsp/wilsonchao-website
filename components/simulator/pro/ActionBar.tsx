@@ -1,7 +1,41 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
+
+// ─── CT Milking Result Dialog ─────────────────────────────────────────────────
+
+function CTMilkResultDialog({
+  finding,
+  onClose,
+}: {
+  finding: string;
+  onClose: () => void;
+}) {
+  return (
+    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 px-4">
+      <div
+        className="w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-teal-700/40"
+        style={{ background: "#001219" }}
+      >
+        <div className="flex items-center gap-2 mb-3">
+          <span className="text-2xl">🔧</span>
+          <h3 className="text-teal-300 font-bold text-lg">CT Milking</h3>
+        </div>
+        <div className="rounded-lg border border-teal-900/30 px-4 py-3 mb-4" style={{ backgroundColor: "#001e2e" }}>
+          <p className="text-xs text-teal-500/60 uppercase tracking-widest mb-2">Finding</p>
+          <p className="text-teal-100 text-sm leading-relaxed">{finding}</p>
+        </div>
+        <button
+          onClick={onClose}
+          className="w-full py-2 rounded-lg bg-teal-700 hover:bg-teal-600 text-white text-sm font-medium transition-colors"
+        >
+          關閉
+        </button>
+      </div>
+    </div>
+  );
+}
 
 // ─── MTP Confirm Dialog ──────────────────────────────────────────────────────
 
@@ -22,14 +56,8 @@ function MTPConfirmDialog({
           <span className="text-2xl">🚨</span>
           <h3 className="text-red-400 font-bold text-lg">啟動大量輸血 Protocol</h3>
         </div>
-        <p className="text-slate-300 text-sm leading-relaxed mb-2">MTP 啟動條件：</p>
-        <ul className="text-slate-400 text-sm space-y-1 mb-4 list-disc list-inside">
-          <li>預估失血 &gt; 1 blood volume</li>
-          <li>持續需要 ≥4U pRBC within 1hr</li>
-          <li>血流動力學不穩定 despite resuscitation</li>
-        </ul>
         <p className="text-yellow-400 text-sm font-semibold mb-5">
-          確定要啟動嗎？此操作無法撤銷。
+          確定啟動大量輸血 Protocol 嗎？此操作無法撤銷。
         </p>
         <div className="flex gap-3">
           <button
@@ -50,61 +78,119 @@ function MTPConfirmDialog({
   );
 }
 
-// ─── Pulse Animation CSS ─────────────────────────────────────────────────────
+// ─── Popover ─────────────────────────────────────────────────────────────────
 
-const pulseStyle = `
-@keyframes guidancePulse {
-  0%, 100% { box-shadow: 0 0 0 0 rgba(74, 222, 128, 0.4); }
-  50% { box-shadow: 0 0 12px 4px rgba(74, 222, 128, 0.6); }
-}
-`;
-
-// ─── Action Button ───────────────────────────────────────────────────────────
-
-interface ActionBtnProps {
+interface PopoverItem {
   icon: string;
   label: string;
   onClick: () => void;
   disabled?: boolean;
   disabledReason?: string;
+  variant?: "default" | "danger";
+}
+
+function ActionPopover({
+  items,
+  onClose,
+}: {
+  items: PopoverItem[];
+  onClose: () => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handleClick(e: MouseEvent) {
+      if (ref.current && !ref.current.contains(e.target as Node)) {
+        onClose();
+      }
+    }
+    document.addEventListener("mousedown", handleClick);
+    return () => document.removeEventListener("mousedown", handleClick);
+  }, [onClose]);
+
+  return (
+    <div
+      ref={ref}
+      className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-[65] min-w-[180px] rounded-xl border border-white/10 bg-[#001a25] shadow-2xl p-1.5"
+    >
+      {items.map((item) => (
+        <button
+          key={item.label}
+          onClick={() => {
+            if (!item.disabled) {
+              item.onClick();
+              onClose();
+            }
+          }}
+          disabled={item.disabled}
+          title={item.disabled && item.disabledReason ? item.disabledReason : item.label}
+          className={[
+            "w-full flex items-center gap-2.5 rounded-lg px-3 py-2 text-sm transition-colors",
+            item.disabled
+              ? "text-slate-600 cursor-not-allowed"
+              : item.variant === "danger"
+                ? "text-red-300 hover:bg-red-900/40"
+                : "text-slate-200 hover:bg-white/8",
+          ].join(" ")}
+        >
+          <span className="text-base flex-shrink-0">{item.icon}</span>
+          <span>{item.label}</span>
+        </button>
+      ))}
+    </div>
+  );
+}
+
+// ─── Icon Button ─────────────────────────────────────────────────────────────
+
+interface IconBtnProps {
+  icon: string;
+  label: string;
+  onClick: () => void;
+  disabled?: boolean;
   variant?: "default" | "danger" | "muted";
-  highlighted?: boolean;
-  small?: boolean;
+  active?: boolean;
   shortcut?: string;
 }
 
-function ActionBtn({ icon, label, onClick, disabled, disabledReason, variant, highlighted, small, shortcut }: ActionBtnProps) {
-  let base = small
-    ? "flex items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium transition-all select-none"
-    : "flex flex-col items-center justify-center gap-1 rounded-xl px-2 py-2.5 text-xs font-medium transition-all select-none";
+function IconBtn({ icon, label, onClick, disabled, variant, active, shortcut }: IconBtnProps) {
+  let cls =
+    "relative flex items-center justify-center w-10 h-10 rounded-lg text-lg transition-all select-none";
 
   if (disabled) {
-    base += " bg-slate-800 text-slate-600 cursor-not-allowed opacity-60";
+    cls += " text-slate-600 cursor-not-allowed opacity-50";
+  } else if (active) {
+    cls += " bg-cyan-600/30 text-cyan-300 cursor-pointer";
   } else if (variant === "danger") {
-    base += " bg-red-900/50 border border-red-700/60 text-red-300 hover:bg-red-800/60 cursor-pointer";
-  } else if (highlighted) {
-    base += " bg-green-900/30 border-2 border-green-400/70 text-green-300 cursor-pointer";
+    cls += " text-red-400 hover:bg-red-900/40 cursor-pointer";
+  } else if (variant === "muted") {
+    cls += " text-slate-400 hover:bg-white/8 cursor-pointer";
   } else {
-    base += " bg-slate-800/80 border border-slate-700/60 text-slate-200 hover:bg-slate-700/80 cursor-pointer";
+    cls += " text-slate-200 hover:bg-white/8 cursor-pointer";
   }
 
   return (
     <button
-      className={base}
+      className={cls}
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
-      title={disabled && disabledReason ? disabledReason : label}
-      style={highlighted && !disabled ? { animation: "guidancePulse 2s ease-in-out infinite" } : undefined}
+      title={`${label}${shortcut ? ` (${shortcut})` : ""}`}
+      aria-label={label}
     >
-      <span className={small ? "text-base" : "text-xl leading-none"}>{icon}</span>
-      <span className="leading-tight text-center">{label}</span>
+      {icon}
       {shortcut && (
-        <span className="hidden lg:block text-[10px] text-slate-500 leading-none">
+        <span className="hidden lg:block absolute -bottom-0.5 right-0 text-[8px] text-slate-600 font-mono">
           {shortcut}
         </span>
       )}
     </button>
   );
+}
+
+// ─── Divider ─────────────────────────────────────────────────────────────────
+
+function BarDivider() {
+  return <div className="w-px h-6 bg-white/10 mx-0.5 flex-shrink-0" />;
 }
 
 // ─── Main ActionBar ──────────────────────────────────────────────────────────
@@ -118,66 +204,107 @@ export default function ActionBar() {
   const addTimelineEntry = useProGameStore((s) => s.addTimelineEntry);
   const clock = useProGameStore((s) => s.clock);
   const phase = useProGameStore((s) => s.phase);
-  const guidanceHighlight = useProGameStore((s) => s.guidanceHighlight);
   const hintsUsed = useProGameStore((s) => s.hintsUsed);
   const useHint = useProGameStore((s) => s.useHint);
   const actionAdvance = useProGameStore((s) => s.actionAdvance);
 
   const [showMTPConfirm, setShowMTPConfirm] = useState(false);
-  const [showSubMenu, setShowSubMenu] = useState(false);
+  const [ctMilkResult, setCTMilkResult] = useState<string | null>(null);
+  const [activePopover, setActivePopover] = useState<"treatment" | null>(null);
 
   const isPlaying = phase === "playing";
+
+  // 通報交班: track call_senior -> auto-open SBAR
+  const handleCallAndSBAR = () => {
+    if (!isPlaying) return;
+    useProGameStore.setState((state) => ({
+      playerActions: [
+        ...state.playerActions,
+        { action: "call_senior", gameTime: clock.currentTime, category: "consult" },
+      ],
+    }));
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: "\ud83d\udcde \u4f60\u6253\u96fb\u8a71\u901a\u77e5\u5b78\u9577\uff0c\u6e96\u5099 SBAR \u4ea4\u73ed",
+      sender: "player",
+      isImportant: true,
+    });
+    openModal("sbar");
+  };
 
   const handleMilkCT = () => {
     if (!patient || !isPlaying) return;
     const ct = patient.chestTube;
 
-    if (ct.isPatent) return; // already patent — button disabled
+    let finding: string;
 
-    if (ct.hasClots) {
-      // Blocked by clots: milking restores patency + burst output
-      updateChestTube({ isPatent: true, totalOutput: ct.totalOutput + 50 });
+    if (ct.isPatent) {
+      finding = "\u80f8\u7ba1\u901a\u66a2\uff0c\u5f15\u6d41\u6b63\u5e38\uff0c\u7121\u8840\u584a\u3002\u4e0d\u9700\u8981\u8655\u7406\u3002";
       addTimelineEntry({
         gameTime: clock.currentTime,
         type: "player_action",
-        content: "🔧 Milk chest tube — 擠出血塊，引流恢復",
+        content: "\ud83d\udd27 Milk CT \u2014 \u80f8\u7ba1\u901a\u66a2",
+        sender: "player",
+      });
+      setCTMilkResult(finding);
+      return;
+    }
+
+    if (ct.hasClots) {
+      updateChestTube({ isPatent: true, totalOutput: ct.totalOutput + 50 });
+      finding = "\u64e0\u51fa\u6578\u500b\u8840\u584a\uff0c\u5f15\u6d41\u6062\u5fa9\u901a\u66a2\u3002Burst output +50cc\uff0c\u5f15\u6d41\u6db2\u70ba\u9bae\u7d05\u8272\u3002";
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "\ud83d\udd27 Milk CT \u2014 \u64e0\u51fa\u8840\u584a\uff0c\u5f15\u6d41\u6062\u5fa9",
         sender: "player",
         isImportant: true,
       });
     } else {
-      // No clots but not patent (kinked): partial fix
       updateChestTube({ isPatent: true });
+      finding = "\u7ba1\u8def\u6062\u5fa9\u901a\u66a2\uff0c\u4f46\u672a\u64e0\u51fa\u660e\u986f\u8840\u584a\u3002\u5f15\u6d41\u91cf\u4e0d\u591a\uff0c\u963b\u585e\u539f\u56e0\u53ef\u80fd\u975e\u8840\u584a\u3002";
       addTimelineEntry({
         gameTime: clock.currentTime,
         type: "player_action",
-        content: "🔧 通暢胸管（Milk/Strip CT）",
+        content: "\ud83d\udd27 Milk CT \u2014 \u7ba1\u8def\u901a\u66a2\uff0c\u7121\u8840\u584a",
         sender: "player",
-        isImportant: false,
-      });
-      addTimelineEntry({
-        gameTime: clock.currentTime,
-        type: "nurse_message",
-        content: "護理師：通了，但引流量不多，可能不是血塊的問題",
-        sender: "nurse",
         isImportant: false,
       });
     }
 
-    // Track action and advance 1 minute
+    setCTMilkResult(finding);
+
     useProGameStore.setState((state) => ({
       playerActions: [...state.playerActions, { action: "procedure:chest_tube_milk", gameTime: clock.currentTime, category: "procedure" }],
     }));
     actionAdvance(1);
   };
 
-  // CT button disabled state
-  const ctIsPatent = patient?.chestTube.isPatent === true;
-  const ctDisabledReason = ctIsPatent ? "胸管目前通暢" : undefined;
+  // Treatment popover items
+  const treatmentItems: PopoverItem[] = [
+    { icon: "\ud83d\udc8a", label: "\u958b\u85e5", onClick: () => openModal("order") },
+    { icon: "\ud83e\ude78", label: "\u8f38\u8840", onClick: () => openModal("order") },
+    {
+      icon: "\ud83d\udea8",
+      label: mtpState.activated ? "MTP\u4e2d" : "\u5927\u91cf\u8f38\u8840 MTP",
+      onClick: () => setShowMTPConfirm(true),
+      disabled: mtpState.activated,
+      disabledReason: "\u5927\u91cf\u8f38\u8840 Protocol \u5df2\u555f\u52d5\u4e2d",
+      variant: "danger",
+    },
+    { icon: "\ud83d\udd27", label: "CT Milking", onClick: handleMilkCT },
+    { icon: "\ud83c\udf2c\ufe0f", label: "\u547c\u5438\u5668", onClick: () => { sessionStorage.setItem("sim-order-tab", "ventilator"); openModal("order"); } },
+  ];
 
   return (
     <>
-      <style dangerouslySetInnerHTML={{ __html: pulseStyle }} />
-
+      {ctMilkResult && (
+        <CTMilkResultDialog
+          finding={ctMilkResult}
+          onClose={() => setCTMilkResult(null)}
+        />
+      )}
       {showMTPConfirm && (
         <MTPConfirmDialog
           onConfirm={() => { activateMTP(); setShowMTPConfirm(false); }}
@@ -185,94 +312,87 @@ export default function ActionBar() {
         />
       )}
 
-      <div id="action-bar" className="w-full px-2 py-2 border-t border-slate-700/60 space-y-2" style={{ background: "#0d1f3c" }}>
-        {/* Main Row — 5 buttons */}
-        <div className="grid grid-cols-5 gap-1.5">
-          <ActionBtn
-            icon="🔬" label="PE"
+      <div
+        id="action-bar"
+        className="w-full px-2 py-1.5 flex items-center justify-between"
+        style={{ background: "#0d1f3c" }}
+      >
+        {/* ── Left group: main actions ── */}
+        <div className="flex items-center gap-0.5">
+          <IconBtn
+            icon="\ud83d\udd2c" label="PE"
             onClick={() => openModal("pe")}
             disabled={!isPlaying}
-            highlighted={guidanceHighlight === "pe"}
             shortcut="1"
           />
-          <ActionBtn
-            icon="🩸" label="抽血"
+          <IconBtn
+            icon="\ud83e\ude78" label="\u62bd\u8840"
             onClick={() => openModal("lab_order")}
             disabled={!isPlaying}
-            highlighted={guidanceHighlight === "lab_order"}
             shortcut="2"
           />
-          <ActionBtn
-            icon="💊" label="處置"
-            onClick={() => setShowSubMenu(!showSubMenu)}
+
+          {/* Treatment with popover */}
+          <div className="relative">
+            <IconBtn
+              icon="\ud83d\udc8a" label="\u8655\u7f6e"
+              onClick={() => setActivePopover(activePopover === "treatment" ? null : "treatment")}
+              disabled={!isPlaying}
+              active={activePopover === "treatment"}
+              shortcut="3"
+            />
+            {activePopover === "treatment" && isPlaying && (
+              <ActionPopover
+                items={treatmentItems}
+                onClose={() => setActivePopover(null)}
+              />
+            )}
+          </div>
+
+          <IconBtn
+            icon="\ud83d\udcde" label="\u901a\u5831\u4ea4\u73ed"
+            onClick={handleCallAndSBAR}
             disabled={!isPlaying}
-            highlighted={guidanceHighlight === "order"}
-            shortcut="3"
-          />
-          <ActionBtn
-            icon="📞" label="叫人"
-            onClick={() => openModal("consult")}
-            disabled={!isPlaying}
-            highlighted={guidanceHighlight === "consult"}
             shortcut="4"
           />
-          <span id="sbar-btn">
-            <ActionBtn
-              icon="📋" label="SBAR"
-              onClick={() => openModal("sbar")}
-              disabled={!isPlaying}
-              highlighted={guidanceHighlight === "sbar"}
-              shortcut="5"
-            />
-          </span>
+          <IconBtn
+            icon="\u26a1" label="\u96fb\u64ca"
+            onClick={() => openModal("defibrillator")}
+            disabled={!isPlaying}
+            shortcut="5"
+          />
+          <IconBtn
+            icon="\ud83e\ude7b" label="\u5f71\u50cf"
+            onClick={() => openModal("imaging")}
+            disabled={!isPlaying}
+            shortcut="6"
+          />
         </div>
 
-        {/* Sub Menu — expandable */}
-        {showSubMenu && isPlaying && (
-          <div className="grid grid-cols-3 sm:grid-cols-6 gap-1.5 pt-1 border-t border-slate-700/40">
-            <ActionBtn icon="💊" label="開藥" onClick={() => { openModal("order"); setShowSubMenu(false); }} small />
-            <ActionBtn icon="🩸" label="輸血" onClick={() => { openModal("order"); setShowSubMenu(false); }} small />
-            <ActionBtn
-              icon="🚨" label={mtpState.activated ? "MTP中" : "MTP"}
-              onClick={() => { setShowMTPConfirm(true); setShowSubMenu(false); }}
-              disabled={mtpState.activated}
-              disabledReason="大量輸血 Protocol 已啟動中"
-              variant="danger" small
-            />
-            <ActionBtn
-              icon="🔧" label="通CT"
-              onClick={() => { handleMilkCT(); setShowSubMenu(false); }}
-              disabled={ctIsPatent}
-              disabledReason={ctDisabledReason}
-              small
-            />
-            <ActionBtn icon="🫁" label="POCUS" onClick={() => { openModal("pocus"); setShowSubMenu(false); }} small />
-            <ActionBtn icon="⚡" label="電擊" onClick={() => { openModal("defibrillator"); setShowSubMenu(false); }} small />
-            <ActionBtn icon="🌬️" label="呼吸器" onClick={() => { sessionStorage.setItem("sim-order-tab", "ventilator"); openModal("order"); setShowSubMenu(false); }} small />
-            <ActionBtn icon="🩻" label="影像" onClick={() => { openModal("imaging"); setShowSubMenu(false); }} small />
-          </div>
-        )}
+        {/* ── Divider ── */}
+        <BarDivider />
 
-        {/* Bottom Row — utility */}
-        <div id="time-controls" className="flex gap-1.5">
-          <ActionBtn
-            icon="⏸" label="暫停思考"
+        {/* ── Right group: utility ── */}
+        <div className="flex items-center gap-0.5">
+          <IconBtn
+            icon="\u23f8" label="\u66ab\u505c\u601d\u8003"
             onClick={() => openModal("pause_think")}
-            disabled={!isPlaying} small
+            disabled={!isPlaying}
+            variant="muted"
             shortcut="Space"
           />
-          <ActionBtn
-            icon="💡" label={`提示 ${3 - hintsUsed}/3`}
+          <IconBtn
+            icon="\ud83d\udca1" label={`\u63d0\u793a ${3 - hintsUsed}/3`}
             onClick={useHint}
             disabled={!isPlaying || hintsUsed >= 3}
-            disabledReason={hintsUsed >= 3 ? "已用完所有提示" : undefined}
-            small
+            variant="muted"
             shortcut="H"
           />
-          <ActionBtn
-            icon="⏩" label="快轉5分"
+          <IconBtn
+            icon="\u23e9" label="\u5feb\u8f495\u5206"
             onClick={() => useProGameStore.getState().actionAdvance(5)}
-            disabled={!isPlaying} variant="muted" small
+            disabled={!isPlaying}
+            variant="muted"
             shortcut="F"
           />
         </div>

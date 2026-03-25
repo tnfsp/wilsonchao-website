@@ -195,9 +195,6 @@ export function ConsultModal() {
               <h2 className="text-white font-semibold text-lg leading-tight">
                 叫人 / Consult
               </h2>
-              <p className="text-amber-400/60 text-xs">
-                知道什麼時候需要幫忙是最重要的能力
-              </p>
             </div>
           </div>
           <button
@@ -380,18 +377,7 @@ export function ConsultModal() {
               );
             })}
 
-            {/* Teaching note */}
-            <div
-              className="mt-2 rounded-lg border border-teal-900/25 px-4 py-3"
-              style={{ backgroundColor: "#001520" }}
-            >
-              <p className="text-teal-500/50 text-xs leading-relaxed">
-                💡 <strong className="text-teal-400/60">臨床提示：</strong>
-                叫人不是示弱，是正確的醫療判斷。
-                CT output 持續上升 + 血壓不穩 = 叫學長的時機。
-                叫太晚才是問題。
-              </p>
-            </div>
+            {/* TODO: Move consult timing education to Debrief */}
           </div>
         )}
       </div>

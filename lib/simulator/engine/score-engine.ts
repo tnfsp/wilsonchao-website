@@ -1,4 +1,4 @@
-// ICU 值班模擬器 Pro — Score Engine
+// ICU 值班模擬器 Pro — Score Engine v2
 // 純函數：無副作用、無外部依賴。
 // calculateScore / generateKeyLessons / generateWhatIf
 
@@ -15,6 +15,10 @@ import type {
   GuidelineBundle,
   GuidelineBundleScore,
   GuidelineBundleItemResult,
+  HarmfulOrderDetail,
+  HarmfulOrderDef,
+  ScoreBreakdown,
+  DiagnosticCategory,
 } from "../types";
 
 // ============================================================
@@ -45,15 +49,27 @@ export interface WhatIfResult extends WhatIfBranch {
 }
 
 // ============================================================
-// Internal Constants
+// Internal Constants — NEW WEIGHTS v2
 // ============================================================
 
 const HINT_PENALTY = 5;          // points deducted per hint used
-const PAUSE_THINK_BONUS = 10;    // points added if pause-think was used
+const PAUSE_THINK_BONUS = 5;     // was 10, now 5
 
 // Overall threshold (out of 100)
 const EXCELLENT_THRESHOLD = 80;
 const GOOD_THRESHOLD = 55;
+
+// Weight allocation (total 100 base)
+const WEIGHTS = {
+  criticalActions: 30,
+  sbar: 15,             // was 20
+  escalation: 15,
+  lethalTriad: 10,      // now graded: 1/3=3, 2/3=7, 3/3=10
+  diagnosticWorkup: 10, // NEW
+  diagnosis: 10,        // was 5
+  bonusActions: 5,      // was 10
+  timeToFirst: 5,
+} as const;
 
 // SBAR keyword banks
 const SBAR_NUMBERS_PATTERN = /\d+(\.\d+)?/g;
@@ -70,21 +86,17 @@ const SBAR_A_KEYWORDS = [
   "surgical bleeding", "外科出血", "coagulopathy", "tamponade", "lcos",
   "suspect", "likely", "assessment", "impression", "think", "believe",
   "judge", "diagnosis", "diagnosis", "判斷", "評估", "可能",
+  "sepsis", "septic", "infection", "感染", "敗血",
 ];
 const SBAR_R_KEYWORDS = [
   "re-explore", "return to or", "回 or", "transfusion", "輸血",
   "blood product", "vasopressor", "suggest", "recommend", "plan",
   "need", "should", "已經", "i have", "prepared", "準備", "given",
-  "已給", "啟動", "mtp",
+  "已給", "啟動", "mtp", "antibiotics", "抗生素",
 ];
 
 // Escalation timing bands (game minutes) vs severity
-// If severity > 70 AND elapsed > 15 min without calling senior → "late"
-// If severity > 90 AND elapsed > 10 min → "late"
 const ESCALATION_APPROPRIATE_MAX_MINUTES = 15;
-const ESCALATION_LATE_SEVERITY_THRESHOLD = 70;
-const ESCALATION_CRITICAL_SEVERITY_THRESHOLD = 90;
-const ESCALATION_CRITICAL_DEADLINE = 10;
 
 // ============================================================
 // Helpers — SBAR Analysis
@@ -97,7 +109,7 @@ function countKeywordHits(text: string, keywords: string[]): number {
 
 function hasQuantitativeContent(text: string): boolean {
   const matches = text.match(SBAR_NUMBERS_PATTERN);
-  return matches !== null && matches.length >= 2; // at least 2 numbers = quantitative
+  return matches !== null && matches.length >= 2;
 }
 
 function hasAnticipatoryContent(text: string): boolean {
@@ -112,13 +124,11 @@ function hasAnticipatoryContent(text: string): boolean {
 
 /**
  * Score an SBAR report on four axes.
- * Each axis 0-100 except boolean fields.
  */
 function scoreSBAR(report: SBARReport): SBARScore {
   const { situation, background, assessment, recommendation } = report;
   const allText = `${situation} ${background} ${assessment} ${recommendation}`;
 
-  // Completeness: each section must have substantive content (> 15 chars)
   const sHits = countKeywordHits(situation, SBAR_S_KEYWORDS);
   const bHits = countKeywordHits(background, SBAR_B_KEYWORDS);
   const aHits = countKeywordHits(assessment, SBAR_A_KEYWORDS);
@@ -130,48 +140,29 @@ function scoreSBAR(report: SBARReport): SBARScore {
   const rScore = recommendation.trim().length > 15 ? Math.min(100, 50 + rHits * 10) : 0;
   const completeness = Math.round((sScore + bScore + aScore + rScore) / 4);
 
-  // Prioritization: most important info (vitals numbers, diagnosis) should appear
-  // in Situation + Assessment (first two sections), not buried in Recommendation
-  let prioritization = 50; // baseline
-
-  // Numbers in S or A → good prioritization
+  let prioritization = 50;
   if (hasQuantitativeContent(situation)) prioritization += 20;
   if (hasQuantitativeContent(assessment)) prioritization += 15;
-  // If recommendation is way longer than situation, it means the lead is buried
   if (recommendation.length > situation.length * 3) prioritization -= 15;
-  // Assessment has diagnosis keywords
   if (aHits >= 1) prioritization += 15;
   prioritization = Math.min(100, Math.max(0, prioritization));
 
-  // Quantitative: does report contain specific numbers?
   const quantitative = hasQuantitativeContent(allText);
-
-  // Anticipatory: player says "I have already ordered / given / prepared..."
   const anticipatory = hasAnticipatoryContent(recommendation) ||
     hasAnticipatoryContent(situation);
 
-  return {
-    completeness,
-    prioritization,
-    quantitative,
-    anticipatory,
-  };
+  return { completeness, prioritization, quantitative, anticipatory };
 }
 
 // ============================================================
 // Helpers — Critical Actions
 // ============================================================
 
-/**
- * Match scenario expected actions against actual player orders.
- * Returns enriched CriticalAction list.
- */
 function evaluateCriticalActions(
   expectedActions: ExpectedAction[],
   playerActions: PlayerAction[],
 ): CriticalAction[] {
   return expectedActions.map((ea): CriticalAction => {
-    // Find a matching player action by keyword match on orderName or orderId
     const match = playerActions.find((pa) => {
       const paNameLower = pa.orderName.toLowerCase();
       const eaActionLower = ea.action.toLowerCase();
@@ -181,7 +172,7 @@ function evaluateCriticalActions(
         pa.orderId === ea.id ||
         paNameLower.includes(eaActionLower) ||
         eaActionLower.includes(paNameLower) ||
-        paNameLower.includes(eaDescLower.split(" ")[0]) // first word of description
+        paNameLower.includes(eaDescLower.split(" ")[0])
       );
     });
 
@@ -193,7 +184,7 @@ function evaluateCriticalActions(
       id: ea.id,
       description: ea.description,
       met: met && !timedOut,
-      timeToComplete: timeToComplete,
+      timeToComplete,
       critical: ea.critical,
       hint: ea.hint,
     };
@@ -206,21 +197,11 @@ function evaluateCriticalActions(
 
 type EscalationTiming = "early" | "appropriate" | "late" | "never";
 
-/**
- * Determine whether the player called for senior help at the right time.
- *
- * Logic:
- * - If player never called → "never"
- * - If called very early (before severity warrants) → "early"
- * - If called within the deadline for the prevailing severity → "appropriate"
- * - Otherwise → "late"
- */
 function evaluateEscalationTiming(
   playerActions: PlayerAction[],
   timeline: TimelineEntry[],
   scenario: SimScenario,
 ): EscalationTiming {
-  // Detect senior-call actions
   const escalationAction = playerActions.find(
     (pa) =>
       pa.category === "consult" ||
@@ -230,7 +211,6 @@ function evaluateEscalationTiming(
       pa.orderId === "call_senior",
   );
 
-  // Also check timeline messages for "叫學長" text
   const escalationMessage = timeline.find(
     (t) =>
       t.type === "player_action" &&
@@ -246,41 +226,28 @@ function evaluateEscalationTiming(
 
   if (escalationTime === null) return "never";
 
-  // Get escalation deadline from expectedActions
   const escalationExpected = scenario.expectedActions.find(
     (ea) =>
       ea.action.toLowerCase().includes("叫學長") ||
       ea.action.toLowerCase().includes("call senior") ||
-      ea.id === "call_senior",
+      ea.id === "call_senior" ||
+      ea.id === "act-call-senior",
   );
 
   const deadline = escalationExpected?.deadline ?? ESCALATION_APPROPRIATE_MAX_MINUTES;
 
-  // Too early: called in first 2 minutes regardless of severity — minor flag
   if (escalationTime <= 2) return "early";
-
-  // Appropriate: called within deadline
   if (escalationTime <= deadline) return "appropriate";
-
-  // Late
   return "late";
 }
 
 // ============================================================
-// Helpers — Lethal Triad
+// Helpers — Lethal Triad (GRADED: 1/3=3, 2/3=7, 3/3=10)
 // ============================================================
 
-/**
- * Determine if the player managed the lethal triad adequately.
- *
- * Criteria (any two of three must be addressed):
- *   Hypothermia → warming blanket order or blood warmer used
- *   Acidosis    → volume resuscitation (fluid/blood) + vasopressor if needed
- *   Coagulopathy → FFP, Cryo, Platelet, or hemostatics ordered
- */
-function evaluateLethalTriadManagement(
+function evaluateLethalTriadCount(
   playerActions: PlayerAction[],
-): boolean {
+): number {
   const actionNames = playerActions.map((pa) => pa.orderName.toLowerCase());
   const actionCategories = playerActions.map((pa) => pa.category.toLowerCase());
 
@@ -301,13 +268,50 @@ function evaluateLethalTriadManagement(
       n.includes("txa") || n.includes("tranexamic") || n.includes("protamine"),
     );
 
-  const addressedCount = [
-    addressedHypothermia,
-    addressedAcidosis,
-    addressedCoagulopathy,
-  ].filter(Boolean).length;
+  return [addressedHypothermia, addressedAcidosis, addressedCoagulopathy].filter(Boolean).length;
+}
 
-  return addressedCount >= 2;
+function getLethalTriadScore(count: number): number {
+  if (count >= 3) return 10;
+  if (count >= 2) return 7;
+  if (count >= 1) return 3;
+  return 0;
+}
+
+// ============================================================
+// Helpers — Diagnostic Workup Quality (NEW)
+// ============================================================
+
+/**
+ * Score based on breadth of diagnostic categories covered.
+ * (unique categories done / total categories expected) * 10
+ */
+function evaluateDiagnosticWorkup(
+  scenario: SimScenario,
+  criticalActions: CriticalAction[],
+): number {
+  // Collect expected categories from all expectedActions that have a diagnosticCategory
+  const expectedCategories = new Set<DiagnosticCategory>();
+  scenario.expectedActions.forEach((ea) => {
+    if (ea.diagnosticCategory) {
+      expectedCategories.add(ea.diagnosticCategory);
+    }
+  });
+
+  if (expectedCategories.size === 0) return 10; // no categories defined → full marks
+
+  // Which categories did the player actually complete?
+  const doneCategories = new Set<DiagnosticCategory>();
+  scenario.expectedActions.forEach((ea) => {
+    if (ea.diagnosticCategory) {
+      const ca = criticalActions.find((c) => c.id === ea.id);
+      if (ca?.met) {
+        doneCategories.add(ea.diagnosticCategory);
+      }
+    }
+  });
+
+  return Math.round((doneCategories.size / expectedCategories.size) * 10);
 }
 
 // ============================================================
@@ -331,7 +335,6 @@ function evaluateCorrectDiagnosis(
     .join(" ")
     .toLowerCase();
 
-  // Check if player mentioned the correct diagnosis keywords in text or SBAR
   const dxKeywords = correctDx.split(/[\s_]+/);
   const matchedKeywords = dxKeywords.filter((kw) =>
     kw.length > 3 && allPlayerText.includes(kw),
@@ -341,27 +344,56 @@ function evaluateCorrectDiagnosis(
 }
 
 // ============================================================
-// Helpers — Harmful Orders
+// Helpers — Harmful Orders (GRADED: critical=-15, moderate=-5)
 // ============================================================
 
 /**
- * Check for obvious harmful order patterns.
- * Returns array of human-readable warning strings.
+ * Detect harmful orders. Returns both legacy string[] and graded details.
  */
-function detectHarmfulOrders(playerActions: PlayerAction[]): string[] {
-  const harmful: string[] = [];
-
+function detectHarmfulOrders(
+  playerActions: PlayerAction[],
+  scenarioHarmfulDefs?: HarmfulOrderDef[],
+): { descriptions: string[]; details: HarmfulOrderDetail[] } {
+  const details: HarmfulOrderDetail[] = [];
   const actionNames = playerActions.map((pa) => pa.orderName.toLowerCase());
 
-  // Excessive diuresis in actively bleeding patient
+  // Check scenario-specific harmful order definitions first
+  if (scenarioHarmfulDefs) {
+    for (const def of scenarioHarmfulDefs) {
+      const patternLower = def.pattern.toLowerCase();
+      if (actionNames.some((n) => n.includes(patternLower))) {
+        details.push({
+          description: def.description,
+          severity: def.severity,
+          penalty: def.penalty,
+        });
+      }
+    }
+  }
+
+  // Built-in harmful patterns (only add if not already matched by scenario defs)
+  const existingDescs = new Set(details.map((d) => d.description));
+
+  // Anticoagulation in bleeding scenario
+  if (actionNames.some((n) => n.includes("heparin") || n.includes("warfarin") || n.includes("coumadin"))) {
+    const desc = "Anticoagulation ordered in active bleeding scenario";
+    if (!existingDescs.has(desc)) {
+      details.push({ description: desc, severity: "critical", penalty: -15 });
+    }
+  }
+
+  // Diuretic while bleeding
   if (
     actionNames.some((n) => n.includes("lasix") || n.includes("furosemide") || n.includes("diuretic")) &&
     actionNames.some((n) => n.includes("prbc") || n.includes("bleeding"))
   ) {
-    harmful.push("Diuretic ordered while patient is actively bleeding");
+    const desc = "Diuretic ordered while patient is actively bleeding";
+    if (!existingDescs.has(desc)) {
+      details.push({ description: desc, severity: "moderate", penalty: -5 });
+    }
   }
 
-  // High-dose vasopressor without volume (vasopressor without any fluid/blood)
+  // Vasopressor without volume
   const hasVasopressor = actionNames.some(
     (n) =>
       n.includes("levophed") ||
@@ -373,20 +405,24 @@ function detectHarmfulOrders(playerActions: PlayerAction[]): string[] {
     (pa) => pa.category === "fluid" || pa.category === "transfusion",
   );
   if (hasVasopressor && !hasVolumeResuscitation) {
-    harmful.push("Vasopressor started without concurrent volume resuscitation");
-  }
-
-  // Anticoagulation in bleeding scenario
-  if (actionNames.some((n) => n.includes("heparin") || n.includes("warfarin") || n.includes("coumadin"))) {
-    harmful.push("Anticoagulation ordered in active bleeding scenario");
+    const desc = "Vasopressor started without concurrent volume resuscitation";
+    if (!existingDescs.has(desc)) {
+      details.push({ description: desc, severity: "moderate", penalty: -5 });
+    }
   }
 
   // NSAIDs / antiplatelet
   if (actionNames.some((n) => n.includes("aspirin") || n.includes("ibuprofen") || n.includes("ketorolac"))) {
-    harmful.push("Antiplatelet / NSAID ordered in bleeding scenario");
+    const desc = "Antiplatelet / NSAID ordered in bleeding scenario";
+    if (!existingDescs.has(desc)) {
+      details.push({ description: desc, severity: "moderate", penalty: -5 });
+    }
   }
 
-  return harmful;
+  return {
+    descriptions: details.map((d) => d.description),
+    details,
+  };
 }
 
 // ============================================================
@@ -402,10 +438,6 @@ function calculateTimeToFirstAction(playerActions: PlayerAction[]): number {
 // Helpers — Guideline Bundle Compliance
 // ============================================================
 
-/**
- * Evaluate player compliance with guideline bundles defined in the scenario.
- * Maps each bundle item's actionIds to actual player actions to determine completion.
- */
 function evaluateGuidelineBundles(
   bundles: GuidelineBundle[] | undefined,
   criticalActions: CriticalAction[],
@@ -414,16 +446,13 @@ function evaluateGuidelineBundles(
   if (!bundles || bundles.length === 0) return [];
 
   return bundles.map((bundle): GuidelineBundleScore => {
-    // Filter out informational items from scoring
     const scorableItems = bundle.items.filter((item) => !item.informational);
     const items: GuidelineBundleItemResult[] = scorableItems.map((item) => {
-      // Check if any of the mapped actionIds were completed
       const matchingCritical = criticalActions.filter((ca) =>
         item.actionIds.includes(ca.id),
       );
       const completed = matchingCritical.some((ca) => ca.met);
 
-      // Find the earliest completion time among matching actions
       const completionTimes = matchingCritical
         .filter((ca) => ca.met && ca.timeToComplete !== null)
         .map((ca) => ca.timeToComplete!);
@@ -431,7 +460,6 @@ function evaluateGuidelineBundles(
         ? Math.min(...completionTimes)
         : null;
 
-      // Check if within guideline time window
       const withinTimeWindow = item.timeWindow
         ? completed && completedAt !== null && completedAt <= item.timeWindow
         : completed;
@@ -451,7 +479,6 @@ function evaluateGuidelineBundles(
       ? Math.round((completedItems / scorableItems.length) * 100)
       : 0;
 
-    // Time to complete ALL items (null if not all completed)
     const allCompleted = completedItems === scorableItems.length;
     const allTimes = items
       .filter((i) => i.completedAt !== null)
@@ -475,40 +502,42 @@ function evaluateGuidelineBundles(
 }
 
 // ============================================================
-// Helpers — Numeric Score (for overall rating)
+// Helpers — Numeric Score v2 (with ScoreBreakdown)
 // ============================================================
 
-function computeNumericScore(
+function computeNumericScoreV2(
   criticalActions: CriticalAction[],
   sbarScore: SBARScore,
   escalationTiming: EscalationTiming,
-  lethalTriadManaged: boolean,
-  harmfulOrders: string[],
+  lethalTriadCount: number,
+  harmfulDetails: HarmfulOrderDetail[],
   hintsUsed: number,
   pauseThinkUsed: boolean,
   correctDiagnosis: boolean,
   timeToFirstAction: number,
-): number {
-  let score = 0;
-
-  // --- Critical actions (40 pts total) ---
+  diagnosticWorkupScore: number,
+): { total: number; breakdown: ScoreBreakdown } {
+  // --- Critical actions (30 pts) ---
   const totalCritical = criticalActions.filter((ca) => ca.critical).length;
   const metCritical = criticalActions.filter((ca) => ca.critical && ca.met).length;
+  const criticalEarned = totalCritical > 0
+    ? Math.round((metCritical / totalCritical) * WEIGHTS.criticalActions)
+    : WEIGHTS.criticalActions;
+
+  // --- Bonus actions (5 pts) ---
   const totalBonus = criticalActions.filter((ca) => !ca.critical).length;
   const metBonus = criticalActions.filter((ca) => !ca.critical && ca.met).length;
+  const bonusEarned = totalBonus > 0
+    ? Math.round((metBonus / totalBonus) * WEIGHTS.bonusActions)
+    : 0;
 
-  if (totalCritical > 0) {
-    score += (metCritical / totalCritical) * 30;
-  }
-  if (totalBonus > 0) {
-    score += (metBonus / totalBonus) * 10;
-  }
-
-  // --- SBAR (20 pts) ---
-  score += (sbarScore.completeness / 100) * 8;
-  score += (sbarScore.prioritization / 100) * 5;
-  if (sbarScore.quantitative) score += 4;
-  if (sbarScore.anticipatory) score += 3;
+  // --- SBAR (15 pts) ---
+  const sbarEarned = Math.round(
+    (sbarScore.completeness / 100) * 6 +
+    (sbarScore.prioritization / 100) * 4 +
+    (sbarScore.quantitative ? 3 : 0) +
+    (sbarScore.anticipatory ? 2 : 0),
+  );
 
   // --- Escalation (15 pts) ---
   const escalationPoints: Record<EscalationTiming, number> = {
@@ -517,29 +546,65 @@ function computeNumericScore(
     late: 3,
     never: 0,
   };
-  score += escalationPoints[escalationTiming];
+  const escalationEarned = escalationPoints[escalationTiming];
 
-  // --- Lethal triad (10 pts) ---
-  if (lethalTriadManaged) score += 10;
+  // --- Lethal triad (10 pts, graded) ---
+  const lethalTriadEarned = getLethalTriadScore(lethalTriadCount);
 
-  // --- Correct diagnosis (5 pts) ---
-  if (correctDiagnosis) score += 5;
+  // --- Diagnostic workup (10 pts) ---
+  const diagnosticEarned = diagnosticWorkupScore;
 
-  // --- Time to first action (5 pts, ≤ 3 min = full) ---
-  if (timeToFirstAction <= 3) score += 5;
-  else if (timeToFirstAction <= 6) score += 3;
-  else if (timeToFirstAction <= 10) score += 1;
+  // --- Diagnosis (10 pts) ---
+  const diagnosisEarned = correctDiagnosis ? WEIGHTS.diagnosis : 0;
 
-  // --- Hint penalty ---
-  score -= hintsUsed * HINT_PENALTY;
+  // --- Time to first action (5 pts) ---
+  let timeEarned = 0;
+  if (timeToFirstAction <= 3) timeEarned = 5;
+  else if (timeToFirstAction <= 6) timeEarned = 3;
+  else if (timeToFirstAction <= 10) timeEarned = 1;
 
-  // --- Pause think bonus ---
-  if (pauseThinkUsed) score += PAUSE_THINK_BONUS;
+  // --- Pause think bonus (+5) ---
+  const pauseBonus = pauseThinkUsed ? PAUSE_THINK_BONUS : 0;
 
-  // --- Harmful orders penalty (-5 each) ---
-  score -= harmfulOrders.length * 5;
+  // --- Hint penalty (-5 each) ---
+  const hintPen = hintsUsed * HINT_PENALTY;
 
-  return Math.min(100, Math.max(0, Math.round(score)));
+  // --- Harmful orders penalty (graded) ---
+  const harmfulPen = Math.abs(harmfulDetails.reduce((sum, d) => sum + d.penalty, 0));
+
+  const rawScore =
+    criticalEarned + bonusEarned + sbarEarned + escalationEarned +
+    lethalTriadEarned + diagnosticEarned + diagnosisEarned + timeEarned +
+    pauseBonus - hintPen - harmfulPen;
+
+  const total = Math.min(100, Math.max(0, Math.round(rawScore)));
+
+  const breakdown: ScoreBreakdown = {
+    criticalActions: { earned: criticalEarned, max: WEIGHTS.criticalActions },
+    sbar: { earned: sbarEarned, max: WEIGHTS.sbar },
+    escalation: { earned: escalationEarned, max: WEIGHTS.escalation },
+    lethalTriad: { earned: lethalTriadEarned, max: WEIGHTS.lethalTriad },
+    diagnosticWorkup: { earned: diagnosticEarned, max: WEIGHTS.diagnosticWorkup },
+    diagnosis: { earned: diagnosisEarned, max: WEIGHTS.diagnosis },
+    bonusActions: { earned: bonusEarned, max: WEIGHTS.bonusActions },
+    timeToFirst: { earned: timeEarned, max: WEIGHTS.timeToFirst },
+    pauseThinkBonus: pauseBonus,
+    hintPenalty: -hintPen,
+    harmfulOrderPenalty: -harmfulPen,
+  };
+
+  return { total, breakdown };
+}
+
+// ============================================================
+// Stars — v2
+// ============================================================
+
+function getStars(score: number, patientDied: boolean, missedCriticalCount: number): 1 | 2 | 3 {
+  if (patientDied) return 1;
+  if (score >= 80 && missedCriticalCount === 0) return 3;
+  if (score >= 60) return 2;
+  return 1;
 }
 
 // ============================================================
@@ -548,14 +613,6 @@ function computeNumericScore(
 
 /**
  * Calculate the final GameScore for a completed simulation run.
- *
- * @param scenario       - The scenario definition
- * @param playerActions  - All orders/actions placed by the player
- * @param timeline       - Full chat + event timeline
- * @param sbarReport     - SBAR report submitted at handoff
- * @param hintsUsed      - Number of hints used (from store)
- * @param pauseThinkUsed - Whether player used the pause-think feature
- * @param mtpState       - MTP state (to check for unnecessary activation)
  */
 export function calculateScore(
   scenario: SimScenario,
@@ -565,8 +622,8 @@ export function calculateScore(
   hintsUsed: number = 0,
   pauseThinkUsed: boolean = false,
   mtpState?: MTPState,
+  patientDied: boolean = false,
 ): GameScore {
-  // --- Evaluate each dimension ---
   const criticalActions = evaluateCriticalActions(
     scenario.expectedActions,
     playerActions,
@@ -580,9 +637,11 @@ export function calculateScore(
     scenario,
   );
 
-  const lethalTriadManaged = evaluateLethalTriadManagement(playerActions);
+  const lethalTriadCount = evaluateLethalTriadCount(playerActions);
+  const lethalTriadManaged = lethalTriadCount >= 2;
 
-  const harmfulOrders = detectHarmfulOrders(playerActions);
+  const { descriptions: harmfulOrders, details: harmfulOrderDetails } =
+    detectHarmfulOrders(playerActions);
 
   const correctDiagnosis = evaluateCorrectDiagnosis(
     playerActions,
@@ -593,24 +652,25 @@ export function calculateScore(
 
   const timeToFirstAction = calculateTimeToFirstAction(playerActions);
 
-  // --- Guideline bundle compliance ---
+  const diagnosticWorkupScore = evaluateDiagnosticWorkup(scenario, criticalActions);
+
   const guidelineBundleScores = evaluateGuidelineBundles(
     scenario.guidelineBundles,
     criticalActions,
     playerActions,
   );
 
-  // --- Compute numeric score for overall rating ---
-  const numericScore = computeNumericScore(
+  const { total: numericScore, breakdown } = computeNumericScoreV2(
     criticalActions,
     sbar,
     escalationTiming,
-    lethalTriadManaged,
-    harmfulOrders,
+    lethalTriadCount,
+    harmfulOrderDetails,
     hintsUsed,
     pauseThinkUsed,
     correctDiagnosis,
     timeToFirstAction,
+    diagnosticWorkupScore,
   );
 
   const overall: GameScore["overall"] =
@@ -620,46 +680,44 @@ export function calculateScore(
       ? "good"
       : "needs_improvement";
 
+  const missedCriticalCount = criticalActions.filter((ca) => ca.critical && !ca.met).length;
+
   const keyLessons = generateKeyLessons(
     {
       timeToFirstAction,
       correctDiagnosis,
       criticalActions,
       harmfulOrders,
+      harmfulOrderDetails,
       escalationTiming,
       lethalTriadManaged,
+      lethalTriadCount,
+      diagnosticWorkupScore,
       sbar,
       hintsUsed,
       pauseThinkUsed,
       overall,
-      keyLessons: [], // placeholder; will be filled below
+      keyLessons: [],
       stars: 1,
       totalScore: numericScore,
-      patientDied: false,
+      patientDied,
+      scoreBreakdown: breakdown,
     },
     scenario,
   );
 
-  // Calculate stars
-  const patientDied = false;
-  let stars: 1 | 2 | 3;
-  if (patientDied) {
-    stars = 1;
-  } else if (numericScore >= 80) {
-    stars = 3;
-  } else if (numericScore >= 50) {
-    stars = 2;
-  } else {
-    stars = 1;
-  }
+  const stars = getStars(numericScore, patientDied, missedCriticalCount);
 
   return {
     timeToFirstAction,
     correctDiagnosis,
     criticalActions,
     harmfulOrders,
+    harmfulOrderDetails,
     escalationTiming,
     lethalTriadManaged,
+    lethalTriadCount,
+    diagnosticWorkupScore,
     sbar,
     hintsUsed,
     pauseThinkUsed,
@@ -669,6 +727,7 @@ export function calculateScore(
     totalScore: numericScore,
     patientDied,
     guidelineBundleScores: guidelineBundleScores.length > 0 ? guidelineBundleScores : undefined,
+    scoreBreakdown: breakdown,
   };
 }
 
@@ -676,13 +735,6 @@ export function calculateScore(
 // generateKeyLessons
 // ============================================================
 
-/**
- * Generate personalised teaching points based on the player's score.
- * Returns up to 5 actionable lessons, ordered by priority.
- *
- * @param score    - The computed GameScore
- * @param scenario - The scenario definition (for context + debrief data)
- */
 export function generateKeyLessons(
   score: GameScore,
   scenario: SimScenario,
@@ -695,7 +747,7 @@ export function generateKeyLessons(
     .forEach((ca, i) => {
       lessons.push({
         priority: 10 + i,
-        text: `⚠️ 關鍵動作未完成：${ca.description}。${ca.hint}`,
+        text: `關鍵動作未完成：${ca.description}。${ca.hint}`,
       });
     });
 
@@ -705,7 +757,7 @@ export function generateKeyLessons(
     .forEach((ca, i) => {
       lessons.push({
         priority: 30 + i,
-        text: `💡 加分動作未執行：${ca.description}。${ca.hint}`,
+        text: `加分動作未執行：${ca.description}。${ca.hint}`,
       });
     });
 
@@ -713,17 +765,17 @@ export function generateKeyLessons(
   if (score.escalationTiming === "never") {
     lessons.push({
       priority: 5,
-      text: `🚨 始終未呼叫學長。在血流動力學不穩定且未改善的情況下，應即時 escalate——「叫學長不丟臉，叫太晚才丟臉。」`,
+      text: `始終未呼叫學長。在血流動力學不穩定且未改善的情況下，應即時 escalate——「叫學長不丟臉，叫太晚才丟臉。」`,
     });
   } else if (score.escalationTiming === "late") {
     lessons.push({
       priority: 8,
-      text: `⏰ Escalation 時機偏晚。Severity 已高但延遲通知學長，可能錯過最佳處置時窗。`,
+      text: `Escalation 時機偏晚。Severity 已高但延遲通知學長，可能錯過最佳處置時窗。`,
     });
   } else if (score.escalationTiming === "early") {
     lessons.push({
       priority: 50,
-      text: `ℹ️ 叫學長的時機稍早（尚未完成初步評估）。建議先做快速評估再通知，效率更高。`,
+      text: `叫學長的時機稍早（尚未完成初步評估）。建議先做快速評估再通知，效率更高。`,
     });
   }
 
@@ -731,7 +783,7 @@ export function generateKeyLessons(
   if (!score.lethalTriadManaged) {
     lessons.push({
       priority: 15,
-      text: `❄️ 死亡三角（Hypothermia + Acidosis + Coagulopathy）未完整處理。三者相互惡化，心外術後要主動監測並預防。`,
+      text: `死亡三角（Hypothermia + Acidosis + Coagulopathy）未完整處理。三者相互惡化，心外術後要主動監測並預防。`,
     });
   }
 
@@ -739,25 +791,19 @@ export function generateKeyLessons(
   if (score.sbar.completeness < 60) {
     lessons.push({
       priority: 20,
-      text: `📋 SBAR 完整性不足（${score.sbar.completeness}/100）。S/B/A/R 四項皆需實質內容，缺哪一項都會讓 senior 難以判斷。`,
+      text: `SBAR 完整性不足（${score.sbar.completeness}/100）。S/B/A/R 四項皆需實質內容，缺哪一項都會讓 senior 難以判斷。`,
     });
   }
   if (!score.sbar.quantitative) {
     lessons.push({
       priority: 22,
-      text: `📊 交班缺乏具體數字（如「CT 280cc/hr、Hb 8.2」）。數字勝過形容詞，「出很多」不如「cumulative 1100cc within 3 hours」。`,
+      text: `交班缺乏具體數字。數字勝過形容詞，「出很多」不如「cumulative 1100cc within 3 hours」。`,
     });
   }
   if (!score.sbar.anticipatory) {
     lessons.push({
       priority: 25,
-      text: `🔮 Recommendation 缺少「我已經...」的 anticipatory language。說「我已輸了 2U pRBC、準備第二套」比只報問題更展示臨床主動性。`,
-    });
-  }
-  if (score.sbar.prioritization < 50) {
-    lessons.push({
-      priority: 27,
-      text: `📑 重要資訊未放在前面（Situation 應先說最緊急的發現）。Prioritization 低代表 senior 需要多找才能抓到核心。`,
+      text: `Recommendation 缺少「我已經...」的 anticipatory language。說「我已輸了 2U pRBC、準備第二套」比只報問題更展示臨床主動性。`,
     });
   }
 
@@ -765,7 +811,7 @@ export function generateKeyLessons(
   score.harmfulOrders.forEach((ho, i) => {
     lessons.push({
       priority: 3 + i,
-      text: `🚫 有害醫囑：${ho}。`,
+      text: `有害醫囑：${ho}。`,
     });
   });
 
@@ -773,7 +819,7 @@ export function generateKeyLessons(
   if (score.timeToFirstAction > 10) {
     lessons.push({
       priority: 35,
-      text: `⏱️ 初步反應偏慢（第一個 order 在第 ${score.timeToFirstAction} 分鐘）。Parallel processing：評估的同時就可以先抽血、給 fluid。`,
+      text: `初步反應偏慢（第一個 order 在第 ${score.timeToFirstAction} 分鐘）。Parallel processing：評估的同時就可以先抽血、給 fluid。`,
     });
   }
 
@@ -781,19 +827,18 @@ export function generateKeyLessons(
   if (!score.correctDiagnosis) {
     lessons.push({
       priority: 18,
-      text: `🔍 診斷方向未指向 "${scenario.debrief.correctDiagnosis}"。${scenario.debrief.pitfalls[0] ?? "注意鑑別診斷。"}`,
+      text: `診斷方向未指向 "${scenario.debrief.correctDiagnosis}"。${scenario.debrief.pitfalls[0] ?? "注意鑑別診斷。"}`,
     });
   }
 
-  // --- Scenario-specific pitfalls (append from debrief) ---
+  // --- Scenario-specific pitfalls ---
   scenario.debrief.pitfalls.slice(0, 2).forEach((pitfall, i) => {
     lessons.push({
       priority: 60 + i,
-      text: `📌 常見陷阱：${pitfall}`,
+      text: `常見陷阱：${pitfall}`,
     });
   });
 
-  // Sort by priority (lower = more important), take top 5
   lessons.sort((a, b) => a.priority - b.priority);
   return lessons.slice(0, 5).map((l) => l.text);
 }
@@ -802,14 +847,6 @@ export function generateKeyLessons(
 // generateWhatIf
 // ============================================================
 
-/**
- * For each WhatIfBranch in the scenario, determine whether the player
- * actually took that path and generate a WhatIfResult for the debrief.
- *
- * @param scenario      - The scenario (contains debrief.whatIf branches)
- * @param playerActions - All player actions
- * @returns Array of WhatIfResult, with branches the player missed first
- */
 export function generateWhatIf(
   scenario: SimScenario,
   playerActions: PlayerAction[],
@@ -820,7 +857,6 @@ export function generateWhatIf(
   return scenario.debrief.whatIf.map((branch): WhatIfResult => {
     const scenarioLower = branch.scenario.toLowerCase();
 
-    // Heuristic: did player actually walk the branch?
     let playerActuallyTook = false;
     let actualPath: string | undefined;
 
@@ -829,7 +865,6 @@ export function generateWhatIf(
       scenarioLower.includes("call senior") ||
       scenarioLower.includes("escalat")
     ) {
-      // Branch = "if you called senior early"
       playerActuallyTook = playerActions.some(
         (pa) =>
           pa.category === "consult" ||
@@ -845,7 +880,6 @@ export function generateWhatIf(
       scenarioLower.includes("血") ||
       scenarioLower.includes("transfusion")
     ) {
-      // Branch = "if you only gave fluid without blood"
       const gaveBlood = actionCategories.some((c) => c === "transfusion") ||
         actionNames.some((n) => n.includes("prbc") || n.includes("pRBC"));
       const gaveFluidOnly = actionCategories.some((c) => c === "fluid") && !gaveBlood;
@@ -854,7 +888,6 @@ export function generateWhatIf(
         playerActuallyTook = gaveFluidOnly;
         actualPath = gaveBlood ? "你同時有輸血" : undefined;
       } else {
-        // "if you had given blood" → did they give blood?
         playerActuallyTook = gaveBlood;
         actualPath = !gaveBlood ? "你只給了 fluid，未輸血" : undefined;
       }
@@ -863,9 +896,9 @@ export function generateWhatIf(
       scenarioLower.includes("ct 堵") ||
       scenarioLower.includes("tamponade") ||
       scenarioLower.includes("通 ct") ||
-      scenarioLower.includes("milk")
+      scenarioLower.includes("milk") ||
+      scenarioLower.includes("strip")
     ) {
-      // Branch = chest tube management
       playerActuallyTook = actionNames.some(
         (n) => n.includes("milk") || n.includes("strip") || n.includes("chest tube"),
       );
@@ -877,8 +910,29 @@ export function generateWhatIf(
       playerActuallyTook = actionCategories.some((c) => c === "mtp") ||
         actionNames.some((n) => n.includes("mtp"));
       actualPath = !playerActuallyTook ? "你沒有啟動 MTP" : undefined;
+    } else if (
+      scenarioLower.includes("sepsis") ||
+      scenarioLower.includes("hour-1") ||
+      scenarioLower.includes("bundle") ||
+      scenarioLower.includes("辨識")
+    ) {
+      // Sepsis early recognition branch
+      const earlyAbx = playerActions.some(
+        (pa) => pa.orderName.toLowerCase().includes("antibiotic") ||
+          pa.orderName.toLowerCase().includes("vancomycin") ||
+          pa.orderName.toLowerCase().includes("tazocin") ||
+          pa.orderName.toLowerCase().includes("piperacillin"),
+      );
+      playerActuallyTook = earlyAbx;
+      actualPath = !earlyAbx ? "你沒有在第一時間啟動 sepsis bundle" : undefined;
+    } else if (
+      scenarioLower.includes("source") ||
+      scenarioLower.includes("wound") ||
+      scenarioLower.includes("pericardiocentesis")
+    ) {
+      playerActuallyTook = false;
+      actualPath = undefined;
     } else {
-      // Generic fallback: just show the branch without player-path analysis
       playerActuallyTook = false;
       actualPath = undefined;
     }

@@ -200,12 +200,16 @@ function useStandardGameTick(
   const difficultyConfig = useProGameStore((s) => s.difficultyConfig);
   const playerActions = useProGameStore((s) => s.playerActions);
 
-  const lastGuidanceRef = useRef<Set<string>>(new Set());
+  // Map<key, lastFiredGameTime> — allows re-firing after cooldown
+  const lastGuidanceRef = useRef<Map<string, number>>(new Map());
   const lastGuidanceTimeRef = useRef<number>(0);
   const lastPlayerActionTimeRef = useRef<number>(0);
   const firedUrgencyIdsRef = useRef<Set<string>>(new Set());
 
-  // Clear guidance dedup set when phase resets (not_started) so guidance can re-fire next playthrough
+  // Guidance re-fire cooldown: same trigger can fire again after N game-minutes
+  const GUIDANCE_COOLDOWN_MINUTES = 5;
+
+  // Clear guidance dedup map when phase resets (not_started) so guidance can re-fire next playthrough
   useEffect(() => {
     if (phase === "not_started") {
       lastGuidanceRef.current.clear();
@@ -243,12 +247,17 @@ function useStandardGameTick(
       );
 
       if (guidanceMsgs.length > 0) {
-        // Dedup: only push messages not seen recently (by trigger+relatedAction)
+        // Dedup with cooldown: same trigger can re-fire after GUIDANCE_COOLDOWN_MINUTES
+        const currentTime = state.clock.currentTime;
         for (const gm of guidanceMsgs) {
           const key = `${gm.trigger}:${gm.relatedAction ?? ""}`;
-          if (!lastGuidanceRef.current.has(key)) {
-            lastGuidanceRef.current.add(key);
-            lastGuidanceTimeRef.current = state.clock.currentTime;
+          const lastFired = lastGuidanceRef.current.get(key);
+          if (lastFired !== undefined && (currentTime - lastFired) < GUIDANCE_COOLDOWN_MINUTES) {
+            continue; // Still in cooldown, skip
+          }
+          {
+            lastGuidanceRef.current.set(key, currentTime);
+            lastGuidanceTimeRef.current = currentTime;
             useProGameStore.getState().addTimelineEntry({
               type: "nurse_message",
               sender: "nurse",
@@ -716,6 +725,11 @@ export default function StandardPageClient({ id }: { id: string }) {
   if (!scenario) return <LoadingScreen />;
 
   if (phase === "death") return <DeathScreen />;
+  if (phase === "outcome") {
+    // Standard mode also uses OutcomeScreen before debrief
+    const OutcomeScreen = require("@/components/simulator/pro/OutcomeScreen").default;
+    return <OutcomeScreen />;
+  }
   if (phase === "debrief") {
     return <StandardDebriefWrapper scenario={scenario} overlay={overlay} />;
   }

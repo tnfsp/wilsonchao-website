@@ -244,6 +244,7 @@ const expectedActions: ExpectedAction[] = [
     hint: "Sepsis bundle 第一條：在抗生素之前抽 blood culture × 2。先抽再打！順序很重要。",
     rationale: "Blood culture 是確認致病菌和調整抗生素的唯一方法。一旦給了抗生素，培養的陽性率會顯著下降（30-50% reduction）。'先抽再打' 是 Surviving Sepsis Campaign 的核心原則之一。兩套不同部位可以區分 true bacteremia vs contamination。",
     howTo: "兩套 blood culture（不同部位抽）：一套 peripheral venipuncture + 一套 central line（如果有的話）。每套含 aerobic + anaerobic bottle。消毒 > 30 sec 減少 contamination。然後立刻給抗生素，不要等結果。",
+    diagnosticCategory: "lab",
   },
   {
     id: "act-antibiotics",
@@ -254,6 +255,7 @@ const expectedActions: ExpectedAction[] = [
     hint: "Sternal wound infection + septic shock → 要蓋 MRSA + Gram-negative。Vancomycin + Tazocin 是標準組合。",
     rationale: "Septic shock 每延遲 1 小時給抗生素，死亡率增加約 7.6%（Kumar et al. 2006）。Hour-1 bundle 是 SSC 2026 最高等級建議。Sternal wound infection 需要蓋 MRSA（Vancomycin）+ Gram-negative（Piperacillin-Tazobactam），因為術後感染可能是 polymicrobial。SSC 2026 新增強烈建議使用 prolonged infusion beta-lactams。",
     howTo: "Vancomycin 25-30mg/kg IV loading dose（90kg → 約 2g）over 1-2hr + Piperacillin-Tazobactam 4.5g IV q6h。先打 Tazocin（快），Vancomycin 需要 infuse 較久。如果 PCN allergy → 改 Meropenem + Vancomycin。",
+    diagnosticCategory: "treatment",
   },
   {
     id: "act-fluid-resuscitation",
@@ -262,6 +264,7 @@ const expectedActions: ExpectedAction[] = [
     deadline: 15,
     critical: true,
     hint: "90kg 病人 × 30mL/kg = 2700mL。先快速給，再評估反應。不用一次灌完，但要盡快啟動。",
+    diagnosticCategory: "treatment",
   },
   {
     id: "act-lactate",
@@ -270,6 +273,7 @@ const expectedActions: ExpectedAction[] = [
     deadline: 10,
     critical: true,
     hint: "Lactate 是 sepsis 嚴重度和 resuscitation 效果的最佳指標。一定要追蹤趨勢！",
+    diagnosticCategory: "lab",
   },
   {
     id: "act-vasopressor",
@@ -278,6 +282,7 @@ const expectedActions: ExpectedAction[] = [
     deadline: 15,
     critical: true,
     hint: "Fluid 給了但 MAP 上不來 → Levophed 是 septic shock 的 first-line vasopressor。不要等太久。",
+    diagnosticCategory: "treatment",
   },
   {
     id: "act-call-senior",
@@ -286,6 +291,7 @@ const expectedActions: ExpectedAction[] = [
     deadline: 15,
     critical: true,
     hint: "Antibiotics 治菌、但膿要清。Source control 是 sepsis 的根本治療之一。VS 需要決定 timing。",
+    diagnosticCategory: "consult",
   },
   {
     id: "act-wound-culture",
@@ -294,6 +300,7 @@ const expectedActions: ExpectedAction[] = [
     deadline: 15,
     critical: false,
     hint: "有膿就要取 culture。Gram stain 可以在 1 小時內初步告訴你是什麼菌。",
+    diagnosticCategory: "lab",
   },
   {
     id: "act-foley",
@@ -508,34 +515,44 @@ const availablePOCUS: Record<string, POCUSView> = {
 // ============================================================
 
 const physicalExam: Record<string, PEFinding> = {
-  general: {
-    area: "General",
+  head_neck: {
+    area: "Head & Neck",
     finding:
-      "Febrile, flushed, diaphoretic。意識漸混：GCS 13（E3V4M6）→ 後期可能掉到 11。問時間地點答不正確。四肢溫暖但有 delayed capillary refill。",
+      "Febrile, flushed, diaphoretic。意識漸混：GCS 13（E3V4M6）。問時間地點答不正確。JVD (-)。氣管置中。",
   },
   chest: {
-    area: "Chest / Respiratory",
+    area: "Chest",
     finding:
-      "Tachypneic（RR 24-30）。雙側呼吸音清晰，基底可能有少許 crackle（大量輸液後加重）。Sternotomy wound：見下方 wound 部分。",
+      "Sternotomy wound: Erythema 明顯（紅腫範圍 > 5cm from incision line）。Warmth (+++)。Fluctuance (+) at upper portion。右上角 1cm 開口滲出黃綠色 purulent drainage。臭味 (+)。Sternal stability 尚可，但按壓有 mild click。",
+  },
+  lungs: {
+    area: "Lungs",
+    finding:
+      "Tachypneic（RR 24-30）。雙側呼吸音清晰，基底可能有少許 crackle（大量輸液後加重）。",
   },
   heart: {
-    area: "Cardiovascular",
+    area: "Heart",
     finding:
-      "Tachycardic, regular rhythm。心音正常，無雜音。Warm extremities（distributive shock 特徵 — warm shock phase）。Bounding pulses initially。Wide pulse pressure（100/55 → PP 45）。",
+      "Tachycardic, regular rhythm。S1/S2 normal，無雜音。Heart sounds not muffled。Bounding pulses initially。Wide pulse pressure（100/55 → PP 45）。",
   },
   abdomen: {
     area: "Abdomen",
     finding: "Soft, non-distended。Mild tenderness RUQ（可能 early hepatic congestion）。Bowel sounds present。",
   },
-  wound: {
-    area: "Sternal Wound",
-    finding:
-      "Erythema 明顯（紅腫範圍 > 5cm from incision line）。Warmth (+++)。Fluctuance (+) at upper portion。右上角 1cm 開口滲出黃綠色 purulent drainage。臭味 (+)。Sternal stability 尚可，但按壓有 mild click。",
-  },
   extremities: {
     area: "Extremities",
     finding:
-      "Warm peripheries（warm shock phase）。Cap refill 2-3 秒。Bilateral pedal pulses present。Mild bilateral pitting edema（POD#3 術後液體平衡）。",
+      "Warm peripheries（warm shock phase）。Cap refill 2-3 秒。Bilateral pedal pulses present。Temp warm。Mild bilateral pitting edema（POD#3 術後液體平衡）。",
+  },
+  tubes_lines: {
+    area: "Tubes & Lines",
+    finding:
+      "Chest tube patent，引流量少（serous）。Central line site (right IJ) clean, no erythema。Foley in situ, UOP decreasing。",
+  },
+  back: {
+    area: "Back",
+    finding:
+      "Sacrum intact。Posterior lung: bibasilar crackle（輸液後加重）。",
   },
 };
 
@@ -545,6 +562,13 @@ const physicalExam: Record<string, PEFinding> = {
 
 const debrief: DebriefData = {
   correctDiagnosis: "Septic shock secondary to deep sternal wound infection (DSWI)",
+
+  exampleSBAR: {
+    situation: "床8的張先生，58歲男性，CABG x4 POD3。發燒 38.8\u00B0C，心跳 120，BP 90/50 → MAP 63，意識變差（GCS 13）。Sternal wound 有膿性滲出。",
+    background: "POD3 CABG x4，DM（HbA1c 8.2）、COPD。昨天還穩定，今晚突然發燒心跳快。WBC 從 12 升到 18.5，Lactate 4.2。Sternal wound 紅腫範圍擴大，有黃綠色膿液。",
+    assessment: "高度懷疑 deep sternal wound infection 導致的 septic shock。符合 Sepsis-3 criteria：感染 + SOFA score increase >= 2。已進入 Hour-1 Bundle 流程。",
+    recommendation: "已抽 blood culture x2 → 已開始 Vancomycin + Tazocin。NS 30mL/kg 灌注中。Levophed 0.05 維持 MAP > 65。建議通知主治醫師安排 wound washout + debridement。",
+  },
 
   keyPoints: [
     "Sepsis-3 定義：感染 + SOFA score increase ≥ 2。SSC 2026 建議使用 NEWS/NEWS2/MEWS/SIRS 進行 sepsis 篩檢（優於 qSOFA，敏感度更高）→ 啟動 sepsis workup。",
@@ -746,6 +770,8 @@ export const septicShock: SimScenario = {
     peep: 8,
     rrSet: 12,
     tvSet: 500,
+    inspPressure: 15,
+    psLevel: 10,
     ieRatio: '1:2',
   },
 
@@ -776,6 +802,30 @@ export const septicShock: SimScenario = {
   physicalExam,
 
   debrief,
+
+  outcomes: [
+    {
+      condition: "survived_good",
+      emoji: "🌟",
+      title: "病人穩定，感染受控",
+      narrative:
+        "學長到場後確認你的處置方向正確。Hour-1 Bundle 在時限內完成：血培養已送、廣效抗生素已給、輸液復甦充足、升壓藥維持 MAP > 65。感染科會診後調整了抗生素組合。24 小時內 lactate 從 4.2 降到 1.8，vasopressor 開始 weaning。你的快速辨識和系統性處置，是 sepsis 存活的關鍵。",
+    },
+    {
+      condition: "survived_poor",
+      emoji: "⚠️",
+      title: "病人存活，但進入多重器官衰竭",
+      narrative:
+        "學長到場時病人已經需要高劑量 vasopressor，lactate 持續上升。部分 Hour-1 Bundle 項目延遲執行，導致感染在黃金時間內沒有被充分控制。病人後續發展為 ARDS 需要插管，AKI 需要 CRRT。雖然最終存活，但 ICU 住院天數大幅延長。Sepsis 的每一個小時延遲，死亡率增加 7.6%。",
+    },
+    {
+      condition: "died",
+      emoji: "💀",
+      title: "病人因敗血性休克過世",
+      narrative:
+        "感染引發的全身性發炎反應失控，血管張力崩潰，多重器官相繼衰竭。即使後期給予了最大劑量的 vasopressor 和抗生素，已經無法逆轉器官損傷。Septic shock 的死亡率本就高達 40%，而延遲處置讓情況更加嚴峻。每一次面對 sepsis，速度就是一切。",
+    },
+  ],
 };
 
 export default septicShock;

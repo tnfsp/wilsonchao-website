@@ -111,7 +111,7 @@ export function PauseThinkModal() {
                 暫停思考
               </h2>
               <p className="text-indigo-400/60 text-xs">
-                系統性整理你的思路 — 有做會加分，不強制填寫
+                整理你的臨床思路
               </p>
             </div>
           </div>
@@ -132,14 +132,6 @@ export function PauseThinkModal() {
             <p className="text-indigo-400/60 text-sm">
               臨床推理已記錄。繼續處理病人。
             </p>
-            <div
-              className="w-full mt-2 rounded-lg border border-indigo-900/30 px-4 py-3 text-left"
-              style={{ backgroundColor: "#001a30" }}
-            >
-              <p className="text-indigo-400/50 text-xs">
-                💡 系統性思考是避免錯誤的關鍵。把你的思路寫出來，可以讓你更快發現盲點。
-              </p>
-            </div>
             <button
               onClick={closeModal}
               className="mt-2 px-6 py-2.5 rounded-lg bg-indigo-700 hover:bg-indigo-600 text-white text-sm font-medium transition-colors border border-indigo-600"
@@ -181,18 +173,6 @@ export function PauseThinkModal() {
                 </div>
               ))}
 
-              {/* Scoring note */}
-              <div
-                className="rounded-lg border border-indigo-900/25 px-4 py-3"
-                style={{ backgroundColor: "#001020" }}
-              >
-                <p className="text-indigo-500/50 text-xs leading-relaxed">
-                  ⏸ <strong className="text-indigo-400/60">暫停思考加分：</strong>
-                  做了這個步驟代表你有系統性的臨床推理能力。
-                  填越詳細越好，但就算只填一項也有加分。
-                  不填可以按「跳過」，不扣分。
-                </p>
-              </div>
             </div>
 
             {/* Footer actions */}

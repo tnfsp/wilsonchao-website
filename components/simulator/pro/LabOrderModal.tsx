@@ -12,28 +12,27 @@ import type { OrderDefinition } from "@/lib/simulator/types";
 interface LabMeta {
   emoji: string;
   desc: string;
-  urgent?: boolean; // highlight as clinically important in cardiac surgery
 }
 
 const LAB_META: Record<string, LabMeta> = {
-  cbc: { emoji: "🩸", desc: "Hb / Hct / Plt / WBC", urgent: true },
-  coag: { emoji: "🧬", desc: "PT / INR / aPTT / Fibrinogen", urgent: true },
-  abg: { emoji: "💨", desc: "pH / PaO2 / PaCO2 / BE / Lactate", urgent: true },
-  lactate: { emoji: "⚗️", desc: "血乳酸 — 組織灌流指標", urgent: true },
+  cbc: { emoji: "🩸", desc: "Hb / Hct / Plt / WBC" },
+  coag: { emoji: "🧬", desc: "PT / INR / aPTT / Fibrinogen" },
+  abg: { emoji: "💨", desc: "pH / PaO₂ / PaCO₂ / BE / Lactate" },
+  lactate: { emoji: "⚗️", desc: "Lactate" },
   bcs: { emoji: "🧪", desc: "Na / K / Cl / BUN / Cr / Glucose" },
-  ica: { emoji: "🦴", desc: "Ionized Ca²⁺ — 大量輸血必查", urgent: true },
-  act: { emoji: "⏱️", desc: "ACT — 肝素拮抗監測（心外必查）", urgent: true },
-  troponin: { emoji: "❤️", desc: "Troponin I/T + CK-MB — 心肌損傷" },
-  blood_culture: { emoji: "🦠", desc: "血培養 × 2 sets — 感染評估" },
-  teg: { emoji: "📊", desc: "TEG 全程凝血功能圖", urgent: true },
-  rotem: { emoji: "📈", desc: "ROTEM 旋轉式彈力圖", urgent: true },
+  ica: { emoji: "🦴", desc: "Ionized Ca²⁺" },
+  act: { emoji: "⏱️", desc: "Activated Clotting Time" },
+  troponin: { emoji: "❤️", desc: "Troponin I/T + CK-MB" },
+  blood_culture: { emoji: "🦠", desc: "Blood Culture × 2 sets" },
+  teg: { emoji: "📊", desc: "Thromboelastography" },
+  rotem: { emoji: "📈", desc: "ROTEM" },
 };
 
-// Group display order
+// Group display order — simple categories like a real HIS
 const LAB_GROUPS: { label: string; ids: string[] }[] = [
-  { label: "⭐ 術後出血必查", ids: ["cbc", "coag", "abg", "lactate", "ica", "act", "teg"] },
-  { label: "🧪 一般化驗", ids: ["bcs", "troponin"] },
-  { label: "🔬 特殊檢查", ids: ["rotem", "blood_culture"] },
+  { label: "血液", ids: ["cbc", "coag", "abg", "lactate"] },
+  { label: "生化", ids: ["bcs", "ica", "troponin"] },
+  { label: "特殊", ids: ["act", "teg", "rotem", "blood_culture"] },
 ];
 
 // Build lookup
@@ -240,9 +239,7 @@ export default function LabOrderModal() {
                             <span className={`font-semibold text-sm ${isChecked ? "text-cyan-200" : "text-white"}`}>
                               {def.name}
                             </span>
-                            {meta?.urgent && (
-                              <span className="text-xs bg-red-700/50 text-red-300 rounded px-1.5 py-0.5">必查</span>
-                            )}
+                            {/* No hints — player decides what to order */}
                           </div>
                           {meta?.desc && (
                             <p className="text-zinc-500 text-xs mt-0.5 leading-snug">{meta.desc}</p>

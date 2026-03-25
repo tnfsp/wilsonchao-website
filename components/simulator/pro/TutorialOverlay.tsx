@@ -10,33 +10,40 @@ interface TutorialStep {
   target: TargetId;
   title: string;
   message: string;
+  /** Where to place the card relative to the target */
+  placement: "above" | "below" | "center";
 }
 
 const STEPS: TutorialStep[] = [
   {
     target: "pro-vitals-panel",
-    title: "Vitals Monitor",
-    message: "Vitals Monitor shows patient status. Red = danger, yellow = warning.",
+    title: "生命徵象監視器",
+    message: "病人的即時生命徵象。紅色 = 危急，黃色 = 警戒。注意趨勢變化。",
+    placement: "below",
   },
   {
     target: "action-bar",
-    title: "Action Buttons",
-    message: "Use these buttons to take actions: PE, labs, imaging, orders, and consults.",
+    title: "操作按鈕",
+    message: "PE、抽血、處置、通報交班、電擊。點「處置」展開更多：開藥、輸血、影像、呼吸器等。",
+    placement: "above",
   },
   {
     target: "time-controls",
-    title: "Fast Forward",
-    message: "Fast forward time with the \u23E9 button or press F on your keyboard.",
+    title: "時間控制",
+    message: "「快轉 5 分」跳過等待時間，或按鍵盤 F。「暫停思考」整理你的臨床思路。",
+    placement: "above",
   },
   {
     target: "sbar-btn",
-    title: "Call for Help",
-    message: "Call for help with SBAR when you\u2019re ready to escalate to the senior.",
+    title: "通報交班",
+    message: "覺得需要幫忙時，點這裡叫學長並用 SBAR 交班。知道什麼時候該叫人很重要。",
+    placement: "above",
   },
   {
     target: "none",
-    title: "Good luck, Dr!",
-    message: "You\u2019re on your own now. Trust your instincts and act fast.",
+    title: "祝你好運，醫師！",
+    message: "現在開始，你一個人值班。相信你的判斷，果斷行動。",
+    placement: "center",
   },
 ];
 
@@ -48,11 +55,9 @@ function useTargetRect(targetId: TargetId): DOMRect | null {
     const el = document.getElementById(targetId);
     if (!el) { setRect(null); return; }
 
-    // Scroll the element into view so the spotlight lands on it even on mobile
     el.scrollIntoView({ behavior: "smooth", block: "center" });
 
     const update = () => setRect(el.getBoundingClientRect());
-    // Small delay to let scroll settle before measuring
     const t = setTimeout(update, 400);
     window.addEventListener("resize", update);
     return () => {
@@ -73,7 +78,6 @@ export default function TutorialOverlay() {
   useEffect(() => {
     if (typeof window === "undefined") return;
     if (!localStorage.getItem(STORAGE_KEY)) {
-      // Small delay so game elements mount first
       const t = setTimeout(() => setVisible(true), 600);
       return () => clearTimeout(t);
     }
@@ -109,6 +113,27 @@ export default function TutorialOverlay() {
       }
     : null;
 
+  // Position the card near the target element
+  const cardStyle: React.CSSProperties = {};
+
+  if (rect && current.placement !== "center") {
+    const cardWidth = 340;
+    // Center horizontally relative to target, clamped to viewport
+    let left = rect.left + rect.width / 2 - cardWidth / 2;
+    left = Math.max(16, Math.min(left, window.innerWidth - cardWidth - 16));
+    cardStyle.left = left;
+    cardStyle.width = cardWidth;
+    cardStyle.position = "absolute";
+
+    if (current.placement === "below") {
+      cardStyle.top = rect.bottom + pad + 16;
+    } else {
+      cardStyle.bottom = window.innerHeight - rect.top + pad + 16;
+    }
+  }
+
+  const isPositioned = rect && current.placement !== "center";
+
   return (
     <div
       ref={overlayRef}
@@ -129,12 +154,39 @@ export default function TutorialOverlay() {
         )}
       </div>
 
-      {/* Message card */}
-      <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+      {/* Message card — positioned near target or centered */}
+      <div
+        className={`${isPositioned ? "" : "absolute inset-0 flex items-center justify-center"} pointer-events-none`}
+      >
         <div
           className="pointer-events-auto max-w-sm w-full mx-4 rounded-2xl p-5 border border-white/20"
-          style={{ background: "rgba(0, 18, 25, 0.95)" }}
+          style={{
+            background: "rgba(0, 18, 25, 0.95)",
+            ...cardStyle,
+          }}
         >
+          {/* Arrow pointing to target */}
+          {isPositioned && current.placement === "below" && (
+            <div
+              className="absolute -top-2 left-1/2 -translate-x-1/2 w-0 h-0"
+              style={{
+                borderLeft: "8px solid transparent",
+                borderRight: "8px solid transparent",
+                borderBottom: "8px solid rgba(94,234,212,0.6)",
+              }}
+            />
+          )}
+          {isPositioned && current.placement === "above" && (
+            <div
+              className="absolute -bottom-2 left-1/2 -translate-x-1/2 w-0 h-0"
+              style={{
+                borderLeft: "8px solid transparent",
+                borderRight: "8px solid transparent",
+                borderTop: "8px solid rgba(94,234,212,0.6)",
+              }}
+            />
+          )}
+
           {/* Step indicator */}
           <div className="flex items-center gap-1.5 mb-3">
             {STEPS.map((_, i) => (
@@ -164,13 +216,13 @@ export default function TutorialOverlay() {
               onClick={dismiss}
               className="px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors"
             >
-              Skip
+              跳過
             </button>
             <button
               onClick={next}
               className="ml-auto px-5 py-2 rounded-xl bg-teal-600 hover:bg-teal-500 text-white text-sm font-medium transition-colors"
             >
-              {step < STEPS.length - 1 ? "Next" : "Start!"}
+              {step < STEPS.length - 1 ? "下一步" : "開始！"}
             </button>
           </div>
         </div>

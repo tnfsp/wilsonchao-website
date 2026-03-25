@@ -209,6 +209,7 @@ const expectedActions: ExpectedAction[] = [
     hint: "CT output 從 150 掉到 50 → 不是改善，最可能是 clot 堵住。先試 milk/strip！",
     rationale: "CT output 突降常代表 clot 堵塞而非出血停止。若未及時處理，可能遺漏 tamponade 的早期線索，延誤診斷。Strip/milk 是 CVSICU 標準床邊操作，零風險且能立即區分堵塞 vs 真正的低輸出。",
     howTo: "雙手戴手套 → 從 chest tube 近端向遠端依序 strip，再反向 milk。觀察是否有 clot 排出、output 是否恢復。若無恢復 → 高度懷疑 tamponade。",
+    diagnosticCategory: "pe",
   },
   {
     id: "act-cardiac-pocus",
@@ -219,6 +220,7 @@ const expectedActions: ExpectedAction[] = [
     hint: "CVP 升 + BP 降 + 心音變悶 → Beck triad。POCUS 30 秒就可以確認 tamponade。",
     rationale: "Beck triad（低血壓 + JVD + muffled heart sounds）的敏感度不高，POCUS 是床邊確認 tamponade 最快最準的工具。Subxiphoid view 30 秒即可看到 pericardial effusion 和 RV diastolic collapse。延遲診斷 = 延遲治療 = 死亡率上升。",
     howTo: "Subxiphoid view 為首選：探頭放劍突下，朝左肩方向。看 pericardial space 有無積液、RV 是否有 diastolic collapse。如果畫面不佳，改用 parasternal long axis。",
+    diagnosticCategory: "pocus",
   },
   {
     id: "act-call-senior",
@@ -229,6 +231,7 @@ const expectedActions: ExpectedAction[] = [
     hint: "這是急症中的急症。需要 VS 來決定是否 bedside re-open 或回 OR。越早通知越好。",
     rationale: "Cardiac tamponade 需要 emergent surgical intervention（re-sternotomy），這不是住院醫師或值班醫師能獨立決定的手術。早期通知讓 VS 有時間準備 OR、通知麻醉科。每延遲 10 分鐘通知，patient deterioration 風險顯著增加。",
     howTo: "直接打 VS 手機（不是 pager）：簡述 'POD1 CABG，CT output 突降，POCUS 見 pericardial effusion，BP dropping，需要評估 re-sternotomy'。同時通知 OR 可能需要 emergent case。",
+    diagnosticCategory: "consult",
   },
   {
     id: "act-volume-challenge",
@@ -239,6 +242,7 @@ const expectedActions: ExpectedAction[] = [
     hint: "Tamponade 時心臟充盈受限。給 volume 可以暫時提高 preload 維持 CO，爭取時間。",
     rationale: "Tamponade 時心臟被外壓限制充盈，但提高靜脈回流壓可部分克服 → 暫時維持 cardiac output。這是 bridging therapy，爭取手術準備時間。SSC 和 EACTS guideline 都建議 volume loading 作為 tamponade 的暫時處置。",
     howTo: "Crystalloid（LR 或 NS）500mL bolus，用 pressure bag 快速灌注。給完後評估 BP/CVP 反應。可重複一次，但若無反應不要繼續灌 → 改用 vasopressor bridge。",
+    diagnosticCategory: "treatment",
   },
   {
     id: "act-vasopressor",
@@ -259,6 +263,7 @@ const expectedActions: ExpectedAction[] = [
     hint: "Tamponade 的 definitive treatment 是解除壓迫。備好：開胸器械、pRBC、外科團隊。",
     rationale: "Re-sternotomy 是 cardiac tamponade 的 definitive treatment。準備工作需要時間（通知 OR、備血、開胸器械），越早開始準備越能縮短 door-to-incision time。在極端情況下，bedside re-sternotomy 可能是唯一選項。",
     howTo: "三件事同步進行：(1) 通知 OR team + 麻醉科準備 emergent case (2) 備血：pRBC 4U + FFP 4U + Plt 1 dose (3) 床邊準備開胸器械包（sternal wire cutter、retractor）。",
+    diagnosticCategory: "treatment",
   },
   {
     id: "act-type-screen",
@@ -279,6 +284,7 @@ const expectedActions: ExpectedAction[] = [
     hint: "Lactate 和 base deficit 告訴你灌流夠不夠。Tamponade 的低心輸出 → 會有 lactic acidosis。",
     rationale: "Lactate 和 base deficit 反映組織灌流狀態。Tamponade 造成的低心輸出會導致 lactic acidosis。追蹤數值可以客觀評估 resuscitation 效果和手術急迫性。",
     howTo: "從 arterial line 抽 ABG（如果有的話），或做 venous blood gas + lactate。重點看 pH、base deficit、lactate。Lactate > 4 mmol/L 代表嚴重組織低灌流。",
+    diagnosticCategory: "lab",
   },
   {
     id: "act-vent-fio2-adjust",
@@ -431,20 +437,25 @@ const availablePOCUS: Record<string, POCUSView> = {
 // ============================================================
 
 const physicalExam: Record<string, PEFinding> = {
-  general: {
-    area: "General",
+  head_neck: {
+    area: "Head & Neck",
     finding:
-      "病人焦躁不安、意識漸混。四肢冰冷濕冷，周邊膚色蒼白。Cap refill > 4 秒。",
+      "病人焦躁不安、意識漸混。周邊膚色蒼白。頸靜脈明顯怒張（JVD +）。氣管置中。",
   },
   chest: {
-    area: "Chest / Respiratory",
+    area: "Chest",
     finding:
-      "雙側呼吸音清晰，無囉音。Sternotomy wound intact。敷料乾淨。Chest tube 引流瓶內可見暗紅色凝血塊。",
+      "Sternotomy wound intact。敷料乾淨。胸廓起伏對稱。",
+  },
+  lungs: {
+    area: "Lungs",
+    finding:
+      "雙側呼吸音清晰，無囉音。",
   },
   heart: {
-    area: "Cardiovascular",
+    area: "Heart",
     finding:
-      "Heart sounds distant / muffled。心跳快但規律。頸靜脈明顯怒張（JVD）。Peripheral pulse weak, thready。Pulsus paradoxus > 15mmHg（A-line 可測量）。",
+      "Heart sounds distant / muffled。心跳快但規律。S1/S2 diminished。Pulsus paradoxus > 15mmHg（A-line 可測量）。",
   },
   abdomen: {
     area: "Abdomen",
@@ -453,12 +464,17 @@ const physicalExam: Record<string, PEFinding> = {
   extremities: {
     area: "Extremities",
     finding:
-      "四肢冰冷、蒼白。Bilateral pedal pulses barely palpable。無明顯水腫。",
+      "四肢冰冷、蒼白。Bilateral pedal pulses barely palpable。Cap refill > 4 秒。Temp cold。無明顯水腫。",
   },
-  ct_site: {
-    area: "Chest Tube Site",
+  tubes_lines: {
+    area: "Tubes & Lines",
     finding:
-      "雙側 CT in situ。Suction at -20 cmH2O。右側 CT 引流管內可見暗紅色 clot 堵塞——用手擠壓（milk）無法通過。左側 CT 引流微量暗紅色。",
+      "雙側 CT in situ。Suction at -20 cmH2O。右側 CT 引流管內可見暗紅色 clot 堵塞——用手擠壓（milk）無法通過。左側 CT 引流微量暗紅色。Central line site clean。",
+  },
+  back: {
+    area: "Back",
+    finding:
+      "Sacrum intact。Posterior lung fields clear。",
   },
 };
 
@@ -468,6 +484,13 @@ const physicalExam: Record<string, PEFinding> = {
 
 const debrief: DebriefData = {
   correctDiagnosis: "Cardiac tamponade due to clot obstruction of chest tube",
+
+  exampleSBAR: {
+    situation: "床5的陳阿姨，72歲女性，MVR + CABG x2 POD0。CT output 從 150cc/hr 突然降到近乎零。BP 85/60 → 75/55，HR 120，CVP 從 12 升到 18。",
+    background: "今日 MVR（機械瓣）+ CABG x2，術中順利。術後初期 CT 引流穩定 ~150cc/hr 鮮紅色。病人有 AF 病史，術前 warfarin bridged with heparin。目前 on Levophed 0.03 + Amiodarone drip。",
+    assessment: "高度懷疑 cardiac tamponade。CT output 突然停止 + CVP 上升 + BP 下降 = Beck triad 形成中。POCUS 顯示 large pericardial effusion with RV diastolic collapse。已嘗試 strip/milk CT 但無法通。",
+    recommendation: "建議緊急通知主治醫師評估 emergent re-sternotomy。已給 volume challenge 500mL、準備備血 4U pRBC。請 OR 準備 emergent case。",
+  },
 
   keyPoints: [
     "CT output 突然減少 ≠ 改善！最危險的可能是 clot obstruction → 血液積在 pericardial space → tamponade。",
@@ -626,6 +649,8 @@ export const cardiacTamponade: SimScenario = {
     peep: 5,
     rrSet: 12,
     tvSet: 500,
+    inspPressure: 15,
+    psLevel: 10,
     ieRatio: '1:2',
   },
 
@@ -657,6 +682,30 @@ export const cardiacTamponade: SimScenario = {
   physicalExam,
 
   debrief,
+
+  outcomes: [
+    {
+      condition: "survived_good",
+      emoji: "🌟",
+      title: "病人成功搶救",
+      narrative:
+        "學長到場後根據你的 SBAR 報告和 POCUS 結果，立即啟動緊急開胸準備。在 OR 中發現心包腔內約 300cc 血塊壓迫右心房。清除血塊、止住出血點後，病人血壓迅速回升，CVP 下降到正常範圍。你的早期辨識 Beck's Triad + 及時 POCUS 確認，是這次成功搶救的關鍵。",
+    },
+    {
+      condition: "survived_poor",
+      emoji: "⚠️",
+      title: "病人存活，但差點失去",
+      narrative:
+        "學長到場時病人已經接近 PEA arrest。心包填塞的診斷延遲導致心輸出量持續惡化。學長緊急在 bedside 做了 subxiphoid pericardiotomy，引流出大量血塊後血壓才恢復。病人雖然存活，但經歷了一段 low-output state，可能對腎臟和腦部造成影響。更早做 POCUS 和通知學長，可能避免這段危險期。",
+    },
+    {
+      condition: "died",
+      emoji: "💀",
+      title: "病人因心包填塞過世",
+      narrative:
+        "心包腔內的血液持續壓迫心臟，最終導致 PEA arrest。即使進行了 CPR 和緊急開胸，心臟已經在長時間低灌流下受損嚴重，無法恢復有效節律。心包填塞是心外術後最緊急的併發症之一 — 從出現徵兆到不可逆，時間窗口非常短。",
+    },
+  ],
 };
 
 export default cardiacTamponade;

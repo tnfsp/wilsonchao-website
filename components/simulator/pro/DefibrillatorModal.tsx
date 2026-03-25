@@ -3,21 +3,24 @@
 import { useState } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { RhythmType } from "@/lib/simulator/types";
+import { EcgCanvas } from "./EcgCanvas";
+import { generateECGMorphology } from "@/lib/simulator/engine/ecg-generator";
+import { getLastBioGearsState } from "@/lib/simulator/engine/biogears-engine";
 
 // ─── Rhythm descriptions ────────────────────────────────────────────────────
 
-const RHYTHM_INFO: Record<RhythmType, { label: string; desc: string; shockable: boolean }> = {
-  nsr:           { label: "Normal Sinus Rhythm",   desc: "正常竇性節律",             shockable: false },
-  sinus_tach:    { label: "Sinus Tachycardia",     desc: "竇性心搏過速",             shockable: false },
-  sinus_brady:   { label: "Sinus Bradycardia",     desc: "竇性心搏過緩",             shockable: false },
-  afib:          { label: "Atrial Fibrillation",    desc: "心房顫動",                 shockable: false },
-  aflutter:      { label: "Atrial Flutter",         desc: "心房撲動",                 shockable: false },
-  vf:            { label: "Ventricular Fibrillation", desc: "心室顫動 — 可電擊節律",  shockable: true  },
-  vt_pulse:      { label: "VT with Pulse",          desc: "有脈搏心室頻脈",           shockable: true  },
-  vt_pulseless:  { label: "Pulseless VT",           desc: "無脈搏心室頻脈 — 可電擊節律", shockable: true },
-  svt:           { label: "SVT",                    desc: "上心室頻脈",               shockable: false },
-  pea:           { label: "PEA",                    desc: "無脈搏電活動 — 不可電擊",    shockable: false },
-  asystole:      { label: "Asystole",               desc: "心搏停止 — 不可電擊",       shockable: false },
+const RHYTHM_INFO: Record<RhythmType, { label: string }> = {
+  nsr:           { label: "Normal Sinus Rhythm" },
+  sinus_tach:    { label: "Sinus Tachycardia" },
+  sinus_brady:   { label: "Sinus Bradycardia" },
+  afib:          { label: "Atrial Fibrillation" },
+  aflutter:      { label: "Atrial Flutter" },
+  vf:            { label: "Ventricular Fibrillation" },
+  vt_pulse:      { label: "VT with Pulse" },
+  vt_pulseless:  { label: "Pulseless VT" },
+  svt:           { label: "SVT" },
+  pea:           { label: "PEA" },
+  asystole:      { label: "Asystole" },
 };
 
 const ENERGY_OPTIONS = [120, 150, 200, 360] as const;
@@ -39,8 +42,15 @@ export default function DefibrillatorModal() {
   if (activeModal !== "defibrillator") return null;
 
   const rhythm = patient?.vitals.rhythmStrip ?? "nsr";
-  const rhythmInfo = RHYTHM_INFO[rhythm];
   const { energy, mode } = defibrillator;
+
+  // Generate ECG morphology for live waveform display
+  const bgState = getLastBioGearsState();
+  const scenario = useProGameStore.getState().scenario;
+  const ecgMorphology = generateECGMorphology(bgState, {
+    pathology: scenario?.pathology,
+    tamponade: scenario?.pathology === "cardiac_tamponade",
+  });
 
   const handleShock = () => {
     if (!confirmShock) {
@@ -73,27 +83,15 @@ export default function DefibrillatorModal() {
         </div>
 
         <div className="px-6 py-5 space-y-5">
-          {/* Current Rhythm */}
-          <div className="rounded-xl border border-zinc-700 bg-zinc-900/50 p-4">
-            <p className="text-xs uppercase tracking-widest text-zinc-500 mb-2">目前節律</p>
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-white font-bold text-lg">{rhythmInfo.label}</p>
-                <p className="text-zinc-400 text-sm">{rhythmInfo.desc}</p>
-              </div>
-              <span className={`text-xs px-2.5 py-1 rounded-full border font-semibold ${
-                rhythmInfo.shockable
-                  ? "bg-red-900/40 text-red-400 border-red-500/30"
-                  : "bg-zinc-800 text-zinc-500 border-zinc-600"
-              }`}>
-                {rhythmInfo.shockable ? "可電擊" : "不可電擊"}
-              </span>
-            </div>
-            {patient && (
-              <p className="text-zinc-600 text-xs mt-2">
-                HR {Math.round(patient.vitals.hr)} bpm · MAP {Math.round(patient.vitals.map)} mmHg
-              </p>
-            )}
+          {/* Live ECG — player must interpret rhythm themselves */}
+          <div className="rounded-xl border border-zinc-700 bg-black overflow-hidden">
+            <EcgCanvas
+              morphology={ecgMorphology}
+              width={380}
+              height={120}
+              showGrid
+              showLabels={false}
+            />
           </div>
 
           {/* Energy Selector */}

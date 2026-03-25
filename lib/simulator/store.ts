@@ -295,6 +295,8 @@ const initialVentilatorState: VentilatorState = {
   peep: 5,
   rrSet: 14,
   tvSet: 500,
+  inspPressure: 15,
+  psLevel: 10,
   ieRatio: '1:2',
 };
 
@@ -1453,7 +1455,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
 
     set((state) => ({
       sbarReport: report,
-      phase: "sbar",
+      phase: "outcome",
       timeline: [...state.timeline, entry],
       playerActions: [...state.playerActions, { action: "sbar:submitted", gameTime: get().clock.currentTime }],
       activeModal: null,
@@ -1941,24 +1943,59 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     // Determine outcome based on rhythm
     let result: ShockResult;
     if (rhythm === "vf" || rhythm === "vt_pulseless") {
-      // Async shock — appropriate for VF/pulseless VT
+      // Async shock — appropriate for VF/pulseless VT → convert to sinus tach
       result = { success: true, message: "電擊成功 — 節律恢復中" };
-      shockEntry.content = `⚡ 電擊 ${energy}J（${mode === "sync" ? "同步" : "非同步"}）— VF/VT 電擊後觀察節律`;
+      shockEntry.content = `⚡ 電擊 ${energy}J（${mode === "sync" ? "同步" : "非同步"}）— VF/VT 電擊後節律恢復`;
+
+      // Update rhythm to post-shock sinus tachycardia
+      set((state) => ({
+        patient: state.patient ? {
+          ...state.patient,
+          vitals: { ...state.patient.vitals, rhythmStrip: "sinus_tach" as const },
+        } : state.patient,
+      }));
     } else if (rhythm === "vt_pulse") {
-      // Sync cardioversion for VT with pulse
+      // Sync cardioversion for VT with pulse → convert to NSR
+      const postRhythm = mode === "sync" ? "nsr" as const : "sinus_tach" as const;
       if (mode === "sync") {
         result = { success: true, message: "同步電擊成功 — VT 轉為竇性節律" };
-        shockEntry.content = `⚡ 同步電擊 ${energy}J — VT with pulse → 節律轉換中`;
+        shockEntry.content = `⚡ 同步電擊 ${energy}J — VT with pulse → 節律轉換`;
       } else {
-        result = { success: true, message: "非同步電擊 — 注意：VT with pulse 建議使用同步模式" };
+        result = { success: true, message: "非同步電擊 — VT 暫時轉換，注意：建議使用同步模式" };
         shockEntry.content = `⚡ 非同步電擊 ${energy}J — VT with pulse（⚠ 建議同步模式）`;
       }
+
+      set((state) => ({
+        patient: state.patient ? {
+          ...state.patient,
+          vitals: { ...state.patient.vitals, rhythmStrip: postRhythm },
+        } : state.patient,
+      }));
     } else if (rhythm === "asystole" || rhythm === "pea") {
       result = { success: false, message: "不適合電擊 — Asystole/PEA 為不可電擊節律" };
-      shockEntry.content = `⚡ 嘗試電擊 ${energy}J — ⚠ ${rhythm === "asystole" ? "Asystole" : "PEA"} 不可電擊`;
+      shockEntry.content = `⚡ 電擊 ${energy}J — ⚠ ${rhythm === "asystole" ? "Asystole" : "PEA"} 不可電擊！病人因不當電擊惡化`;
+
+      // Record + trigger death
+      set((state) => ({
+        defibrillator: { ...state.defibrillator, lastShockAt: clock.currentTime },
+        timeline: [...state.timeline, { id: nextId("tl"), ...shockEntry }],
+        playerActions: [...state.playerActions, { action: actionLabel, gameTime: clock.currentTime, category: "acls" }],
+      }));
+      get().triggerDeath(`對 ${rhythm === "asystole" ? "Asystole" : "PEA"} 執行電擊，導致病人心臟停止無法恢復`);
+      return result;
     } else {
-      result = { success: false, message: `目前節律（${rhythm}）不需要電擊` };
-      shockEntry.content = `⚡ 嘗試電擊 ${energy}J — 目前節律不需電擊`;
+      // Non-shockable rhythm (NSR, sinus tach, afib, etc.) — inappropriate shock causes arrest
+      result = { success: false, message: `不當電擊 — ${rhythm} 非電擊適應症` };
+      shockEntry.content = `⚡ 電擊 ${energy}J — ⚠ 對 ${rhythm} 執行不當電擊！病人發生心室顫動`;
+
+      // Record + trigger death
+      set((state) => ({
+        defibrillator: { ...state.defibrillator, lastShockAt: clock.currentTime },
+        timeline: [...state.timeline, { id: nextId("tl"), ...shockEntry }],
+        playerActions: [...state.playerActions, { action: actionLabel, gameTime: clock.currentTime, category: "acls" }],
+      }));
+      get().triggerDeath(`對 ${rhythm} 執行不當電擊，誘發致命性心律不整`);
+      return result;
     }
 
     set((state) => ({

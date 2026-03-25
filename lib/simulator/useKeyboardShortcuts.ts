@@ -5,7 +5,7 @@ import { useProGameStore } from "@/lib/simulator/store";
 
 /**
  * Keyboard shortcuts for the Pro simulator:
- *   1 = PE, 2 = 抽血, 3 = 處置, 4 = 叫人, 5 = SBAR
+ *   1 = PE, 2 = 抽血, 3 = 處置, 4 = 通報交班(SBAR), 5 = 電擊
  *   Space = toggle pause (open/close pause_think modal)
  *   F = fast forward 5 min
  *   Escape = close any open modal
@@ -21,7 +21,7 @@ export function useKeyboardShortcuts() {
       if ((e.target as HTMLElement)?.isContentEditable) return;
 
       const state = useProGameStore.getState();
-      if (state.phase !== "playing" && state.phase !== "sbar") return;
+      if (state.phase !== "playing" && state.phase !== "sbar" && state.phase !== "outcome") return;
 
       const key = e.key.toLowerCase();
 
@@ -53,11 +53,25 @@ export function useKeyboardShortcuts() {
           break;
         case "4":
           e.preventDefault();
-          state.openModal("consult");
+          // 通報交班: track call_senior + open SBAR
+          useProGameStore.setState((s) => ({
+            playerActions: [
+              ...s.playerActions,
+              { action: "call_senior", gameTime: s.clock.currentTime, category: "consult" },
+            ],
+          }));
+          state.addTimelineEntry({
+            gameTime: state.clock.currentTime,
+            type: "player_action",
+            content: "📞 你打電話通知學長，準備 SBAR 交班",
+            sender: "player",
+            isImportant: true,
+          });
+          state.openModal("sbar");
           break;
         case "5":
           e.preventDefault();
-          state.openModal("sbar");
+          state.openModal("defibrillator");
           break;
         case " ":
           e.preventDefault();

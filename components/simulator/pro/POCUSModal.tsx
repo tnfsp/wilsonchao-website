@@ -1,3 +1,12 @@
+/**
+ * @deprecated This component has been merged into ImagingModal.tsx.
+ * POCUS (Echo, Lung POCUS, IVC) is now handled as tabs within the unified
+ * ImagingModal. This file is preserved for reference only — do not use.
+ *
+ * Migration: 2026-03-25
+ * See: components/simulator/pro/ImagingModal.tsx
+ */
+
 "use client";
 
 import { useState } from "react";

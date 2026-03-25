@@ -2,12 +2,18 @@
 
 import React from "react";
 import IOBalanceBar from "./IOBalanceBar";
-import MiniVitalsBar from "./MiniVitalsBar";
 import { useProGameStore } from "@/lib/simulator/store";
 
 interface ProGameLayoutProps {
-  leftPanel: React.ReactNode;
-  rightPanel: React.ReactNode;
+  /** Mobile top area: vitals rows + waveform + CT status (fixed, no scroll) */
+  monitorPanel: React.ReactNode;
+  /** Desktop-only left panel: full vitals + waveform + CT + vent (scrollable) */
+  desktopLeftPanel: React.ReactNode;
+  /** Chat timeline (scrollable area) */
+  chatPanel: React.ReactNode;
+  /** Message input bar */
+  messageInput: React.ReactNode;
+  /** Icon-only action bar */
   actionBar?: React.ReactNode;
 }
 
@@ -19,8 +25,10 @@ const dangerPulseCSS = `
 `;
 
 export default function ProGameLayout({
-  leftPanel,
-  rightPanel,
+  monitorPanel,
+  desktopLeftPanel,
+  chatPanel,
+  messageInput,
   actionBar,
 }: ProGameLayoutProps) {
   const severity = useProGameStore((s) => s.patient?.severity ?? 0);
@@ -49,37 +57,49 @@ export default function ProGameLayout({
         </>
       )}
 
-      {/* Top bar */}
+      {/* ═══ Top bar — always visible ═══ */}
       <IOBalanceBar />
-      <MiniVitalsBar />
 
-      {/* Desktop: side-by-side */}
+      {/* ═══ Desktop (lg+): side-by-side ═══ */}
       <div className="hidden lg:flex flex-1 overflow-hidden">
+        {/* Left column: monitors (scrollable) */}
         <div
           className="w-[380px] flex-shrink-0 overflow-y-auto border-r border-white/8"
           style={{ scrollbarWidth: "thin", scrollbarColor: "#ffffff1a transparent" }}
         >
-          <div className="p-3 space-y-3">{leftPanel}</div>
+          <div className="p-3 space-y-3">{desktopLeftPanel}</div>
         </div>
+
+        {/* Right column: chat + input + action bar */}
         <div className="flex-1 flex flex-col overflow-hidden min-w-0">
-          <div className="flex-1 overflow-hidden">{rightPanel}</div>
+          <div className="flex-1 overflow-hidden">{chatPanel}</div>
+          <div className="flex-shrink-0">{messageInput}</div>
+          {actionBar && (
+            <div className="flex-shrink-0 border-t border-white/8 bg-[#00202e]">
+              {actionBar}
+            </div>
+          )}
         </div>
       </div>
 
-      {/* Mobile: stacked — chat first so user sees conversation immediately;
-           MiniVitalsBar (sticky above) provides always-visible vitals summary.
-           Scroll down to reach the full vitals panel. */}
-      <div className="lg:hidden flex-1 overflow-y-auto" style={{ scrollbarWidth: "thin", scrollbarColor: "#ffffff1a transparent" }}>
-        <div className="min-h-[50vh]">{rightPanel}</div>
-        <div className="p-3 space-y-3">{leftPanel}</div>
-      </div>
+      {/* ═══ Mobile (<lg): Fixed layers, zero scroll ═══ */}
+      <div className="lg:hidden flex flex-col flex-1 overflow-hidden">
+        {/* Fixed monitor area: vitals rows + waveform + CT */}
+        <div className="flex-shrink-0">{monitorPanel}</div>
 
-      {/* Bottom Action Bar */}
-      {actionBar && (
-        <div className="flex-shrink-0 border-t border-white/8 bg-[#00202e]">
-          {actionBar}
-        </div>
-      )}
+        {/* Scrollable chat — the ONLY scrollable area */}
+        <div className="flex-1 overflow-hidden">{chatPanel}</div>
+
+        {/* Fixed message input */}
+        <div className="flex-shrink-0">{messageInput}</div>
+
+        {/* Fixed action bar */}
+        {actionBar && (
+          <div className="flex-shrink-0 border-t border-white/8 bg-[#00202e]">
+            {actionBar}
+          </div>
+        )}
+      </div>
     </div>
   );
 }

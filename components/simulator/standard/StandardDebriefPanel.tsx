@@ -87,11 +87,11 @@ function ScoreHeader({ score }: { score: StandardScore }) {
             key={i}
             className={`text-5xl transition-all duration-500 ${
               i <= score.stars
-                ? "text-yellow-400 scale-110"
+                ? "text-yellow-400 scale-110 drop-shadow-[0_0_8px_rgba(250,204,21,0.5)]"
                 : "text-slate-700 scale-90 opacity-40"
             }`}
           >
-            {"\u2B50"}
+            ★
           </span>
         ))}
       </div>

@@ -3,7 +3,7 @@
 import { useState, useCallback, useEffect } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import { medicationCategories } from "@/lib/simulator/data/medications";
-import { transfusionCategories, MTP_ACTIVATION_CRITERIA } from "@/lib/simulator/data/transfusions";
+import { transfusionCategories } from "@/lib/simulator/data/transfusions";
 import { checkDrugInteractions } from "@/lib/simulator/engine/order-engine";
 import type { OrderDefinition, DrugInteraction, VentMode, VentilatorState } from "@/lib/simulator/types";
 
@@ -398,16 +398,10 @@ function TransfusionTab({
       </div>
 
       {/* MTP */}
+      {/* TODO: Move MTP ratio education to Debrief */}
       {!mtpState.activated ? (
         <div className="bg-zinc-800/80 border border-red-800 rounded-xl p-4">
-          <p className="text-red-400 font-bold text-sm mb-2">🚨 Massive Transfusion Protocol（MTP）</p>
-          <p className="text-zinc-400 text-xs mb-3">啟動條件（符合任一）：</p>
-          <ul className="text-zinc-500 text-xs space-y-1 mb-4 list-disc list-inside">
-            {MTP_ACTIVATION_CRITERIA.map((c, i) => (
-              <li key={i}>{c}</li>
-            ))}
-          </ul>
-          <p className="text-zinc-400 text-xs mb-3">啟動後：pRBC : FFP : Plt = <strong className="text-white">1 : 1 : 1</strong>，每 round 2U : 2U : 1 dose</p>
+          <p className="text-red-400 font-bold text-sm mb-3">🚨 Massive Transfusion Protocol（MTP）</p>
           <button
             onClick={activateMTP}
             className="w-full bg-red-700 hover:bg-red-600 text-white rounded-lg py-2.5 font-bold text-sm transition"
@@ -489,7 +483,16 @@ function VentilatorTab({
   const [peep, setPeep] = useState(currentVent.peep);
   const [rrSet, setRrSet] = useState(currentVent.rrSet);
   const [tvSet, setTvSet] = useState(currentVent.tvSet);
+  const [inspPressure, setInspPressure] = useState(currentVent.inspPressure);
+  const [psLevel, setPsLevel] = useState(currentVent.psLevel);
   const [ieRatio, setIeRatio] = useState(currentVent.ieRatio);
+
+  // Mode-dependent control visibility
+  const showTV = mode === "VC" || mode === "SIMV";
+  const showInspPressure = mode === "PC";
+  const showPS = mode === "PS" || mode === "SIMV";
+  const showRR = mode !== "PS"; // PS is patient-triggered
+  const showIE = mode !== "PS";
 
   // Detect what changed
   const changes: Partial<VentilatorState> = {};
@@ -506,21 +509,37 @@ function VentilatorTab({
     changes.peep = peep;
     diffs.push(`PEEP ${currentVent.peep} → ${peep}`);
   }
-  if (rrSet !== currentVent.rrSet) {
+  if (showRR && rrSet !== currentVent.rrSet) {
     changes.rrSet = rrSet;
     diffs.push(`RR ${currentVent.rrSet} → ${rrSet}`);
   }
-  if (tvSet !== currentVent.tvSet) {
+  if (showTV && tvSet !== currentVent.tvSet) {
     changes.tvSet = tvSet;
     diffs.push(`TV ${currentVent.tvSet} → ${tvSet}`);
   }
-  if (ieRatio !== currentVent.ieRatio) {
+  if (showInspPressure && inspPressure !== currentVent.inspPressure) {
+    changes.inspPressure = inspPressure;
+    diffs.push(`Insp P ${currentVent.inspPressure} → ${inspPressure}`);
+  }
+  if (showPS && psLevel !== currentVent.psLevel) {
+    changes.psLevel = psLevel;
+    diffs.push(`PS ${currentVent.psLevel} → ${psLevel}`);
+  }
+  if (showIE && ieRatio !== currentVent.ieRatio) {
     changes.ieRatio = ieRatio;
     diffs.push(`I:E ${currentVent.ieRatio} → ${ieRatio}`);
   }
 
   const hasChanges = diffs.length > 0;
-  const fio2Color = fio2 > 60 ? "text-yellow-400" : fio2 > 80 ? "text-red-400" : "text-cyan-400";
+  const fio2Color = fio2 > 80 ? "text-red-400" : fio2 > 60 ? "text-yellow-400" : "text-cyan-400";
+
+  // Mode description
+  const modeDesc: Record<VentMode, string> = {
+    VC: "Volume Control — 設定 TV + RR",
+    PC: "Pressure Control — 設定吸氣壓 + RR",
+    PS: "Pressure Support — 設定 PS，病人觸發",
+    SIMV: "SIMV — 設定 TV + RR + PS",
+  };
 
   return (
     <div className="space-y-5">
@@ -540,18 +559,6 @@ function VentilatorTab({
             <p className="text-zinc-500 text-[10px]">PEEP</p>
             <p className="text-cyan-400 font-mono font-bold text-sm">{currentVent.peep}</p>
           </div>
-          <div className="bg-black/30 rounded-lg py-1.5 px-2">
-            <p className="text-zinc-500 text-[10px]">RR</p>
-            <p className="text-zinc-300 font-mono font-bold text-sm">{currentVent.rrSet}</p>
-          </div>
-          <div className="bg-black/30 rounded-lg py-1.5 px-2">
-            <p className="text-zinc-500 text-[10px]">TV</p>
-            <p className="text-zinc-300 font-mono font-bold text-sm">{currentVent.tvSet}</p>
-          </div>
-          <div className="bg-black/30 rounded-lg py-1.5 px-2">
-            <p className="text-zinc-500 text-[10px]">I:E</p>
-            <p className="text-zinc-300 font-mono font-bold text-sm">{currentVent.ieRatio}</p>
-          </div>
         </div>
         {patient && (
           <p className="text-zinc-600 text-xs mt-2 text-center">
@@ -565,26 +572,29 @@ function VentilatorTab({
         <p className="text-xs uppercase tracking-widest text-zinc-500">調整呼吸器</p>
 
         {/* Mode selection */}
-        <div className="flex items-center justify-between py-2">
-          <span className="text-sm text-zinc-300">Mode</span>
-          <div className="flex gap-1.5">
-            {VENT_MODES.map((m) => (
-              <button
-                key={m}
-                onClick={() => setMode(m)}
-                className={`text-xs px-3 py-1.5 rounded-lg border transition-colors font-mono font-bold ${
-                  mode === m
-                    ? "border-blue-500/60 bg-blue-900/30 text-blue-300"
-                    : "border-zinc-600 text-zinc-500 hover:border-zinc-400 hover:text-zinc-300"
-                }`}
-              >
-                {m}
-              </button>
-            ))}
+        <div>
+          <div className="flex items-center justify-between py-2">
+            <span className="text-sm text-zinc-300">Mode</span>
+            <div className="flex gap-1.5">
+              {VENT_MODES.map((m) => (
+                <button
+                  key={m}
+                  onClick={() => setMode(m)}
+                  className={`text-xs px-3 py-1.5 rounded-lg border transition-colors font-mono font-bold ${
+                    mode === m
+                      ? "border-blue-500/60 bg-blue-900/30 text-blue-300"
+                      : "border-zinc-600 text-zinc-500 hover:border-zinc-400 hover:text-zinc-300"
+                  }`}
+                >
+                  {m}
+                </button>
+              ))}
+            </div>
           </div>
+          <p className="text-zinc-600 text-[11px] mt-0.5">{modeDesc[mode]}</p>
         </div>
 
-        {/* FiO₂ slider */}
+        {/* FiO₂ slider — all modes */}
         <div className="py-2 space-y-2">
           <div className="flex items-center justify-between">
             <span className="text-sm text-zinc-300">FiO₂</span>
@@ -600,41 +610,52 @@ function VentilatorTab({
             className="w-full h-1.5 rounded-full appearance-none cursor-pointer accent-cyan-400"
             style={{ background: `linear-gradient(to right, #22d3ee ${((fio2 - 21) / 79) * 100}%, #27272a ${((fio2 - 21) / 79) * 100}%)` }}
           />
-          <div className="flex justify-between text-[10px] text-zinc-600">
-            <span>21%</span>
-            <span>60%</span>
-            <span>100%</span>
-          </div>
         </div>
 
-        {/* PEEP */}
+        {/* PEEP — all modes */}
         <VentStepper label="PEEP" value={peep} min={0} max={20} step={1} unit="cmH₂O" onChange={setPeep} />
 
-        {/* RR */}
-        <VentStepper label="RR" value={rrSet} min={8} max={30} step={1} unit="/min" onChange={setRrSet} />
+        {/* RR — VC/PC/SIMV only */}
+        {showRR && (
+          <VentStepper label="RR" value={rrSet} min={8} max={30} step={1} unit="/min" onChange={setRrSet} />
+        )}
 
-        {/* TV */}
-        <VentStepper label="TV" value={tvSet} min={300} max={700} step={25} unit="mL" onChange={setTvSet} />
+        {/* TV — VC/SIMV only */}
+        {showTV && (
+          <VentStepper label="TV" value={tvSet} min={300} max={700} step={25} unit="mL" onChange={setTvSet} />
+        )}
 
-        {/* I:E ratio */}
-        <div className="flex items-center justify-between py-2">
-          <span className="text-sm text-zinc-300">I:E Ratio</span>
-          <div className="flex gap-1.5">
-            {IE_RATIOS.map((ie) => (
-              <button
-                key={ie}
-                onClick={() => setIeRatio(ie)}
-                className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors font-mono ${
-                  ieRatio === ie
-                    ? "border-teal-500/60 bg-teal-900/30 text-teal-300"
-                    : "border-zinc-600 text-zinc-500 hover:border-zinc-400 hover:text-zinc-300"
-                }`}
-              >
-                {ie}
-              </button>
-            ))}
+        {/* Inspiratory Pressure — PC only */}
+        {showInspPressure && (
+          <VentStepper label="Insp Pressure" value={inspPressure} min={5} max={35} step={1} unit="cmH₂O" onChange={setInspPressure} />
+        )}
+
+        {/* PS Level — PS/SIMV */}
+        {showPS && (
+          <VentStepper label="PS Level" value={psLevel} min={5} max={25} step={1} unit="cmH₂O" onChange={setPsLevel} />
+        )}
+
+        {/* I:E ratio — VC/PC/SIMV */}
+        {showIE && (
+          <div className="flex items-center justify-between py-2">
+            <span className="text-sm text-zinc-300">I:E Ratio</span>
+            <div className="flex gap-1.5">
+              {IE_RATIOS.map((ie) => (
+                <button
+                  key={ie}
+                  onClick={() => setIeRatio(ie)}
+                  className={`text-xs px-2.5 py-1.5 rounded-lg border transition-colors font-mono ${
+                    ieRatio === ie
+                      ? "border-teal-500/60 bg-teal-900/30 text-teal-300"
+                      : "border-zinc-600 text-zinc-500 hover:border-zinc-400 hover:text-zinc-300"
+                  }`}
+                >
+                  {ie}
+                </button>
+              ))}
+            </div>
           </div>
-        </div>
+        )}
       </div>
 
       {/* Change summary + confirm */}
@@ -734,9 +755,10 @@ export default function OrderModal() {
         sender: "player",
         isImportant: true,
       });
-      setLastResult({ ok: true, message: `✅ 呼吸器調整完成：${summary}` });
+      // Auto-close modal after vent adjustment
+      closeModal();
     },
-    [updateVentilator, addTimelineEntry, clock.currentTime]
+    [updateVentilator, addTimelineEntry, clock.currentTime, closeModal]
   );
 
   if (!isOpen) return null;
