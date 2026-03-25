@@ -35,12 +35,18 @@ export interface GuidanceMessage {
 // Constants
 // ============================================================
 
-const IDLE_THRESHOLD_MINUTES = 1; // 60 game-seconds
+const IDLE_THRESHOLD_MINUTES = 3; // 3 game-minutes (~60 real-seconds at 0.75x)
 const MISSED_ACTION_WARN_BEFORE_MINUTES = 2;
 const DUPLICATE_WINDOW_MINUTES = 5;
 const DOSE_ERROR_MULTIPLIER = 5;
 const PHASE_DETECT_WINDOW_MINUTES = 0.5;
 const PHASE_SEVERITY_THRESHOLD = 10;
+
+/**
+ * Minimum game-minutes between ANY two guidance messages.
+ * Prevents the nurse from feeling intrusive by spacing out hints.
+ */
+const GUIDANCE_COOLDOWN_MINUTES = 2;
 
 const VITAL_DANGER = {
   sbp: { low: 80 },
@@ -383,11 +389,16 @@ export function checkDoseError(
  * Evaluate all guidance triggers and return messages for the current tick.
  * Only fires in Standard mode (identified by config.rescueThreshold).
  *
+ * Respects a cooldown period: if `lastGuidanceTime` is within
+ * `GUIDANCE_COOLDOWN_MINUTES` of `gameTime`, only `critical` messages pass.
+ * This prevents the nurse from feeling intrusive.
+ *
  * @param state     Current patient state (vitals, severity, etc.)
  * @param actions   All player actions so far (with game-time metadata)
  * @param scenario  The scenario definition
  * @param config    Difficulty config — must be Standard mode to fire
  * @param gameTime  Current game time in minutes
+ * @param lastGuidanceTime  Game time of last emitted guidance (optional, 0 = no prior)
  */
 export function evaluateGuidance(
   state: PatientState,
@@ -395,6 +406,7 @@ export function evaluateGuidance(
   scenario: SimScenario,
   config: DifficultyConfig,
   gameTime: number,
+  lastGuidanceTime: number = 0,
 ): GuidanceMessage[] {
   if (!isStandardMode(config)) return [];
 
@@ -408,5 +420,14 @@ export function evaluateGuidance(
     checkDoseError(actions),
   ];
 
-  return checks.filter((msg): msg is GuidanceMessage => msg !== null);
+  const all = checks.filter((msg): msg is GuidanceMessage => msg !== null);
+
+  // Cooldown: if last guidance was too recent, only let critical messages through
+  const timeSinceLastGuidance = gameTime - lastGuidanceTime;
+  if (timeSinceLastGuidance < GUIDANCE_COOLDOWN_MINUTES) {
+    return all.filter((msg) => msg.severity === "critical");
+  }
+
+  // At most 1 message per tick to avoid flooding the player
+  return all.length > 0 ? [all[0]] : [];
 }

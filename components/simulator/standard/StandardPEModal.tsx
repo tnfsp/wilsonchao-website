@@ -375,7 +375,7 @@ export default function StandardPEModal() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
     >
       {/* Backdrop */}
       <div

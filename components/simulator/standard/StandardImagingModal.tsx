@@ -382,6 +382,11 @@ const CXR_IMAGES: Record<string, { src: string; alt: string; attribution: string
     alt: "Pulmonary edema — 心因性肺水腫 CXR",
     attribution: "Wikimedia Commons, CC-BY-SA 3.0",
   },
+  septic_shock: {
+    src: "/assets/cxr/cardiogenic-shock/pulmonary-edema.png",
+    alt: "Bilateral infiltrates — ARDS/Sepsis 相關肺浸潤",
+    attribution: "Wikimedia Commons, CC-BY-SA 3.0",
+  },
 };
 
 interface EchoClip {
@@ -402,6 +407,14 @@ const ECHO_VIDEOS: Record<string, EchoClip[]> = {
     { src: "/assets/echo/cardiac-tamponade/a4c.mp4", label: "A4C — 心包積液" },
     { src: "/assets/echo/cardiac-tamponade/subcostal.mp4", label: "Subcostal" },
     { src: "/assets/echo/cardiac-tamponade/ivc.mp4", label: "IVC — 擴張無塌陷" },
+  ],
+  surgical_bleeding: [
+    { src: "/assets/echo/hypovolemia/ivc-long.mp4", label: "IVC Long Axis — 塌陷（低血容）" },
+    { src: "/assets/echo/hypovolemia/ivc-trans.mp4", label: "IVC Trans — 呼吸變化明顯" },
+  ],
+  septic_shock: [
+    { src: "/assets/echo/lung-b-lines/b-lines.mp4", label: "Lung B-lines — 肺水腫/ARDS" },
+    { src: "/assets/echo/lung-b-lines/confluent-b-lines.mp4", label: "Confluent B-lines — 嚴重肺浸潤" },
   ],
 };
 
@@ -447,7 +460,7 @@ export default function StandardImagingModal() {
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
+      className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center p-0 sm:p-4"
     >
       {/* Backdrop */}
       <div
@@ -456,7 +469,7 @@ export default function StandardImagingModal() {
         onClick={closeModal}
       />
       <div
-        className="relative w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="relative w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[85vh] sm:max-h-[90vh]"
         style={{ backgroundColor: "#0a1929" }}
       >
         {/* Header */}

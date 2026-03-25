@@ -201,6 +201,7 @@ function useStandardGameTick(
   const playerActions = useProGameStore((s) => s.playerActions);
 
   const lastGuidanceRef = useRef<Set<string>>(new Set());
+  const lastGuidanceTimeRef = useRef<number>(0);
   const lastPlayerActionTimeRef = useRef<number>(0);
   const firedUrgencyIdsRef = useRef<Set<string>>(new Set());
 
@@ -208,6 +209,7 @@ function useStandardGameTick(
   useEffect(() => {
     if (phase === "not_started") {
       lastGuidanceRef.current.clear();
+      lastGuidanceTimeRef.current = 0;
     }
   }, [phase]);
 
@@ -237,6 +239,7 @@ function useStandardGameTick(
         state.scenario,
         state.difficultyConfig,
         state.clock.currentTime,
+        lastGuidanceTimeRef.current,
       );
 
       if (guidanceMsgs.length > 0) {
@@ -245,6 +248,7 @@ function useStandardGameTick(
           const key = `${gm.trigger}:${gm.relatedAction ?? ""}`;
           if (!lastGuidanceRef.current.has(key)) {
             lastGuidanceRef.current.add(key);
+            lastGuidanceTimeRef.current = state.clock.currentTime;
             useProGameStore.getState().addTimelineEntry({
               type: "nurse_message",
               sender: "nurse",

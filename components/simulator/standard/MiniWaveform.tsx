@@ -21,25 +21,26 @@ const BG_COLOR = "#000000";
 const SWEEP_COLOR = "rgba(0, 0, 0, 0.6)";
 const GRID_COLOR = "rgba(255, 255, 255, 0.04)";
 
-// Traces: ECG top half, ART bottom half
+// Traces: A-line (arterial) top half — PRIMARY for post-cardiac surgery ICU
+//         ECG (Lead II) bottom half — secondary
 const TRACES = [
-  {
-    label: "II",
-    color: ECG_COLOR,
-    yOffset: 0,
-    height: 0.5, // fraction of canvas
-    yMin: -0.1,
-    yMax: 1.1,
-    getBuffer: (s: WaveformState) => s.ecg,
-  },
   {
     label: "ART",
     color: ART_COLOR,
-    yOffset: 0.5,
-    height: 0.5,
+    yOffset: 0,
+    height: 0.5, // fraction of canvas — top half, primary trace
     yMin: 0.15,
     yMax: 1.05,
     getBuffer: (s: WaveformState) => s.arterial,
+  },
+  {
+    label: "II",
+    color: ECG_COLOR,
+    yOffset: 0.5,
+    height: 0.5,
+    yMin: -0.1,
+    yMax: 1.1,
+    getBuffer: (s: WaveformState) => s.ecg,
   },
 ] as const;
 
@@ -187,14 +188,14 @@ export default memo(function MiniWaveform() {
         ctx.fillText(trace.label, 4, yTop + 12);
       }
 
-      // Numeric readouts — top right
+      // Numeric readouts — top right (ART primary, ECG secondary)
       const wv = getWaveformVitals();
       ctx.textAlign = "right";
       ctx.font = "bold 12px monospace";
-      ctx.fillStyle = ECG_COLOR;
-      ctx.fillText(`HR ${wv.hr}`, w - 6, 14);
       ctx.fillStyle = ART_COLOR;
-      ctx.fillText(`${wv.sbp}/${wv.dbp}`, w - 6, h * 0.5 + 14);
+      ctx.fillText(`${wv.sbp}/${wv.dbp}`, w - 6, 14);
+      ctx.fillStyle = ECG_COLOR;
+      ctx.fillText(`HR ${wv.hr}`, w - 6, h * 0.5 + 14);
       ctx.textAlign = "left";
 
       rafRef.current = requestAnimationFrame(draw);
