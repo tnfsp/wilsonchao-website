@@ -57,7 +57,7 @@ export default function MiniVitalsBar() {
   const items = [
     { label: "HR", value: String(Math.round(vitals.hr)), severity: hrSeverity(vitals.hr) },
     { label: "BP", value: `${Math.round(vitals.sbp)}/${Math.round(vitals.dbp)}`, severity: sbpSeverity(vitals.sbp) },
-    { label: "SpO\u2082", value: `${Math.round(vitals.spo2)}%`, severity: spo2Severity(vitals.spo2) },
+    { label: "SpO₂", value: `${Math.round(vitals.spo2)}%`, severity: spo2Severity(vitals.spo2) },
     { label: "CVP", value: String(Math.round(vitals.cvp)), severity: cvpSeverity(vitals.cvp) },
   ];
 

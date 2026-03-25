@@ -53,8 +53,14 @@ const echoVideos: Record<string, EchoVideoMap> = {
   hypovolemia: {
     ivc: {
       path: "/assets/echo/hypovolemia/ivc-long.mp4",
-      description: "Flat IVC with complete inspiratory collapse",
+      description: "Flat IVC with complete inspiratory collapse — subcostal long-axis",
       litflCase: "Case 015",
+    },
+  },
+  normal: {
+    a4c: {
+      path: "/assets/echo/normal/a4c.mp4",
+      description: "Normal A4C — normal ventricular size and contractility",
     },
   },
   rv_dilation: {
@@ -151,4 +157,11 @@ export const ECHO_ATTRIBUTION = {
   author: "Dr James Rippey",
   license: "CC-BY-NC-SA 4.0",
   url: "https://litfl.com",
+};
+
+export const ECHO_ATTRIBUTION_WIKIMEDIA = {
+  source: "Wikimedia Commons (CardioNetworks ECHOpedia)",
+  author: "Vdbilt / CardioNetworks",
+  license: "CC-BY-SA 3.0",
+  url: "https://commons.wikimedia.org/wiki/File:A4C_normal_(CardioNetworks_ECHOpedia).webm",
 };

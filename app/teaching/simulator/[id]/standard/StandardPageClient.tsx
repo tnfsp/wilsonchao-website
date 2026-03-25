@@ -331,11 +331,12 @@ function useStandardGameTick(
     }
   }, [difficultyConfig, overlay]);
 
-  // Expose for action handlers
+  // Register tickPatient in store so actionAdvance can call it
+  const registerTickPatient = useProGameStore((s) => s.registerTickPatient);
   useEffect(() => {
-    (window as unknown as Record<string, unknown>).__tickPatient = tickPatient;
-    return () => { delete (window as unknown as Record<string, unknown>).__tickPatient; };
-  }, [tickPatient]);
+    registerTickPatient(tickPatient);
+    return () => { registerTickPatient(null); };
+  }, [tickPatient, registerTickPatient]);
 
   // Slower tick for Standard: 1 game-minute every 20 real-seconds (0.75x)
   useEffect(() => {

@@ -56,6 +56,11 @@ const CXR_REAL_IMAGES: Record<string, { src: string; alt: string; attribution: s
     alt: "Bilateral infiltrates — ARDS/Sepsis 相關肺浸潤",
     attribution: "Wikimedia Commons, CC-BY-SA 3.0",
   },
+  surgical_bleeding: {
+    src: "/assets/cxr/surgical-bleeding/hemothorax.png",
+    alt: "Hemothorax — 術後出血 CXR",
+    attribution: "R. Amin & B.H. Waibel, Wikimedia Commons, CC-BY 4.0",
+  },
 };
 
 // ── Real echo video clips per pathology + view ───────────────
@@ -87,9 +92,11 @@ const ECHO_CLIPS: Record<string, Record<string, EchoClip[]>> = {
     lung: [],
   },
   surgical_bleeding: {
-    cardiac: [],
+    cardiac: [
+      { src: "/assets/echo/normal/a4c.mp4", label: "A4C — 正常心臟功能（出血非心因性）" },
+    ],
     ivc: [
-      { src: "/assets/echo/hypovolemia/ivc-long.mp4", label: "IVC Long Axis — 塌陷（低血容）" },
+      { src: "/assets/echo/hypovolemia/ivc-long.mp4", label: "IVC Long Axis — 塌陷（低血容量）" },
       { src: "/assets/echo/hypovolemia/ivc-trans.mp4", label: "IVC Trans — 呼吸變化明顯" },
     ],
     lung: [],

@@ -20,5 +20,14 @@ All ultrasound videos in this directory are sourced from **LITFL (Life in the Fa
 | lung-b-lines/ | [Pulmonary Oedema](https://litfl.com/lung-ultrasound-pulmonary-oedema/) | B-lines |
 | lung-pneumothorax/ | [Pneumothorax](https://litfl.com/lung-ultrasound-pneumothorax/) | Absent lung sliding |
 
+## Additional Sources
+
+### normal/a4c.mp4
+- **Source**: Wikimedia Commons — [CardioNetworks ECHOpedia](https://commons.wikimedia.org/wiki/File:A4C_normal_(CardioNetworks_ECHOpedia).webm)
+- **Author**: Vdbilt / CardioNetworks
+- **License**: CC-BY-SA 3.0
+- **Description**: Normal apical 4-chamber (A4C) echocardiography — normal ventricular size and contractility
+- **Original format**: WebM (converted to MP4, looped 3x for duration)
+
 ## Usage
 Educational / non-commercial use only. Attribution overlay displayed in simulator UI.

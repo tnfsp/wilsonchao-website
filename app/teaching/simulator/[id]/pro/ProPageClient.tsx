@@ -322,11 +322,12 @@ function useGameTick() {
     }
   }, [useBioGears, tickPatientFormula, tickPatientBioGears]);
 
-  // Expose tickPatient globally so action handlers can call it
+  // Register tickPatient in store so actionAdvance can call it
+  const registerTickPatient = useProGameStore((s) => s.registerTickPatient);
   useEffect(() => {
-    (window as unknown as Record<string, unknown>).__tickPatient = tickPatient;
-    return () => { delete (window as unknown as Record<string, unknown>).__tickPatient; };
-  }, [tickPatient]);
+    registerTickPatient(tickPatient);
+    return () => { registerTickPatient(null); };
+  }, [tickPatient, registerTickPatient]);
 
   useEffect(() => {
     if (phase !== "playing") return;

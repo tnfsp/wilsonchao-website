@@ -138,7 +138,7 @@ export default function MobileMonitorPanel() {
 
       {/* ── Row 2: SpO2 CVP T RR ── */}
       <div className="flex items-center gap-3 px-3 py-1 text-xs border-t border-white/5">
-        <V label="SpO\u2082" value={String(spo2)} level={spo2Severity(spo2)} />
+        <V label="SpO₂" value={String(spo2)} level={spo2Severity(spo2)} />
         <V label="CVP" value={String(cvp)} level={cvpSeverity(cvp)} />
         <V label="T" value={temp.toFixed(1)} level={tempSeverity(temp)} />
         <V label="RR" value={String(rr)} level={rr > 25 || rr < 10 ? "warning" : "normal"} />

@@ -21,6 +21,14 @@ and used under open Creative Commons licenses.
 - **License**: CC-BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
 - **Original dimensions**: 823 × 760 px
 
+### surgical-bleeding/hemothorax.png
+
+- **Description**: A persistent traumatic hemothorax requiring surgery
+- **Author**: R. Amin and B. H. Waibel
+- **Source**: https://commons.wikimedia.org/wiki/File:Hemothorax.jpg
+- **License**: CC-BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
+- **Original dimensions**: 750 × 559 px (converted to PNG, resized to 800px width)
+
 ## License Compliance
 
 These images are used in an educational medical simulation.

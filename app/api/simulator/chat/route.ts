@@ -33,13 +33,36 @@ const DANGEROUS_ORDERS: Record<string, Set<string>> = {
   septic_shock: new Set(["metoprolol", "labetalol", "propofol"]),
 };
 
+// Server-side allowlist of valid medication IDs (must match IDs defined in system prompt)
+const VALID_MEDICATION_IDS = new Set([
+  // Medications
+  "norepinephrine", "epinephrine", "vasopressin", "dopamine", "dobutamine", "milrinone",
+  "protamine", "txa", "aminocaproic_acid", "ddavp", "vitamin_k",
+  "ns", "lr", "albumin_5", "calcium_gluconate", "calcium_chloride", "kcl_iv", "mgso4",
+  "furosemide", "ceftriaxone", "piptazo", "vancomycin",
+  "propofol", "fentanyl", "midazolam",
+  "epinephrine-ivp", "atropine", "amiodarone-ivp", "nicardipine", "labetalol", "nitroglycerin",
+  "heparin", "tpa", "aspirin", "clopidogrel", "hydrocortisone",
+  // Labs
+  "cbc", "bcs", "coag", "abg", "lactate", "ica", "act", "troponin", "blood_culture", "teg", "rotem",
+  // Transfusions
+  "prbc_1u", "prbc_2u", "prbc_4u", "ffp_2u", "ffp_4u", "platelet_1dose", "platelet_2dose", "cryo_6u", "cryo_10u",
+]);
+
 function filterDangerousActions(
   actions: NurseAction[],
   pathology?: string
 ): NurseAction[] {
-  if (!pathology || !DANGEROUS_ORDERS[pathology]) return actions;
+  // Step 1: Only allow actions with valid medication IDs (prevents prompt injection)
+  const validActions = actions.filter((a) => {
+    if (a.type !== "place_order" && a.type !== "confirm_order") return true;
+    const medId = (a.medicationId ?? "").toLowerCase();
+    return VALID_MEDICATION_IDS.has(medId);
+  });
+  // Step 2: Filter pathology-specific dangerous orders
+  if (!pathology || !DANGEROUS_ORDERS[pathology]) return validActions;
   const blocked = DANGEROUS_ORDERS[pathology];
-  return actions.filter((a) => {
+  return validActions.filter((a) => {
     const drugId = (a.medicationId ?? "").toLowerCase();
     return !blocked.has(drugId);
   });
@@ -264,12 +287,15 @@ prbc_1u, prbc_2u, prbc_4u, ffp_2u, ffp_4u, platelet_1dose, platelet_2dose, cryo_
     // Always end with the current user message
     messages.push({ role: "user", content: message });
 
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 500,
-      system: systemPrompt,
-      messages,
-    });
+    const response = await client.messages.create(
+      {
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 500,
+        system: systemPrompt,
+        messages,
+      },
+      { timeout: 30_000 },
+    );
 
     const responseText =
       response.content[0].type === "text" ? response.content[0].text : "";
@@ -292,9 +318,9 @@ prbc_1u, prbc_2u, prbc_4u, ffp_2u, ffp_4u, platelet_1dose, platelet_2dose, cryo_
       parsed = { reply: responseText || "（林姐暫時沒有回應）", actions: [] };
     }
 
-    // Filter out dangerous orders based on active pathology
+    // Validate medication IDs against allowlist + filter pathology-specific dangerous orders
     const pathology = gameState?.pathology as string | undefined;
-    if (parsed.actions && parsed.actions.length > 0 && pathology) {
+    if (parsed.actions && parsed.actions.length > 0) {
       parsed.actions = filterDangerousActions(parsed.actions, pathology);
     }
 

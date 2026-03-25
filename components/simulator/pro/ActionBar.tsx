@@ -320,13 +320,13 @@ export default function ActionBar() {
         {/* ── Left group: main actions ── */}
         <div className="flex items-center gap-0.5">
           <IconBtn
-            icon="\ud83d\udd2c" label="PE"
+            icon="🔬" label="PE"
             onClick={() => openModal("pe")}
             disabled={!isPlaying}
             shortcut="1"
           />
           <IconBtn
-            icon="\ud83e\ude78" label="\u62bd\u8840"
+            icon="🩸" label="抽血"
             onClick={() => openModal("lab_order")}
             disabled={!isPlaying}
             shortcut="2"
@@ -335,7 +335,7 @@ export default function ActionBar() {
           {/* Treatment with popover */}
           <div className="relative">
             <IconBtn
-              icon="\ud83d\udc8a" label="\u8655\u7f6e"
+              icon="💊" label="處置"
               onClick={() => setActivePopover(activePopover === "treatment" ? null : "treatment")}
               disabled={!isPlaying}
               active={activePopover === "treatment"}
@@ -350,19 +350,19 @@ export default function ActionBar() {
           </div>
 
           <IconBtn
-            icon="\ud83d\udcde" label="\u901a\u5831\u4ea4\u73ed"
+            icon="📞" label="通報交班"
             onClick={handleCallAndSBAR}
             disabled={!isPlaying}
             shortcut="4"
           />
           <IconBtn
-            icon="\u26a1" label="\u96fb\u64ca"
+            icon="⚡" label="電擊"
             onClick={() => openModal("defibrillator")}
             disabled={!isPlaying}
             shortcut="5"
           />
           <IconBtn
-            icon="\ud83e\ude7b" label="\u5f71\u50cf"
+            icon="🩻" label="影像"
             onClick={() => openModal("imaging")}
             disabled={!isPlaying}
             shortcut="6"
@@ -375,21 +375,21 @@ export default function ActionBar() {
         {/* ── Right group: utility ── */}
         <div className="flex items-center gap-0.5">
           <IconBtn
-            icon="\u23f8" label="\u66ab\u505c\u601d\u8003"
+            icon="⏸" label="暫停思考"
             onClick={() => openModal("pause_think")}
             disabled={!isPlaying}
             variant="muted"
             shortcut="Space"
           />
           <IconBtn
-            icon="\ud83d\udca1" label={`\u63d0\u793a ${3 - hintsUsed}/3`}
+            icon="💡" label={`提示 ${3 - hintsUsed}/3`}
             onClick={useHint}
             disabled={!isPlaying || hintsUsed >= 3}
             variant="muted"
             shortcut="H"
           />
           <IconBtn
-            icon="\u23e9" label="\u5feb\u8f495\u5206"
+            icon="⏩" label="快轉5分"
             onClick={() => useProGameStore.getState().actionAdvance(5)}
             disabled={!isPlaying}
             variant="muted"

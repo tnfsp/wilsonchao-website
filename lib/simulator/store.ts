@@ -119,6 +119,9 @@ export interface ProGameStore {
   // UI
   activeModal: ModalType;
 
+  // Internal: patient tick function registered by game screen component
+  _tickPatientFn: ((minutes: number) => void) | null;
+
   // Ventilator
   ventilator: VentilatorState;
 
@@ -133,6 +136,9 @@ export interface ProGameStore {
 
   /** 開始遊戲，phase → playing，排入初始事件 */
   startGame: () => void;
+
+  /** 註冊 patient tick 函數（由 GameScreen 元件掛載時設定） */
+  registerTickPatient: (fn: ((minutes: number) => void) | null) => void;
 
   /** 推進遊戲時間，觸發到期事件 */
   advanceTime: (minutes: number) => void;
@@ -351,6 +357,7 @@ const initialState = {
   deathCause: null as string | null,
   rescueState: null as RescueState | null,
   activeModal: null as ModalType,
+  _tickPatientFn: null as ((minutes: number) => void) | null,
   ventilator: initialVentilatorState,
   guidanceMode: false,
   guidanceHighlight: null as string | null,
@@ -739,6 +746,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         score: null,
         deathCause: null,
         activeModal: null,
+        _tickPatientFn: null,
         defibrillator: initialDefibrillatorState,
       });
     } catch (err) {
@@ -1315,16 +1323,22 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
   },
 
   // ----------------------------------------------------------
+  // registerTickPatient — store-based callback for patient tick (replaces window.__tickPatient)
+  // ----------------------------------------------------------
+  registerTickPatient: (fn: ((minutes: number) => void) | null) => {
+    set({ _tickPatientFn: fn });
+  },
+
+  // ----------------------------------------------------------
   // actionAdvance — advance time + trigger events (patient update done by useGameTick)
   // Called by modals/actions to simulate time passing during an action.
   // ----------------------------------------------------------
   actionAdvance: (minutes: number) => {
     if (minutes <= 0) return;
     get().advanceTime(minutes);
-    // Patient update is handled by the component-level tickPatient via window.__tickPatient
-    const tick = (window as unknown as Record<string, unknown>).__tickPatient;
+    const tick = get()._tickPatientFn;
     if (typeof tick === "function") {
-      (tick as (m: number) => void)(minutes);
+      tick(minutes);
     }
   },
 

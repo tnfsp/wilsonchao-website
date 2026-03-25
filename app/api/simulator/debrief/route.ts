@@ -246,12 +246,15 @@ export async function POST(request: NextRequest) {
     const systemPrompt = buildSystemPrompt(body);
     const userMessage = buildUserMessage(body);
 
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
-      max_tokens: 2000,
-      system: systemPrompt,
-      messages: [{ role: "user", content: userMessage }],
-    });
+    const response = await client.messages.create(
+      {
+        model: "claude-sonnet-4-20250514",
+        max_tokens: 2000,
+        system: systemPrompt,
+        messages: [{ role: "user", content: userMessage }],
+      },
+      { timeout: 30_000 },
+    );
 
     const responseText =
       response.content[0].type === "text" ? response.content[0].text : "";
