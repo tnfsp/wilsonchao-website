@@ -268,38 +268,40 @@ function useGameTick() {
     useProGameStore.setState({ patient: newPatient });
 
     // Death check after patient update
-    const vitals = newPatient.vitals;
-    const severity = newPatient.severity ?? 0;
-    if (
-      severity >= 95 ||
-      vitals.map < 30 ||
-      vitals.hr > 180 ||
-      vitals.hr < 30
-    ) {
-      let severityCause: string;
-      if (severity >= 95) {
-        const scenarioId = useProGameStore.getState().scenario?.id ?? "";
-        if (scenarioId.includes("septic")) {
-          severityCause = "病人因敗血性休克惡化，多重器官衰竭。";
-        } else if (scenarioId.includes("tamponade") || scenarioId.includes("bleeding-to-tamponade")) {
-          // Multi-phase: 根據當前 pathology 判斷死因
-          const currentPathology = useProGameStore.getState().patient?.pathology;
-          severityCause = currentPathology === "cardiac_tamponade"
-            ? "心包填塞未及時處理，心輸出量衰竭。"
-            : "病人因持續出血未控制，血流動力學衰竭。";
+    // Multi-phase scenarios: 死亡由 scripted events 控制（未來由 ACLS 機制處理），不用 auto-death
+    const scenario = useProGameStore.getState().scenario;
+    const useScriptedDeath = !!scenario?.phasedFindings;
+
+    if (!useScriptedDeath) {
+      const vitals = newPatient.vitals;
+      const severity = newPatient.severity ?? 0;
+      if (
+        severity >= 95 ||
+        vitals.map < 30 ||
+        vitals.hr > 180 ||
+        vitals.hr < 30
+      ) {
+        let severityCause: string;
+        if (severity >= 95) {
+          const scenarioId = scenario?.id ?? "";
+          if (scenarioId.includes("septic")) {
+            severityCause = "病人因敗血性休克惡化，多重器官衰竭。";
+          } else if (scenarioId.includes("tamponade")) {
+            severityCause = "心包填塞未及時處理，心輸出量衰竭。";
+          } else {
+            severityCause = "病人因持續出血未控制，血流動力學衰竭。";
+          }
         } else {
-          severityCause = "病人因持續出血未控制，血流動力學衰竭。";
+          severityCause = "";
         }
-      } else {
-        severityCause = "";
+        const cause =
+          severity >= 95
+            ? severityCause
+            : vitals.map < 30
+            ? "MAP 過低，器官灌流不足導致多重器官衰竭。"
+            : "致死性心律不整。";
+        useProGameStore.getState().triggerDeath(cause);
       }
-      const cause =
-        severity >= 95
-          ? severityCause
-          : vitals.map < 30
-          ? "MAP 過低，器官灌流不足導致多重器官衰竭。"
-          : "致死性心律不整。";
-      useProGameStore.getState().triggerDeath(cause);
     }
   }, []);
 

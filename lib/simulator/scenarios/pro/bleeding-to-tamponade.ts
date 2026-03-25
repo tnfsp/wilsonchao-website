@@ -50,11 +50,11 @@ const initialChestTube: ChestTubeState = {
 // Event Conditions
 // ============================================================
 
-// Phase 1: severity > 70 AND 沒叫學長
+// Phase 1: severity > 40 AND 沒叫學長（門檻低一點，讓護理師催促更容易觸發）
 const conditionHighSeverityNoSenior: EventCondition = {
   operator: "AND",
   conditions: [
-    { field: "severity",         op: ">",    value: 70 },
+    { field: "severity",         op: ">",    value: 40 },
     { field: "action_not_taken", op: "==",   value: "call_senior" },
   ],
 };
