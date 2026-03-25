@@ -6,6 +6,25 @@ const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+// ── Simple in-memory rate limiter (per IP, 20 requests per 10 minutes) ──────
+
+const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
+const RATE_LIMIT_MAX = 20;
+
+const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
+
+function checkRateLimit(ip: string): boolean {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip);
+  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
+    rateLimitMap.set(ip, { count: 1, windowStart: now });
+    return true;
+  }
+  if (entry.count >= RATE_LIMIT_MAX) return false;
+  entry.count++;
+  return true;
+}
+
 // Dangerous orders that should be blocked based on active pathology
 const DANGEROUS_ORDERS: Record<string, Set<string>> = {
   surgical_bleeding: new Set(["heparin", "tpa", "warfarin", "aspirin", "clopidogrel"]),
@@ -27,6 +46,15 @@ function filterDangerousActions(
 }
 
 export async function POST(request: NextRequest) {
+  // Rate limit check
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json(
+      { reply: "林姐：學長，你問太快了啦，讓我喘一口氣。", actions: [] },
+      { status: 429 }
+    );
+  }
+
   try {
     const body = await request.json();
     const { message, gameState } = body;

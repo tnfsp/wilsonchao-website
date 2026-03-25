@@ -179,6 +179,7 @@ export default function MessageInput() {
         labs: labResults,
         orders: activeOrders,
         timeline: recentTimeline,
+        pathology: patient?.pathology,
       };
 
       const res = await fetch("/api/simulator/chat", {
