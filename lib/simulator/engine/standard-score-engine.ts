@@ -30,6 +30,7 @@ export interface StandardScore {
   stars: 1 | 2 | 3;
   grade: string;
   guidelineSummary: string;
+  patientDied?: boolean;
 }
 
 // ============================================================
@@ -108,11 +109,13 @@ function deriveGuidelineSummary(
  * @param playerActions - All orders/actions placed by the player
  * @param scenario      - The Pro scenario definition (canonical source)
  * @param _overlay      - Standard overlay (reserved for future use)
+ * @param patientDied   - Whether the patient died (caps stars at 1)
  */
 export function computeStandardScore(
   playerActions: PlayerAction[],
   scenario: SimScenario,
   _overlay?: StandardOverlay,
+  patientDied?: boolean,
 ): StandardScore {
   const items: ChecklistItem[] = scenario.expectedActions.map(
     (ea): ChecklistItem => {
@@ -144,8 +147,11 @@ export function computeStandardScore(
       : 1;
 
   // Stars: 3 = all critical + >80% important, 2 = all critical, 1 = <all critical
+  // Death protection: patient died → cap at 1 star (same as Pro mode)
   let stars: 1 | 2 | 3;
-  if (allCriticalDone && importantDoneRatio > 0.8) {
+  if (patientDied) {
+    stars = 1;
+  } else if (allCriticalDone && importantDoneRatio > 0.8) {
     stars = 3;
   } else if (allCriticalDone) {
     stars = 2;
@@ -165,5 +171,6 @@ export function computeStandardScore(
     stars,
     grade,
     guidelineSummary,
+    patientDied: !!patientDied,
   };
 }
