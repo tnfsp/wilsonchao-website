@@ -448,10 +448,15 @@ export default function StandardImagingModal() {
   return (
     <div
       className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4"
-      style={{ backgroundColor: "rgba(0,0,0,0.72)" }}
     >
+      {/* Backdrop */}
       <div
-        className="w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
+        className="absolute inset-0"
+        style={{ backgroundColor: "rgba(0,0,0,0.72)" }}
+        onClick={closeModal}
+      />
+      <div
+        className="relative w-full sm:max-w-md rounded-t-2xl sm:rounded-2xl border border-white/10 shadow-2xl overflow-hidden flex flex-col max-h-[90vh]"
         style={{ backgroundColor: "#0a1929" }}
       >
         {/* Header */}

@@ -277,6 +277,9 @@ function useStandardGameTick(
     }
 
     // Death check with rescue window support (store.triggerDeath intercepts for Standard)
+    // Skip death check while rescue countdown is active (rescue engine handles expiry)
+    if (useProGameStore.getState().rescueState?.active) return;
+
     const vitals = newPatient.vitals;
     const severity = newPatient.severity ?? 0;
     const threshold = difficultyConfig.rescueThreshold;
@@ -381,6 +384,7 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
 
   const handlePresetOrder = useCallback((preset: StandardPresetOrder) => {
     const state = useProGameStore.getState();
+    if (state.phase !== "playing") return;
 
     if (!preset.isCorrect) {
       // Wrong order: push feedback to ChatTimeline as nurse message

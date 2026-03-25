@@ -807,9 +807,10 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     // 找出所有應在 newTime 前觸發、且尚未觸發的事件
     // 同時處理條件型事件：時間到 AND 條件成立才觸發
     const currentState = get();
+    if (!currentState.patient) return;
     const snapshot: GameStateSnapshot = {
       clock: { ...clock, currentTime: newTime },
-      patient: currentState.patient!,
+      patient: currentState.patient,
       orders: currentState.placedOrders as PlacedOrder[],
       mtp: currentState.mtpState,
       severity: currentState.patient?.severity ?? 0,
@@ -1575,6 +1576,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
   tickRescueCountdown: () => {
     const state = get();
     if (!state.rescueState?.active) return;
+    if (state.phase !== "playing") return;
 
     // Check if player took a rescue action
     const rescued = evaluateRescueActions(
@@ -1642,10 +1644,13 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
   // resetGame
   // ----------------------------------------------------------
   resetGame: () => {
+    const current = get();
     set({
       ...initialState,
-      // 保留 scenario 讓使用者可以直接 restart
-      scenario: get().scenario,
+      // 保留 scenario + difficulty 讓使用者可以直接 restart
+      scenario: current.scenario,
+      difficulty: current.difficulty,
+      difficultyConfig: current.difficultyConfig,
     });
   },
 

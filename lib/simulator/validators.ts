@@ -104,9 +104,9 @@ const medicationRanges: Record<string, DoseRange> = {
   },
   vancomycin: {
     min: 0.5,
-    max: 2,
+    max: 3,
     unit: "g",
-    warningHigh: "Vancomycin 單次 > 2g 需確認腎功能",
+    warningHigh: "Vancomycin 單次 > 3g 超出建議範圍，25-30 mg/kg loading（需確認體重與腎功能）",
   },
 
   // Steroids

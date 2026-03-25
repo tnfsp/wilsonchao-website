@@ -1,14 +1,43 @@
 import { NextRequest, NextResponse } from "next/server";
 import Anthropic from "@anthropic-ai/sdk";
-import type { NurseChatResponse } from "@/lib/simulator/engine/nurse-action-types";
+import type { NurseChatResponse, NurseAction } from "@/lib/simulator/engine/nurse-action-types";
 
 const client = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY,
 });
 
+// Dangerous orders that should be blocked based on active pathology
+const DANGEROUS_ORDERS: Record<string, Set<string>> = {
+  surgical_bleeding: new Set(["heparin", "tpa", "warfarin", "aspirin", "clopidogrel"]),
+  coagulopathy: new Set(["heparin", "tpa", "warfarin", "aspirin", "clopidogrel"]),
+  cardiac_tamponade: new Set(["nitroglycerin", "morphine", "metoprolol", "labetalol", "furosemide"]),
+  septic_shock: new Set(["metoprolol", "labetalol", "propofol"]),
+};
+
+function filterDangerousActions(
+  actions: NurseAction[],
+  pathology?: string
+): NurseAction[] {
+  if (!pathology || !DANGEROUS_ORDERS[pathology]) return actions;
+  const blocked = DANGEROUS_ORDERS[pathology];
+  return actions.filter((a) => {
+    const drugId = (a.medicationId ?? "").toLowerCase();
+    return !blocked.has(drugId);
+  });
+}
+
 export async function POST(request: NextRequest) {
   try {
-    const { message, gameState } = await request.json();
+    const body = await request.json();
+    const { message, gameState } = body;
+
+    // Input validation
+    if (!message || typeof message !== "string" || message.length > 1000) {
+      return NextResponse.json(
+        { reply: "（訊息格式不正確）", actions: [] },
+        { status: 400 }
+      );
+    }
 
     const { vitals, chestTube, clock, labs, orders, timeline } = gameState ?? {};
 
@@ -226,12 +255,18 @@ prbc_1u, prbc_2u, prbc_4u, ffp_2u, ffp_4u, platelet_1dose, platelet_2dose, cryo_
       parsed = { reply: responseText || "（林姐暫時沒有回應）", actions: [] };
     }
 
+    // Filter out dangerous orders based on active pathology
+    const pathology = gameState?.pathology as string | undefined;
+    if (parsed.actions && parsed.actions.length > 0 && pathology) {
+      parsed.actions = filterDangerousActions(parsed.actions, pathology);
+    }
+
     return NextResponse.json(parsed);
   } catch (error) {
     console.error("Simulator chat error:", error);
     return NextResponse.json(
-      { reply: "林姐：學長，系統好像有點問題，你稍等一下。", actions: [] },
-      { status: 200 }
+      { reply: "林姐：學長，系統好像有點問題，你稍等一下。", actions: [], error: true },
+      { status: 500 }
     );
   }
 }

@@ -26,18 +26,18 @@ export const septicShockPresets: StandardPresetOrder[] = [
     category: "medication",
     isCorrect: true,
     orders: [
-      { definitionId: "vancomycin", dose: "2000", frequency: "Over 1hr" },
+      { definitionId: "vancomycin", dose: "2500", frequency: "Over 1hr" },
       { definitionId: "pip_tazo", dose: "4.5", frequency: "Q6H" },
     ],
   },
   {
     id: "preset-fluid-30ml",
-    label: "輸液挑戰 LR 30mL/kg",
+    label: "輸液挑戰 LR 30mL/kg (2700mL)",
     icon: "💧",
     category: "medication",
     isCorrect: true,
     orders: [
-      { definitionId: "lr", dose: "2000", frequency: "Bolus" },
+      { definitionId: "lr", dose: "2700", frequency: "Bolus" },
     ],
   },
   {

@@ -86,9 +86,14 @@ export default function StandardDefibrillatorModal() {
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-start justify-center bg-black/80 backdrop-blur-sm overflow-y-auto">
+    <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4">
+      {/* Backdrop */}
       <div
-        className="relative w-full max-w-sm mx-auto my-6 rounded-2xl shadow-2xl border border-red-900/40"
+        className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+        onClick={handleClose}
+      />
+      <div
+        className="relative w-full max-w-sm rounded-t-2xl sm:rounded-2xl shadow-2xl border border-red-900/40"
         style={{ background: "#001219" }}
       >
         {/* Header */}

@@ -61,13 +61,13 @@ export default function RescueCountdown() {
           </p>
         </div>
 
-        <style jsx>{`
+        <style dangerouslySetInnerHTML={{ __html: `
           @keyframes rescueFadeOut {
             0% { opacity: 1; }
             70% { opacity: 1; }
             100% { opacity: 0; }
           }
-        `}</style>
+        ` }} />
       </div>
     );
   }
@@ -127,7 +127,7 @@ export default function RescueCountdown() {
         </div>
       </div>
 
-      <style jsx>{`
+      <style dangerouslySetInnerHTML={{ __html: `
         @keyframes rescuePulse {
           0%, 100% { opacity: 0.4; }
           50% { opacity: 1; }
@@ -137,7 +137,7 @@ export default function RescueCountdown() {
           25% { transform: translateX(-2px); }
           75% { transform: translateX(2px); }
         }
-      `}</style>
+      ` }} />
     </div>
   );
 }

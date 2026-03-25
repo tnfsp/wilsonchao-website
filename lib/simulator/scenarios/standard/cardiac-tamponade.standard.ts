@@ -98,7 +98,7 @@ export const cardiacTamponadePresets: StandardPresetOrder[] = [
     category: "procedure",
     isCorrect: false,
     feedbackIfWrong:
-      "學長，術後的 tamponade 用穿刺抽得到嗎？",
+      "學長，術後的 tamponade 通常是凝血塊造成的，needle pericardiocentesis 抽不到 organized clot，需要 re-sternotomy 手術清除。注意：非術後的 tamponade（液態積液）pericardiocentesis 是標準治療喔。",
     orders: [
       { definitionId: "pericardiocentesis", dose: "1", frequency: "STAT" },
     ],

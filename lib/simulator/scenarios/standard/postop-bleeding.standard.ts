@@ -153,7 +153,7 @@ export const postopBleedingPresets: StandardPresetOrder[] = [
       type: "fluid",
       startTime: 0,
       duration: 20,
-      vitalChanges: { sbp: -10, hr: 8 },
+      vitalChanges: {},
       severityChange: 15,
       isCorrectTreatment: false,
     },

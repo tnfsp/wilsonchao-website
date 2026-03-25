@@ -65,12 +65,8 @@ export default function DifficultySelect({ scenarioId, title, subtitle }: Props)
           {identities.map((id) => {
             const href = `/teaching/simulator/${scenarioId}/${id.key}`;
 
-            return (
-              <Link
-                key={id.key}
-                href={href}
-                className={`block w-full text-left ${id.bgColor} border ${id.borderColor} rounded-xl p-5 transition-all group relative`}
-              >
+            const content = (
+              <>
                 <div className="flex items-start gap-4">
                   <span className="text-3xl mt-0.5">{id.icon}</span>
                   <div className="flex-1">
@@ -78,16 +74,18 @@ export default function DifficultySelect({ scenarioId, title, subtitle }: Props)
                       <span className={`text-xs px-2 py-0.5 rounded-full border font-medium ${id.badgeClass}`}>
                         {id.badge}
                       </span>
-                      <span className={`font-bold group-hover:${id.labelColor} transition text-white`}>
+                      <span className="font-bold transition text-white">
                         {id.label}
                       </span>
                     </div>
                     <div className={`text-sm ${id.labelColor} mb-1`}>{id.sublabel}</div>
                     <div className="text-gray-400 text-sm">{id.description}</div>
                   </div>
-                  <span className="text-gray-600 group-hover:text-white text-xl transition mt-1">
-                    &rarr;
-                  </span>
+                  {!id.comingSoon && (
+                    <span className="text-gray-600 group-hover:text-white text-xl transition mt-1">
+                      &rarr;
+                    </span>
+                  )}
                 </div>
                 {id.comingSoon && (
                   <div className="absolute top-3 right-3">
@@ -96,6 +94,27 @@ export default function DifficultySelect({ scenarioId, title, subtitle }: Props)
                     </span>
                   </div>
                 )}
+              </>
+            );
+
+            if (id.comingSoon) {
+              return (
+                <div
+                  key={id.key}
+                  className={`block w-full text-left ${id.bgColor} border ${id.borderColor} rounded-xl p-5 transition-all relative opacity-60 cursor-not-allowed`}
+                >
+                  {content}
+                </div>
+              );
+            }
+
+            return (
+              <Link
+                key={id.key}
+                href={href}
+                className={`block w-full text-left ${id.bgColor} border ${id.borderColor} rounded-xl p-5 transition-all group relative`}
+              >
+                {content}
               </Link>
             );
           })}
