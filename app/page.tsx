@@ -145,7 +145,7 @@ export default async function Home() {
         </header>
 
         {/* 最近寫的: blog + 週報 merged */}
-        <section className="space-y-4">
+        <section className="space-y-5">
           <div className="flex items-baseline justify-between gap-3">
             <span className="section-title">最近寫的</span>
             <Link
@@ -155,30 +155,24 @@ export default async function Home() {
               全部文章 →
             </Link>
           </div>
-          <ul className="space-y-3">
+          <ul className="space-y-1">
             {recentItems.map((item) => (
-              <li key={item.href}>
-                <div className="flex items-baseline justify-between gap-4">
-                  <div className="flex items-baseline gap-2 min-w-0">
-                    <span className="flex-shrink-0 rounded px-1.5 py-0.5 text-xs font-medium bg-[var(--highlight)] text-[var(--muted)]">
-                      {item.tag}
-                    </span>
-                    <Link
-                      href={item.href}
-                      className="text-base text-[var(--foreground)] hover:text-[var(--accent)] transition-colors truncate"
-                    >
+              <li key={item.href} className="group -mx-3 rounded-md px-3 py-2.5 transition-colors hover:bg-[var(--highlight)]/30">
+                <Link href={item.href} className="block">
+                  <div className="flex items-baseline justify-between gap-6">
+                    <span className="text-base text-[var(--foreground)] group-hover:text-[var(--accent)] transition-colors min-w-0 truncate">
                       {item.title}
-                    </Link>
+                    </span>
+                    <span className="flex-shrink-0 text-sm text-[var(--muted)] tabular-nums opacity-60">
+                      {item.date}
+                    </span>
                   </div>
-                  <span className="flex-shrink-0 text-sm text-[var(--muted)] tabular-nums">
-                    {item.date}
-                  </span>
-                </div>
-                {item.excerpt ? (
-                  <p className="mt-1 ml-[calc(1.5rem+0.5rem)] text-sm text-[var(--muted)] line-clamp-1">
-                    {item.excerpt}
-                  </p>
-                ) : null}
+                  {item.excerpt ? (
+                    <p className="mt-1 text-sm text-[var(--muted)] opacity-50 line-clamp-1">
+                      {item.excerpt}
+                    </p>
+                  ) : null}
+                </Link>
               </li>
             ))}
           </ul>
