@@ -171,7 +171,7 @@ export function ImagingModal() {
 
   // Dynamic pathology: follows patient state (multi-phase scenario support)
   const currentPathology = patient?.pathology ?? scenario.pathology ?? "";
-  const phased = scenario.phasedFindings?.[currentPathology];
+  const phased = patient?.pathology ? scenario.phasedFindings?.[patient.pathology] : undefined;
   const availableImaging = (phased?.availableImaging ?? scenario.availableImaging) as Record<string, string>;
   const availablePOCUS = (phased?.availablePOCUS ?? scenario.availablePOCUS) as Record<string, POCUSView>;
   const pathology = currentPathology;

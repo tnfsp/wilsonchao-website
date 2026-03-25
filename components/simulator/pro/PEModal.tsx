@@ -121,7 +121,7 @@ export function PEModal() {
 
   if (activeModal !== "pe" || !scenario) return null;
 
-  const phased = scenario.phasedFindings?.[patient?.pathology ?? ""];
+  const phased = patient?.pathology ? scenario.phasedFindings?.[patient.pathology] : undefined;
   const physicalExam = (phased?.physicalExam ?? scenario.physicalExam) as Record<string, PEFinding>;
   const currentFinding: PEFinding | undefined = selected ? physicalExam[selected] : undefined;
   const currentRegion = selected ? PE_REGIONS.find((r) => r.key === selected) : undefined;
