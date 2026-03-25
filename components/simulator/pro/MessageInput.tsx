@@ -14,9 +14,11 @@ function getOrderDefinitionById(id: string) {
 
 // Words that mean "yes / confirm / go ahead"
 const CONFIRM_WORDS = ["好", "對", "確認", "ok", "yes", "run", "開", "沒錯", "正確", "go"];
+const CONFIRM_PHRASES = ["好的", "好吧", "好啊", "ok開", "沒問題", "可以", "行", "開吧", "給他開", "幫我開"];
 
 function isConfirmReply(text: string): boolean {
-  const normalized = text.trim().toLowerCase();
+  const normalized = text.trim().toLowerCase().replace(/\s/g, "");
+  if (CONFIRM_PHRASES.some((p) => normalized === p)) return true;
   return CONFIRM_WORDS.some((w) => normalized === w || normalized === w + "啊" || normalized === w + "啦");
 }
 
@@ -34,12 +36,12 @@ export default function MessageInput() {
   const [text, setText] = useState("");
   const [isLoading, setIsLoading] = useState(false);
 
-  // Pending confirmation state for confirm_order flow
-  const [pendingConfirm, setPendingConfirm] = useState<{
+  // Pending confirmation queue for confirm_order flow (supports multiple simultaneous confirms)
+  const [pendingConfirmQueue, setPendingConfirmQueue] = useState<Array<{
     medicationId: string;
     dose: string;
     frequency: string;
-  } | null>(null);
+  }>>([]);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -86,18 +88,34 @@ export default function MessageInput() {
     const msgText = text.trim();
 
     // ── Pending confirmation flow ──────────────────────────────
-    if (pendingConfirm && isConfirmReply(msgText)) {
+    if (pendingConfirmQueue.length > 0 && isConfirmReply(msgText)) {
       setText("");
       // Show player message
       sendMessage(msgText);
 
-      const definition = getOrderDefinitionById(pendingConfirm.medicationId);
-      const displayName = definition?.name ?? pendingConfirm.medicationId;
+      // Consume the first item in the queue
+      const top = pendingConfirmQueue[0];
+      const definition = getOrderDefinitionById(top.medicationId);
+
+      if (!definition) {
+        console.warn(`[NurseAI] pendingConfirm medicationId not found: ${top.medicationId}`);
+        addTimelineEntry({
+          gameTime: clock.currentTime + 1,
+          type: "nurse_message",
+          content: `${nurseName}：學長，我找不到這個藥，你再說一次看看？`,
+          sender: "nurse",
+        });
+        setPendingConfirmQueue((q) => q.slice(1));
+        inputRef.current?.focus();
+        return;
+      }
+
+      const displayName = definition.name;
 
       const result = placeOrder({
-        definition: definition!,
-        dose: pendingConfirm.dose,
-        frequency: pendingConfirm.frequency,
+        definition,
+        dose: top.dose,
+        frequency: top.frequency,
       });
 
       // Nurse confirms
@@ -126,7 +144,7 @@ export default function MessageInput() {
         });
       }
 
-      setPendingConfirm(null);
+      setPendingConfirmQueue((q) => q.slice(1));
       inputRef.current?.focus();
       return;
     }
@@ -187,13 +205,16 @@ export default function MessageInput() {
           if (action.type === "place_order") {
             executePlaceOrder(action);
           } else if (action.type === "confirm_order") {
-            // Store pending confirmation so next "好" triggers placeOrder
+            // Enqueue pending confirmation so next "好" triggers placeOrder
             const definition = getOrderDefinitionById(action.medicationId);
-            setPendingConfirm({
-              medicationId: action.medicationId,
-              dose: action.dose ?? definition?.defaultDose ?? "1",
-              frequency: action.frequency ?? (definition?.category === "lab" ? "STAT" : "Continuous"),
-            });
+            setPendingConfirmQueue((q) => [
+              ...q,
+              {
+                medicationId: action.medicationId,
+                dose: action.dose ?? definition?.defaultDose ?? "1",
+                frequency: action.frequency ?? (definition?.category === "lab" ? "STAT" : "Continuous"),
+              },
+            ]);
             // Note: nurse already asked in reply, no extra timeline entry needed
           }
         }
@@ -232,7 +253,7 @@ export default function MessageInput() {
         onChange={(e) => setText(e.target.value)}
         onKeyDown={handleKeyDown}
         placeholder={
-          pendingConfirm
+          pendingConfirmQueue.length > 0
             ? "回「好」確認，或輸入其他指令..."
             : isPlaying
             ? "跟林姐說話..."

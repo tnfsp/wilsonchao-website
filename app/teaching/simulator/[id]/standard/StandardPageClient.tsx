@@ -200,6 +200,13 @@ function useStandardGameTick(
   const lastPlayerActionTimeRef = useRef<number>(0);
   const firedUrgencyIdsRef = useRef<Set<string>>(new Set());
 
+  // Clear guidance dedup set when phase resets (not_started) so guidance can re-fire next playthrough
+  useEffect(() => {
+    if (phase === "not_started") {
+      lastGuidanceRef.current.clear();
+    }
+  }, [phase]);
+
   // Update lastPlayerActionTime whenever playerActions length changes
   useEffect(() => {
     const state = useProGameStore.getState();
@@ -538,9 +545,11 @@ function StandardDebriefWrapper({
   overlay: StandardOverlay | null;
 }) {
   const placedOrders = useProGameStore((s) => s.placedOrders);
+  const trackedActions = useProGameStore((s) => s.playerActions);
+  const deathCause = useProGameStore((s) => s.deathCause);
 
-  // Convert PlacedOrder[] → PlayerAction[] for the score engine
-  const playerActionsForScore: PlayerAction[] = placedOrders.map((o) => ({
+  // Convert PlacedOrder[] → PlayerAction[] for order-based actions
+  const fromOrders: PlayerAction[] = placedOrders.map((o) => ({
     orderId: o.definition.id,
     orderName: o.definition.name,
     category: o.definition.category,
@@ -548,10 +557,34 @@ function StandardDebriefWrapper({
     dose: o.dose,
   }));
 
+  // Convert special TrackedActions (call_senior, pocus_cardiac, etc.)
+  // that were tracked directly in playerActions but NOT in placedOrders.
+  // These have category "preset" and an action string matching the definitionId.
+  const placedOrderIds = new Set(placedOrders.map((o) => o.definition.id));
+  const fromSpecialActions: PlayerAction[] = trackedActions
+    .filter(
+      (ta) =>
+        ta.category === "preset" &&
+        !ta.action.startsWith("preset:wrong:") &&
+        !placedOrderIds.has(ta.action),
+    )
+    .map((ta) => ({
+      orderId: ta.action,
+      orderName: ta.action,
+      category: ta.category ?? "preset",
+      placedAt: ta.gameTime,
+    }));
+
+  // Merge: orders first, then special actions not already covered
+  const playerActionsForScore: PlayerAction[] = [...fromOrders, ...fromSpecialActions];
+
+  const patientDied = !!deathCause;
+
   const score: StandardScore = computeStandardScore(
     playerActionsForScore,
     scenario,
     overlay ?? undefined,
+    patientDied,
   );
 
   return (

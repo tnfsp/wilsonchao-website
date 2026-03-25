@@ -1168,6 +1168,90 @@ export const hydrocortisone: OrderDefinition = {
 };
 
 // ============================================================
+// DUMMY ENTRIES — Used in wrong preset orders (scenario traps)
+// These allow placeOrder to record timeline entries for wrong drugs
+// so penalty feedback is visible. Penalty effects are injected separately.
+// ============================================================
+
+export const warfarin: OrderDefinition = {
+  id: "warfarin",
+  name: "Warfarin 5mg",
+  category: "medication",
+  subcategory: "anticoagulant",
+  tags: ["anticoagulant"],
+  defaultDose: "5",
+  unit: "mg",
+  route: "PO",
+  frequencies: ["STAT", "QD"],
+  timeToEffect: 0,
+};
+
+export const holdTransfusion: OrderDefinition = {
+  id: "hold_transfusion",
+  name: "Hold 輸血",
+  category: "procedure",
+  subcategory: "special",
+  tags: ["special"],
+  defaultDose: "1",
+  unit: "order",
+  route: "special",
+  frequencies: ["STAT"],
+  timeToEffect: 0,
+};
+
+export const dexamethasoneHigh: OrderDefinition = {
+  id: "dexamethasone",
+  name: "Dexamethasone 10mg",
+  category: "medication",
+  subcategory: "steroid",
+  tags: ["steroid"],
+  defaultDose: "10",
+  unit: "mg",
+  route: "IV",
+  frequencies: ["STAT"],
+  timeToEffect: 30,
+};
+
+export const fluidRestrict: OrderDefinition = {
+  id: "fluid_restrict",
+  name: "Fluid Restriction",
+  category: "procedure",
+  subcategory: "special",
+  tags: ["special"],
+  defaultDose: "1",
+  unit: "order",
+  route: "special",
+  frequencies: ["STAT"],
+  timeToEffect: 0,
+};
+
+export const esmolol: OrderDefinition = {
+  id: "esmolol",
+  name: "Esmolol 50mcg/kg/min",
+  category: "medication",
+  subcategory: "antihypertensive",
+  tags: ["antihypertensive"],
+  defaultDose: "50",
+  unit: "mcg/kg/min",
+  route: "IV",
+  frequencies: ["Continuous"],
+  timeToEffect: 5,
+};
+
+export const oralAugmentin: OrderDefinition = {
+  id: "oral_augmentin",
+  name: "Oral Augmentin 875mg",
+  category: "medication",
+  subcategory: "antibiotic",
+  tags: ["antibiotic"],
+  defaultDose: "875",
+  unit: "mg",
+  route: "PO",
+  frequencies: ["BID"],
+  timeToEffect: 60,
+};
+
+// ============================================================
 // ALL MEDICATIONS EXPORT
 // ============================================================
 
@@ -1221,6 +1305,13 @@ export const allMedications: OrderDefinition[] = [
   // Antiplatelet Agents
   aspirin,
   clopidogrel,
+  // Dummy entries for wrong preset orders (scenario traps)
+  warfarin,
+  holdTransfusion,
+  dexamethasoneHigh,
+  fluidRestrict,
+  esmolol,
+  oralAugmentin,
 ];
 
 export const medicationCategories = {

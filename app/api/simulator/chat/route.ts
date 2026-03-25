@@ -220,7 +220,8 @@ prbc_1u, prbc_2u, prbc_4u, ffp_2u, ffp_4u, platelet_1dose, platelet_2dose, cryo_
       // Ensure required fields exist
       if (typeof parsed.reply !== "string") throw new Error("missing reply");
       if (!Array.isArray(parsed.actions)) parsed.actions = [];
-    } catch {
+    } catch (e) {
+      console.warn("[NurseAI] JSON parse failed, falling back to plain reply. Raw:", responseText?.slice(0, 200), e);
       // Graceful fallback: treat response as plain nurse reply
       parsed = { reply: responseText || "（林姐暫時沒有回應）", actions: [] };
     }

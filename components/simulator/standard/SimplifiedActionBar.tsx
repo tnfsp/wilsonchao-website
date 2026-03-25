@@ -78,9 +78,21 @@ export default function SimplifiedActionBar() {
       className="w-full px-3 py-3 space-y-2"
       style={{ background: "#0d1f3c" }}
     >
-      {/* action buttons */}
+      {/* action buttons — 4+3 layout (two rows) */}
       <div className="grid grid-cols-4 gap-2">
-        {MAIN_ACTIONS.map((action) => (
+        {MAIN_ACTIONS.slice(0, 4).map((action) => (
+          <ActionButton
+            key={action.id}
+            icon={action.icon}
+            label={action.label}
+            onClick={() => openModal(action.modal)}
+            disabled={!isPlaying}
+            highlighted={guidanceHighlight === action.modal || guidanceHighlight === action.id}
+          />
+        ))}
+      </div>
+      <div className="grid grid-cols-3 gap-2">
+        {MAIN_ACTIONS.slice(4).map((action) => (
           <ActionButton
             key={action.id}
             icon={action.icon}
