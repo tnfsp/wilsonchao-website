@@ -133,6 +133,13 @@ ${scenarioMeta.pitfalls.map((p, i) => `- ${p}`).join("\n")}
 8. keyLessons 2-3 個核心教學點，要具體且 actionable
 9. 如果病人死亡，一定要有 criticalMoment 指出關鍵轉折點
 
+## 重要：避免內容重複
+- Guideline Compliance（各 action 是否完成的 checklist）已在另一個 section 獨立顯示
+- attendingFeedback 不要重複列出哪些 action 做了 / 沒做（那是 checklist 的工作）
+- attendingFeedback 要聚焦在：臨床判斷品質、時機掌握、決策邏輯、團隊合作
+- 例如：不要寫「你有 order CBC ✓」，要寫「你在第一時間就想到量化出血，這個 mindset 很好」
+- 例如：不要寫「你沒有叫學長 ✗」，要寫「以這個情境的嚴重度，更早 escalate 可以讓 VS 提前準備 OR」
+
 ## 回傳格式
 你必須回傳嚴格的 JSON，格式如下（不要加 markdown code fence）：
 {

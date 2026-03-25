@@ -52,6 +52,54 @@ import type {
 } from "./types";
 
 // ============================================================
+// Shared ACTION_PATTERNS — used by both scoring and hint system
+// ============================================================
+
+const ACTION_PATTERNS: Record<string, RegExp> = {
+  // ── Sepsis / General scenarios ──
+  "act-blood-culture": /order:lab:.*blood.?culture|lab:.*blood.?culture/i,
+  "act-antibiotics": /order:medication:.*(?:vancomycin|piptazo|ceftriaxone|pip.*tazo|meropenem|cefepime)/i,
+  "act-fluid-resuscitation": /order:fluid:.*(?:ns|lr|normal.?saline|lactated|albumin)|order:transfusion|mtp:activated/i,
+  "act-lactate": /order:lab:.*(?:lactate|abg|blood.?gas)/i,
+  "act-vasopressor": /order:medication:.*(?:norepinephrine|levophed|epinephrine|vasopressin)/i,
+  "act-call-senior": /consult:.*senior|consult:.*vs|call_senior|call_vs|message:.*叫學長|message:.*通知/i,
+  "act-wound-culture": /order:lab:.*wound.?culture|order:lab:.*swab/i,
+  "act-foley": /order:procedure:.*foley|order:procedure:.*catheter/i,
+  "act-central-line": /order:procedure:.*central.?line|order:procedure:.*cvc/i,
+  "act-abg": /order:lab:.*abg|order:lab:.*blood.?gas/i,
+  "act-check-ct": /pocus:.*|order:imaging:.*cxr|order:lab:.*cbc/i,
+  "act-protamine": /order:.*protamine/i,
+  "act-txa": /order:.*txa|order:.*tranexamic/i,
+  "act-mtp": /mtp:activated/i,
+  "act-pericardiocentesis": /order:procedure:.*pericardio/i,
+  "act-echo": /pocus:cardiac/i,
+  "act-vent-fio2-increase": /vent:.*fio2=/i,
+  "act-vent-peep-increase": /vent:.*peep=/i,
+  "act-vent-fio2-adjust": /vent:.*fio2=/i,
+  "act-vent-peep-adjust": /vent:.*peep=/i,
+  "act-vent-maintain": /vent:/i,
+
+  // ── Bleeding-to-Tamponade (Phase 1) ──
+  "act-cbc-stat": /order:lab:.*(?:cbc|complete.?blood)/i,
+  "act-coag-panel": /order:lab:.*(?:coag|pt.*inr|aptt|fibrinogen)/i,
+  "act-type-screen": /order:lab:.*(?:type.*screen|crossmatch|備血|配血)/i,
+  "act-volume-resuscitation": /order:fluid:.*(?:ns|lr|normal.?saline|lactated|albumin)|order:transfusion|mtp:activated/i,
+  "act-abg-lactate": /order:lab:.*(?:abg|blood.?gas|lactate)/i,
+
+  // ── Bleeding-to-Tamponade (Phase 2) ──
+  "act-strip-milk-ct-p2": /procedure:.*(?:chest.?tube.?milk|strip|milk)|milk.*ct/i,
+  "act-cardiac-pocus-p2": /pocus:cardiac/i,
+  "act-recall-senior": /consult:.*senior|recall_senior|message:.*再.*叫.*學長|message:.*叫學長|message:.*通知|call_senior/i,
+  "act-volume-challenge-p2": /order:fluid:.*(?:ns|lr|normal.?saline|lactated|albumin)|order:transfusion/i,
+  "act-prepare-resternotomy": /message:.*(?:resternotomy|re.?sternotomy|開胸|開刀房|通知.*OR|準備.*手術)|consult:.*(?:or|手術)|order:procedure:.*resternotomy/i,
+  "act-abg-lactate-p2": /order:lab:.*(?:abg|blood.?gas|lactate)/i,
+  "act-vent-fio2": /vent:.*fio2=/i,
+
+  // ── Cardiac Tamponade (standalone) ──
+  "act-volume-challenge": /order:fluid:.*(?:ns|lr|normal.?saline|lactated|albumin)|order:transfusion/i,
+};
+
+// ============================================================
 // Helpers
 // ============================================================
 
@@ -504,30 +552,6 @@ function computeBasicScore(
     : clock.currentTime;
 
   // 2. Critical actions — 對照 scenario.expectedActions with pattern matching
-  const ACTION_PATTERNS: Record<string, RegExp> = {
-    "act-blood-culture": /order:lab:.*blood.?culture|lab:.*blood.?culture/i,
-    "act-antibiotics": /order:medication:.*(?:vancomycin|piptazo|ceftriaxone|pip.*tazo|meropenem|cefepime)/i,
-    "act-fluid-resuscitation": /order:fluid:.*(?:ns|lr|normal.?saline|lactated|albumin)|order:transfusion|mtp:activated/i,
-    "act-lactate": /order:lab:.*(?:lactate|abg|blood.?gas)/i,
-    "act-vasopressor": /order:medication:.*(?:norepinephrine|levophed|epinephrine|vasopressin)/i,
-    "act-call-senior": /consult:.*senior|consult:.*vs|call_senior|call_vs|message:.*叫學長|message:.*通知/i,
-    "act-wound-culture": /order:lab:.*wound.?culture|order:lab:.*swab/i,
-    "act-foley": /order:procedure:.*foley|order:procedure:.*catheter/i,
-    "act-central-line": /order:procedure:.*central.?line|order:procedure:.*cvc/i,
-    "act-abg": /order:lab:.*abg|order:lab:.*blood.?gas/i,
-    "act-check-ct": /pocus:.*|order:imaging:.*cxr|order:lab:.*cbc/i,
-    "act-protamine": /order:.*protamine/i,
-    "act-txa": /order:.*txa|order:.*tranexamic/i,
-    "act-mtp": /mtp:activated/i,
-    "act-pericardiocentesis": /order:procedure:.*pericardio/i,
-    "act-echo": /pocus:cardiac/i,
-    "act-vent-fio2-increase": /vent:.*fio2=/i,
-    "act-vent-peep-increase": /vent:.*peep=/i,
-    "act-vent-fio2-adjust": /vent:.*fio2=/i,
-    "act-vent-peep-adjust": /vent:.*peep=/i,
-    "act-vent-maintain": /vent:/i,
-  };
-
   const criticalActions: CriticalAction[] = scenario.expectedActions.map(
     (expected) => {
       const pattern = ACTION_PATTERNS[expected.id];
@@ -1925,31 +1949,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     const { phase, hintsUsed, scenario, playerActions, clock } = get();
     if (phase !== "playing" || hintsUsed >= 3 || !scenario) return;
 
-    // 用 scoring 邏輯找第一個未完成的 critical action
-    const ACTION_PATTERNS: Record<string, RegExp> = {
-      "act-blood-culture": /order:lab:.*blood.?culture|lab:.*blood.?culture/i,
-      "act-antibiotics": /order:medication:.*(?:vancomycin|piptazo|ceftriaxone|pip.*tazo|meropenem|cefepime)/i,
-      "act-fluid-resuscitation": /order:fluid:.*(?:ns|lr|normal.?saline|lactated|albumin)|order:transfusion|mtp:activated/i,
-      "act-lactate": /order:lab:.*(?:lactate|abg|blood.?gas)/i,
-      "act-vasopressor": /order:medication:.*(?:norepinephrine|levophed|epinephrine|vasopressin)/i,
-      "act-call-senior": /consult:.*senior|consult:.*vs|call_senior|call_vs|message:.*叫學長|message:.*通知/i,
-      "act-wound-culture": /order:lab:.*wound.?culture|order:lab:.*swab/i,
-      "act-foley": /order:procedure:.*foley|order:procedure:.*catheter/i,
-      "act-central-line": /order:procedure:.*central.?line|order:procedure:.*cvc/i,
-      "act-abg": /order:lab:.*abg|order:lab:.*blood.?gas/i,
-      "act-check-ct": /pocus:.*|order:imaging:.*cxr|order:lab:.*cbc/i,
-      "act-protamine": /order:.*protamine/i,
-      "act-txa": /order:.*txa|order:.*tranexamic/i,
-      "act-mtp": /mtp:activated/i,
-      "act-pericardiocentesis": /order:procedure:.*pericardio/i,
-      "act-echo": /pocus:cardiac/i,
-      "act-vent-fio2-increase": /vent:.*fio2=/i,
-      "act-vent-peep-increase": /vent:.*peep=/i,
-      "act-vent-fio2-adjust": /vent:.*fio2=/i,
-      "act-vent-peep-adjust": /vent:.*peep=/i,
-      "act-vent-maintain": /vent:/i,
-    };
-
+    // 用 scoring 邏輯找第一個未完成的 critical action（使用 module-level ACTION_PATTERNS）
     const unmetAction = scenario.expectedActions.find((expected) => {
       if (!expected.critical) return false;
       const pattern = ACTION_PATTERNS[expected.id];

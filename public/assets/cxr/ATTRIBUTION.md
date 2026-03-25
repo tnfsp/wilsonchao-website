@@ -21,13 +21,12 @@ and used under open Creative Commons licenses.
 - **License**: CC-BY-SA 4.0 (https://creativecommons.org/licenses/by-sa/4.0/)
 - **Original dimensions**: 823 × 760 px
 
-### surgical-bleeding/hemothorax.png
+### surgical-bleeding/mediastinal-hematoma-post-cabg.jpg
 
-- **Description**: A persistent traumatic hemothorax requiring surgery
-- **Author**: R. Amin and B. H. Waibel
-- **Source**: https://commons.wikimedia.org/wiki/File:Hemothorax.jpg
-- **License**: CC-BY 4.0 (https://creativecommons.org/licenses/by/4.0/)
-- **Original dimensions**: 750 × 559 px (converted to PNG, resized to 800px width)
+- **Description**: Mediastinal haematoma post coronary artery bypass graft — sternotomy wires, surgical clips, widened left cardiomediastinal contour
+- **Source**: https://radiopaedia.org/cases/mediastinal-haematoma-post-coronary-artery-bypass-graft
+- **License**: CC-BY-NC-SA (https://creativecommons.org/licenses/by-nc-sa/4.0/)
+- **Original dimensions**: 608 × 630 px
 
 ## License Compliance
 

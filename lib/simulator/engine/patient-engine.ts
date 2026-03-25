@@ -74,12 +74,12 @@ export function computeSeverityDelta(
   const baseRates: Record<Pathology, number> = {
     surgical_bleeding: 0.4,
     coagulopathy: 0.3,
-    tamponade: 0.6,
+    tamponade: 2.5,           // 術後 tamponade（Phase 2 轉換後）— 未治療 ~12 分鐘死亡
     lcos: 0.25,
     vasoplegia: 0.3,
     tension_pneumothorax: 0.8,
     postop_af: 0.1,
-    cardiac_tamponade: 0.7,
+    cardiac_tamponade: 2.5,   // 獨立 tamponade scenario — 與 tamponade 相同
     septic_shock: 0.35,
   };
 

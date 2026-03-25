@@ -857,7 +857,11 @@ function useAIDebrief(
         },
         scenarioMeta: {
           pathology: patient?.pathology ?? scenario.pathology,
-          correctDiagnosis: scenario.debrief.correctDiagnosis,
+          // Phase-aware correctDiagnosis: if multi-phase scenario and patient died
+          // before pathology changed (still in Phase 1), use initial pathology as diagnosis
+          correctDiagnosis: scenario.phasedFindings && patient?.pathology === scenario.pathology
+            ? `Surgical bleeding (post-cardiac surgery) — 病人在 Phase 1 出血階段死亡，未進展至 Phase 2`
+            : scenario.debrief.correctDiagnosis,
           keyPoints: scenario.debrief.keyPoints,
           pitfalls: scenario.debrief.pitfalls,
           expectedActions: scenario.expectedActions.map((ea: ExpectedAction) => ({

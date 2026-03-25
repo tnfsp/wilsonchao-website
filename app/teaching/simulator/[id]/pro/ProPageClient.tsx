@@ -267,41 +267,35 @@ function useGameTick() {
     
     useProGameStore.setState({ patient: newPatient });
 
-    // Death check after patient update
-    // Multi-phase scenarios: 死亡由 scripted events 控制（未來由 ACLS 機制處理），不用 auto-death
+    // Death check after patient update — vitals-driven for ALL scenarios
+    // (未來 ACLS 機制會在 death 前加一層 arrest → defibrillation → ROSC 流程)
     const scenario = useProGameStore.getState().scenario;
-    const useScriptedDeath = !!scenario?.phasedFindings;
+    const vitals = newPatient.vitals;
+    const severity = newPatient.severity ?? 0;
 
-    if (!useScriptedDeath) {
-      const vitals = newPatient.vitals;
-      const severity = newPatient.severity ?? 0;
-      if (
-        severity >= 95 ||
-        vitals.map < 30 ||
-        vitals.hr > 180 ||
-        vitals.hr < 30
-      ) {
-        let severityCause: string;
-        if (severity >= 95) {
-          const scenarioId = scenario?.id ?? "";
-          if (scenarioId.includes("septic")) {
-            severityCause = "病人因敗血性休克惡化，多重器官衰竭。";
-          } else if (scenarioId.includes("tamponade")) {
-            severityCause = "心包填塞未及時處理，心輸出量衰竭。";
-          } else {
-            severityCause = "病人因持續出血未控制，血流動力學衰竭。";
-          }
-        } else {
-          severityCause = "";
-        }
-        const cause =
-          severity >= 95
-            ? severityCause
-            : vitals.map < 30
-            ? "MAP 過低，器官灌流不足導致多重器官衰竭。"
-            : "致死性心律不整。";
-        useProGameStore.getState().triggerDeath(cause);
+    if (
+      severity >= 95 ||
+      vitals.map < 30 ||
+      vitals.hr > 180 ||
+      vitals.hr < 30
+    ) {
+      const scenarioId = scenario?.id ?? "";
+      const pathology = newPatient.pathology ?? "";
+      let cause: string;
+
+      if (vitals.map < 30) {
+        cause = "MAP 過低，器官灌流不足導致多重器官衰竭。";
+      } else if (vitals.hr > 180 || vitals.hr < 30) {
+        cause = "致死性心律不整。";
+      } else if (pathology.includes("tamponade")) {
+        cause = "心包填塞未及時處理，心輸出量衰竭。";
+      } else if (scenarioId.includes("septic")) {
+        cause = "病人因敗血性休克惡化，多重器官衰竭。";
+      } else {
+        cause = "病人因持續出血未控制，血流動力學衰竭。";
       }
+
+      useProGameStore.getState().triggerDeath(cause);
     }
   }, []);
 

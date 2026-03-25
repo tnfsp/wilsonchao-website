@@ -68,14 +68,6 @@ const conditionTransfusionNoiCa: EventCondition = {
   ],
 };
 
-// Phase 1: 第二套 lab — 只有追蹤過 lab 才出現
-const conditionSecondLabTracked: EventCondition = {
-  operator: "AND",
-  conditions: [
-    { field: "action_taken", op: "==", value: "order_cbc" },
-  ],
-};
-
 // Phase 1: 學長到場（叫過學長才觸發）
 const conditionSeniorCalled: EventCondition = {
   operator: "AND",
@@ -191,22 +183,8 @@ const events: ScriptedEvent[] = [
   // 由 ConsultModal 處理（玩家點「叫學長」→ 排程 senior_arrives event → SeniorDialogModal 彈出）
   // 不用 scripted event，避免學長在沒被叫的情況下自動出現
 
-  // ── 18:00 ── 第二套 Lab（有追蹤才出現）
-  {
-    id: "evt-18-second-lab",
-    triggerTime: 18,
-    triggerCondition: conditionSecondLabTracked,
-    type: "lab_result",
-    message: "醫師，追的 CBC 第二次結果出來了。",
-    newLabResults: {
-      cbc_t2: {
-        hb:  { value: 7.1, unit: "g/dL",  normal: "13.5-17.5", flag: "critical" },
-        wbc: { value: 10.2,unit: "K/\u03BCL",  normal: "4.5-11.0" },
-        plt: { value: 95,  unit: "K/\u03BCL",  normal: "150-400",   flag: "L" },
-        fib: { value: 148, unit: "mg/dL",  normal: "200-400",   flag: "critical" },
-      },
-    },
-  },
+  // evt-18-second-lab 已移除：30 分鐘遊戲內 scripted 兩次 CBC 不符合臨床實務。
+  // 如果玩家需要追蹤 Hb，可以自行再 order CBC（lab-engine 會動態計算結果）。
 
   // ── 18:00 ── 輸 >= 4U 血但沒追 iCa → 護理師提醒
   {

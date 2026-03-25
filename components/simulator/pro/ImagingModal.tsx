@@ -56,7 +56,11 @@ const CXR_REAL_IMAGES: Record<string, { src: string; alt: string; attribution: s
     alt: "Bilateral infiltrates — ARDS/Sepsis 相關肺浸潤",
     attribution: "Wikimedia Commons, CC-BY-SA 3.0",
   },
-  // surgical_bleeding: temporarily disabled to preview CxrCanvas fallback
+  surgical_bleeding: {
+    src: "/assets/cxr/surgical-bleeding/mediastinal-hematoma-post-cabg.jpg",
+    alt: "Mediastinal hematoma post-CABG — 縱膈腔血腫，widened mediastinum",
+    attribution: "Radiopaedia.org, CC-BY-NC-SA",
+  },
 };
 
 // ── Real echo video clips per pathology + view ───────────────
@@ -594,7 +598,7 @@ export function ImagingModal() {
         style={{ backgroundColor: "#001219" }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-5 py-4 border-b border-teal-900/40">
+        <div className="flex items-center justify-between px-5 py-4 border-b border-teal-900/40 shrink-0">
           <div className="flex items-center gap-3">
             <span className="text-2xl">🩻</span>
             <div>
@@ -615,8 +619,8 @@ export function ImagingModal() {
           </button>
         </div>
 
-        {/* Tabs — sticky + horizontally scrollable for mobile */}
-        <div className="flex overflow-x-auto border-b border-teal-900/30 scrollbar-hide sticky top-0 z-10" style={{ backgroundColor: "#001219" }}>
+        {/* Tabs — horizontally scrollable for mobile */}
+        <div className="flex overflow-x-auto border-b border-teal-900/30 scrollbar-hide shrink-0" style={{ backgroundColor: "#001219" }}>
           {TABS.map((tab) => (
             <button
               key={tab.key}
@@ -635,12 +639,12 @@ export function ImagingModal() {
         </div>
 
         {/* Tab content */}
-        <div className="flex-1 overflow-y-auto p-5">
+        <div className="flex-1 overflow-y-auto p-5 min-h-0">
           {renderTabContent()}
         </div>
 
         {/* Footer */}
-        <div className="border-t border-teal-900/30 px-5 py-3 flex items-center justify-between">
+        <div className="border-t border-teal-900/30 px-5 py-3 flex items-center justify-between shrink-0">
           <span className="text-teal-400/40 text-xs">
             {orderedCount > 0
               ? `已開 ${orderedCount} 項影像`
