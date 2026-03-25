@@ -182,7 +182,7 @@ const events: ScriptedEvent[] = [
     type: "vitals_change",
     chestTubeChanges: {
       currentRate: 310,
-      totalOutput: 1050,
+      totalOutput: 1150,
     },
     severityChange: 10,
   },

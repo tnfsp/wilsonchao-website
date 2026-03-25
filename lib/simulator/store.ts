@@ -1042,6 +1042,11 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
               content: `${nurseName}：醫師，${labData.orderName ?? order.definition.name} 結果出來了。`,
               sender: "nurse",
             });
+
+            // Auto-open lab results modal (clerk 拿報告來給你看)
+            if (!get().activeModal) {
+              set({ activeModal: "lab_results" });
+            }
           }
         }
       } else if (ev.type === "vitals_change" || ev.type === "escalation" || ev.type === "chest_tube_change") {

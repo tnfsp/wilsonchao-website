@@ -907,7 +907,7 @@ function useAIDebrief(
       console.error("[AI Debrief] fetch failed:", err);
       setState({ status: "error", error: err instanceof Error ? err.message : "Unknown error" });
     }
-  }, [score, scenario, timeline, sbarReport, deathCause]);
+  }, [score, scenario, timeline, sbarReport, deathCause, patient]);
 
   useEffect(() => {
     fetchDebrief();
