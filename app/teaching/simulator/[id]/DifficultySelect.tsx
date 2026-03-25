@@ -90,7 +90,7 @@ export default function DifficultySelect({ scenarioId, title, subtitle }: Props)
                 {id.comingSoon && (
                   <div className="absolute top-3 right-3">
                     <span className="text-[10px] px-1.5 py-0.5 rounded bg-white/5 text-gray-500 border border-white/10">
-                      Coming Soon
+                      即將推出
                     </span>
                   </div>
                 )}

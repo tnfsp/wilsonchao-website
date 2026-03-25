@@ -234,7 +234,7 @@ export default function ColorVitalsPanel({
   if (!displayVitals) {
     return (
       <div className="rounded-xl border border-white/8 bg-white/5 p-4 text-gray-500 text-sm">
-        Vitals 尚未載入
+        生命徵象尚未載入
       </div>
     );
   }
