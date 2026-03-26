@@ -166,7 +166,10 @@ epinephrine-ivp, atropine, amiodarone-ivp, nicardipine, labetalol, nitroglycerin
 heparin, tpa, aspirin, clopidogrel, hydrocortisone
 
 Labs（檢驗）:
-cbc, bcs, coag, abg, lactate, ica, act, troponin, blood_culture, teg, rotem
+cbc, abg（bundles）
+na, k, cl, co2, bun, cr, glucose（individual chemistry）
+pt_inr, aptt, fibrinogen（individual coagulation）
+lactate, ica, act, troponin, type_screen, blood_culture, teg, rotem
 
 Transfusions（輸血）:
 prbc_1u, prbc_2u, prbc_4u, ffp_2u, ffp_4u, platelet_1dose, platelet_2dose, cryo_6u, cryo_10u
@@ -208,13 +211,19 @@ prbc_1u, prbc_2u, prbc_4u, ffp_2u, ffp_4u, platelet_1dose, platelet_2dose, cryo_
 - Plavix / Clopidogrel → clopidogrel
 - Solumedrol / Hydrocortisone / 類固醇 → hydrocortisone
 - CBC / 血球 → cbc
-- BCS / Chem / 生化 → bcs
-- Coag / PT/PTT / 凝血 → coag
+- BCS / Chem / 生化 → 同時開 na, k, cl, co2, bun, cr, glucose（多個 order）
+- Coag / PT/PTT / 凝血 → 同時開 pt_inr, aptt, fibrinogen（多個 order）
 - ABG / 血氣 → abg
 - Lactate / 乳酸 → lactate
 - iCa / Ionized Ca → ica
 - ACT → act
+- PT / INR → pt_inr
+- aPTT → aptt
+- Fibrinogen / 纖維蛋白原 → fibrinogen
+- Na / Sodium / 鈉 → na
+- K / Potassium / 鉀 → k
 - Troponin / 心肌酶 → troponin
+- Type & Screen / 備血 / 配血 → type_screen
 - Blood culture / 血培養 → blood_culture
 - TEG → teg
 - ROTEM → rotem
@@ -246,7 +255,7 @@ prbc_1u, prbc_2u, prbc_4u, ffp_2u, ffp_4u, platelet_1dose, platelet_2dose, cryo_
 - ns: "500" (unit: mL)
 - lr: "500" (unit: mL)
 - albumin_5: "250" (unit: mL)
-- cbc/bcs/coag/abg/lactate/ica/act/troponin/blood_culture/teg/rotem: "1" (unit: panel)
+- 所有 lab（cbc/abg/na/k/cl/co2/bun/cr/glucose/pt_inr/aptt/fibrinogen/lactate/ica/act/troponin/type_screen/blood_culture/teg/rotem）: "1"
 - 輸血 prbc_1u/prbc_2u etc.: 用 defaultDose 即可，dose = 對應 unit 數量字串
 
 ## 回答規則

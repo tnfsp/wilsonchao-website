@@ -20,7 +20,7 @@ const PANEL_GROUPS: { label: string; keys: string[] }[] = [
   },
   {
     label: "ABG",
-    keys: ["pH", "pao2", "PaO2", "paco2", "PaCO2", "hco3", "HCO3", "HCO\u2083", "be", "BE", "lactate", "Lactate", "sao2", "SaO2"],
+    keys: ["ph", "pH", "pao2", "PaO2", "paco2", "PaCO2", "hco3", "HCO3", "HCO\u2083", "be", "BE", "lactate", "Lactate", "sao2", "SaO2"],
   },
   {
     label: "Chemistry",

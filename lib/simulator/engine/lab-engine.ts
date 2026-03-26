@@ -66,7 +66,7 @@ const RANGES: Record<string, NormalRange> = {
   paco2:       { unit: "mmHg",    normal: "35-45",    low: 35,  high: 45,  criticalLow: 20,  criticalHigh: 60 },
   hco3:        { unit: "mEq/L",   normal: "22-26",    low: 22,  high: 26,  criticalLow: 15,  criticalHigh: 35 },
   be:          { unit: "mEq/L",   normal: "-2 to +2", low: -2,  high: 2,   criticalLow: -10, criticalHigh: 10 },
-  lactate:     { unit: "mg/dL",   normal: "4.5-19.8", low: 4.5, high: 19.8, criticalHigh: 36 },
+  lactate:     { unit: "mmol/L",  normal: "0.5-1.6",  low: 0.5, high: 1.6, criticalHigh: 4.0 },
   // BCS
   na:          { unit: "mEq/L",   normal: "135-145",  low: 135, high: 145, criticalLow: 120, criticalHigh: 160 },
   k:           { unit: "mEq/L",   normal: "3.5-5.0",  low: 3.5, high: 5.0, criticalLow: 2.5, criticalHigh: 6.0 },
@@ -74,6 +74,7 @@ const RANGES: Record<string, NormalRange> = {
   bun:         { unit: "mg/dL",   normal: "7-20",     low: 7,   high: 20 },
   cr:          { unit: "mg/dL",   normal: "0.7-1.3",  low: 0.7, high: 1.3, criticalHigh: 4.0 },
   glucose:     { unit: "mg/dL",   normal: "70-110",   low: 70,  high: 110, criticalLow: 40,  criticalHigh: 400 },
+  co2:         { unit: "mEq/L",  normal: "23-29",    low: 23,  high: 29,  criticalLow: 15,  criticalHigh: 40 },
   // Ionized Calcium
   ica:         { unit: "mmol/L",  normal: "1.10-1.30", low: 1.10, high: 1.30, criticalLow: 0.9 },
   // ACT
@@ -343,10 +344,10 @@ export function computeLabSnapshot(
       const plt = computePlatelets(bloodVolumeFraction, ctx.prbcUnits, ctx.plateletDoses);
       const wbc = computeWBC(ctx.gameTimeMinutes);
       return {
-        Hgb: labVal(hgb, "hgb"),
-        Hct: labVal(hct, "hct", 0),
-        Plt: labVal(plt, "plt", 0),
-        WBC: labVal(wbc, "wbc"),
+        hb: labVal(hgb, "hgb"),
+        hct: labVal(hct, "hct", 0),
+        plt: labVal(plt, "plt", 0),
+        wbc: labVal(wbc, "wbc"),
       };
     }
 
@@ -356,10 +357,10 @@ export function computeLabSnapshot(
       const aptt = computeAPTT(inr);
       const fibrinogen = computeFibrinogen(bloodVolumeFraction, ctx.cryoDoses, ctx.prbcUnits);
       return {
-        PT: labVal(pt, "pt"),
-        INR: labVal(inr, "inr", 2),
-        aPTT: labVal(aptt, "aptt", 0),
-        Fibrinogen: labVal(fibrinogen, "fibrinogen", 0),
+        pt: labVal(pt, "pt"),
+        inr: labVal(inr, "inr", 2),
+        aptt: labVal(aptt, "aptt", 0),
+        fib: labVal(fibrinogen, "fibrinogen", 0),
       };
     }
 
@@ -368,20 +369,20 @@ export function computeLabSnapshot(
       const pao2 = spo2ToPaO2(labs.spo2_fraction);
       const hco3 = computeHCO3(pH, paCO2);
       const be = computeBE(pH, hco3);
-      const lactateVal = labs.lactate_mg_per_dL;
+      const lactateVal = labs.lactate_mg_per_dL / 9.009; // mg/dL → mmol/L
       return {
-        pH: labVal(pH, "pH", 3),
-        PaO2: labVal(pao2, "pao2", 0),
-        PaCO2: labVal(paCO2, "paco2", 0),
-        "HCO₃": labVal(hco3, "hco3"),
-        BE: labVal(be, "be"),
-        Lactate: labVal(lactateVal, "lactate"),
+        ph: labVal(pH, "pH", 3),
+        pao2: labVal(pao2, "pao2", 0),
+        paco2: labVal(paCO2, "paco2", 0),
+        hco3: labVal(hco3, "hco3"),
+        be: labVal(be, "be"),
+        lactate: labVal(lactateVal, "lactate"),
       };
     }
 
     case "lactate": {
       return {
-        Lactate: labVal(labs.lactate_mg_per_dL, "lactate"),
+        lactate: labVal(labs.lactate_mg_per_dL / 9.009, "lactate"), // mg/dL → mmol/L
       };
     }
 
@@ -393,26 +394,26 @@ export function computeLabSnapshot(
         ctx.gameTimeMinutes
       );
       return {
-        Na: labVal(elec.na, "na", 0),
-        K: labVal(elec.k, "k"),
-        Cl: labVal(elec.cl, "cl", 0),
-        BUN: labVal(renal.bun, "bun", 0),
-        Cr: labVal(renal.cr, "cr", 2),
-        Glucose: labVal(elec.glucose, "glucose", 0),
+        na: labVal(elec.na, "na", 0),
+        k: labVal(elec.k, "k"),
+        cl: labVal(elec.cl, "cl", 0),
+        bun: labVal(renal.bun, "bun", 0),
+        cr: labVal(renal.cr, "cr", 2),
+        glucose: labVal(elec.glucose, "glucose", 0),
       };
     }
 
     case "ica": {
       const ica = computeICA(ctx.prbcUnits, ctx.ffpUnits, ctx.cacl2_mL);
       return {
-        "iCa²⁺": labVal(ica, "ica", 2),
+        ica: labVal(ica, "ica", 2),
       };
     }
 
     case "act": {
       const act = computeACT(ctx.protamineGiven, ctx.gameTimeMinutes);
       return {
-        ACT: labVal(act, "act", 0),
+        act: labVal(act, "act", 0),
       };
     }
 
@@ -424,19 +425,19 @@ export function computeLabSnapshot(
       const fibrinogen = computeFibrinogen(bloodVolumeFraction, ctx.cryoDoses, ctx.prbcUnits);
       const teg = computeTEG(plt, fibrinogen, inr, ctx.txaGiven);
       return {
-        "R-time": labVal(teg.r, "teg_r"),
-        "K-time": labVal(teg.k, "teg_k"),
-        "α-angle": labVal(teg.alpha, "teg_alpha", 0),
-        MA: labVal(teg.ma, "teg_ma", 0),
-        LY30: labVal(teg.ly30, "teg_ly30"),
+        r_time: labVal(teg.r, "teg_r"),
+        k_time: labVal(teg.k, "teg_k"),
+        alpha: labVal(teg.alpha, "teg_alpha", 0),
+        ma: labVal(teg.ma, "teg_ma", 0),
+        ly30: labVal(teg.ly30, "teg_ly30"),
       };
     }
 
     case "troponin": {
       // Always mildly elevated post-cardiac surgery
       return {
-        "Troponin I": labVal(0.85 + Math.random() * 0.3, "troponin_i", 2),
-        "CK-MB": labVal(45 + Math.random() * 15, "ckmb", 0),
+        troponin_i: labVal(0.85 + Math.random() * 0.3, "troponin_i", 2),
+        ckmb: labVal(45 + Math.random() * 15, "ckmb", 0),
       };
     }
 
@@ -454,31 +455,31 @@ export function computeLabSnapshot(
     // ── Individual chemistry (split from BCS) ──
     case "na": {
       const elec = computeElectrolytes(labs.pH, bloodVolumeFraction);
-      return { Na: labVal(elec.na, "na", 0) };
+      return { na: labVal(elec.na, "na", 0) };
     }
     case "k": {
       const elec = computeElectrolytes(labs.pH, bloodVolumeFraction);
-      return { K: labVal(elec.k, "k") };
+      return { k: labVal(elec.k, "k") };
     }
     case "cl": {
       const elec = computeElectrolytes(labs.pH, bloodVolumeFraction);
-      return { Cl: labVal(elec.cl, "cl", 0) };
+      return { cl: labVal(elec.cl, "cl", 0) };
     }
     case "co2": {
       const hco3 = computeHCO3(labs.pH, paCO2);
-      return { "CO₂": labVal(hco3 + 1, "co2", 0) }; // Total CO₂ ≈ HCO₃ + 1
+      return { co2: labVal(hco3 + 1, "co2", 0) }; // Total CO₂ ≈ HCO₃ + 1
     }
     case "bun": {
       const renal = computeRenalFunction(labs.urine_production_mL_per_min, bloodVolumeFraction, ctx.gameTimeMinutes);
-      return { BUN: labVal(renal.bun, "bun", 0) };
+      return { bun: labVal(renal.bun, "bun", 0) };
     }
     case "cr": {
       const renal = computeRenalFunction(labs.urine_production_mL_per_min, bloodVolumeFraction, ctx.gameTimeMinutes);
-      return { Cr: labVal(renal.cr, "cr", 2) };
+      return { cr: labVal(renal.cr, "cr", 2) };
     }
     case "glucose": {
       const elec = computeElectrolytes(labs.pH, bloodVolumeFraction);
-      return { Glucose: labVal(elec.glucose, "glucose", 0) };
+      return { glucose: labVal(elec.glucose, "glucose", 0) };
     }
 
     // ── Individual coagulation (split from Coag) ──
@@ -486,18 +487,18 @@ export function computeLabSnapshot(
       const inr = computeINR(bloodVolumeFraction, temp, ctx.ffpUnits, ctx.prbcUnits);
       const pt = clamp(12 * inr, 8, 60);
       return {
-        PT: labVal(pt, "pt"),
-        INR: labVal(inr, "inr", 2),
+        pt: labVal(pt, "pt"),
+        inr: labVal(inr, "inr", 2),
       };
     }
     case "aptt": {
       const inr = computeINR(bloodVolumeFraction, temp, ctx.ffpUnits, ctx.prbcUnits);
       const apttVal = computeAPTT(inr);
-      return { aPTT: labVal(apttVal, "aptt", 0) };
+      return { aptt: labVal(apttVal, "aptt", 0) };
     }
     case "fibrinogen": {
       const fibVal = computeFibrinogen(bloodVolumeFraction, ctx.cryoDoses, ctx.prbcUnits);
-      return { Fibrinogen: labVal(fibVal, "fibrinogen", 0) };
+      return { fib: labVal(fibVal, "fibrinogen", 0) };
     }
 
     // ── Type & Screen ──

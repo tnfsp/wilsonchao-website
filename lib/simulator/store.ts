@@ -1070,6 +1070,11 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
               sender: "nurse",
             });
 
+            // Mark order as completed with results (for LabOverviewPanel)
+            if (labData.orderId) {
+              get().updateOrderStatus(labData.orderId, "completed", labResults);
+            }
+
             // Auto-open lab results modal (clerk 拿報告來給你看)
             if (!get().activeModal) {
               set({ activeModal: "lab_results" });
