@@ -97,8 +97,8 @@ export default async function Home() {
       <main className="page-shell space-y-16">
         {/* Hero — text-first, inline navigation */}
         <header className="space-y-5">
-          <div className="flex items-center gap-4">
-            <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-full sm:h-20 sm:w-20">
+          <div className="flex items-start gap-5 sm:gap-6">
+            <div className="relative h-20 w-20 flex-shrink-0 overflow-hidden rounded-full sm:h-24 sm:w-24">
               <Image
                 src="/hero.jpg"
                 alt="趙玴祥 Wilson Chao"
@@ -107,44 +107,41 @@ export default async function Home() {
                 priority
               />
             </div>
-            <div>
+            <div className="min-w-0 flex-1 space-y-2">
               <h1 className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">
                 嗨，我是玴祥
               </h1>
-              <p className="text-sm text-[var(--muted)]">心臟外科醫師 · 對世界好奇的人</p>
+              <p className="text-[0.95rem] leading-relaxed text-[var(--muted)]">
+                白天在高醫把心臟打開，晚上把心裡的事寫下來。
+                {heroIntroParagraphs.length > 0 && (
+                  <> {heroIntroParagraphs.join(" ")}</>
+                )}
+              </p>
+              <RandomTagline />
+              {/* Social Icons */}
+              <div className="flex items-center gap-2 pt-1">
+                {[
+                  { label: "Instagram", href: "https://www.instagram.com/momobear_doctor", ext: true, d: <><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="5" /><circle cx="17.5" cy="6.5" r="1.25" fill="currentColor" stroke="none" /></> },
+                  { label: "Telegram", href: "https://t.me/doctormomo", ext: true, d: <><path d="M22 2L11 13" /><path d="M22 2L15 22L11 13L2 9L22 2Z" /></> },
+                  { label: "RSS", href: "/feed", ext: false, d: <><path d="M4 11a9 9 0 0 1 9 9" /><path d="M4 4a16 16 0 0 1 16 16" /><circle cx="5" cy="19" r="1.5" fill="currentColor" stroke="none" /></> },
+                  { label: "Email", href: "mailto:aa2670095@gmail.com", ext: true, d: <><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></> },
+                ].map((s) => (
+                  <a
+                    key={s.label}
+                    href={s.href}
+                    title={s.label}
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--surface)]"
+                    target={s.ext ? "_blank" : undefined}
+                    rel={s.ext ? "noreferrer" : undefined}
+                  >
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">{s.d}</svg>
+                  </a>
+                ))}
+              </div>
             </div>
           </div>
 
-          <div className="max-w-2xl space-y-4 text-base leading-relaxed text-[var(--muted)]">
-            <p>白天在高醫把心臟打開，晚上把心裡的事寫下來。</p>
-            {heroIntroParagraphs.map((paragraph: string, index: number) => (
-              <p key={index}>{paragraph}</p>
-            ))}
-            <RandomTagline />
-          </div>
-
-          {/* Row 1: Social Icons */}
-          <div className="flex items-center gap-2">
-            {[
-              { label: "Instagram", href: "https://www.instagram.com/momobear_doctor", ext: true, d: <><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="5" /><circle cx="17.5" cy="6.5" r="1.25" fill="currentColor" stroke="none" /></> },
-              { label: "Telegram", href: "https://t.me/doctormomo", ext: true, d: <><path d="M22 2L11 13" /><path d="M22 2L15 22L11 13L2 9L22 2Z" /></> },
-              { label: "RSS", href: "/feed", ext: false, d: <><path d="M4 11a9 9 0 0 1 9 9" /><path d="M4 4a16 16 0 0 1 16 16" /><circle cx="5" cy="19" r="1.5" fill="currentColor" stroke="none" /></> },
-              { label: "Email", href: "mailto:aa2670095@gmail.com", ext: true, d: <><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></> },
-            ].map((s) => (
-              <a
-                key={s.label}
-                href={s.href}
-                title={s.label}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--surface)]"
-                target={s.ext ? "_blank" : undefined}
-                rel={s.ext ? "noreferrer" : undefined}
-              >
-                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">{s.d}</svg>
-              </a>
-            ))}
-          </div>
-
-          {/* Row 2: Navigation pills */}
+          {/* Navigation pills */}
           <div className="flex flex-wrap gap-2">
             {[
               { label: "Blog", href: "/blog" },

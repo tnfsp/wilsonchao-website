@@ -189,8 +189,8 @@ export default async function AboutPage() {
               <Image
                 src={copy.aboutImage}
                 alt="Portrait"
-                width={96}
-                height={96}
+                width={112}
+                height={112}
                 className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-full border border-[var(--border)] object-cover"
                 unoptimized
                 priority={false}
