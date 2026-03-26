@@ -237,9 +237,7 @@ export default async function AboutPage() {
               ))}
             </div>
           </div>
-          <div className="pt-2">
-            <ViewStats slug="about" />
-          </div>
+
         </footer>
       </main>
 
