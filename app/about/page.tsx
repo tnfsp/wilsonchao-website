@@ -47,6 +47,17 @@ const SOCIAL_ICONS = [
       </svg>
     ),
   },
+  {
+    label: "Email",
+    href: "mailto:aa2670095@gmail.com",
+    external: true,
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="4" width="20" height="16" rx="2" />
+        <path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" />
+      </svg>
+    ),
+  },
 ];
 
 /* ── Footer links with icons ── */
@@ -170,7 +181,7 @@ export default async function AboutPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
       />
       <main className="page-shell">
-        {/* Hero: Avatar + Name + Intro + Core Links */}
+        {/* Hero: 3-column — Avatar | Name+Intro | Social Icons */}
         <header className="pb-8">
           <span className="section-title">About</span>
           <div className="mt-4 flex items-center gap-5 sm:gap-6">
@@ -185,7 +196,7 @@ export default async function AboutPage() {
                 priority={false}
               />
             ) : null}
-            <div className="space-y-1.5">
+            <div className="min-w-0 flex-1 space-y-1.5">
               <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--foreground)] leading-tight">
                 {copy.aboutName}
               </h1>
@@ -195,22 +206,21 @@ export default async function AboutPage() {
                 </p>
               ) : null}
             </div>
-          </div>
-
-          {/* Social Icons — IG, Telegram, RSS */}
-          <div className="mt-5 flex items-center gap-3">
-            {SOCIAL_ICONS.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                title={item.label}
-                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--surface)]"
-                target={item.external ? "_blank" : undefined}
-                rel={item.external ? "noreferrer" : undefined}
-              >
-                {item.icon}
-              </Link>
-            ))}
+            {/* Social Icons — IG, Telegram, RSS, Email */}
+            <div className="shrink-0 flex items-center gap-2">
+              {SOCIAL_ICONS.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  title={item.label}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--surface)]"
+                  target={item.external ? "_blank" : undefined}
+                  rel={item.external ? "noreferrer" : undefined}
+                >
+                  {item.icon}
+                </Link>
+              ))}
+            </div>
           </div>
         </header>
 
