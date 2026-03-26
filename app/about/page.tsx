@@ -165,14 +165,14 @@ export default async function AboutPage() {
         {/* Hero: Avatar left, Name + Intro + Icons stacked right */}
         <header className="pb-8">
           <span className="section-title">About</span>
-          <div className="mt-4 flex items-start gap-5 sm:gap-6">
+          <div className="mt-4 flex items-stretch gap-5 sm:gap-6">
             {copy.aboutImage ? (
               <Image
                 src={copy.aboutImage}
                 alt="Portrait"
-                width={112}
-                height={112}
-                className="h-20 w-20 sm:h-24 sm:w-24 shrink-0 rounded-full border border-[var(--border)] object-cover"
+                width={128}
+                height={128}
+                className="w-20 sm:w-[7rem] shrink-0 self-stretch rounded-full border border-[var(--border)] object-cover aspect-square"
                 unoptimized
                 priority={false}
               />
