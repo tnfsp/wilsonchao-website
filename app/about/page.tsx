@@ -3,6 +3,7 @@ import Link from "next/link";
 import { marked } from "marked";
 import { loadSiteCopy, linkItems } from "@/lib/content";
 import { sanitizeHtml } from "@/lib/sanitize";
+import { ViewStats } from "@/components/ui/ViewCounter";
 
 const BASE_URL = "https://wilsonchao.com";
 
@@ -60,7 +61,7 @@ const SOCIAL_ICONS = [
   },
 ];
 
-/* ── Footer links with icons ── */
+/* ── Footer links (kept minimal) ── */
 const FOOTER_LINKS = [
   {
     label: "Blogroll",
@@ -217,19 +218,17 @@ export default async function AboutPage() {
           dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml) }}
         />
 
-        {/* Footer — minimal */}
-        <footer className="mt-16 pt-8 border-t border-[var(--border)]">
+        {/* Footer — matching homepage style */}
+        <footer className="border-t border-[var(--border)] pt-6 text-sm text-[var(--muted)]">
           <div className="flex items-center justify-between">
-            <p className="text-sm text-[var(--muted)]">
-              交個朋友吧
-            </p>
+            <span>{copy.footerText || "只代表個人意見，半手工打造"}</span>
             <div className="flex items-center gap-1">
               {SOCIAL_ICONS.map((item) => (
                 <Link
                   key={item.label}
                   href={item.href}
                   title={item.label}
-                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] transition-colors duration-200 hover:text-[var(--accent)]"
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition-all duration-200 hover:text-[var(--accent)]"
                   target={item.external ? "_blank" : undefined}
                   rel={item.external ? "noreferrer" : undefined}
                 >
@@ -238,17 +237,8 @@ export default async function AboutPage() {
               ))}
             </div>
           </div>
-          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
-            {FOOTER_LINKS.map((item) => (
-              <Link
-                key={item.label}
-                href={item.href}
-                className="flex items-center gap-1.5 text-[13px] text-[var(--muted)] transition-colors duration-200 hover:text-[var(--accent)]"
-              >
-                {item.icon}
-                <span>{item.label}</span>
-              </Link>
-            ))}
+          <div className="pt-2">
+            <ViewStats slug="about" />
           </div>
         </footer>
       </main>
