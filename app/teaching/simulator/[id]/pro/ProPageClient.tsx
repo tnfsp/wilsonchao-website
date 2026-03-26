@@ -225,6 +225,8 @@ function useEngineStatus(): EngineStatus {
   useEffect(() => {
     const fn = () => setStatus(_engineStatus);
     _engineListeners.add(fn);
+    // Sync in case status changed between render and effect registration
+    setStatus(_engineStatus);
     return () => { _engineListeners.delete(fn); };
   }, []);
   return status;

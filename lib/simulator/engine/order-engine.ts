@@ -225,6 +225,9 @@ export function getOrderEffect(
     if (override.duration !== undefined) {
       activeEffect.duration = override.duration;
     }
+    if (override.temperatureChange !== undefined) {
+      activeEffect.temperatureChange = override.temperatureChange;
+    }
     if (override.vitalChanges) {
       activeEffect.vitalChanges = { ...activeEffect.vitalChanges, ...override.vitalChanges };
     }
