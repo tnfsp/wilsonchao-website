@@ -7,6 +7,7 @@ export const metadata: Metadata = {
   title: "趙玴祥醫師｜心臟血管外科｜高雄醫學大學附設中和紀念醫院",
   description:
     "趙玴祥醫師，高雄醫學大學附設中和紀念醫院心臟血管外科醫師。專長冠狀動脈繞道手術（CABG）、心臟瓣膜修補及置換手術、主動脈手術。門診時間與預約資訊。",
+  alternates: { canonical: `${BASE_URL}/clinic` },
   openGraph: {
     title: "趙玴祥醫師｜心臟血管外科門診",
     description:

@@ -14,6 +14,7 @@ export async function generateMetadata({ params }: { params: Promise<{ slug: str
   return {
     title: `${slide.title} — Teaching | Wilson Chao`,
     description: slide.subtitle,
+    alternates: { canonical: `https://wilsonchao.com/teaching/${slug}` },
   };
 }
 

@@ -1,6 +1,10 @@
 import Link from "next/link";
 import { linkItems, loadSiteCopy } from "@/lib/content";
 
+export const metadata = {
+  alternates: { canonical: "https://wilsonchao.com/links" },
+};
+
 export default async function LinksPage() {
   const copy = await loadSiteCopy();
   return (

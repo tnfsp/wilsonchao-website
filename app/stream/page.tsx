@@ -6,6 +6,7 @@ export const revalidate = 60;
 export const metadata = {
   title: "Stream — Wilson Chao",
   description: "日常的腦內碎片——想法、電影、音樂，都在這裡流過。",
+  alternates: { canonical: "https://wilsonchao.com/stream" },
 };
 
 export default async function StreamPage() {

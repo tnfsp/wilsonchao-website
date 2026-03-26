@@ -1,9 +1,14 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import Image from "next/image";
 import { loadBlogEntries, loadSiteCopy, loadStreamEntries } from "@/lib/content";
 import { ViewStats } from "@/components/ui/ViewCounter";
 import { RandomTagline } from "@/components/ui/RandomTagline";
 import { BASE_URL } from "@/lib/constants";
+
+export const metadata: Metadata = {
+  alternates: { canonical: BASE_URL },
+};
 
 const websiteJsonLd = {
   "@context": "https://schema.org",

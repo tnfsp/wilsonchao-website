@@ -6,6 +6,10 @@ import { sanitizeHtml } from "@/lib/sanitize";
 
 const BASE_URL = "https://wilsonchao.com";
 
+export const metadata = {
+  alternates: { canonical: `${BASE_URL}/about` },
+};
+
 export default async function AboutPage() {
   const copy = await loadSiteCopy();
   const bodyHtml = copy.aboutBody ? await marked.parse(copy.aboutBody, { breaks: true }) : "";

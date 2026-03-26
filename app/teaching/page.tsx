@@ -1,5 +1,9 @@
 import Link from "next/link";
 
+export const metadata = {
+  alternates: { canonical: "https://wilsonchao.com/teaching" },
+};
+
 const modules = {
   required: [
     { slug: "preop-assessment", title: "Module 1：術前評估", subtitle: "「這個人為什麼要開刀？」", emoji: "🫀" },
