@@ -47,8 +47,9 @@ const CONSULT_OPTIONS: ConsultOption[] = [
 
 export function ConsultModal() {
   const activeModal = useProGameStore((s) => s.activeModal);
-  const { scenario, clock, closeModal, addTimelineEntry, advanceTime, addPendingEvent } =
+  const { scenario, clock, closeModal, addTimelineEntry, advanceTime, addPendingEvent, openModal } =
     useProGameStore();
+  const patient = useProGameStore((s) => s.patient);
 
   const [selected, setSelected] = useState<ConsultType | null>(null);
   const [consultReason, setConsultReason] = useState("");
@@ -61,6 +62,10 @@ export function ConsultModal() {
   // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const safeScenario = scenario!;
   const nurseName = safeScenario.nurseProfile.name ?? "護理師";
+
+  // Multi-phase: Phase 2 = pathology has changed from scenario's initial pathology
+  const isMultiPhase = !!scenario.phasedFindings;
+  const isPhase2 = isMultiPhase && patient?.pathology !== scenario.pathology;
 
   // ── Handlers ────────────────────────────────────────────────
 
@@ -77,10 +82,13 @@ export function ConsultModal() {
   function handleConfirmCall(type: ConsultType) {
     if (type === "other") return;
     const opt = CONSULT_OPTIONS.find((o) => o.type === type)!;
-    const arrival = opt.arrivalMinutes ?? 5;
 
-    const callLabel =
-      type === "senior" ? "叫學長（R4/Fellow）" : "通知主治醫師（VS）";
+    // Phase 2 recall: senior just left, comes back faster (3 min)
+    const isRecall = isPhase2 && type === "senior";
+    const arrival = isRecall ? 3 : (opt.arrivalMinutes ?? 5);
+    const callLabel = isRecall
+      ? "緊急叫學長回來"
+      : type === "senior" ? "叫學長（R4/Fellow）" : "通知主治醫師（VS）";
     const arrivalLabel =
       type === "senior" ? "學長" : "主治醫師（VS）";
 
@@ -88,7 +96,9 @@ export function ConsultModal() {
     addTimelineEntry({
       gameTime: clock.currentTime,
       type: "player_action",
-      content: `📞 你打電話給${callLabel}了`,
+      content: isRecall
+        ? "📞 你緊急打電話叫學長回來"
+        : `📞 你打電話給${callLabel}了`,
       sender: "player",
       isImportant: true,
     });
@@ -102,10 +112,14 @@ export function ConsultModal() {
     });
 
     // Store playerAction for scoring
+    // Phase 2 recall uses "recall_senior" to match act-recall-senior scoring pattern
+    const actionId = isRecall
+      ? "recall_senior"
+      : type === "senior" ? "call_senior" : "call_vs";
     useProGameStore.setState((state) => ({
       playerActions: [
         ...state.playerActions,
-        { action: type === "senior" ? "call_senior" : "call_vs", gameTime: clock.currentTime, category: "consult" },
+        { action: actionId, gameTime: clock.currentTime, category: "consult" },
       ],
     }));
 
@@ -193,7 +207,7 @@ export function ConsultModal() {
             <span className="text-2xl">📞</span>
             <div>
               <h2 className="text-white font-semibold text-lg leading-tight">
-                叫人 / Consult
+                {isPhase2 ? "通報 / 交班" : "叫人 / Consult"}
               </h2>
             </div>
           </div>
@@ -230,10 +244,12 @@ export function ConsultModal() {
                 {confirming === "senior" ? (
                   <>
                     <p className="text-amber-200 font-medium text-sm mb-1">
-                      確定要叫學長嗎？
+                      {isPhase2 ? "確定要緊急叫學長回來嗎？" : "確定要叫學長嗎？"}
                     </p>
                     <p className="text-amber-400/70 text-xs leading-relaxed mb-3">
-                      學長約 5 分鐘後到場。到場後需要對學長做 SBAR 報告。
+                      {isPhase2
+                        ? "情況已經改變，學長需要回來重新評估。約 3 分鐘後到場。"
+                        : "學長約 5 分鐘後到場。到場後需要對學長做 SBAR 報告。"}
                     </p>
                   </>
                 ) : (
@@ -268,6 +284,27 @@ export function ConsultModal() {
               </div>
             )}
 
+            {/* Phase 2: SBAR handoff button */}
+            {isPhase2 && (
+              <button
+                onClick={() => { closeModal(); openModal("sbar"); }}
+                className="w-full text-left rounded-lg px-4 py-3.5 border transition-all border-teal-800/30 hover:border-teal-600/50 hover:bg-teal-950/20"
+                style={{ backgroundColor: "transparent" }}
+              >
+                <div className="flex items-start gap-3">
+                  <span className="text-xl mt-0.5">📋</span>
+                  <div>
+                    <div className="text-sm font-semibold text-teal-300">
+                      SBAR 交班報告
+                    </div>
+                    <div className="text-xs text-teal-500/50 mt-0.5">
+                      向學長報告現況，提交最終交班
+                    </div>
+                  </div>
+                </div>
+              </button>
+            )}
+
             {/* Option buttons */}
             {CONSULT_OPTIONS.map((opt) => {
               if (confirming === opt.type) return null;
@@ -282,6 +319,14 @@ export function ConsultModal() {
                 teal:  "text-teal-300",
               };
 
+              // Phase 2: override senior option labels
+              const title = (isPhase2 && opt.type === "senior")
+                ? "緊急叫學長回來"
+                : opt.title;
+              const subtitle = (isPhase2 && opt.type === "senior")
+                ? "學長剛離開，情況有變 — 叫他回來！"
+                : opt.subtitle;
+
               return (
                 <div key={opt.type}>
                   {opt.type !== "other" ? (
@@ -294,14 +339,14 @@ export function ConsultModal() {
                         <span className="text-xl mt-0.5">{opt.emoji}</span>
                         <div>
                           <div className={`text-sm font-semibold ${textMap[opt.urgencyColor]}`}>
-                            {opt.title}
+                            {title}
                           </div>
                           <div className="text-xs text-teal-500/50 mt-0.5">
-                            {opt.subtitle}
+                            {subtitle}
                           </div>
                           {opt.arrivalMinutes && (
                             <div className="text-xs text-teal-500/40 mt-0.5">
-                              ⏱ 預計 {opt.arrivalMinutes} 分鐘後到場
+                              ⏱ 預計 {(isPhase2 && opt.type === "senior") ? 3 : opt.arrivalMinutes} 分鐘後到場
                             </div>
                           )}
                         </div>

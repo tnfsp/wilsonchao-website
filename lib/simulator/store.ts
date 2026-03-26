@@ -263,6 +263,9 @@ export interface ProGameStore {
   /** 觸發病人死亡（由外部 tick 呼叫） */
   triggerDeath: (cause: string) => void;
 
+  /** 觸發心跳停止（進入 ACLS 流程，而非直接死亡） */
+  triggerCardiacArrest: (cause: string) => void;
+
   /** Set rescue window state (Standard mode) */
   setRescueState: (state: RescueState | null) => void;
 
@@ -520,6 +523,7 @@ function computeBasicScore(
     | "setDefibrillatorMode"
     | "deliverShock"
     | "triggerDeath"
+    | "triggerCardiacArrest"
     | "setRescueState"
     | "tickRescueCountdown"
     | "checkGuidance"
@@ -1784,6 +1788,67 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
   },
 
   // ----------------------------------------------------------
+  // triggerCardiacArrest — sets arrest vitals so ACLSModal takes over
+  // Death only happens via ACLS termination (20 min or player choice)
+  // ----------------------------------------------------------
+  triggerCardiacArrest: (cause: string) => {
+    const state = get();
+    if (state.phase !== "playing" || !state.patient) return;
+
+    // Guard: already in arrest (hr === 0 or arrest rhythm) → skip
+    const currentRhythm = state.patient.vitals.rhythmStrip;
+    const arrestRhythms = ["vf", "vt_pulseless", "pea", "asystole"];
+    if (state.patient.vitals.hr === 0 || arrestRhythms.includes(currentRhythm)) {
+      return; // ACLS is already handling this
+    }
+
+    // Determine arrest rhythm from severity via severityToRhythm
+    const { severityToRhythm } = require("./engine/phase-engine");
+    const severity = state.patient.severity ?? 0;
+    let arrestRhythm = severityToRhythm(severity);
+    // If severityToRhythm returns a non-arrest rhythm (e.g. severity < 80),
+    // force PEA as the default arrest rhythm
+    if (!arrestRhythms.includes(arrestRhythm)) {
+      arrestRhythm = "pea";
+    }
+
+    const nurseName = state.scenario?.nurseProfile?.name ?? "護理師";
+    const arrestEntry: TimelineEntry = {
+      id: nextId("tl"),
+      gameTime: state.clock.currentTime,
+      type: "system_event",
+      content: `⚠️ CARDIAC ARREST — ${cause}`,
+      sender: "system",
+      isImportant: true,
+    };
+    const nurseEntry: TimelineEntry = {
+      id: nextId("tl"),
+      gameTime: state.clock.currentTime,
+      type: "nurse_message",
+      content: `${nurseName}：醫師！病人沒有脈搏了！心跳停止！`,
+      sender: "nurse",
+      isImportant: true,
+    };
+
+    set((s) => ({
+      patient: s.patient
+        ? {
+            ...s.patient,
+            vitals: {
+              ...s.patient.vitals,
+              hr: 0,
+              sbp: 0,
+              dbp: 0,
+              map: 0,
+              rhythmStrip: arrestRhythm,
+            },
+          }
+        : s.patient,
+      timeline: [...s.timeline, arrestEntry, nurseEntry],
+    }));
+  },
+
+  // ----------------------------------------------------------
   // triggerDeath (with rescue window interception for Standard)
   // ----------------------------------------------------------
   triggerDeath: (cause: string) => {
@@ -2275,17 +2340,54 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       get().triggerDeath(`對 ${rhythm === "asystole" ? "Asystole" : "PEA"} 執行電擊，導致病人心臟停止無法恢復`);
       return result;
     } else {
-      // Non-shockable rhythm (NSR, sinus tach, afib, etc.) — inappropriate shock causes arrest
+      // Non-shockable rhythm (NSR, sinus tach, afib, etc.) — inappropriate shock causes VF arrest
       result = { success: false, message: `不當電擊 — ${rhythm} 非電擊適應症` };
       shockEntry.content = `⚡ 電擊 ${energy}J — ⚠ 對 ${rhythm} 執行不當電擊！病人發生心室顫動`;
 
-      // Record + trigger death
+      // Record + trigger cardiac arrest (VF) → ACLS takes over
       set((state) => ({
         defibrillator: { ...state.defibrillator, lastShockAt: clock.currentTime },
         timeline: [...state.timeline, { id: nextId("tl"), ...shockEntry }],
         playerActions: [...state.playerActions, { action: actionLabel, gameTime: clock.currentTime, category: "acls" }],
       }));
-      get().triggerDeath(`對 ${rhythm} 執行不當電擊，誘發致命性心律不整`);
+      // Inappropriate shock on non-arrest rhythm → patient goes into VF (cardiac arrest)
+      // Set VF directly since triggerCardiacArrest uses severityToRhythm which may not give VF
+      const arrestCause = `對 ${rhythm} 執行不當電擊，誘發心室顫動`;
+      const nurseName = get().scenario?.nurseProfile?.name ?? "護理師";
+      set((s) => ({
+        patient: s.patient
+          ? {
+              ...s.patient,
+              vitals: {
+                ...s.patient.vitals,
+                hr: 0,
+                sbp: 0,
+                dbp: 0,
+                map: 0,
+                rhythmStrip: "vf" as const,
+              },
+            }
+          : s.patient,
+        timeline: [
+          ...s.timeline,
+          {
+            id: nextId("tl"),
+            gameTime: clock.currentTime,
+            type: "system_event" as const,
+            content: `⚠️ CARDIAC ARREST — ${arrestCause}`,
+            sender: "system" as const,
+            isImportant: true,
+          },
+          {
+            id: nextId("tl"),
+            gameTime: clock.currentTime,
+            type: "nurse_message" as const,
+            content: `${nurseName}：醫師！病人沒有脈搏了！心室顫動！`,
+            sender: "nurse" as const,
+            isImportant: true,
+          },
+        ],
+      }));
       return result;
     }
 

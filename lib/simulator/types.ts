@@ -681,6 +681,15 @@ export interface DebriefData {
   guidelines: string[];
   whatIf: WhatIfBranch[];
   exampleSBAR?: ExampleSBAR;
+  /** Per-phase diagnosis variants for multi-phase scenarios.
+   *  Key = Pathology value for that phase. Used so the debrief
+   *  references the correct diagnosis when the player is rescued/dies
+   *  before the scenario transitions to a later phase. */
+  phaseDiagnoses?: Partial<Record<Pathology, {
+    correctDiagnosis: string;
+    /** Short display title for the debrief header (e.g. "術後出血") */
+    title: string;
+  }>>;
 }
 
 /** Model SBAR for comparison in debrief */

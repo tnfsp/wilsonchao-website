@@ -298,36 +298,45 @@ function useGameTick() {
     
     useProGameStore.setState({ patient: newPatient });
 
-    // Death check after patient update — vitals-driven for ALL scenarios
-    // (未來 ACLS 機制會在 death 前加一層 arrest → defibrillation → ROSC 流程)
+    // Cardiac arrest check — triggers ACLS flow instead of direct death.
+    // Patient NEVER dies directly; they go through cardiac arrest → ACLS → 20-min rescue window.
+    // Death only occurs when ACLS fails for 20 minutes or player terminates resuscitation.
     const scenario = useProGameStore.getState().scenario;
     const vitals = newPatient.vitals;
     const severity = newPatient.severity ?? 0;
 
-    // Thresholds account for +/-5% noise in patient-engine vitals
-    if (
-      severity >= 95 ||
-      vitals.map < 25 ||
-      vitals.hr > 190 ||
-      vitals.hr < 25
-    ) {
-      const scenarioId = scenario?.id ?? "";
-      const pathology = newPatient.pathology ?? "";
-      let cause: string;
+    // Guard: if patient is already in arrest (hr === 0 or arrest rhythm), skip —
+    // ACLSModal is already handling this patient.
+    const arrestRhythms = ["vf", "vt_pulseless", "pea", "asystole"];
+    const alreadyInArrest =
+      vitals.hr === 0 || arrestRhythms.includes(vitals.rhythmStrip);
 
-      if (vitals.map < 25) {
-        cause = "MAP 過低，器官灌流不足導致多重器官衰竭。";
-      } else if (vitals.hr > 190 || vitals.hr < 25) {
-        cause = "致死性心律不整。";
-      } else if (pathology.includes("tamponade")) {
-        cause = "心包填塞未及時處理，心輸出量衰竭。";
-      } else if (scenarioId.includes("septic")) {
-        cause = "病人因敗血性休克惡化，多重器官衰竭。";
-      } else {
-        cause = "病人因持續出血未控制，血流動力學衰竭。";
+    if (!alreadyInArrest) {
+      // Thresholds account for +/-5% noise in patient-engine vitals
+      if (
+        severity >= 95 ||
+        vitals.map < 25 ||
+        vitals.hr > 190 ||
+        vitals.hr < 25
+      ) {
+        const scenarioId = scenario?.id ?? "";
+        const pathology = newPatient.pathology ?? "";
+        let cause: string;
+
+        if (vitals.map < 25) {
+          cause = "MAP 過低，器官灌流不足導致多重器官衰竭。";
+        } else if (vitals.hr > 190 || vitals.hr < 25) {
+          cause = "致死性心律不整。";
+        } else if (pathology.includes("tamponade")) {
+          cause = "心包填塞未及時處理，心輸出量衰竭。";
+        } else if (scenarioId.includes("septic")) {
+          cause = "病人因敗血性休克惡化，多重器官衰竭。";
+        } else {
+          cause = "病人因持續出血未控制，血流動力學衰竭。";
+        }
+
+        useProGameStore.getState().triggerCardiacArrest(cause);
       }
-
-      useProGameStore.getState().triggerDeath(cause);
     }
   }, []);
 

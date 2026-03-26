@@ -86,6 +86,12 @@ interface DebriefRequestBody {
       postOpDay: string;
       history: string;
     };
+    /** Present only for multi-phase scenarios — tells which phase the player was in at game end */
+    rescuePhase?: {
+      currentPathology: string;
+      isInitialPhase: boolean;
+      phaseLabel: string;
+    };
   };
   playerSBAR: {
     situation: string;
@@ -110,6 +116,30 @@ interface DebriefRequestBody {
 function buildSystemPrompt(body: DebriefRequestBody): string {
   const { scoreResult, scenarioMeta, patientOutcome } = body;
 
+  // Build phase-awareness section for multi-phase scenarios
+  let phaseSection = "";
+  if (scenarioMeta.rescuePhase) {
+    const { phaseLabel, isInitialPhase, currentPathology } = scenarioMeta.rescuePhase;
+    phaseSection = `
+## 重要：Multi-phase 情境的 Phase 限制
+此情境有多個 phase。玩家在 **${phaseLabel}** 結束遊戲（pathology: ${currentPathology}）。
+${isInitialPhase
+  ? `- 病人在初始階段（${phaseLabel}）就被搶救或死亡，**尚未進展至後續 phase**。
+- 病人此時的問題是「${scenarioMeta.correctDiagnosis}」，不是 cardiac tamponade。
+- 病人並未發展出 tamponade — 沒有 pericardial effusion、沒有 RV collapse、沒有 Beck triad。
+- 你的所有評論、keyMoments、feedback 都必須只討論 timeline 中實際出現的事件。
+- **絕對不要**提及以下任何內容（這些是後續 phase 才會發生的事）：
+  - POCUS 顯示 pericardial effusion 或 RV diastolic collapse
+  - Beck triad（低血壓 + JVD + muffled heart sounds 的組合）
+  - 心包填塞（cardiac tamponade）
+  - Re-sternotomy 或手術中發現血塊
+  - CT output 突然停止（如果 timeline 中沒有這個事件）
+  - 300cc 血塊壓迫心臟`
+  : `- 病人已進展至 ${phaseLabel}，從初始 pathology 轉變為 ${currentPathology}。
+- 請完整評論兩個 phase 的處置。`}
+`;
+  }
+
   return `你是一位資深心臟外科主治醫師（VS），正在 M&M conference 或 debrief session 中回顧這個 case。
 你的角色是教育住院醫師（學員），語氣專業但有教育性——像一位嚴格但關心後輩的學長。
 
@@ -121,7 +151,7 @@ function buildSystemPrompt(body: DebriefRequestBody): string {
 - 病理機轉：${scenarioMeta.pathology}
 - 結局：${patientOutcome.survived ? "存活" : `死亡（${patientOutcome.deathCause ?? "不明"}）`}
 - 得分：${scoreResult.totalScore}/100，${scoreResult.stars} 星
-
+${phaseSection}
 ## 教學重點（scenario 設計者定義）
 ${scenarioMeta.keyPoints.map((p, i) => `${i + 1}. ${p}`).join("\n")}
 
@@ -138,6 +168,7 @@ ${scenarioMeta.pitfalls.map((p, i) => `- ${p}`).join("\n")}
 7. sbarReview 基於比較 player 的 SBAR 和 example SBAR
 8. keyLessons 2-3 個核心教學點，要具體且 actionable
 9. 如果病人死亡，一定要有 criticalMoment 指出關鍵轉折點
+10. **只引用 timeline 中實際出現的事件。不要描述玩家從未經歷的事件。**
 
 ## 重要：避免內容重複
 - Guideline Compliance（各 action 是否完成的 checklist）已在另一個 section 獨立顯示

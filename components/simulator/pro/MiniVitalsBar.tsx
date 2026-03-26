@@ -1,6 +1,8 @@
 "use client";
 
+import { useMemo } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
+import { applyVitalsFog, FOG_PRESETS } from "@/lib/simulator/engine/fog-of-war";
 
 // ── Threshold helpers ────────────────────────────────────────
 
@@ -50,7 +52,16 @@ const miniVitalsPulseCSS = `
 // ── Component ────────────────────────────────────────────────
 
 export default function MiniVitalsBar() {
-  const vitals = useProGameStore((s) => s.patient?.vitals);
+  const rawVitals = useProGameStore((s) => s.patient?.vitals);
+  const fogLevel = useProGameStore((s) => s.difficultyConfig.fogLevel ?? "none");
+  const gameTime = useProGameStore((s) => s.clock.currentTime);
+
+  // Apply fog-of-war (same transform as ProVitalsPanel)
+  const fogConfig = FOG_PRESETS[fogLevel] ?? FOG_PRESETS.none;
+  const vitals = useMemo(() => {
+    if (!rawVitals) return undefined;
+    return applyVitalsFog(rawVitals, fogConfig, Math.floor(gameTime * 1000)).displayVitals;
+  }, [rawVitals, fogConfig, gameTime]);
 
   if (!vitals) return null;
 

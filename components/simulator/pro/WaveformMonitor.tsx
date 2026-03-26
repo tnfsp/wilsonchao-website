@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useCallback, memo } from "react";
+import { useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import {
   createWaveformState,
@@ -12,6 +12,7 @@ import {
   type WaveformState,
   type WaveformVitals,
 } from "@/lib/simulator/engine/waveform-synth";
+import { applyVitalsFog, FOG_PRESETS } from "@/lib/simulator/engine/fog-of-war";
 
 // ─── Config ─────────────────────────────────────────────────────────────────
 
@@ -189,8 +190,17 @@ function WaveformMonitorInner({ className = "", height = 320 }: WaveformMonitorP
   const lastTickRef = useRef<number>(0);
 
   // Read vitals from store
-  const vitals = useProGameStore((s) => s.patient?.vitals);
+  const rawVitals = useProGameStore((s) => s.patient?.vitals);
   const phase = useProGameStore((s) => s.phase);
+  const fogLevel = useProGameStore((s) => s.difficultyConfig.fogLevel ?? "none");
+  const gameTime = useProGameStore((s) => s.clock.currentTime);
+
+  // Apply fog-of-war to vitals (same transform as ProVitalsPanel)
+  const fogConfig = FOG_PRESETS[fogLevel] ?? FOG_PRESETS.none;
+  const vitals = useMemo(() => {
+    if (!rawVitals) return undefined;
+    return applyVitalsFog(rawVitals, fogConfig, Math.floor(gameTime * 1000)).displayVitals;
+  }, [rawVitals, fogConfig, gameTime]);
 
   // Convert store vitals to waveform vitals
   const getWaveformVitals = useCallback((): WaveformVitals => {

@@ -761,6 +761,18 @@ const physicalExam: Record<string, PEFinding> = {
 const debrief: DebriefData = {
   correctDiagnosis: "Cardiac tamponade \u2014 hidden tamponade following surgical bleeding with CT clot obstruction",
 
+  // Per-phase diagnosis variants for phase-aware debrief
+  phaseDiagnoses: {
+    surgical_bleeding: {
+      correctDiagnosis: "Postoperative hemorrhage requiring surgical re-exploration",
+      title: "術後出血",
+    },
+    cardiac_tamponade: {
+      correctDiagnosis: "Cardiac tamponade \u2014 hidden tamponade following surgical bleeding with CT clot obstruction",
+      title: "術後出血 \u2192 心包填塞",
+    },
+  },
+
   exampleSBAR: {
     situation: "床3的林先生，65歲男性，CABG x3 POD0。一開始 CT output 持續上升至 320cc/hr，BP 掉到 85/50。處理出血過程中，CT output 突然從 300 降到近乎零。CVP 從 7 升到 18，BP 持續惡化。",
     background: "今日 CABG x3，術後初期穩定。Phase 1 出血：CT 持續出鮮紅色有血塊，Hb 從 10.5 降至 7.1，已輸 pRBC + FFP。Phase 2 轉變：約第 20 分鐘 CT 突然不出，strip/milk 發現 clot obstruction，POCUS 顯示 large pericardial effusion with RV diastolic collapse。",

@@ -858,11 +858,28 @@ function useAIDebrief(
         },
         scenarioMeta: {
           pathology: patient?.pathology ?? scenario.pathology,
-          // Phase-aware correctDiagnosis: if multi-phase scenario and patient died
-          // before pathology changed (still in Phase 1), use initial pathology as diagnosis
-          correctDiagnosis: scenario.phasedFindings && patient?.pathology === scenario.pathology
-            ? `Surgical bleeding (post-cardiac surgery) — 病人在 Phase 1 出血階段死亡，未進展至 Phase 2`
-            : scenario.debrief.correctDiagnosis,
+          // Phase-aware correctDiagnosis: use phaseDiagnoses if available
+          correctDiagnosis: (() => {
+            const currentPathology = patient?.pathology ?? scenario.pathology;
+            const phaseDiag = scenario.debrief.phaseDiagnoses?.[currentPathology];
+            if (phaseDiag) return phaseDiag.correctDiagnosis;
+            // Fallback: old hardcoded logic for multi-phase without phaseDiagnoses
+            if (scenario.phasedFindings && currentPathology === scenario.pathology) {
+              return `Surgical bleeding (post-cardiac surgery) — 病人在初始階段死亡/被搶救，未進展至後續 phase`;
+            }
+            return scenario.debrief.correctDiagnosis;
+          })(),
+          // Tell the API which phase the player was in when the game ended
+          rescuePhase: (() => {
+            if (!scenario.phasedFindings) return undefined;
+            const currentPathology = patient?.pathology ?? scenario.pathology;
+            const isStillInitialPhase = currentPathology === scenario.pathology;
+            return {
+              currentPathology,
+              isInitialPhase: isStillInitialPhase,
+              phaseLabel: isStillInitialPhase ? "Phase 1" : "Phase 2",
+            };
+          })(),
           keyPoints: scenario.debrief.keyPoints,
           pitfalls: scenario.debrief.pitfalls,
           expectedActions: scenario.expectedActions.map((ea: ExpectedAction) => ({
@@ -1201,6 +1218,14 @@ export default function DebriefPanel() {
   const harmfulDetails = score.harmfulOrderDetails ?? [];
   const missedCriticalCount = score.criticalActions.filter((ca) => ca.critical && !ca.met).length;
 
+  // Phase-aware diagnosis title for multi-phase scenarios
+  const diagnosisTitle = (() => {
+    const currentPathology = patient?.pathology ?? scenario.pathology;
+    const phaseDiag = scenario.debrief.phaseDiagnoses?.[currentPathology];
+    if (phaseDiag) return phaseDiag.title;
+    return scenario.title;
+  })();
+
   return (
     <div className="min-h-screen overflow-y-auto" style={{ background: "#001219" }}>
       <div className="max-w-3xl mx-auto px-4 py-8 space-y-6">
@@ -1211,7 +1236,7 @@ export default function DebriefPanel() {
           {scenario.hiddenTitle && (
             <div className="mt-3">
               <div className="text-xs text-gray-600 uppercase tracking-widest mb-1">Diagnosis</div>
-              <h2 className="text-xl font-bold text-cyan-300">{scenario.title}</h2>
+              <h2 className="text-xl font-bold text-cyan-300">{diagnosisTitle}</h2>
             </div>
           )}
           <p className="text-gray-500 text-sm mt-1">

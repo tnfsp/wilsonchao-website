@@ -136,9 +136,12 @@ export function syncBioGearsToStore(bgState: BioGearsState): void {
     } : state.patient,
   }));
 
-  // 5. Death check from BioGears events (scenario-aware messages)
+  // 5. Cardiac arrest check from BioGears events (scenario-aware messages)
+  // In Pro mode: triggers ACLS flow (cardiac arrest → ACLSModal → 20-min rescue window)
+  // In Standard mode: triggerDeath handles rescue window interception
   if (bgState.patient.event_cardiac_arrest || bgState.vitals.map < 25) {
-    const scenarioId = useProGameStore.getState().scenario?.id ?? "";
+    const store = useProGameStore.getState();
+    const scenarioId = store.scenario?.id ?? "";
     const isArrest = !!bgState.patient.event_cardiac_arrest;
 
     let cause: string;
@@ -160,7 +163,13 @@ export function syncBioGearsToStore(bgState: BioGearsState): void {
         : "MAP 過低（< 25 mmHg），器官灌流不足導致多重器官衰竭。";
     }
 
-    useProGameStore.getState().triggerDeath(cause);
+    // Pro mode: go through ACLS cardiac arrest flow
+    // Standard mode: triggerDeath has rescue window interception built in
+    if (store.difficulty === "pro") {
+      store.triggerCardiacArrest(cause);
+    } else {
+      store.triggerDeath(cause);
+    }
   }
 }
 

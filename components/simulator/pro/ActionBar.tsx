@@ -2,41 +2,6 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
-import { dispatchPericardialEffusion } from "@/lib/simulator/engine/biogears-engine";
-
-// ─── CT Milking Result Dialog ─────────────────────────────────────────────────
-
-function CTMilkResultDialog({
-  finding,
-  onClose,
-}: {
-  finding: string;
-  onClose: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-[70] flex items-center justify-center bg-black/70 px-4">
-      <div
-        className="w-full max-w-sm rounded-2xl p-5 shadow-2xl border border-teal-700/40"
-        style={{ background: "#001219" }}
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <span className="text-2xl">🔧</span>
-          <h3 className="text-teal-300 font-bold text-lg">CT Milking</h3>
-        </div>
-        <div className="rounded-lg border border-teal-900/30 px-4 py-3 mb-4" style={{ backgroundColor: "#001e2e" }}>
-          <p className="text-xs text-teal-500/60 uppercase tracking-widest mb-2">Finding</p>
-          <p className="text-teal-100 text-sm leading-relaxed">{finding}</p>
-        </div>
-        <button
-          onClick={onClose}
-          className="w-full py-2 rounded-lg bg-teal-700 hover:bg-teal-600 text-white text-sm font-medium transition-colors"
-        >
-          關閉
-        </button>
-      </div>
-    </div>
-  );
-}
 
 // ─── MTP Confirm Dialog ──────────────────────────────────────────────────────
 
@@ -260,21 +225,23 @@ export default function ActionBar() {
   const openModal = useProGameStore((s) => s.openModal);
   const activateMTP = useProGameStore((s) => s.activateMTP);
   const mtpState = useProGameStore((s) => s.mtpState);
-  const updateChestTube = useProGameStore((s) => s.updateChestTube);
   const patient = useProGameStore((s) => s.patient);
   const addTimelineEntry = useProGameStore((s) => s.addTimelineEntry);
   const clock = useProGameStore((s) => s.clock);
   const phase = useProGameStore((s) => s.phase);
+  const scenario = useProGameStore((s) => s.scenario);
   const hintsUsed = useProGameStore((s) => s.hintsUsed);
   const useHint = useProGameStore((s) => s.useHint);
   const actionAdvance = useProGameStore((s) => s.actionAdvance);
-  const scenario = useProGameStore((s) => s.scenario);
 
   const [showMTPConfirm, setShowMTPConfirm] = useState(false);
-  const [ctMilkResult, setCTMilkResult] = useState<string | null>(null);
   const [activePopover, setActivePopover] = useState<"treatment" | null>(null);
 
   const isPlaying = phase === "playing";
+
+  // Multi-phase scenario: Phase 2 = pathology has changed from original
+  const isMultiPhase = !!scenario?.phasedFindings;
+  const isPhase2 = isMultiPhase && patient?.pathology !== scenario?.pathology;
 
   // Show prominent MTP button for hemorrhage-related pathologies
   const showMTPButton = isPlaying && !mtpState.activated && (
@@ -282,11 +249,19 @@ export default function ActionBar() {
     patient?.pathology === "coagulopathy"
   );
 
-  // 通報交班: 所有 phase 都開 SBAR，但 Phase 1 提交後不結束遊戲
+  // 通報交班 / 叫人
+  // Phase 1 或單 phase → 記錄 call_senior + 開 SBAR modal
+  // Phase 2（multi-phase 且 pathology 已轉換）→ 開 consult modal（叫學長回來 / SBAR 交班）
   const handleCallAndSBAR = () => {
     if (!isPlaying) return;
 
-    // Record call_senior action
+    if (isPhase2) {
+      // Phase 2: 開 consult modal，讓玩家選擇叫學長回來或做 SBAR 交班
+      openModal("consult");
+      return;
+    }
+
+    // Phase 1 / 單 phase: 記錄 call_senior + 開 SBAR modal
     useProGameStore.setState((state) => ({
       playerActions: [
         ...state.playerActions,
@@ -302,115 +277,10 @@ export default function ActionBar() {
       isImportant: true,
     });
 
-    // 開 SBAR modal（Phase 1 = 給學長的報告；Phase 2 = 最終交班）
     openModal("sbar");
   };
 
-  const handleMilkCT = () => {
-    if (!patient || !isPlaying) return;
-    const ct = patient.chestTube;
-
-    let finding: string;
-
-    const nurseName = scenario?.nurseProfile?.name ?? "護理師";
-
-    if (ct.isPatent) {
-      finding = "\u80f8\u7ba1\u901a\u66a2\uff0c\u5f15\u6d41\u6b63\u5e38\uff0c\u7121\u8840\u584a\u3002\u4e0d\u9700\u8981\u8655\u7406\u3002";
-      addTimelineEntry({
-        gameTime: clock.currentTime,
-        type: "player_action",
-        content: "\ud83d\udd27 Milk CT \u2014 \u80f8\u7ba1\u901a\u66a2",
-        sender: "player",
-      });
-      addTimelineEntry({
-        gameTime: clock.currentTime,
-        type: "nurse_message",
-        content: `${nurseName}：胸管看起來通暢，引流正常，不需要處理。`,
-        sender: "nurse",
-      });
-      setCTMilkResult(finding);
-      return;
-    }
-
-    if (ct.hasClots) {
-      // Tamponade: 管路可以通但引流量不會恢復（血在心包腔凝固，不是單純管路阻塞）
-      const isTamponade = patient.pathology === "cardiac_tamponade" || patient.pathology === "tamponade";
-      if (isTamponade) {
-        // Tamponade: milk 後管路感覺有通，但沒有血塊出來，引流量也沒恢復
-        updateChestTube({ isPatent: true, currentRate: Math.max(ct.currentRate, 10), totalOutput: ct.totalOutput + 5 });
-        // Milk CT 暫時緩解：部分恢復引流，降低心包壓力
-        // 效果：severity -8，但 tamponade 的 base rate (2.5/min) 會很快追回來
-        useProGameStore.getState().updatePatientSeverity(
-          Math.max(0, (patient.severity ?? 0) - 8)
-        );
-        // T12: Dispatch to BioGears — temporarily reduce effusion rate by 20-30%
-        // Milk effect: reduce for ~3 sim-minutes, then restore
-        dispatchPericardialEffusion(10); // reduce from ~15 to 10 mL/min
-        setTimeout(() => dispatchPericardialEffusion(15), 3 * 60 * 1000); // restore after 3 min
-        finding = "用力 milk 了好幾次，管路感覺有通，但沒有擠出血塊。引流量幾乎沒有增加——管路本身好像不是問題⋯⋯那血去哪了？";
-        addTimelineEntry({
-          gameTime: clock.currentTime,
-          type: "player_action",
-          content: "🔧 Milk CT — 管路通了但無血塊排出，引流量未恢復。管路不是問題？",
-          sender: "player",
-          isImportant: true,
-        });
-        addTimelineEntry({
-          gameTime: clock.currentTime,
-          type: "nurse_message",
-          content: `${nurseName}：醫師，我 milk 了好幾次，管路好像有通，但引流量幾乎沒增加⋯⋯心包壓力暫時有稍微下降。`,
-          sender: "nurse",
-          isImportant: true,
-        });
-      } else {
-        updateChestTube({ isPatent: true, totalOutput: ct.totalOutput + 50 });
-        // 成功擠出血塊，恢復引流 → severity -5
-        useProGameStore.getState().updatePatientSeverity(
-          Math.max(0, (patient.severity ?? 0) - 5)
-        );
-        finding = "擠出數個血塊，引流恢復通暢。Burst output +50cc，引流液為鮮紅色。";
-        addTimelineEntry({
-          gameTime: clock.currentTime,
-          type: "player_action",
-          content: "🔧 Milk CT — 擠出血塊，引流恢復",
-          sender: "player",
-          isImportant: true,
-        });
-        addTimelineEntry({
-          gameTime: clock.currentTime,
-          type: "nurse_message",
-          content: `${nurseName}：胸管 milk 完，擠出血塊了！引流恢復通暢，burst output +50cc。Severity 有改善。`,
-          sender: "nurse",
-          isImportant: true,
-        });
-      }
-    } else {
-      updateChestTube({ isPatent: true });
-      finding = "管路恢復通暢，但未擠出明顯血塊。引流量不多，阻塞原因可能非血塊。";
-      addTimelineEntry({
-        gameTime: clock.currentTime,
-        type: "player_action",
-        content: "🔧 Milk CT — 管路通暢，無血塊",
-        sender: "player",
-        isImportant: false,
-      });
-      addTimelineEntry({
-        gameTime: clock.currentTime,
-        type: "nurse_message",
-        content: `${nurseName}：胸管 milk 完了，管路通暢但沒有明顯血塊排出，引流量沒太大變化。`,
-        sender: "nurse",
-      });
-    }
-
-    setCTMilkResult(finding);
-
-    useProGameStore.setState((state) => ({
-      playerActions: [...state.playerActions, { action: "procedure:chest_tube_milk", gameTime: clock.currentTime, category: "procedure" }],
-    }));
-    actionAdvance(1);
-  };
-
-  // Treatment popover items
+  // Treatment popover items (orders only — CT milking moved to ChestTubePanel)
   const treatmentItems: PopoverItem[] = [
     { icon: "\ud83d\udc8a", label: "\u958b\u85e5", onClick: () => openModal("order") },
     { icon: "\ud83e\ude78", label: "\u8f38\u8840", onClick: () => openModal("order") },
@@ -422,18 +292,11 @@ export default function ActionBar() {
       disabledReason: "\u5927\u91cf\u8f38\u8840 Protocol \u5df2\u555f\u52d5\u4e2d",
       variant: "danger",
     },
-    { icon: "\ud83d\udd27", label: "CT Milking", onClick: handleMilkCT },
     { icon: "\ud83c\udf2c\ufe0f", label: "\u547c\u5438\u5668", onClick: () => { sessionStorage.setItem("sim-order-tab", "ventilator"); openModal("order"); } },
   ];
 
   return (
     <>
-      {ctMilkResult && (
-        <CTMilkResultDialog
-          finding={ctMilkResult}
-          onClose={() => setCTMilkResult(null)}
-        />
-      )}
       {showMTPConfirm && (
         <MTPConfirmDialog
           onConfirm={() => { activateMTP(); setShowMTPConfirm(false); }}

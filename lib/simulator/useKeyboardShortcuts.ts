@@ -52,24 +52,32 @@ export function useKeyboardShortcuts() {
           e.preventDefault();
           state.openModal("order");
           break;
-        case "4":
+        case "4": {
           e.preventDefault();
-          // 通報交班: track call_senior + open SBAR
-          useProGameStore.setState((s) => ({
-            playerActions: [
-              ...s.playerActions,
-              { action: "call_senior", gameTime: s.clock.currentTime, category: "consult" },
-            ],
-          }));
-          state.addTimelineEntry({
-            gameTime: state.clock.currentTime,
-            type: "player_action",
-            content: "📞 你打電話通知學長，準備 SBAR 交班",
-            sender: "player",
-            isImportant: true,
-          });
-          state.openModal("sbar");
+          // Multi-phase Phase 2: open consult modal (recall senior / SBAR handoff)
+          const isMultiPhase = !!state.scenario?.phasedFindings;
+          const isPhase2 = isMultiPhase && state.patient?.pathology !== state.scenario?.pathology;
+          if (isPhase2) {
+            state.openModal("consult");
+          } else {
+            // Phase 1 / single phase: track call_senior + open SBAR
+            useProGameStore.setState((s) => ({
+              playerActions: [
+                ...s.playerActions,
+                { action: "call_senior", gameTime: s.clock.currentTime, category: "consult" },
+              ],
+            }));
+            state.addTimelineEntry({
+              gameTime: state.clock.currentTime,
+              type: "player_action",
+              content: "📞 你打電話通知學長，準備 SBAR 交班",
+              sender: "player",
+              isImportant: true,
+            });
+            state.openModal("sbar");
+          }
           break;
+        }
         case "5":
           e.preventDefault();
           state.openModal("defibrillator");
