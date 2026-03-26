@@ -10,9 +10,20 @@ export const metadata = {
   alternates: { canonical: `${BASE_URL}/about` },
 };
 
+/* ── Core links shown in hero ── */
+const CORE_LABELS = [
+  "📸 Instagram｜追蹤生活更新",
+  "📨 Telegram｜即時通知",
+  "📰 RSS｜訂閱文章",
+];
+
 export default async function AboutPage() {
   const copy = await loadSiteCopy();
   const bodyHtml = copy.aboutBody ? await marked.parse(copy.aboutBody, { breaks: true }) : "";
+
+  const allLinks = linkItems.filter((item) => item.href !== "/about");
+  const coreLinks = allLinks.filter((item) => CORE_LABELS.includes(item.label));
+  const secondaryLinks = allLinks.filter((item) => !CORE_LABELS.includes(item.label));
 
   const personJsonLd = {
     "@context": "https://schema.org",
@@ -72,7 +83,7 @@ export default async function AboutPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
       />
       <main className="page-shell">
-        {/* Hero: Avatar + Name + Intro */}
+        {/* Hero: Avatar + Name + Intro + Core Links */}
         <header className="pb-8">
           <span className="section-title">About</span>
           <div className="mt-4 flex items-center gap-5 sm:gap-6">
@@ -98,6 +109,21 @@ export default async function AboutPage() {
               ) : null}
             </div>
           </div>
+
+          {/* Core CTA — IG, Telegram, RSS */}
+          <div className="mt-5 flex flex-wrap gap-2.5">
+            {coreLinks.map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--foreground)] shadow-[0_8px_24px_rgba(0,18,25,0.04)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                target={item.external ? "_blank" : undefined}
+                rel={item.external ? "noreferrer" : undefined}
+              >
+                {item.label}
+              </Link>
+            ))}
+          </div>
         </header>
 
         {/* Professional Card — AEO: 給 AI 引擎抽取事實用 */}
@@ -113,30 +139,25 @@ export default async function AboutPage() {
           dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml) }}
         />
 
-        {/* 找到我 + Now */}
-        <section className="mt-12 pt-8 border-t border-[var(--border)]">
-          <h2 className="text-xl font-semibold inline-block bg-[var(--highlight)] px-2 py-0.5 rounded text-[var(--foreground)] mb-4">
-            找到我
-          </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 max-w-lg">
-            {linkItems
-              .filter((item) => item.href !== "/about")
-              .map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2.5 text-center text-sm text-[var(--foreground)] shadow-[0_8px_24px_rgba(0,18,25,0.04)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
-                  target={item.external ? "_blank" : undefined}
-                  rel={item.external ? "noreferrer" : undefined}
-                >
-                  {item.label}
-                </Link>
-              ))}
-          </div>
-          <p className="mt-8 text-sm text-[var(--muted)]">
+        {/* Footer CTA — lightweight */}
+        <footer className="mt-12 pt-8 border-t border-[var(--border)]">
+          <p className="text-sm text-[var(--muted)]">
             感謝你逛到這裡，交個朋友吧！
           </p>
-        </section>
+          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-sm">
+            {[...coreLinks, ...secondaryLinks].map((item) => (
+              <Link
+                key={item.label}
+                href={item.href}
+                className="text-[var(--muted)] underline underline-offset-[3px] decoration-[var(--border)] transition-colors hover:text-[var(--accent)]"
+                target={item.external ? "_blank" : undefined}
+                rel={item.external ? "noreferrer" : undefined}
+              >
+                {item.label.replace(/^.+?｜/, "")}
+              </Link>
+            ))}
+          </div>
+        </footer>
       </main>
 
       {/* Scoped prose styles for about body */}
