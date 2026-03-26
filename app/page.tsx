@@ -107,11 +107,31 @@ export default async function Home() {
                 priority
               />
             </div>
-            <div>
+            <div className="min-w-0 flex-1">
               <h1 className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">
                 嗨，我是玴祥
               </h1>
               <p className="text-sm text-[var(--muted)]">心臟外科醫師 · 對世界好奇的人</p>
+            </div>
+            {/* Social Icons */}
+            <div className="shrink-0 flex items-center gap-2">
+              {[
+                { label: "Instagram", href: "https://www.instagram.com/momobear_doctor", ext: true, d: <><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="5" /><circle cx="17.5" cy="6.5" r="1.25" fill="currentColor" stroke="none" /></> },
+                { label: "Telegram", href: "https://t.me/doctormomo", ext: true, d: <><path d="M22 2L11 13" /><path d="M22 2L15 22L11 13L2 9L22 2Z" /></> },
+                { label: "RSS", href: "/feed", ext: false, d: <><path d="M4 11a9 9 0 0 1 9 9" /><path d="M4 4a16 16 0 0 1 16 16" /><circle cx="5" cy="19" r="1.5" fill="currentColor" stroke="none" /></> },
+                { label: "Email", href: "mailto:aa2670095@gmail.com", ext: true, d: <><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></> },
+              ].map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  title={s.label}
+                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--surface)]"
+                  target={s.ext ? "_blank" : undefined}
+                  rel={s.ext ? "noreferrer" : undefined}
+                >
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">{s.d}</svg>
+                </a>
+              ))}
             </div>
           </div>
 
@@ -121,28 +141,6 @@ export default async function Home() {
               <p key={index}>{paragraph}</p>
             ))}
             <RandomTagline />
-          </div>
-
-          {/* Social badges */}
-          <div className="flex flex-wrap gap-2">
-            <a
-              href="https://www.instagram.com/momobear_doctor"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--foreground)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><rect width="20" height="20" x="2" y="2" rx="5" ry="5"/><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"/><line x1="17.5" x2="17.51" y1="6.5" y2="6.5"/></svg>
-              Instagram
-            </a>
-            <a
-              href="https://t.me/doctormomo"
-              target="_blank"
-              rel="noreferrer"
-              className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface)] px-3 py-1.5 text-sm text-[var(--foreground)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
-            >
-              <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="m22 2-7 20-4-9-9-4Z"/><path d="M22 2 11 13"/></svg>
-              Telegram
-            </a>
           </div>
 
           {/* Navigation pills */}
@@ -248,32 +246,30 @@ export default async function Home() {
 
         {/* Footer */}
         <footer className="border-t border-[var(--border)] pt-6 text-sm text-[var(--muted)]">
-          {siteCopy.footerText}
-          <div className="pt-3 flex items-center gap-4">
+          <div className="flex items-center justify-between">
+            <span>{siteCopy.footerText}</span>
+            <div className="flex items-center gap-1">
+              {[
+                { label: "Instagram", href: "https://www.instagram.com/momobear_doctor", ext: true, d: <><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="5" /><circle cx="17.5" cy="6.5" r="1.25" fill="currentColor" stroke="none" /></> },
+                { label: "Telegram", href: "https://t.me/doctormomo", ext: true, d: <><path d="M22 2L11 13" /><path d="M22 2L15 22L11 13L2 9L22 2Z" /></> },
+                { label: "RSS", href: "/feed", ext: false, d: <><path d="M4 11a9 9 0 0 1 9 9" /><path d="M4 4a16 16 0 0 1 16 16" /><circle cx="5" cy="19" r="1.5" fill="currentColor" stroke="none" /></> },
+                { label: "Email", href: "mailto:aa2670095@gmail.com", ext: true, d: <><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></> },
+              ].map((s) => (
+                <a
+                  key={s.label}
+                  href={s.href}
+                  title={s.label}
+                  className="flex h-8 w-8 items-center justify-center rounded-full text-[var(--muted)] transition-all duration-200 hover:text-[var(--accent)]"
+                  target={s.ext ? "_blank" : undefined}
+                  rel={s.ext ? "noreferrer" : undefined}
+                >
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">{s.d}</svg>
+                </a>
+              ))}
+            </div>
+          </div>
+          <div className="pt-2">
             <ViewStats slug="home" />
-            <Link
-              href="/feed"
-              className="flex items-center gap-1 text-[var(--muted)] transition-colors hover:text-[var(--accent)]"
-              title="RSS Feeds"
-              aria-label="RSS Feeds"
-            >
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                width="14"
-                height="14"
-                viewBox="0 0 24 24"
-                fill="none"
-                stroke="currentColor"
-                strokeWidth="2"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              >
-                <path d="M4 11a9 9 0 0 1 9 9" />
-                <path d="M4 4a16 16 0 0 1 16 16" />
-                <circle cx="5" cy="19" r="1" />
-              </svg>
-              RSS
-            </Link>
           </div>
         </footer>
       </main>
