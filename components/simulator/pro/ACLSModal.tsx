@@ -146,6 +146,15 @@ export default function ACLSModal() {
   const deliverShock = useProGameStore((s) => s.deliverShock);
   const addTimelineEntry = useProGameStore((s) => s.addTimelineEntry);
   const scenario = useProGameStore((s) => s.scenario);
+  const firedEvents = useProGameStore((s) => s.firedEvents);
+  const pendingEvents = useProGameStore((s) => s.pendingEvents);
+
+  // ── Derived: is this a tamponade scenario? ──
+  const isTamponade =
+    scenario?.pathology === "cardiac_tamponade" ||
+    scenario?.pathology === "tamponade" ||
+    patient?.pathology === "cardiac_tamponade" ||
+    patient?.pathology === "tamponade";
 
   // ── ACLS internal state ──
   const [aclsPhase, setAclsPhase] = useState<ACLSPhase>("arrest_detected");
@@ -177,6 +186,11 @@ export default function ACLSModal() {
   const [hasAchievedRosc, setHasAchievedRosc] = useState(false); // whether ROSC was ever achieved
   const [show15MinWarning, setShow15MinWarning] = useState(false); // 15-minute approaching warning
   const [previousRhythm, setPreviousRhythm] = useState<RhythmType | null>(null); // for rhythm transition detection
+
+  // ── Senior arrival resternotomy tracking (tamponade only) ──
+  const [seniorResternotomyCountdown, setSeniorResternotomyCountdown] = useState<number | null>(null); // seconds remaining until ROSC
+  const [seniorArrivalHandled, setSeniorArrivalHandled] = useState(false); // prevent re-triggering
+  const resternotomyTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const timelineRef = useRef<HTMLDivElement>(null);
   const eventIdRef = useRef(0);
@@ -378,6 +392,114 @@ export default function ACLSModal() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patient?.vitals.rhythmStrip]);
+
+  // ── Senior arrival detection (tamponade resternotomy mechanic) ──
+  // Derive senior status from store events
+  const seniorHasArrived = firedEvents.some((e) => e.type === "senior_arrives");
+  const seniorEnRoute = pendingEvents.some((e) => e.type === "senior_arrives" && !e.fired);
+  // Compute ETA for senior en route (game-minutes remaining)
+  const seniorEtaMinutes = seniorEnRoute
+    ? Math.max(
+        0,
+        Math.ceil(
+          (pendingEvents.find((e) => e.type === "senior_arrives" && !e.fired)?.triggerAt ?? clock.currentTime) -
+            clock.currentTime
+        )
+      )
+    : 0;
+
+  useEffect(() => {
+    if (!isVisible || !isTamponade || seniorArrivalHandled) return;
+    if (aclsPhase === "rosc" || aclsPhase === "death") return;
+
+    if (seniorHasArrived) {
+      // Senior just arrived (or was already present) during active arrest
+      setSeniorArrivalHandled(true);
+      setSeniorResternotomyCountdown(120); // 2 minutes = 120 seconds
+
+      // Add timeline events
+      const id1 = ++eventIdRef.current;
+      setAclsTimeline((prev) => [
+        ...prev,
+        {
+          id: id1,
+          timestamp: elapsedSeconds,
+          text: "學長已到達 — 評估後決定 emergent resternotomy",
+          type: "system" as const,
+        },
+      ]);
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "system_event",
+        content: "學長到達，評估後決定 emergent resternotomy。正在準備中...",
+        sender: "senior",
+        isImportant: true,
+      });
+
+      // Start 120-second countdown
+      resternotomyTimerRef.current = setInterval(() => {
+        setSeniorResternotomyCountdown((prev) => {
+          if (prev === null || prev <= 1) {
+            // Timer done — clear interval and trigger ROSC
+            if (resternotomyTimerRef.current) {
+              clearInterval(resternotomyTimerRef.current);
+              resternotomyTimerRef.current = null;
+            }
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+
+    return () => {
+      if (resternotomyTimerRef.current) {
+        clearInterval(resternotomyTimerRef.current);
+        resternotomyTimerRef.current = null;
+      }
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVisible, seniorHasArrived, isTamponade, seniorArrivalHandled, aclsPhase]);
+
+  // ── Trigger ROSC when resternotomy countdown reaches 0 ──
+  useEffect(() => {
+    if (seniorResternotomyCountdown === 0 && seniorArrivalHandled && aclsPhase !== "rosc" && aclsPhase !== "death") {
+      // Resternotomy complete — ROSC
+      const id1 = ++eventIdRef.current;
+      setAclsTimeline((prev) => [
+        ...prev,
+        {
+          id: id1,
+          timestamp: elapsedSeconds,
+          text: "Resternotomy 完成 — tamponade relieved, ROSC achieved",
+          type: "rosc" as const,
+        },
+      ]);
+
+      // Use the same ROSC flow
+      setAclsPhase("rosc");
+      setCprActive(false);
+      setHasAchievedRosc(true);
+      dispatchStopCpr();
+      dispatchCardiacArrest(false);
+
+      const arrestInfo = arrestCount > 1 ? ` (arrest episode #${arrestCount})` : "";
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "system_event",
+        content: `ROSC achieved - 學長完成 resternotomy，tamponade relieved. Total arrest time: ${formatTime(elapsedSeconds)}${arrestInfo}`,
+        sender: "system",
+        isImportant: true,
+      });
+
+      // Auto-dismiss after 3 seconds
+      roscDismissTimerRef.current = setTimeout(() => {
+        setIsVisible(false);
+        roscDismissTimerRef.current = null;
+      }, 3000);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [seniorResternotomyCountdown, seniorArrivalHandled, aclsPhase]);
 
   // ── Event helpers ──
   const addEvent = useCallback(
@@ -639,18 +761,6 @@ export default function ACLSModal() {
     });
   };
 
-  const handleResternotomy = () => {
-    addEvent("EMERGENCY RESTERNOTOMY performed!", "system");
-    addTimelineEntry({
-      gameTime: clock.currentTime,
-      type: "player_action",
-      content: "ACLS: Emergency Resternotomy - definitive tamponade treatment",
-      sender: "player",
-      isImportant: true,
-    });
-    handleRosc("Resternotomy - tamponade relieved");
-  };
-
   const handleRosc = (method: string) => {
     setAclsPhase("rosc");
     setCprActive(false);
@@ -728,11 +838,6 @@ export default function ACLSModal() {
     lastEpiTime !== null ? Math.max(0, EPI_MIN_INTERVAL_SECONDS - (elapsedSeconds - lastEpiTime)) : 0;
   const amiodaroneMaxReached = amiodarone300Given && amiodarone150Given;
   const isInActiveArrest = aclsPhase !== "rosc" && aclsPhase !== "death";
-  const isTamponade =
-    scenario?.pathology === "cardiac_tamponade" ||
-    scenario?.pathology === "tamponade" ||
-    patient?.pathology === "cardiac_tamponade" ||
-    patient?.pathology === "tamponade";
 
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-md">
@@ -843,6 +948,27 @@ export default function ACLSModal() {
             </p>
             <p className="text-orange-400/70 text-xs md:text-sm mt-1">
               Patient lost pulse after ROSC. Resume ACLS immediately. Drug history preserved.
+            </p>
+          </div>
+        )}
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            Senior Arrival / Resternotomy Banner (tamponade only)
+            ═══════════════════════════════════════════════════════════════════ */}
+        {isTamponade && isInActiveArrest && seniorResternotomyCountdown !== null && seniorResternotomyCountdown > 0 && (
+          <div className="flex-shrink-0 px-3 py-3 md:px-6 md:py-4 bg-cyan-950/50 border-b border-cyan-700/50 text-center">
+            <p className="text-cyan-300 text-base md:text-lg font-bold tracking-wide">
+              學長已到達！正在準備 emergent resternotomy...
+            </p>
+            <p className="text-cyan-400/70 text-xs md:text-sm mt-1">
+              準備中... {formatTime(seniorResternotomyCountdown)} — 繼續 CPR
+            </p>
+          </div>
+        )}
+        {isTamponade && isInActiveArrest && seniorEnRoute && !seniorHasArrived && (
+          <div className="flex-shrink-0 px-3 py-2 md:px-6 md:py-3 bg-zinc-900/50 border-b border-zinc-700/50 text-center">
+            <p className="text-zinc-300 text-sm font-semibold">
+              學長在路上（預計 {seniorEtaMinutes} 分鐘）— 繼續 ACLS
             </p>
           </div>
         )}
@@ -1144,21 +1270,6 @@ export default function ACLSModal() {
                 ) : null}
               </button>
             </div>
-
-            {/* Emergency Resternotomy (only for tamponade) */}
-            {isTamponade && (
-              <button
-                onClick={handleResternotomy}
-                disabled={aclsPhase === "rosc"}
-                className={`w-full min-h-[44px] py-3 rounded-xl text-sm font-bold transition-all ${
-                  aclsPhase === "rosc"
-                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                    : "bg-orange-800 hover:bg-orange-700 text-orange-100 border border-orange-600/50 shadow-lg shadow-orange-900/30"
-                }`}
-              >
-                Emergency Resternotomy
-              </button>
-            )}
 
             {/* Reversible Causes (H's and T's) */}
             <div className="rounded-xl border border-zinc-700/50 bg-black/30 overflow-hidden">

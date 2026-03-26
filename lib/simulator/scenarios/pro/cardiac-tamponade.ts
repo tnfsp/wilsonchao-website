@@ -99,7 +99,7 @@ const events: ScriptedEvent[] = [
       hasClots: true,
       isPatent: true, // 還沒完全堵
     },
-    severityChange: 15,
+    severityChange: 5,
   },
 
   // ── 07:00 ── CVP 悄悄爬上來（分開報，讓學員自己串線索）
@@ -109,7 +109,7 @@ const events: ScriptedEvent[] = [
     type: "nurse_call",
     message:
       "醫師，跟你報一下，CVP 現在 {{cvp}}，比剛剛高了一些。血壓 {{sbp}}/{{dbp}}，接下來要怎麼處理？",
-    severityChange: 5,
+    severityChange: 3,
   },
 
   // ── 10:00 ── CT output 幾乎沒了。Beck triad 開始形成
@@ -125,7 +125,7 @@ const events: ScriptedEvent[] = [
       hasClots: true,
       isPatent: false, // clot obstruction
     },
-    severityChange: 25,
+    severityChange: 5,
   },
 
   // ── 12:00 ── 沒有通 CT 的話，護理師提醒（條件觸發）
@@ -151,7 +151,7 @@ const events: ScriptedEvent[] = [
       hasClots: true,
       isPatent: false,
     },
-    severityChange: 20,
+    severityChange: 5,
   },
 
   // ── 15:00 ── 沒叫學長 → 護理師只報數字，不建議行動
@@ -191,7 +191,7 @@ const events: ScriptedEvent[] = [
     type: "escalation",
     message:
       "⚠️ PEA arrest！心跳從 {{hr}} 突然掉 → asystole。Tamponade 導致心臟完全無法舒張充盈。→ 情境結束，進入 Debrief。",
-    severityChange: 100,
+    severityChange: 50,
   },
 ];
 

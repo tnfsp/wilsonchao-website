@@ -197,14 +197,15 @@ function InfoRow({
 
 // ─── Engine Mode ─────────────────────────────────────────────────────────────
 
-/** BioGears engine mode. Currently opt-in (?engine=biogears) until order dispatch wiring is complete.
- *  TODO: Switch to default-on once dispatchOrderToBioGears is wired into store pipeline. */
+/** BioGears is the default engine for Pro mode.
+ *  Falls back to formula engine if BioGears server is unreachable.
+ *  Use ?engine=formula to explicitly use formula mode (testing). */
 function useBioGearsMode(): boolean {
-  const [enabled, setEnabled] = useState(false);
+  const [enabled, setEnabled] = useState(true);  // default ON
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
-      setEnabled(params.get("engine") === "biogears");
+      if (params.get("engine") === "formula") setEnabled(false);  // opt-OUT
     }
   }, []);
   return enabled;

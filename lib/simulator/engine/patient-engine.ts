@@ -82,7 +82,7 @@ export function computeSeverityDelta(
     vasoplegia: 0.3,
     tension_pneumothorax: 0.8,
     postop_af: 0.1,
-    cardiac_tamponade: 5.0,   // 獨立 tamponade scenario — 同上
+    cardiac_tamponade: 2.5,   // 獨立 tamponade scenario — arrest ~min 18-20
     septic_shock: 0.35,
   };
 
