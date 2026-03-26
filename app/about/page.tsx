@@ -10,7 +10,94 @@ export const metadata = {
   alternates: { canonical: `${BASE_URL}/about` },
 };
 
-/* ── Core links shown in hero ── */
+/* ── Core social links (hero icons) ── */
+const SOCIAL_ICONS = [
+  {
+    label: "Instagram",
+    href: "https://www.instagram.com/momobear_doctor",
+    external: true,
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="2" y="2" width="20" height="20" rx="5" />
+        <circle cx="12" cy="12" r="5" />
+        <circle cx="17.5" cy="6.5" r="1.25" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+  {
+    label: "Telegram",
+    href: "https://t.me/doctormomo",
+    external: true,
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M22 2L11 13" />
+        <path d="M22 2L15 22L11 13L2 9L22 2Z" />
+      </svg>
+    ),
+  },
+  {
+    label: "RSS",
+    href: "/feed",
+    external: false,
+    icon: (
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 11a9 9 0 0 1 9 9" />
+        <path d="M4 4a16 16 0 0 1 16 16" />
+        <circle cx="5" cy="19" r="1.5" fill="currentColor" stroke="none" />
+      </svg>
+    ),
+  },
+];
+
+/* ── Footer links with icons ── */
+const FOOTER_LINKS = [
+  {
+    label: "Now",
+    href: "/now",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <circle cx="12" cy="12" r="10" />
+        <polyline points="12 6 12 12 16 14" />
+      </svg>
+    ),
+  },
+  {
+    label: "Stream",
+    href: "/stream",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20" />
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z" />
+      </svg>
+    ),
+  },
+  {
+    label: "Blogroll",
+    href: "/blogroll",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <line x1="8" y1="6" x2="21" y2="6" />
+        <line x1="8" y1="12" x2="21" y2="12" />
+        <line x1="8" y1="18" x2="21" y2="18" />
+        <line x1="3" y1="6" x2="3.01" y2="6" />
+        <line x1="3" y1="12" x2="3.01" y2="12" />
+        <line x1="3" y1="18" x2="3.01" y2="18" />
+      </svg>
+    ),
+  },
+  {
+    label: "Website",
+    href: "/",
+    icon: (
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z" />
+        <polyline points="9 22 9 12 15 12 15 22" />
+      </svg>
+    ),
+  },
+];
+
+/* ── Core labels for filtering (kept for data compat) ── */
 const CORE_LABELS = [
   "📸 Instagram｜追蹤生活更新",
   "📨 Telegram｜即時通知",
@@ -110,17 +197,18 @@ export default async function AboutPage() {
             </div>
           </div>
 
-          {/* Core CTA — IG, Telegram, RSS */}
-          <div className="mt-5 flex flex-wrap gap-2.5">
-            {coreLinks.map((item) => (
+          {/* Social Icons — IG, Telegram, RSS */}
+          <div className="mt-5 flex items-center gap-3">
+            {SOCIAL_ICONS.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="rounded-full border border-[var(--border)] bg-[var(--surface)] px-4 py-2 text-sm text-[var(--foreground)] shadow-[0_8px_24px_rgba(0,18,25,0.04)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent)]"
+                title={item.label}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--surface)]"
                 target={item.external ? "_blank" : undefined}
                 rel={item.external ? "noreferrer" : undefined}
               >
-                {item.label}
+                {item.icon}
               </Link>
             ))}
           </div>
@@ -139,21 +227,36 @@ export default async function AboutPage() {
           dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml) }}
         />
 
-        {/* Footer CTA — lightweight */}
-        <footer className="mt-12 pt-8 border-t border-[var(--border)]">
-          <p className="text-sm text-[var(--muted)]">
-            感謝你逛到這裡，交個朋友吧！
-          </p>
-          <div className="mt-3 flex flex-wrap gap-x-4 gap-y-1.5 text-sm">
-            {[...coreLinks, ...secondaryLinks].map((item) => (
+        {/* Footer — minimal */}
+        <footer className="mt-16 pt-8 border-t border-[var(--border)]">
+          <div className="flex items-center justify-between">
+            <p className="text-sm text-[var(--muted)]">
+              交個朋友吧
+            </p>
+            <div className="flex items-center gap-1">
+              {SOCIAL_ICONS.map((item) => (
+                <Link
+                  key={item.label}
+                  href={item.href}
+                  title={item.label}
+                  className="flex h-8 w-8 items-center justify-center rounded-lg text-[var(--muted)] transition-colors duration-200 hover:text-[var(--accent)]"
+                  target={item.external ? "_blank" : undefined}
+                  rel={item.external ? "noreferrer" : undefined}
+                >
+                  {item.icon}
+                </Link>
+              ))}
+            </div>
+          </div>
+          <div className="mt-4 flex flex-wrap items-center gap-x-5 gap-y-2">
+            {FOOTER_LINKS.map((item) => (
               <Link
                 key={item.label}
                 href={item.href}
-                className="text-[var(--muted)] underline underline-offset-[3px] decoration-[var(--border)] transition-colors hover:text-[var(--accent)]"
-                target={item.external ? "_blank" : undefined}
-                rel={item.external ? "noreferrer" : undefined}
+                className="flex items-center gap-1.5 text-[13px] text-[var(--muted)] transition-colors duration-200 hover:text-[var(--accent)]"
               >
-                {item.label.replace(/^.+?｜/, "")}
+                {item.icon}
+                <span>{item.label}</span>
               </Link>
             ))}
           </div>
