@@ -19,6 +19,7 @@ import type {
   HarmfulOrderDef,
   ScoreBreakdown,
   DiagnosticCategory,
+  Pathology,
 } from "../types";
 
 // ============================================================
@@ -315,6 +316,45 @@ function evaluateDiagnosticWorkup(
 }
 
 // ============================================================
+// Helpers — Phase-Aware Correct Diagnosis
+// ============================================================
+
+/**
+ * For multi-phase scenarios (e.g. bleeding → tamponade), determine the
+ * correct diagnosis based on where the patient actually is.
+ *
+ * - If patient is still in Phase 1 (pathology hasn't changed from initial),
+ *   the correct diagnosis is the initial pathology (e.g. "surgical bleeding"),
+ *   NOT the final debrief diagnosis (e.g. "cardiac tamponade").
+ * - If patient progressed to Phase 2+, use the debrief correctDiagnosis.
+ */
+function getPhaseAwareCorrectDiagnosis(
+  scenario: SimScenario,
+  currentPathology?: Pathology,
+): string {
+  // Single-phase scenario or no pathology info → use debrief as-is
+  if (!scenario.phasedFindings || !currentPathology) {
+    return scenario.debrief.correctDiagnosis;
+  }
+
+  // Multi-phase: if pathology hasn't changed from the initial scenario pathology,
+  // the patient is still in Phase 1
+  if (currentPathology === scenario.pathology) {
+    // Map known initial pathologies to human-readable diagnosis strings
+    const initialPathologyDiagnosis: Partial<Record<Pathology, string>> = {
+      surgical_bleeding: "Surgical bleeding — post-cardiac surgery hemorrhagic shock",
+      coagulopathy: "Coagulopathy — post-cardiac surgery bleeding",
+      septic_shock: "Septic shock",
+    };
+    return initialPathologyDiagnosis[scenario.pathology]
+      ?? scenario.pathology.replace(/_/g, " ");
+  }
+
+  // Patient progressed to Phase 2+ → use the final debrief correctDiagnosis
+  return scenario.debrief.correctDiagnosis;
+}
+
+// ============================================================
 // Helpers — Diagnosis Check
 // ============================================================
 
@@ -323,8 +363,9 @@ function evaluateCorrectDiagnosis(
   timeline: TimelineEntry[],
   scenario: SimScenario,
   sbarReport: SBARReport,
+  currentPathology?: Pathology,
 ): boolean {
-  const correctDx = scenario.debrief.correctDiagnosis.toLowerCase();
+  const correctDx = getPhaseAwareCorrectDiagnosis(scenario, currentPathology).toLowerCase();
   const allPlayerText = [
     ...timeline
       .filter((t) => t.sender === "player")
@@ -623,6 +664,7 @@ export function calculateScore(
   pauseThinkUsed: boolean = false,
   mtpState?: MTPState,
   patientDied: boolean = false,
+  currentPathology?: Pathology,
 ): GameScore {
   const criticalActions = evaluateCriticalActions(
     scenario.expectedActions,
@@ -648,6 +690,7 @@ export function calculateScore(
     timeline,
     scenario,
     sbarReport,
+    currentPathology,
   );
 
   const timeToFirstAction = calculateTimeToFirstAction(playerActions);
@@ -704,6 +747,7 @@ export function calculateScore(
       scoreBreakdown: breakdown,
     },
     scenario,
+    currentPathology,
   );
 
   const stars = getStars(numericScore, patientDied, missedCriticalCount);
@@ -738,6 +782,7 @@ export function calculateScore(
 export function generateKeyLessons(
   score: GameScore,
   scenario: SimScenario,
+  currentPathology?: Pathology,
 ): string[] {
   const lessons: Array<{ priority: number; text: string }> = [];
 
@@ -825,9 +870,10 @@ export function generateKeyLessons(
 
   // --- Correct diagnosis ---
   if (!score.correctDiagnosis) {
+    const phaseAwareDx = getPhaseAwareCorrectDiagnosis(scenario, currentPathology);
     lessons.push({
       priority: 18,
-      text: `診斷方向未指向 "${scenario.debrief.correctDiagnosis}"。${scenario.debrief.pitfalls[0] ?? "注意鑑別診斷。"}`,
+      text: `診斷方向未指向 "${phaseAwareDx}"。${scenario.debrief.pitfalls[0] ?? "注意鑑別診斷。"}`,
     });
   }
 

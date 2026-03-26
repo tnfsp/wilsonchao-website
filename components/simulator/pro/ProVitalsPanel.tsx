@@ -1,9 +1,11 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo } from "react";
+import { useEffect, useRef, useState, useMemo, useCallback } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { VitalSigns, ALineWaveform } from "@/lib/simulator/types";
 import { applyVitalsFog, FOG_PRESETS } from "@/lib/simulator/engine/fog-of-war";
+import { getLastBioGearsState, getBioGearsClient } from "@/lib/simulator/engine/biogears-engine";
+import type { BioGearsHemodynamics } from "@/lib/simulator/engine/biogears-client";
 
 // ─── CSS ─────────────────────────────────────────────────────────────────────
 
@@ -216,6 +218,65 @@ function VitalCard({
   );
 }
 
+// ─── BioGears live detection ─────────────────────────────────────────────────
+
+/** Returns true if BioGears client is initialized and providing live data. */
+function useBioGearsLive(): boolean {
+  const [live, setLive] = useState(false);
+
+  useEffect(() => {
+    // Poll every 2 seconds to check BioGears status
+    const check = () => {
+      try {
+        const client = getBioGearsClient();
+        setLive(client.isInitialized);
+      } catch {
+        setLive(false);
+      }
+    };
+    check();
+    const interval = setInterval(check, 2000);
+    return () => clearInterval(interval);
+  }, []);
+
+  return live;
+}
+
+/** Returns the latest BioGears hemodynamics data, or null if not available. */
+function useBioGearsHemodynamics(): BioGearsHemodynamics | null {
+  const [hemo, setHemo] = useState<BioGearsHemodynamics | null>(null);
+  const biogearsLive = useBioGearsLive();
+
+  useEffect(() => {
+    if (!biogearsLive) {
+      setHemo(null);
+      return;
+    }
+    const sync = () => {
+      const bgState = getLastBioGearsState();
+      setHemo(bgState?.hemodynamics ?? null);
+    };
+    sync();
+    const interval = setInterval(sync, 2000);
+    return () => clearInterval(interval);
+  }, [biogearsLive]);
+
+  return hemo;
+}
+
+// ─── Advanced Hemodynamics Row ──────────────────────────────────────────────
+
+function HemoRow({ label, value, unit }: { label: string; value: string; unit: string }) {
+  return (
+    <div className="flex items-center justify-between py-1">
+      <span className="text-[10px] text-gray-500 uppercase tracking-wider">{label}</span>
+      <span className="text-xs font-mono text-gray-200">
+        {value} <span className="text-gray-500">{unit}</span>
+      </span>
+    </div>
+  );
+}
+
 // ─── ProVitalsPanel ───────────────────────────────────────────────────────────
 
 export default function ProVitalsPanel({
@@ -227,6 +288,11 @@ export default function ProVitalsPanel({
   const severity = useProGameStore((s) => s.patient?.severity ?? 0);
   const fogLevel = useProGameStore((s) => s.difficultyConfig.fogLevel ?? "none");
   const gameTime = useProGameStore((s) => s.clock.currentTime);
+
+  // BioGears live mode
+  const biogearsLive = useBioGearsLive();
+  const hemodynamics = useBioGearsHemodynamics();
+  const [hemoExpanded, setHemoExpanded] = useState(false);
 
   // Apply fog-of-war (display layer only)
   const fogConfig = FOG_PRESETS[fogLevel] ?? FOG_PRESETS.none;

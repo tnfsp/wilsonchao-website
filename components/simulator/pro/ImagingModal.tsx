@@ -10,6 +10,12 @@ import {
   generateECGMorphology,
   generateInterpretation,
 } from "@/lib/simulator/engine/ecg-generator";
+import {
+  getClipsForSeverity,
+  getSeverityTier,
+  ECHO_ATTRIBUTION,
+} from "@/lib/simulator/echo-video-map";
+import type { EchoClip, PocusCategoryKey } from "@/lib/simulator/echo-video-map";
 import { EcgCanvas } from "./EcgCanvas";
 import { CxrCanvas } from "./CxrCanvas";
 
@@ -63,70 +69,7 @@ const CXR_REAL_IMAGES: Record<string, { src: string; alt: string; attribution: s
   },
 };
 
-// ── Real echo video clips per pathology + view ───────────────
-
-interface EchoClip { src: string; label: string; }
-
-/** Map: pathology → pocus view key → clips */
-const ECHO_CLIPS: Record<string, Record<string, EchoClip[]>> = {
-  cardiac_tamponade: {
-    cardiac: [
-      { src: "/assets/echo/cardiac-tamponade/a4c.mp4", label: "A4C — 心包積液 + RV collapse" },
-      { src: "/assets/echo/cardiac-tamponade/plax.mp4", label: "PLAX — 心包積液" },
-      { src: "/assets/echo/cardiac-tamponade/psax.mp4", label: "PSAX" },
-      { src: "/assets/echo/cardiac-tamponade/subcostal.mp4", label: "Subcostal" },
-    ],
-    ivc: [
-      { src: "/assets/echo/cardiac-tamponade/ivc.mp4", label: "IVC — 擴張無塌陷（plethora）" },
-    ],
-    lung: [],
-  },
-  tamponade: {
-    cardiac: [
-      { src: "/assets/echo/cardiac-tamponade/a4c.mp4", label: "A4C — 心包積液" },
-      { src: "/assets/echo/cardiac-tamponade/subcostal.mp4", label: "Subcostal" },
-    ],
-    ivc: [
-      { src: "/assets/echo/cardiac-tamponade/ivc.mp4", label: "IVC — 擴張無塌陷" },
-    ],
-    lung: [],
-  },
-  surgical_bleeding: {
-    cardiac: [
-      { src: "/assets/echo/normal/a4c.mp4", label: "A4C — 正常心臟功能（出血非心因性）" },
-    ],
-    ivc: [
-      { src: "/assets/echo/hypovolemia/ivc-long.mp4", label: "IVC Long Axis — 塌陷（低血容量）" },
-      { src: "/assets/echo/hypovolemia/ivc-trans.mp4", label: "IVC Trans — 呼吸變化明顯" },
-    ],
-    lung: [],
-  },
-  lcos: {
-    cardiac: [
-      { src: "/assets/echo/takotsubo/a4c.mp4", label: "A4C — LV dysfunction" },
-      { src: "/assets/echo/takotsubo/plax.mp4", label: "PLAX — 收縮功能下降" },
-    ],
-    ivc: [],
-    lung: [
-      { src: "/assets/echo/lung-b-lines/b-lines.mp4", label: "Lung B-lines — 肺水腫" },
-    ],
-  },
-  septic_shock: {
-    cardiac: [],
-    ivc: [],
-    lung: [
-      { src: "/assets/echo/lung-b-lines/b-lines.mp4", label: "Lung B-lines — ARDS/肺水腫" },
-      { src: "/assets/echo/lung-b-lines/confluent-b-lines.mp4", label: "Confluent B-lines — 嚴重肺浸潤" },
-    ],
-  },
-  tension_pneumothorax: {
-    cardiac: [],
-    ivc: [],
-    lung: [
-      { src: "/assets/echo/lung-pneumothorax/absent-sliding.mp4", label: "Lung — 肺滑動消失（Absent sliding）" },
-    ],
-  },
-};
+// ── Echo clips: now sourced from echo-video-map.ts (severity-based) ─
 
 // ── Map tab key → POCUS view key (for availablePOCUS lookup) ─
 
@@ -139,9 +82,9 @@ function getPocusViewKey(tab: ImagingTab): string | null {
   }
 }
 
-// ── Map tab key → echo clips key ─────────────────────────────
+// ── Map tab key → echo clips category key ────────────────────
 
-function getClipsKey(tab: ImagingTab): string | null {
+function getClipsKey(tab: ImagingTab): PocusCategoryKey | null {
   switch (tab) {
     case "echo":       return "cardiac";
     case "lung_pocus": return "lung";
@@ -332,10 +275,15 @@ export function ImagingModal() {
   }
 
   // ── Severity-based echo clip selection ─────────────────────
-  // Phase 1 (surgical_bleeding):
-  //   severity < 40 → normal cardiac (surgical_bleeding clips)
-  //   severity >= 40 → mild pericardial effusion (use tamponade clips as "early sign")
-  // Phase 2 (tamponade) → full tamponade clips (RV collapse, D-shape when available)
+  //
+  // Uses echo-video-map.ts getClipsForSeverity() for 3-tier selection:
+  //   Low   (severity 0-40):  Minimal findings
+  //   Medium (severity 40-70): Moderate findings, early compromise
+  //   High  (severity 70-100): Severe findings, hemodynamic collapse
+  //
+  // For Phase 1 surgical_bleeding with severity >= 40:
+  //   Override to "tamponade" pathology to show early effusion hints
+  // Phase 2 (cardiac_tamponade) uses its own severity tiers directly
 
   function getEffectiveEchoPathology(tab: ImagingTab): string {
     // Only apply severity-based override for cardiac echo and IVC
@@ -351,14 +299,24 @@ export function ImagingModal() {
     return pathology;
   }
 
-  // ── Render video clips ─────────────────────────────────────
+  /** Get the current severity for echo-video-map tier selection */
+  function getEffectiveSeverity(): number {
+    return patient?.severity ?? 0;
+  }
+
+  // ── Render video clips (severity-aware) ─────────────────────
 
   function renderClips(tab: ImagingTab) {
     const clipsKey = getClipsKey(tab);
     if (!clipsKey) return null;
+
     const effectivePathology = getEffectiveEchoPathology(tab);
-    const clips = ECHO_CLIPS[effectivePathology]?.[clipsKey] ?? [];
+    const severity = getEffectiveSeverity();
+    const clips: EchoClip[] = getClipsForSeverity(effectivePathology, clipsKey, severity);
+
     if (clips.length === 0) return null;
+
+    const tier = getSeverityTier(severity);
 
     return (
       <div className="space-y-2 mb-3">
@@ -377,8 +335,16 @@ export function ImagingModal() {
             </p>
           </div>
         ))}
+
+        {/* Severity tier indicator — subtle hint for the learner */}
+        {tier === "high" && (
+          <p className="text-amber-400/50 text-[10px] italic">
+            Severity: significant findings
+          </p>
+        )}
+
         <p className="text-teal-600/40 text-[10px]">
-          LITFL ECG Library / Wikimedia Commons, CC-BY-NC-SA 4.0
+          {ECHO_ATTRIBUTION.source} / Wikimedia Commons, {ECHO_ATTRIBUTION.license}
         </p>
       </div>
     );
@@ -401,7 +367,10 @@ export function ImagingModal() {
 
     const clipsKey = getClipsKey(tab);
     const effectivePathology = getEffectiveEchoPathology(tab);
-    const clips = clipsKey ? (ECHO_CLIPS[effectivePathology]?.[clipsKey] ?? []) : [];
+    const severity = getEffectiveSeverity();
+    const clips: EchoClip[] = clipsKey
+      ? getClipsForSeverity(effectivePathology, clipsKey, severity)
+      : [];
     const hasClips = clips.length > 0;
 
     // Severity-based finding description for Phase 1 early effusion

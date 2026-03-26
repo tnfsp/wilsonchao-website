@@ -387,7 +387,15 @@ export interface TransfusionOrder {
   useWarmer: boolean;
 }
 
-export type BloodProduct = "prbc" | "ffp" | "platelet" | "cryo";
+/**
+ * Blood product subcategories used in the order/transfusion system.
+ *
+ * These are the lowercase identifiers matching `OrderDefinition.subcategory`
+ * values in `data/transfusions.ts`. For the BioGears-facing product type
+ * (which also documents clinical effects), see `BloodProductType` in
+ * `engine/biogears-client.ts`.
+ */
+export type BloodProduct = "prbc" | "ffp" | "platelet" | "cryo" | "whole_blood";
 
 export interface MTPState {
   activated: boolean;

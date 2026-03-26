@@ -170,6 +170,47 @@ export function syncBioGearsToStore(bgState: BioGearsState): void {
 
 import { BIOGEARS_COMPOUNDS, BIOGEARS_DRUGS } from "./biogears-client";
 
+// ============================================================
+// Drug concentration map (B15 fix)
+// Standard ICU infusion concentrations in ug/mL
+// ============================================================
+
+const DRUG_CONCENTRATIONS: Record<string, number> = {
+  "Epinephrine": 16,       // 4 mg/250mL = 16 ug/mL
+  "Norepinephrine": 16,    // 4 mg/250mL = 16 ug/mL (common: 4mg/250mL or 8mg/250mL)
+  "Vasopressin": 0.04,     // 20 units/500mL ≈ 0.04 units/mL
+  "Dopamine": 1600,        // 400 mg/250mL = 1600 ug/mL
+  "Dobutamine": 1000,      // 250 mg/250mL = 1000 ug/mL
+  "Milrinone": 200,        // 50 mg/250mL = 200 ug/mL
+  "Nitroglycerin": 200,    // 50 mg/250mL = 200 ug/mL
+  "Nicardipine": 100,      // 25 mg/250mL = 100 ug/mL
+  "Amiodarone": 1800,      // 450 mg/250mL = 1800 ug/mL (loading)
+  "Fentanyl": 10,          // 2500 mcg/250mL = 10 ug/mL
+  "Propofol": 10000,       // 10 mg/mL = 10000 ug/mL
+  "Midazolam": 1000,       // 250 mg/250mL = 1000 ug/mL (if infusion)
+  "Morphine": 1000,        // 250 mg/250mL = 1000 ug/mL
+  "Ketamine": 1000,        // 250 mg/250mL = 1000 ug/mL
+};
+
+// Default infusion duration in minutes by drug type.
+// Push drugs get shorter durations; maintenance infusions default to 60 min.
+const DEFAULT_INFUSION_DURATION_MIN: Record<string, number> = {
+  "Epinephrine": 60,
+  "Norepinephrine": 60,
+  "Vasopressin": 60,
+  "Dopamine": 60,
+  "Dobutamine": 60,
+  "Milrinone": 60,
+  "Nitroglycerin": 60,
+  "Nicardipine": 60,
+  "Amiodarone": 10,       // loading dose over 10 min
+  "Fentanyl": 60,
+  "Propofol": 60,
+  "Midazolam": 60,
+  "Morphine": 60,
+  "Ketamine": 60,
+};
+
 /**
  * Translate a simulator order into BioGears commands.
  * Called by the store's placeOrder / activateMTP flow.
@@ -206,11 +247,18 @@ export async function dispatchOrderToBioGears(
       ([key]) => nameLower.includes(key)
     );
     if (drugName) {
+      const substanceName = drugName[1];
       const doseMg = parseFloat(dose) || 1;
       if (nameLower.includes("drip") || nameLower.includes("infusion") || nameLower.includes("continuous")) {
-        await client.drugInfusion(drugName[1], doseMg, 4);
+        // B3 fix: proper dose → rate conversion
+        // doseMg is the total dose in mg; convert to ug/min then to mL/min
+        const durationMin = DEFAULT_INFUSION_DURATION_MIN[substanceName] ?? 60;
+        const doseUgPerMin = (doseMg * 1000) / durationMin;
+        const concentration = DRUG_CONCENTRATIONS[substanceName] ?? 4;
+        const rateMlPerMin = doseUgPerMin / concentration;
+        await client.drugInfusion(substanceName, rateMlPerMin, concentration);
       } else {
-        await client.drugBolus(drugName[1], doseMg);
+        await client.drugBolus(substanceName, doseMg);
       }
       return;
     }
@@ -307,6 +355,104 @@ export async function advanceBioGears(gameMinutes: number): Promise<void> {
   const result = await client.advance(seconds);
   if (result.ok) {
     syncBioGearsToStore(result);
+  }
+}
+
+// ============================================================
+// Additional action dispatch (B4 fix)
+// ============================================================
+
+/**
+ * Start or stop pericardial effusion (cardiac tamponade simulation).
+ * @param rateMlPerMin - fluid accumulation rate; 0 stops the effusion.
+ * Bridge command: {"cmd":"pericardial_effusion","rate_mL_per_min":N}
+ */
+export async function dispatchPericardialEffusion(rateMlPerMin: number): Promise<void> {
+  const client = getBioGearsClient();
+  if (!client.isInitialized) return;
+  try {
+    await (client as any).pericardialEffusion(rateMlPerMin);
+  } catch (err) {
+    console.error("[BioGears] pericardialEffusion failed:", err);
+  }
+}
+
+/**
+ * Trigger or resolve cardiac arrest.
+ * @param active - true = arrest, false = ROSC
+ * Bridge command: {"cmd":"cardiac_arrest","active":"true"|"false"}
+ */
+export async function dispatchCardiacArrest(active: boolean): Promise<void> {
+  const client = getBioGearsClient();
+  if (!client.isInitialized) return;
+  try {
+    await (client as any).cardiacArrest(active);
+  } catch (err) {
+    console.error("[BioGears] cardiacArrest failed:", err);
+  }
+}
+
+/**
+ * Start CPR (chest compressions).
+ * @param forceScale - 0.0-1.0 fraction of max force (default 0.7)
+ * @param rateBpm - compressions per minute (default 100 → period 0.6s)
+ * Bridge command: {"cmd":"chest_compression","force_scale":N,"period_s":N}
+ */
+export async function dispatchStartCpr(
+  forceScale: number = 0.7,
+  rateBpm: number = 100,
+): Promise<void> {
+  const client = getBioGearsClient();
+  if (!client.isInitialized) return;
+  try {
+    await (client as any).startCpr(forceScale, rateBpm);
+  } catch (err) {
+    console.error("[BioGears] startCpr failed:", err);
+  }
+}
+
+/**
+ * Stop CPR.
+ */
+export async function dispatchStopCpr(): Promise<void> {
+  const client = getBioGearsClient();
+  if (!client.isInitialized) return;
+  try {
+    await (client as any).stopCpr();
+  } catch (err) {
+    console.error("[BioGears] stopCpr failed:", err);
+  }
+}
+
+/**
+ * Insert or remove a chest tube.
+ * @param side - "Left" or "Right"
+ * @param active - true = insert, false = remove
+ * Bridge command: {"cmd":"chest_tube","side":"Left"|"Right","active":"true"|"false"}
+ */
+export async function dispatchChestTube(side: string, active: boolean): Promise<void> {
+  const client = getBioGearsClient();
+  if (!client.isInitialized) return;
+  try {
+    await (client as any).chestTube(side, active);
+  } catch (err) {
+    console.error("[BioGears] chestTube failed:", err);
+  }
+}
+
+/**
+ * Needle decompression for tension pneumothorax.
+ * @param side - "Left" or "Right"
+ * @param active - true = decompress, false = remove
+ * Bridge command: {"cmd":"needle_decompression","side":"Left"|"Right","active":"true"|"false"}
+ */
+export async function dispatchNeedleDecompression(side: string, active: boolean): Promise<void> {
+  const client = getBioGearsClient();
+  if (!client.isInitialized) return;
+  try {
+    await (client as any).needleDecompression(side, active);
+  } catch (err) {
+    console.error("[BioGears] needleDecompression failed:", err);
   }
 }
 

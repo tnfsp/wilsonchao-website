@@ -93,6 +93,7 @@ export function checkRescueActivation(
     shouldActivate =
       vitals.sbp < t.sbp ||
       vitals.hr < t.hr ||
+      vitals.hr > 150 ||  // tachycardic arrest (matches postop-bleeding scenario threshold)
       vitals.spo2 < t.spo2 ||
       severity >= 90;
   }

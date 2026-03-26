@@ -2,6 +2,8 @@
 
 import React from "react";
 import IOBalanceBar from "./IOBalanceBar";
+import BioGearsStatusBadge from "./BioGearsStatusBadge";
+import ACLSModal from "./ACLSModal";
 import { useProGameStore } from "@/lib/simulator/store";
 
 interface ProGameLayoutProps {
@@ -57,8 +59,16 @@ export default function ProGameLayout({
         </>
       )}
 
+      {/* ═══ ACLS Modal — overlays everything when cardiac arrest detected ═══ */}
+      <ACLSModal />
+
       {/* ═══ Top bar — always visible ═══ */}
       <IOBalanceBar />
+
+      {/* BioGears connection toggle — floats at top-right, near the game clock area */}
+      <div className="fixed top-1.5 right-2 z-[56]">
+        <BioGearsStatusBadge />
+      </div>
 
       {/* ═══ Desktop (lg+): side-by-side ═══ */}
       <div className="hidden lg:flex flex-1 overflow-hidden">

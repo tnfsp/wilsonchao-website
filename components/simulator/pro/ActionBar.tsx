@@ -2,6 +2,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
+import { dispatchPericardialEffusion } from "@/lib/simulator/engine/biogears-engine";
 
 // ─── CT Milking Result Dialog ─────────────────────────────────────────────────
 
@@ -193,6 +194,66 @@ function BarDivider() {
   return <div className="w-px h-6 bg-white/10 mx-0.5 flex-shrink-0" />;
 }
 
+// ─── MTP Phase Banner ────────────────────────────────────────────────────────
+
+/** ACS TQIP 6:6:1 MTP products per phase */
+const MTP_PHASES: Record<number, string> = {
+  1: "pRBC 6u + FFP 6u + Plt 1 pool + TXA 1g",
+  2: "pRBC 6u + FFP 6u + Plt 1 pool",
+  3: "pRBC 6u + FFP 6u + Plt 1 pool",
+  4: "pRBC 6u + FFP 6u + Plt 1 pool",
+};
+
+function MTPPhaseBanner({
+  roundsDelivered,
+  activated,
+}: {
+  roundsDelivered: number;
+  activated: boolean;
+}) {
+  if (!activated) return null;
+
+  const currentPhase = roundsDelivered + 1;
+  const isComplete = roundsDelivered >= 4;
+  const phaseDesc = MTP_PHASES[Math.min(currentPhase, 4)] ?? "";
+
+  return (
+    <div className="w-full px-3 py-1.5 flex items-center gap-2 bg-red-950/80 border-t border-red-500/30">
+      <span className="text-red-400 text-sm flex-shrink-0">🩸</span>
+      <div className="flex-1 min-w-0">
+        {isComplete ? (
+          <p className="text-[11px] text-red-300 font-medium truncate">
+            MTP 完成 — 共 4 rounds 已送達
+          </p>
+        ) : roundsDelivered === 0 ? (
+          <p className="text-[11px] text-red-300 font-medium truncate">
+            MTP 啟動中 — Phase 1 血品準備中：{phaseDesc}
+          </p>
+        ) : (
+          <p className="text-[11px] text-red-300 font-medium truncate">
+            MTP Phase {roundsDelivered} 已送達 — Phase {currentPhase} 準備中：{phaseDesc}
+          </p>
+        )}
+      </div>
+      {/* Phase dots */}
+      <div className="flex items-center gap-1 flex-shrink-0">
+        {[1, 2, 3, 4].map((r) => (
+          <div
+            key={r}
+            className={`w-2 h-2 rounded-full ${
+              r <= roundsDelivered
+                ? "bg-red-400"
+                : r === roundsDelivered + 1
+                  ? "bg-red-400/40 animate-pulse"
+                  : "bg-gray-700"
+            }`}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main ActionBar ──────────────────────────────────────────────────────────
 
 export default function ActionBar() {
@@ -207,12 +268,19 @@ export default function ActionBar() {
   const hintsUsed = useProGameStore((s) => s.hintsUsed);
   const useHint = useProGameStore((s) => s.useHint);
   const actionAdvance = useProGameStore((s) => s.actionAdvance);
+  const scenario = useProGameStore((s) => s.scenario);
 
   const [showMTPConfirm, setShowMTPConfirm] = useState(false);
   const [ctMilkResult, setCTMilkResult] = useState<string | null>(null);
   const [activePopover, setActivePopover] = useState<"treatment" | null>(null);
 
   const isPlaying = phase === "playing";
+
+  // Show prominent MTP button for hemorrhage-related pathologies
+  const showMTPButton = isPlaying && !mtpState.activated && (
+    patient?.pathology === "surgical_bleeding" ||
+    patient?.pathology === "coagulopathy"
+  );
 
   // 通報交班: 所有 phase 都開 SBAR，但 Phase 1 提交後不結束遊戲
   const handleCallAndSBAR = () => {
@@ -244,6 +312,8 @@ export default function ActionBar() {
 
     let finding: string;
 
+    const nurseName = scenario?.nurseProfile?.name ?? "護理師";
+
     if (ct.isPatent) {
       finding = "\u80f8\u7ba1\u901a\u66a2\uff0c\u5f15\u6d41\u6b63\u5e38\uff0c\u7121\u8840\u584a\u3002\u4e0d\u9700\u8981\u8655\u7406\u3002";
       addTimelineEntry({
@@ -251,6 +321,12 @@ export default function ActionBar() {
         type: "player_action",
         content: "\ud83d\udd27 Milk CT \u2014 \u80f8\u7ba1\u901a\u66a2",
         sender: "player",
+      });
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "nurse_message",
+        content: `${nurseName}：胸管看起來通暢，引流正常，不需要處理。`,
+        sender: "nurse",
       });
       setCTMilkResult(finding);
       return;
@@ -267,12 +343,23 @@ export default function ActionBar() {
         useProGameStore.getState().updatePatientSeverity(
           Math.max(0, (patient.severity ?? 0) - 8)
         );
+        // T12: Dispatch to BioGears — temporarily reduce effusion rate by 20-30%
+        // Milk effect: reduce for ~3 sim-minutes, then restore
+        dispatchPericardialEffusion(10); // reduce from ~15 to 10 mL/min
+        setTimeout(() => dispatchPericardialEffusion(15), 3 * 60 * 1000); // restore after 3 min
         finding = "用力 milk 了好幾次，管路感覺有通，但沒有擠出血塊。引流量幾乎沒有增加——管路本身好像不是問題⋯⋯那血去哪了？";
         addTimelineEntry({
           gameTime: clock.currentTime,
           type: "player_action",
           content: "🔧 Milk CT — 管路通了但無血塊排出，引流量未恢復。管路不是問題？",
           sender: "player",
+          isImportant: true,
+        });
+        addTimelineEntry({
+          gameTime: clock.currentTime,
+          type: "nurse_message",
+          content: `${nurseName}：醫師，我 milk 了好幾次，管路好像有通，但引流量幾乎沒增加⋯⋯心包壓力暫時有稍微下降。`,
+          sender: "nurse",
           isImportant: true,
         });
       } else {
@@ -289,6 +376,13 @@ export default function ActionBar() {
           sender: "player",
           isImportant: true,
         });
+        addTimelineEntry({
+          gameTime: clock.currentTime,
+          type: "nurse_message",
+          content: `${nurseName}：胸管 milk 完，擠出血塊了！引流恢復通暢，burst output +50cc。Severity 有改善。`,
+          sender: "nurse",
+          isImportant: true,
+        });
       }
     } else {
       updateChestTube({ isPatent: true });
@@ -299,6 +393,12 @@ export default function ActionBar() {
         content: "🔧 Milk CT — 管路通暢，無血塊",
         sender: "player",
         isImportant: false,
+      });
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "nurse_message",
+        content: `${nurseName}：胸管 milk 完了，管路通暢但沒有明顯血塊排出，引流量沒太大變化。`,
+        sender: "nurse",
       });
     }
 
@@ -340,6 +440,12 @@ export default function ActionBar() {
           onCancel={() => setShowMTPConfirm(false)}
         />
       )}
+
+      {/* ── MTP Phase progression banner ── */}
+      <MTPPhaseBanner
+        roundsDelivered={mtpState.roundsDelivered}
+        activated={mtpState.activated}
+      />
 
       <div
         id="action-bar"
@@ -396,6 +502,21 @@ export default function ActionBar() {
             disabled={!isPlaying}
             shortcut="6"
           />
+
+          {/* ── Prominent MTP activation button (hemorrhage scenarios only) ── */}
+          {showMTPButton && (
+            <>
+              <BarDivider />
+              <button
+                onClick={() => setShowMTPConfirm(true)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-700 hover:bg-red-600 text-white text-xs font-bold transition-colors animate-pulse"
+                title="啟動大量輸血 Protocol (MTP)"
+              >
+                <span className="text-sm">🩸</span>
+                <span>MTP</span>
+              </button>
+            </>
+          )}
         </div>
 
         {/* ── Divider ── */}

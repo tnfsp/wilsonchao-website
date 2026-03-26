@@ -93,8 +93,115 @@ const RANGES: Record<string, NormalRange> = {
 };
 
 // ============================================================
+// Display Names — clinical formatting for lab keys
+// ============================================================
+
+export const LAB_DISPLAY_NAMES: Record<string, string> = {
+  // CBC
+  hb: "Hb (g/dL)",
+  hgb: "Hb (g/dL)",
+  Hb: "Hb (g/dL)",
+  Hgb: "Hb (g/dL)",
+  hct: "Hct (%)",
+  Hct: "Hct (%)",
+  plt: "Plt (\u00d710\u00b3/\u03bcL)",
+  Plt: "Plt (\u00d710\u00b3/\u03bcL)",
+  wbc: "WBC (\u00d710\u00b3/\u03bcL)",
+  WBC: "WBC (\u00d710\u00b3/\u03bcL)",
+  mcv: "MCV (fL)",
+  MCV: "MCV (fL)",
+  mch: "MCH (pg)",
+  MCH: "MCH (pg)",
+  // Coag
+  pt: "PT (sec)",
+  PT: "PT (sec)",
+  inr: "INR",
+  INR: "INR",
+  aptt: "aPTT (sec)",
+  aPTT: "aPTT (sec)",
+  fibrinogen: "Fibrinogen (mg/dL)",
+  Fibrinogen: "Fibrinogen (mg/dL)",
+  fib: "Fibrinogen (mg/dL)",
+  Fib: "Fibrinogen (mg/dL)",
+  tt: "TT (sec)",
+  TT: "TT (sec)",
+  act: "ACT (sec)",
+  ACT: "ACT (sec)",
+  // ABG
+  pH: "pH",
+  ph: "pH",
+  pao2: "PaO\u2082 (mmHg)",
+  PaO2: "PaO\u2082 (mmHg)",
+  paco2: "PaCO\u2082 (mmHg)",
+  PaCO2: "PaCO\u2082 (mmHg)",
+  hco3: "HCO\u2083\u207b (mEq/L)",
+  HCO3: "HCO\u2083\u207b (mEq/L)",
+  "HCO\u2083": "HCO\u2083\u207b (mEq/L)",
+  be: "BE (mEq/L)",
+  BE: "BE (mEq/L)",
+  lactate: "Lactate (mmol/L)",
+  Lactate: "Lactate (mmol/L)",
+  sao2: "SaO\u2082 (%)",
+  SaO2: "SaO\u2082 (%)",
+  // Chemistry
+  na: "Na\u207a (mEq/L)",
+  Na: "Na\u207a (mEq/L)",
+  k: "K\u207a (mEq/L)",
+  K: "K\u207a (mEq/L)",
+  cl: "Cl\u207b (mEq/L)",
+  Cl: "Cl\u207b (mEq/L)",
+  co2: "CO\u2082 (mEq/L)",
+  "CO\u2082": "CO\u2082 (mEq/L)",
+  bun: "BUN (mg/dL)",
+  BUN: "BUN (mg/dL)",
+  cr: "Creatinine (mg/dL)",
+  Cr: "Creatinine (mg/dL)",
+  creatinine: "Creatinine (mg/dL)",
+  glucose: "Glucose (mg/dL)",
+  Glucose: "Glucose (mg/dL)",
+  // Ionized Calcium
+  ica: "iCa\u00b2\u207a (mmol/L)",
+  iCa: "iCa\u00b2\u207a (mmol/L)",
+  "iCa\u00b2\u207a": "iCa\u00b2\u207a (mmol/L)",
+  ca: "Ca\u00b2\u207a (mg/dL)",
+  // Cardiac
+  troponin: "Troponin I (ng/mL)",
+  troponin_i: "Troponin I (ng/mL)",
+  Troponin: "Troponin I (ng/mL)",
+  "Troponin I": "Troponin I (ng/mL)",
+  ckmb: "CK-MB (U/L)",
+  "CK-MB": "CK-MB (U/L)",
+  // TEG
+  teg_r: "TEG R (min)",
+  teg_k: "TEG K (min)",
+  teg_alpha: "TEG \u03b1 (\u00b0)",
+  teg_ma: "TEG MA (mm)",
+  teg_ly30: "TEG LY30 (%)",
+  // UOP
+  uop: "UOP (mL/min)",
+};
+
+/**
+ * Get the clinical display name for a lab key.
+ * Falls back to the raw key if no mapping exists.
+ */
+export function getLabDisplayName(key: string): string {
+  return LAB_DISPLAY_NAMES[key] ?? key;
+}
+
+// ============================================================
 // Helpers
 // ============================================================
+
+// Seeded PRNG for deterministic lab noise
+let labSeed = 42;
+export function setLabSeed(seed: number) { labSeed = seed; }
+function labRandom(): number {
+  labSeed ^= labSeed << 13;
+  labSeed ^= labSeed >> 17;
+  labSeed ^= labSeed << 5;
+  return (labSeed >>> 0) / 4294967296;
+}
 
 function clamp(v: number, min: number, max: number): number {
   return Math.max(min, Math.min(max, v));
@@ -217,11 +324,11 @@ function computeACT(protamineGiven: boolean, gameTimeMinutes: number): number {
   // With protamine: normalizes to ~110-130
   if (protamineGiven) {
     // Protamine normalizes over ~10 min
-    return clamp(120 + Math.random() * 10 - 5, 100, 140);
+    return clamp(120 + labRandom() * 10 - 5, 100, 140);
   }
   // Without protamine, ACT stays elevated, slowly drops
   const naturalDecline = Math.min(gameTimeMinutes * 0.5, 40);
-  return clamp(200 - naturalDecline + Math.random() * 10 - 5, 140, 220);
+  return clamp(200 - naturalDecline + labRandom() * 10 - 5, 140, 220);
 }
 
 /** D9: TEG composite */
@@ -240,7 +347,7 @@ function computeTEG(
   // MA (max amplitude): depends on platelets + fibrinogen
   const ma = clamp(30 + plt * 0.12 + fibrinogen * 0.04, 20, 75);
   // LY30 (fibrinolysis): low normally, TXA keeps it low
-  const ly30 = txaGiven ? clamp(1 + Math.random() * 2, 0, 5) : clamp(3 + Math.random() * 5, 0, 20);
+  const ly30 = txaGiven ? clamp(1 + labRandom() * 2, 0, 5) : clamp(3 + labRandom() * 5, 0, 20);
   return { r, k, alpha, ma, ly30 };
 }
 
@@ -250,7 +357,7 @@ function computeWBC(gameTimeMinutes: number): number {
   const baseline = 12;
   // Slowly normalizes over hours
   const stressBonus = Math.max(0, 3 - gameTimeMinutes * 0.02);
-  return clamp(baseline + stressBonus + (Math.random() - 0.5) * 1, 4, 25);
+  return clamp(baseline + stressBonus + (labRandom() - 0.5) * 1, 4, 25);
 }
 
 /** D11: BUN/Creatinine */
@@ -279,18 +386,18 @@ function computeElectrolytes(
   bloodVolumeFraction: number
 ): { na: number; k: number; cl: number; glucose: number } {
   // Na: relatively stable
-  const na = clamp(140 + (Math.random() - 0.5) * 2, 130, 155);
+  const na = clamp(140 + (labRandom() - 0.5) * 2, 130, 155);
   // K: rises with acidosis (0.6 mEq/L per 0.1 pH drop below 7.4)
   let k = 4.0;
   if (pH < 7.4) {
     k += (7.4 - pH) * 6; // 0.6 per 0.1 pH
   }
   // Massive transfusion can raise K (stored blood has high K)
-  k = clamp(k + (Math.random() - 0.5) * 0.3, 2.5, 8.0);
+  k = clamp(k + (labRandom() - 0.5) * 0.3, 2.5, 8.0);
   // Cl: follows Na roughly
-  const cl = clamp(na - 38 + (Math.random() - 0.5) * 2, 90, 115);
+  const cl = clamp(na - 38 + (labRandom() - 0.5) * 2, 90, 115);
   // Glucose: stress response in post-op
-  const glucose = clamp(150 + (1 - bloodVolumeFraction) * 80 + (Math.random() - 0.5) * 20, 60, 400);
+  const glucose = clamp(150 + (1 - bloodVolumeFraction) * 80 + (labRandom() - 0.5) * 20, 60, 400);
   return { na, k, cl, glucose };
 }
 
@@ -335,7 +442,7 @@ export function computeLabSnapshot(
   const { vitals, labs } = bgState;
   const bloodVolumeFraction = (vitals.blood_volume_mL ?? 5500) / 5500;
   const temp = vitals.temperature;
-  const paCO2 = (vitals.etco2 ?? 0.04) * 760 * 1.1; // EtCO2 fraction → mmHg, ×1.1 for PaCO2 approx
+  const paCO2 = (vitals.etco2_mmHg ?? 35) * 1.1; // EtCO2 already in mmHg from bridge, ×1.1 for PaCO2 approx
 
   switch (panelId) {
     case "cbc": {
@@ -436,8 +543,8 @@ export function computeLabSnapshot(
     case "troponin": {
       // Always mildly elevated post-cardiac surgery
       return {
-        troponin_i: labVal(0.85 + Math.random() * 0.3, "troponin_i", 2),
-        ckmb: labVal(45 + Math.random() * 15, "ckmb", 0),
+        troponin_i: labVal(0.85 + labRandom() * 0.3, "troponin_i", 2),
+        ckmb: labVal(45 + labRandom() * 15, "ckmb", 0),
       };
     }
 

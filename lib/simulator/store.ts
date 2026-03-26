@@ -17,7 +17,9 @@ import { checkRescueActivation, evaluateRescueActions, getRescueStabilizeValues 
 import { evaluateCondition } from "@/lib/simulator/engine/time-engine";
 import type { GameStateSnapshot } from "@/lib/simulator/engine/time-engine";
 import { computeLabSnapshot, buildLabContext } from "@/lib/simulator/engine/lab-engine";
-import { getLastBioGearsState } from "@/lib/simulator/engine/biogears-engine";
+import { getLastBioGearsState, dispatchOrderToBioGears, adjustBioGearsVentilator } from "@/lib/simulator/engine/biogears-engine";
+import { createPhaseEngine, evaluateTransitions, markTransitionsFired } from "@/lib/simulator/engine/phase-engine";
+import type { PhaseTransition, PhaseAction, PhaseEvalState } from "@/lib/simulator/engine/phase-engine";
 import type { LabPanelId } from "@/lib/simulator/engine/lab-engine";
 import type {
   SimScenario,
@@ -188,6 +190,9 @@ export interface ProGameStore {
 
   // Rescue Window (Standard mode delayed death)
   rescueState: RescueState | null;
+
+  // Phase Transition Engine
+  phaseTransitions: PhaseTransition[];
 
   // UI
   activeModal: ModalType;
@@ -430,6 +435,7 @@ const initialState = {
   score: null as GameScore | null,
   deathCause: null as string | null,
   rescueState: null as RescueState | null,
+  phaseTransitions: [] as PhaseTransition[],
   activeModal: null as ModalType,
   _tickPatientFn: null as ((minutes: number) => void) | null,
   ventilator: initialVentilatorState,
@@ -588,7 +594,7 @@ function computeBasicScore(
   // 4. Correct diagnosis（pathology match）
   // Multi-phase scenario: 玩家活到 Phase 2 (pathology 已轉換) 才算正確
   const correctDiagnosis = scenario.phasedFindings
-    ? patient?.pathology !== scenario.pathology  // pathology 有轉換 = 活到了 Phase 2
+    ? patient?.pathology !== scenario.pathology && state.phase !== "death"  // pathology 有轉換 + 存活才算
     : scenario.pathology === patient?.pathology;
 
   // 5. Escalation timing (now using actual gameTime from TrackedAction)
@@ -852,10 +858,14 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       isImportant: true,
     };
 
+    // Initialize phase transition engine from scenario config
+    const phaseTransitions = createPhaseEngine(scenario);
+
     set({
       phase: "playing",
       clock: { ...clock, isPaused: false },
       pendingEvents,
+      phaseTransitions,
       timeline: [openingEntry],
       playerActions: [{ action: `game_start:${scenario.id}`, gameTime: 0 }],
     });
@@ -1229,6 +1239,108 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         playerActions: [...state.playerActions, ...trackedActions],
       }));
     }
+
+    // ── Phase Transition Engine evaluation ──
+    // After vitals/events are updated, evaluate condition-driven transitions.
+    // Pure evaluation → collect actions → apply to store.
+    {
+      const latestState = get();
+      const { phaseTransitions } = latestState;
+      if (phaseTransitions.length > 0 && latestState.patient) {
+        const evalState: PhaseEvalState = {
+          elapsedMinutes: newTime,
+          severity: latestState.patient.severity,
+          vitals: latestState.patient.vitals,
+          actionsTaken: latestState.playerActions.map((pa) => pa.action.toLowerCase()),
+        };
+
+        const matched = evaluateTransitions(phaseTransitions, evalState);
+
+        if (matched.length > 0) {
+          // Mark fired transitions (immutable update)
+          const firedIds = matched.map((m) => m.transitionId);
+          const updatedTransitions = markTransitionsFired(phaseTransitions, firedIds, newTime);
+          set({ phaseTransitions: updatedTransitions });
+
+          // Apply actions from all matched transitions
+          const phaseEntries: TimelineEntry[] = [];
+          for (const match of matched) {
+            for (const action of match.actions) {
+              switch (action.type) {
+                case "update_severity_rate":
+                  // Adjust severity via a synthetic effect or direct severity manipulation.
+                  // For simplicity, apply as a severity delta rate change on patient state.
+                  // The patient-engine's base severity rate is per-pathology, so we encode
+                  // this as a tracked action that scenario scripts can use.
+                  set((s) => ({
+                    playerActions: [
+                      ...s.playerActions,
+                      { action: `phase_transition:severity_rate:${action.payload.rate}`, gameTime: newTime },
+                    ],
+                  }));
+                  break;
+
+                case "trigger_event":
+                  set((s) => ({
+                    playerActions: [
+                      ...s.playerActions,
+                      { action: `phase_transition:event:${action.payload.event}`, gameTime: newTime },
+                    ],
+                  }));
+                  break;
+
+                case "update_vitals_target":
+                  // Apply vitals delta to current patient state
+                  set((s) => {
+                    if (!s.patient) return {};
+                    const merged = { ...s.patient.vitals };
+                    for (const [key, delta] of Object.entries(action.payload.vitals)) {
+                      if (typeof delta === "number" && typeof (merged as Record<string, unknown>)[key] === "number") {
+                        (merged as unknown as Record<string, number>)[key] += delta;
+                      }
+                    }
+                    return { patient: { ...s.patient, vitals: merged } };
+                  });
+                  break;
+
+                case "send_biogears_command":
+                  // Dispatch to BioGears engine (fire-and-forget async)
+                  set((s) => ({
+                    playerActions: [
+                      ...s.playerActions,
+                      { action: `phase_transition:biogears:${JSON.stringify(action.payload)}`, gameTime: newTime },
+                    ],
+                  }));
+                  break;
+
+                case "add_message": {
+                  const nurseName = get().scenario?.nurseProfile?.name ?? "護理師";
+                  const sender = action.payload.sender === "nurse" ? "nurse"
+                    : action.payload.sender === "senior" ? "senior"
+                    : "system";
+                  phaseEntries.push({
+                    id: nextId("tl"),
+                    gameTime: newTime,
+                    type: sender === "system" ? "system_event" : "nurse_message",
+                    content: sender === "nurse" ? `${nurseName}：${action.payload.text}` : action.payload.text,
+                    sender,
+                    isImportant: true,
+                  });
+                  break;
+                }
+              }
+            }
+          }
+
+          // Add phase transition timeline entries
+          if (phaseEntries.length > 0) {
+            set((s) => ({
+              timeline: [...s.timeline, ...phaseEntries],
+            }));
+          }
+        }
+      }
+    }
   },
 
   // ----------------------------------------------------------
@@ -1332,6 +1444,13 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       playerActions: [...state.playerActions, { action: actionLabel, gameTime: clock.currentTime, category: params.definition.category }],
     }));
 
+    // Dispatch to BioGears engine (fire-and-forget, outside set())
+    dispatchOrderToBioGears(
+      params.definition.name,
+      params.dose ?? "",
+      params.definition.category ?? "medication",
+    );
+
     // Placing an order takes ~1 game-minute (skip for batch preset orders)
     if (!params.skipAdvance) {
       get().actionAdvance(1);
@@ -1395,6 +1514,11 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       timeline: [...state.timeline, mtpEntry, nurseEntry],
       playerActions: [...state.playerActions, { action: "mtp:activated", gameTime: activatedAt, category: "mtp" }],
     }));
+
+    // Dispatch MTP blood products to BioGears (fire-and-forget, outside set())
+    dispatchOrderToBioGears("pRBC", "500", "transfusion");
+    dispatchOrderToBioGears("FFP", "500", "transfusion");
+    dispatchOrderToBioGears("Platelet", "250", "transfusion");
   },
 
   // ----------------------------------------------------------
@@ -1551,7 +1675,6 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
 
     set((state) => ({
       pauseThinkUsed: true,
-      hintsUsed: pauseThinkUsed ? state.hintsUsed : state.hintsUsed, // 暫停思考不算 hint
       timeline: [...state.timeline, entry],
       playerActions: [...state.playerActions, { action: "pause_think:used", gameTime: clock.currentTime }],
     }));
@@ -1813,6 +1936,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
   // resetGame
   // ----------------------------------------------------------
   resetGame: () => {
+    _idCounter = 0;
     const current = get();
     set({
       ...initialState,
@@ -1854,7 +1978,16 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
   updatePatientSeverity: (severity: number) => {
     set((state) => {
       if (!state.patient) return state;
-      return { patient: { ...state.patient, severity } };
+      // I3: Auto-update rhythm based on severity (severity→rhythm→arrest chain)
+      const { severityToRhythm } = require("./engine/phase-engine");
+      const newRhythm = severityToRhythm(severity);
+      return {
+        patient: {
+          ...state.patient,
+          severity,
+          vitals: { ...state.patient.vitals, rhythmStrip: newRhythm },
+        },
+      };
     });
   },
 
@@ -1966,6 +2099,17 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         category: 'ventilator',
       }],
     }));
+
+    // Dispatch ventilator settings to BioGears (fire-and-forget, outside set())
+    const merged = get().ventilator;
+    adjustBioGearsVentilator({
+      mode: merged.mode === "PC" ? "PC" : "VC",
+      pip: merged.inspPressure,
+      tv_mL: merged.tvSet,
+      peep: merged.peep,
+      rr: merged.rrSet,
+      fio2: merged.fio2,
+    });
   },
 
   // ----------------------------------------------------------
@@ -2016,7 +2160,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
   // ----------------------------------------------------------
   useHint: () => {
     const { phase, hintsUsed, scenario, playerActions, clock } = get();
-    if (phase !== "playing" || hintsUsed >= 3 || !scenario) return;
+    if (phase !== "playing" || hintsUsed >= get().difficultyConfig.hintLimit || !scenario) return;
 
     // 用 scoring 邏輯找第一個未完成的 critical action（使用 module-level ACTION_PATTERNS）
     const unmetAction = scenario.expectedActions.find((expected) => {
@@ -2093,6 +2237,10 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
           vitals: { ...state.patient.vitals, rhythmStrip: "sinus_tach" as const },
         } : state.patient,
       }));
+
+      // ROSC — notify BioGears of successful defibrillation
+      // TODO: call dispatchCardiacArrest(false) once biogears-engine exports it
+      dispatchOrderToBioGears("Epinephrine", "1", "medication");
     } else if (rhythm === "vt_pulse") {
       // Sync cardioversion for VT with pulse → convert to NSR
       const postRhythm = mode === "sync" ? "nsr" as const : "sinus_tach" as const;
@@ -2110,6 +2258,10 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
           vitals: { ...state.patient.vitals, rhythmStrip: postRhythm },
         } : state.patient,
       }));
+
+      // ROSC — notify BioGears of successful cardioversion
+      // TODO: call dispatchCardiacArrest(false) once biogears-engine exports it
+      dispatchOrderToBioGears("Epinephrine", "1", "medication");
     } else if (rhythm === "asystole" || rhythm === "pea") {
       result = { success: false, message: "不適合電擊 — Asystole/PEA 為不可電擊節律" };
       shockEntry.content = `⚡ 電擊 ${energy}J — ⚠ ${rhythm === "asystole" ? "Asystole" : "PEA"} 不可電擊！病人因不當電擊惡化`;

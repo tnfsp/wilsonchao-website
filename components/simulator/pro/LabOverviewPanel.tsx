@@ -3,6 +3,7 @@
 import { useMemo, useState } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { LabValue } from "@/lib/simulator/types";
+import { getLabDisplayName } from "@/lib/simulator/engine/lab-engine";
 
 // ============================================================
 // Constants
@@ -454,7 +455,7 @@ function SummaryTable({ dataPoints, timeSeries }: SummaryTableProps) {
                   >
                     {/* Name */}
                     <td className="py-1.5 pl-3 pr-2 text-zinc-400 font-medium whitespace-nowrap">
-                      {key}
+                      {getLabDisplayName(key)}
                     </td>
                     {/* Value + trend arrow */}
                     <td className={`py-1.5 pr-1 text-right font-mono ${valueColor(lv.flag)}`}>

@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { PlacedOrder, LabValue } from "@/lib/simulator/types";
+import { getLabDisplayName } from "@/lib/simulator/engine/lab-engine";
 
 // ============================================================
 // Helpers
@@ -155,7 +156,7 @@ function LabResultCard({ order, startHour, defaultOpen = false }: LabResultCardP
                 >
                   {/* Name */}
                   <td className="py-2 pr-3 text-zinc-300 font-medium whitespace-nowrap">
-                    {key}
+                    {getLabDisplayName(key)}
                   </td>
 
                   {/* Value */}

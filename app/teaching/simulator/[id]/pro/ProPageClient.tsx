@@ -390,21 +390,9 @@ function useGameTick() {
 function GameScreen() {
   useGameTick();
   useKeyboardShortcuts();
-  const engineStatus = useEngineStatus();
   return (
     <>
-      {/* Engine indicator badge — always visible so Wilson knows which engine is active */}
-      <div className={`fixed top-2 right-2 z-50 px-2 py-1 rounded border text-[10px] font-mono uppercase tracking-wider ${
-        engineStatus === "biogears"
-          ? "bg-emerald-900/80 border-emerald-500/40 text-emerald-400"
-          : engineStatus === "formula"
-            ? "bg-amber-900/80 border-amber-500/40 text-amber-400"
-            : "bg-zinc-800/80 border-zinc-500/40 text-zinc-400 animate-pulse"
-      }`}>
-        {engineStatus === "biogears" && "BioGears Physics"}
-        {engineStatus === "formula" && "Formula Fallback"}
-        {engineStatus === "pending" && "Connecting..."}
-      </div>
+      {/* BioGears status badge is now in ProGameLayout (top-right corner) */}
       <TutorialOverlay />
       <FastForwardToast />
       <ProGameLayout
