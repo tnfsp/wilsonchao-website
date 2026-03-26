@@ -39,13 +39,15 @@ const ARREST_RHYTHMS: RhythmType[] = ["vf", "vt_pulseless", "pea", "asystole"];
 
 const SHOCKABLE_RHYTHMS: RhythmType[] = ["vf", "vt_pulseless"];
 
-const CPR_CYCLE_SECONDS = 120; // 2 minutes per AHA
+// ACLS time is compressed 4:1 for gameplay (30s real = 2min ACLS).
+// Real AHA durations in parentheses; game durations are 1/4 of real.
+const CPR_CYCLE_SECONDS = 30; // 2 minutes per AHA → 30s game time
 
-const MAX_ARREST_SECONDS = 20 * 60; // 20 minutes before termination prompt
+const MAX_ARREST_SECONDS = 5 * 60; // 20 minutes per AHA → 5 min game time
 
-const WARNING_ARREST_SECONDS = 15 * 60; // 15-minute warning
+const WARNING_ARREST_SECONDS = 225; // 15 minutes per AHA → 225s (3:45) game time
 
-const EPI_MIN_INTERVAL_SECONDS = 180; // 3 minutes per AHA 2020
+const EPI_MIN_INTERVAL_SECONDS = 45; // 3 minutes per AHA 2020 → 45s game time
 
 const AMIODARONE_MAX_DOSES = 2; // 300mg first, 150mg second
 
@@ -180,11 +182,13 @@ export default function ACLSModal() {
   const [teachingMessage, setTeachingMessage] = useState<string | null>(null);
   const [confirmShock, setConfirmShock] = useState(false);
   const [showTimeline, setShowTimeline] = useState(false);
+  const [isMinimized, setIsMinimized] = useState(false);
+  const [pulseCheckRevealed, setPulseCheckRevealed] = useState(false);
 
   // ── Re-arrest tracking ──
   const [arrestCount, setArrestCount] = useState(0); // total arrest episodes (for debrief scoring)
   const [hasAchievedRosc, setHasAchievedRosc] = useState(false); // whether ROSC was ever achieved
-  const [show15MinWarning, setShow15MinWarning] = useState(false); // 15-minute approaching warning
+  const [show15MinWarning, setShow15MinWarning] = useState(false); // arrest-time-limit approaching warning
   const [previousRhythm, setPreviousRhythm] = useState<RhythmType | null>(null); // for rhythm transition detection
 
   // ── Senior arrival resternotomy tracking (tamponade only) ──
@@ -282,7 +286,7 @@ export default function ACLSModal() {
       setElapsedSeconds((prev) => {
         const next = prev + 1;
 
-        // 15-minute approaching warning (cumulative)
+        // Approaching arrest time limit warning (cumulative)
         if (
           next >= WARNING_ARREST_SECONDS &&
           next < MAX_ARREST_SECONDS &&
@@ -296,7 +300,7 @@ export default function ACLSModal() {
             {
               id: ++eventIdRef.current,
               timestamp: next,
-              text: "WARNING: Arrest duration approaching 20 minutes. Consider reversible causes and termination criteria.",
+              text: "WARNING: Arrest duration approaching limit. Consider reversible causes and termination criteria.",
               type: "warning" as const,
             },
           ]);
@@ -313,7 +317,7 @@ export default function ACLSModal() {
       if (cprActive) {
         setCprCycleSeconds((prev) => {
           const next = prev + 1;
-          // Auto-prompt for rhythm check at 2-minute cycle
+          // Auto-prompt for rhythm check when cycle completes
           if (next >= CPR_CYCLE_SECONDS) {
             return next; // let the UI show "Rhythm check ready"
           }
@@ -415,7 +419,7 @@ export default function ACLSModal() {
     if (seniorHasArrived) {
       // Senior just arrived (or was already present) during active arrest
       setSeniorArrivalHandled(true);
-      setSeniorResternotomyCountdown(120); // 2 minutes = 120 seconds
+      setSeniorResternotomyCountdown(30); // 2 min AHA → 30s game time (4:1 compression)
 
       // Add timeline events
       const id1 = ++eventIdRef.current;
@@ -436,7 +440,7 @@ export default function ACLSModal() {
         isImportant: true,
       });
 
-      // Start 120-second countdown
+      // Start 30-second countdown (4:1 time compression)
       resternotomyTimerRef.current = setInterval(() => {
         setSeniorResternotomyCountdown((prev) => {
           if (prev === null || prev <= 1) {
@@ -589,21 +593,57 @@ export default function ACLSModal() {
     setCprCycles((prev) => prev + 1);
     setCprCycleSeconds(0);
     setAclsPhase("rhythm_check");
+    setPulseCheckRevealed(false); // Reset — player must click to check monitors
 
     dispatchStopCpr();
     addEvent(
-      `Rhythm check - Cycle #${cprCycles + 1} complete`,
+      `Rhythm check - Cycle #${cprCycles + 1} complete. 停止壓胸，看 monitor。`,
       "check"
     );
+  };
 
-    // Evaluate rhythm
+  const handleRevealPulseCheck = () => {
+    setPulseCheckRevealed(true);
+
+    // Determine A-line and ECG results based on current state
+    const isRosc = !ARREST_RHYTHMS.includes(currentRhythm);
+    const aLineResult = isRosc
+      ? "A-line: Pulsatile waveform — 有脈搏！"
+      : "A-line: Flatline — 無脈搏";
+
+    let ecgResult: string;
+    switch (currentRhythm) {
+      case "pea":
+        ecgResult = "ECG: PEA — 無脈搏電氣活動";
+        break;
+      case "asystole":
+        ecgResult = "ECG: Asystole — 心臟停止";
+        break;
+      case "vf":
+        ecgResult = "ECG: VF — 心室顫動";
+        break;
+      case "vt_pulseless":
+        ecgResult = "ECG: Pulseless VT — 無脈搏心室頻脈";
+        break;
+      case "nsr":
+      case "sinus_tach":
+        ecgResult = "ECG: Sinus — 竇性心律";
+        break;
+      default:
+        ecgResult = `ECG: ${RHYTHM_DISPLAY[currentRhythm]?.label ?? currentRhythm}`;
+    }
+
+    addEvent(`${aLineResult} | ${ecgResult}`, "check");
+
+    // Also log shockability for decision support
     const rhythmInfo = RHYTHM_DISPLAY[currentRhythm];
     if (rhythmInfo) {
       const shockText = rhythmInfo.shockable ? "SHOCKABLE" : "NON-SHOCKABLE";
-      addEvent(
-        `Rhythm: ${rhythmInfo.label} - ${shockText}`,
-        "check"
-      );
+      addEvent(`Rhythm: ${rhythmInfo.label} - ${shockText}`, "check");
+    }
+
+    if (isRosc) {
+      handleRosc("Spontaneous ROSC detected on rhythm check");
     }
   };
 
@@ -679,12 +719,12 @@ export default function ACLSModal() {
   };
 
   const handleEpinephrine = () => {
-    // Check 3-minute interval (AHA 2020: minimum 3 minutes between doses)
+    // Check epinephrine interval (AHA 2020: 3 min real → 45s game time at 4:1 compression)
     // Drug timing persists across re-arrests (never reset on ROSC)
     if (lastEpiTime !== null && elapsedSeconds - lastEpiTime < EPI_MIN_INTERVAL_SECONDS) {
       const remaining = EPI_MIN_INTERVAL_SECONDS - (elapsedSeconds - lastEpiTime);
       setTeachingMessage(
-        `Epinephrine interval not met. Wait ${remaining}s (minimum 3 minutes between doses per AHA 2020).`
+        `Epinephrine interval not met. Wait ${remaining}s (minimum 3-minute interval per AHA 2020).`
       );
       setTimeout(() => setTeachingMessage(null), 3000);
       return;
@@ -712,19 +752,14 @@ export default function ACLSModal() {
       setTimeout(() => setTeachingMessage(null), 3000);
       return;
     }
-    if (!isShockable(currentRhythm)) {
-      setTeachingMessage(
-        "Amiodarone is only indicated for refractory VF/pulseless VT."
-      );
-      setTimeout(() => setTeachingMessage(null), 3000);
-      return;
-    }
+    const nonStandard = !isShockable(currentRhythm);
+    const noteTag = nonStandard ? " (non-standard indication)" : "";
     setAmiodarone300Given(true);
-    addEvent("Amiodarone 300mg IV - First dose (1 of 2 max)", "drug");
+    addEvent(`Amiodarone 300mg IV - First dose (1 of 2 max)${noteTag}`, "drug");
     addTimelineEntry({
       gameTime: clock.currentTime,
       type: "player_action",
-      content: "ACLS: Amiodarone 300mg IV (dose 1/2)",
+      content: `ACLS: Amiodarone 300mg IV (dose 1/2)${noteTag}`,
       sender: "player",
     });
   };
@@ -744,19 +779,14 @@ export default function ACLSModal() {
       setTimeout(() => setTeachingMessage(null), 3000);
       return;
     }
-    if (!isShockable(currentRhythm)) {
-      setTeachingMessage(
-        "Amiodarone is only indicated for refractory VF/pulseless VT."
-      );
-      setTimeout(() => setTeachingMessage(null), 3000);
-      return;
-    }
+    const nonStandard = !isShockable(currentRhythm);
+    const noteTag = nonStandard ? " (non-standard indication)" : "";
     setAmiodarone150Given(true);
-    addEvent("Amiodarone 150mg IV - Second dose (MAX DOSE REACHED)", "drug");
+    addEvent(`Amiodarone 150mg IV - Second dose (MAX DOSE REACHED)${noteTag}`, "drug");
     addTimelineEntry({
       gameTime: clock.currentTime,
       type: "player_action",
-      content: "ACLS: Amiodarone 150mg IV (dose 2/2 - max reached)",
+      content: `ACLS: Amiodarone 150mg IV (dose 2/2 - max reached)${noteTag}`,
       sender: "player",
     });
   };
@@ -839,6 +869,80 @@ export default function ACLSModal() {
   const amiodaroneMaxReached = amiodarone300Given && amiodarone150Given;
   const isInActiveArrest = aclsPhase !== "rosc" && aclsPhase !== "death";
 
+  // ── Minimized floating bar ──
+  if (isMinimized) {
+    return (
+      <div
+        className="fixed bottom-0 left-0 right-0 z-[60] h-[60px] flex items-center justify-between px-4 md:px-6 border-t-2"
+        style={{
+          background: "linear-gradient(180deg, #0a0000 0%, #001219 100%)",
+          borderColor: aclsPhase === "rosc" ? "#22c55e" : "#dc2626",
+          boxShadow:
+            aclsPhase === "rosc"
+              ? "0 -4px 30px rgba(34, 197, 94, 0.3)"
+              : "0 -4px 30px rgba(220, 38, 38, 0.3)",
+        }}
+      >
+        {/* Left: status indicator + rhythm */}
+        <div className="flex items-center gap-3 min-w-0">
+          <div
+            className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+              aclsPhase === "rosc"
+                ? "bg-green-500"
+                : "bg-red-500 animate-pulse"
+            }`}
+          />
+          <span className="text-white font-bold text-sm truncate">ACLS</span>
+          <span className={`text-xs font-semibold ${rhythmInfo.color} truncate`}>
+            {rhythmInfo.label}
+          </span>
+          <span
+            className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${
+              rhythmInfo.shockable
+                ? "bg-red-900/60 text-red-300 border border-red-700"
+                : aclsPhase === "rosc"
+                  ? "bg-green-900/60 text-green-300 border border-green-700"
+                  : "bg-amber-900/60 text-amber-300 border border-amber-700"
+            }`}
+          >
+            {aclsPhase === "rosc" ? "ROSC" : rhythmInfo.shockable ? "SHOCKABLE" : "NON-SHOCKABLE"}
+          </span>
+        </div>
+
+        {/* Center: CPR timer + elapsed */}
+        <div className="flex items-center gap-4">
+          {cprActive && (
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
+              <span className="text-blue-300 text-xs font-mono">
+                CPR {formatTime(Math.min(cprCycleSeconds, CPR_CYCLE_SECONDS))}/{formatTime(CPR_CYCLE_SECONDS)}
+              </span>
+            </div>
+          )}
+          <span
+            className={`font-mono font-bold text-sm ${
+              elapsedSeconds > MAX_ARREST_SECONDS
+                ? "text-red-400"
+                : elapsedSeconds > WARNING_ARREST_SECONDS
+                  ? "text-amber-400"
+                  : "text-white"
+            }`}
+          >
+            {formatTime(elapsedSeconds)}
+          </span>
+        </div>
+
+        {/* Right: expand button */}
+        <button
+          onClick={() => setIsMinimized(false)}
+          className="flex-shrink-0 px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-semibold border border-zinc-600 transition-all"
+        >
+          展開 ACLS
+        </button>
+      </div>
+    );
+  }
+
   return (
     <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/90 backdrop-blur-md">
       {/* Full-screen on mobile, contained dialog on tablet/desktop */}
@@ -903,26 +1007,36 @@ export default function ACLSModal() {
                 </span>
               </div>
             </div>
-            <div className="text-right flex-shrink-0">
-              <p className="text-zinc-500 text-[10px] md:text-xs uppercase tracking-wider">
-                {arrestCount > 1 ? "Total Arrest Time" : "Arrest Duration"}
-              </p>
-              <p
-                className={`text-xl md:text-2xl font-mono font-bold ${
-                  elapsedSeconds > MAX_ARREST_SECONDS
-                    ? "text-red-400"
-                    : elapsedSeconds > WARNING_ARREST_SECONDS
-                      ? "text-amber-400"
-                      : "text-white"
-                }`}
+            <div className="flex items-center gap-3">
+              {/* Minimize button */}
+              <button
+                onClick={() => setIsMinimized(true)}
+                className="flex-shrink-0 px-3 py-1.5 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-medium border border-zinc-600 transition-all"
+                title="最小化 ACLS 面板"
               >
-                {formatTime(elapsedSeconds)}
-              </p>
-              {elapsedSeconds >= WARNING_ARREST_SECONDS && elapsedSeconds < MAX_ARREST_SECONDS && isInActiveArrest && (
-                <p className="text-amber-500 text-[10px] font-semibold mt-0.5 animate-pulse">
-                  Approaching 20 min limit
+                最小化
+              </button>
+              <div className="text-right flex-shrink-0">
+                <p className="text-zinc-500 text-[10px] md:text-xs uppercase tracking-wider">
+                  {arrestCount > 1 ? "Total Arrest Time" : "Arrest Duration"}
                 </p>
-              )}
+                <p
+                  className={`text-xl md:text-2xl font-mono font-bold ${
+                    elapsedSeconds > MAX_ARREST_SECONDS
+                      ? "text-red-400"
+                      : elapsedSeconds > WARNING_ARREST_SECONDS
+                        ? "text-amber-400"
+                        : "text-white"
+                  }`}
+                >
+                  {formatTime(elapsedSeconds)}
+                </p>
+                {elapsedSeconds >= WARNING_ARREST_SECONDS && elapsedSeconds < MAX_ARREST_SECONDS && isInActiveArrest && (
+                  <p className="text-amber-500 text-[10px] font-semibold mt-0.5 animate-pulse">
+                    Approaching arrest time limit
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>
@@ -974,12 +1088,12 @@ export default function ACLSModal() {
         )}
 
         {/* ═══════════════════════════════════════════════════════════════════
-            15-Minute Warning Banner
+            Arrest Time Warning Banner
             ═══════════════════════════════════════════════════════════════════ */}
         {show15MinWarning && !showTerminationPrompt && isInActiveArrest && (
           <div className="flex-shrink-0 px-3 py-2 md:px-6 bg-amber-950/40 border-b border-amber-700/30">
             <p className="text-amber-300 text-xs font-semibold">
-              15 minutes elapsed. Review reversible causes and consider termination criteria.
+              Arrest prolonged. Review reversible causes and consider termination criteria.
             </p>
           </div>
         )}
@@ -1086,14 +1200,121 @@ export default function ACLSModal() {
                 </div>
               )}
 
-              {/* Post rhythm check: resume CPR button */}
+              {/* Post rhythm check: pulse/EKG check + action buttons */}
               {aclsPhase === "rhythm_check" && !cprActive && (
-                <button
-                  onClick={handleResumeCpr}
-                  className="w-full mt-3 min-h-[44px] py-3 rounded-lg bg-blue-700 hover:bg-blue-600 text-white font-semibold text-sm transition-all"
-                >
-                  Resume CPR
-                </button>
+                <div className="mt-3 space-y-3">
+                  {!pulseCheckRevealed ? (
+                    /* Step 1: Player must actively check monitors */
+                    <div className="rounded-xl border border-amber-700/50 bg-amber-950/30 p-4 text-center">
+                      <p className="text-amber-300 text-sm font-semibold mb-1">
+                        停止壓胸，看 Monitor
+                      </p>
+                      <p className="text-zinc-400 text-xs mb-3">
+                        CPR cycle complete. Check A-line and ECG monitors.
+                      </p>
+                      <button
+                        onClick={handleRevealPulseCheck}
+                        className="w-full min-h-[52px] py-3 rounded-xl bg-amber-700 hover:bg-amber-600 active:scale-[0.98] text-white font-bold text-base transition-all shadow-lg shadow-amber-900/40 animate-pulse"
+                      >
+                        Check Pulse &amp; Rhythm
+                      </button>
+                    </div>
+                  ) : (
+                    /* Step 2: Show A-line + ECG results, then action choices */
+                    <div className="space-y-3">
+                      {/* A-line result */}
+                      <div
+                        className={`rounded-lg border p-3 ${
+                          ARREST_RHYTHMS.includes(currentRhythm)
+                            ? "border-red-700/60 bg-red-950/40"
+                            : "border-green-700/60 bg-green-950/40"
+                        }`}
+                      >
+                        <p className="text-zinc-500 text-[10px] uppercase tracking-wider mb-1">
+                          A-Line (Arterial Waveform)
+                        </p>
+                        <p
+                          className={`text-sm font-bold font-mono ${
+                            ARREST_RHYTHMS.includes(currentRhythm)
+                              ? "text-red-300"
+                              : "text-green-300"
+                          }`}
+                        >
+                          {ARREST_RHYTHMS.includes(currentRhythm)
+                            ? "Flatline — 無脈搏"
+                            : "Pulsatile waveform — 有脈搏！"}
+                        </p>
+                      </div>
+
+                      {/* ECG result */}
+                      <div
+                        className={`rounded-lg border p-3 ${
+                          currentRhythm === "asystole"
+                            ? "border-zinc-600/60 bg-zinc-900/40"
+                            : currentRhythm === "pea"
+                              ? "border-amber-700/60 bg-amber-950/40"
+                              : currentRhythm === "vf" || currentRhythm === "vt_pulseless"
+                                ? "border-red-700/60 bg-red-950/40"
+                                : "border-green-700/60 bg-green-950/40"
+                        }`}
+                      >
+                        <p className="text-zinc-500 text-[10px] uppercase tracking-wider mb-1">
+                          ECG Monitor
+                        </p>
+                        <p
+                          className={`text-sm font-bold font-mono ${
+                            currentRhythm === "asystole"
+                              ? "text-zinc-300"
+                              : currentRhythm === "pea"
+                                ? "text-amber-300"
+                                : currentRhythm === "vf" || currentRhythm === "vt_pulseless"
+                                  ? "text-red-300"
+                                  : "text-green-300"
+                          }`}
+                        >
+                          {currentRhythm === "pea" && "PEA — 無脈搏電氣活動"}
+                          {currentRhythm === "asystole" && "Asystole — 心臟停止"}
+                          {currentRhythm === "vf" && "VF — 心室顫動"}
+                          {currentRhythm === "vt_pulseless" && "Pulseless VT — 無脈搏心室頻脈"}
+                          {(currentRhythm === "nsr" || currentRhythm === "sinus_tach") && "Sinus — 竇性心律"}
+                          {!["pea", "asystole", "vf", "vt_pulseless", "nsr", "sinus_tach"].includes(currentRhythm) &&
+                            (RHYTHM_DISPLAY[currentRhythm]?.label ?? currentRhythm)}
+                        </p>
+                      </div>
+
+                      {/* Shockability badge */}
+                      <div className="flex items-center justify-center">
+                        <span
+                          className={`text-xs font-bold uppercase tracking-wider px-3 py-1 rounded ${
+                            isShockable(currentRhythm)
+                              ? "bg-red-900/60 text-red-300 border border-red-700"
+                              : "bg-amber-900/60 text-amber-300 border border-amber-700"
+                          }`}
+                        >
+                          {isShockable(currentRhythm) ? "SHOCKABLE RHYTHM" : "NON-SHOCKABLE RHYTHM"}
+                        </span>
+                      </div>
+
+                      {/* Action buttons after viewing results */}
+                      <div className="flex gap-2">
+                        <button
+                          onClick={handleResumeCpr}
+                          className="flex-1 min-h-[44px] py-3 rounded-lg bg-blue-700 hover:bg-blue-600 text-white font-semibold text-sm transition-all"
+                        >
+                          Resume CPR
+                        </button>
+                        {isShockable(currentRhythm) && (
+                          <button
+                            onClick={handleChargeDefibrillator}
+                            className="flex-1 min-h-[44px] py-3 rounded-lg bg-red-700 hover:bg-red-600 text-white font-semibold text-sm transition-all"
+                          >
+                            Defibrillate
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
               )}
             </div>
 
@@ -1357,7 +1578,7 @@ export default function ACLSModal() {
             {showTerminationPrompt && aclsPhase !== "rosc" && (
               <div className="rounded-xl border border-red-800/60 bg-red-950/40 p-3 md:p-4">
                 <p className="text-red-300 text-sm font-semibold mb-2">
-                  Arrest duration exceeds 20 minutes.
+                  Arrest duration exceeds time limit.
                 </p>
                 <p className="text-red-400/70 text-xs mb-3">
                   Consider termination of resuscitation efforts.

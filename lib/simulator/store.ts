@@ -17,7 +17,7 @@ import { checkRescueActivation, evaluateRescueActions, getRescueStabilizeValues 
 import { evaluateCondition } from "@/lib/simulator/engine/time-engine";
 import type { GameStateSnapshot } from "@/lib/simulator/engine/time-engine";
 import { computeLabSnapshot, buildLabContext } from "@/lib/simulator/engine/lab-engine";
-import { getLastBioGearsState, dispatchOrderToBioGears, adjustBioGearsVentilator } from "@/lib/simulator/engine/biogears-engine";
+import { getLastBioGearsState, dispatchOrderToBioGears, adjustBioGearsVentilator, dispatchPericardialEffusion } from "@/lib/simulator/engine/biogears-engine";
 import { createPhaseEngine, evaluateTransitions, markTransitionsFired } from "@/lib/simulator/engine/phase-engine";
 import type { PhaseTransition, PhaseAction, PhaseEvalState } from "@/lib/simulator/engine/phase-engine";
 import type { LabPanelId } from "@/lib/simulator/engine/lab-engine";
@@ -320,6 +320,9 @@ export interface ProGameStore {
 
   /** 更新呼吸器設定 */
   updateVentilator: (changes: Partial<VentilatorState>) => void;
+
+  /** Milk chest tube — moved from ChestTubePanel so ActionBar can trigger it */
+  milkChestTube: () => void;
 
   // ---- Hint System ----
   /** 使用提示（最多 3 次），找到第一個未完成的 critical action 並顯示 hint */
@@ -2175,6 +2178,90 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       rr: merged.rrSet,
       fio2: merged.fio2,
     });
+  },
+
+  // ----------------------------------------------------------
+  // milkChestTube — extracted from ChestTubePanel for ActionBar access
+  // ----------------------------------------------------------
+  milkChestTube: () => {
+    const { patient, phase, clock, scenario } = get();
+    if (!patient || phase !== "playing") return;
+    const ct = patient.chestTube;
+    const nurseName = scenario?.nurseProfile?.name ?? "護理師";
+
+    if (ct.isPatent) {
+      get().addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "🔧 Milk CT — 胸管通暢",
+        sender: "player",
+      });
+      get().addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "nurse_message",
+        content: `${nurseName}：胸管看起來通暢，引流正常，不需要處理。`,
+        sender: "nurse",
+      });
+    } else if (ct.hasClots) {
+      const isTamponade = patient.pathology === "cardiac_tamponade" || patient.pathology === "tamponade";
+      if (isTamponade) {
+        get().updateChestTube({ isPatent: true, currentRate: Math.max(ct.currentRate, 10), totalOutput: ct.totalOutput + 5 });
+        get().updatePatientSeverity(Math.max(0, (patient.severity ?? 0) - 8));
+        dispatchPericardialEffusion(10);
+        setTimeout(() => dispatchPericardialEffusion(15), 3 * 60 * 1000);
+        get().addTimelineEntry({
+          gameTime: clock.currentTime,
+          type: "player_action",
+          content: "🔧 Milk CT — 管路通了但無血塊排出，引流量未恢復。管路不是問題？",
+          sender: "player",
+          isImportant: true,
+        });
+        get().addTimelineEntry({
+          gameTime: clock.currentTime,
+          type: "nurse_message",
+          content: `${nurseName}：醫師，我 milk 了好幾次，管路好像有通，但引流量幾乎沒增加⋯⋯心包壓力暫時有稍微下降。`,
+          sender: "nurse",
+          isImportant: true,
+        });
+      } else {
+        get().updateChestTube({ isPatent: true, totalOutput: ct.totalOutput + 50 });
+        get().updatePatientSeverity(Math.max(0, (patient.severity ?? 0) - 5));
+        get().addTimelineEntry({
+          gameTime: clock.currentTime,
+          type: "player_action",
+          content: "🔧 Milk CT — 擠出血塊，引流恢復",
+          sender: "player",
+          isImportant: true,
+        });
+        get().addTimelineEntry({
+          gameTime: clock.currentTime,
+          type: "nurse_message",
+          content: `${nurseName}：胸管 milk 完，擠出血塊了！引流恢復通暢，burst output +50cc。Severity 有改善。`,
+          sender: "nurse",
+          isImportant: true,
+        });
+      }
+    } else {
+      get().updateChestTube({ isPatent: true });
+      get().addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "🔧 Milk CT — 管路通暢，無血塊",
+        sender: "player",
+        isImportant: false,
+      });
+      get().addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "nurse_message",
+        content: `${nurseName}：胸管 milk 完了，管路通暢但沒有明顯血塊排出，引流量沒太大變化。`,
+        sender: "nurse",
+      });
+    }
+
+    set((state) => ({
+      playerActions: [...state.playerActions, { action: "procedure:chest_tube_milk", gameTime: clock.currentTime, category: "procedure" }],
+    }));
+    get().actionAdvance(1);
   },
 
   // ----------------------------------------------------------

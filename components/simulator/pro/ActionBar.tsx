@@ -226,22 +226,14 @@ export default function ActionBar() {
   const activateMTP = useProGameStore((s) => s.activateMTP);
   const mtpState = useProGameStore((s) => s.mtpState);
   const patient = useProGameStore((s) => s.patient);
-  const addTimelineEntry = useProGameStore((s) => s.addTimelineEntry);
-  const clock = useProGameStore((s) => s.clock);
   const phase = useProGameStore((s) => s.phase);
-  const scenario = useProGameStore((s) => s.scenario);
   const hintsUsed = useProGameStore((s) => s.hintsUsed);
   const useHint = useProGameStore((s) => s.useHint);
-  const actionAdvance = useProGameStore((s) => s.actionAdvance);
 
   const [showMTPConfirm, setShowMTPConfirm] = useState(false);
   const [activePopover, setActivePopover] = useState<"treatment" | null>(null);
 
   const isPlaying = phase === "playing";
-
-  // Multi-phase scenario: Phase 2 = pathology has changed from original
-  const isMultiPhase = !!scenario?.phasedFindings;
-  const isPhase2 = isMultiPhase && patient?.pathology !== scenario?.pathology;
 
   // Show prominent MTP button for hemorrhage-related pathologies
   const showMTPButton = isPlaying && !mtpState.activated && (
@@ -249,38 +241,16 @@ export default function ActionBar() {
     patient?.pathology === "coagulopathy"
   );
 
-  // 通報交班 / 叫人
-  // Phase 1 或單 phase → 記錄 call_senior + 開 SBAR modal
-  // Phase 2（multi-phase 且 pathology 已轉換）→ 開 consult modal（叫學長回來 / SBAR 交班）
+  // CT Milking handler — delegates to store-level milkChestTube action
+  const handleMilkCT = useProGameStore((s) => s.milkChestTube);
+
+  // 通報交班 / 叫人 → 一律開 ConsultModal
   const handleCallAndSBAR = () => {
     if (!isPlaying) return;
-
-    if (isPhase2) {
-      // Phase 2: 開 consult modal，讓玩家選擇叫學長回來或做 SBAR 交班
-      openModal("consult");
-      return;
-    }
-
-    // Phase 1 / 單 phase: 記錄 call_senior + 開 SBAR modal
-    useProGameStore.setState((state) => ({
-      playerActions: [
-        ...state.playerActions,
-        { action: "call_senior", gameTime: clock.currentTime, category: "consult" },
-      ],
-    }));
-
-    addTimelineEntry({
-      gameTime: clock.currentTime,
-      type: "player_action",
-      content: "📞 你打電話通知學長，準備 SBAR 報告",
-      sender: "player",
-      isImportant: true,
-    });
-
-    openModal("sbar");
+    openModal("consult");
   };
 
-  // Treatment popover items (orders only — CT milking moved to ChestTubePanel)
+  // Treatment popover items (orders only — CT milking is a separate ActionBar button)
   const treatmentItems: PopoverItem[] = [
     { icon: "\ud83d\udc8a", label: "\u958b\u85e5", onClick: () => openModal("order") },
     { icon: "\ud83e\ude78", label: "\u8f38\u8840", onClick: () => openModal("order") },
@@ -347,6 +317,11 @@ export default function ActionBar() {
             )}
           </div>
 
+          <IconBtn
+            icon="🔧" label="Milk CT"
+            onClick={handleMilkCT}
+            disabled={!isPlaying || !patient?.chestTube}
+          />
           <IconBtn
             icon="📞" label="通報交班"
             onClick={handleCallAndSBAR}

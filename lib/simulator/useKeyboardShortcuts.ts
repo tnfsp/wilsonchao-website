@@ -5,7 +5,8 @@ import { useProGameStore } from "@/lib/simulator/store";
 
 /**
  * Keyboard shortcuts for the Pro simulator:
- *   1 = PE, 2 = 抽血, 3 = 處置, 4 = 通報交班(SBAR), 5 = 電擊
+ *   1 = PE, 2 = 抽血, 3 = 處置, 4 = 通報/叫人/交班 (ConsultModal), 5 = 電擊
+ *   6 = 影像
  *   L = Lab Overview
  *   Space = toggle pause (open/close pause_think modal)
  *   F = fast forward 5 min
@@ -52,32 +53,11 @@ export function useKeyboardShortcuts() {
           e.preventDefault();
           state.openModal("order");
           break;
-        case "4": {
+        case "4":
           e.preventDefault();
-          // Multi-phase Phase 2: open consult modal (recall senior / SBAR handoff)
-          const isMultiPhase = !!state.scenario?.phasedFindings;
-          const isPhase2 = isMultiPhase && state.patient?.pathology !== state.scenario?.pathology;
-          if (isPhase2) {
-            state.openModal("consult");
-          } else {
-            // Phase 1 / single phase: track call_senior + open SBAR
-            useProGameStore.setState((s) => ({
-              playerActions: [
-                ...s.playerActions,
-                { action: "call_senior", gameTime: s.clock.currentTime, category: "consult" },
-              ],
-            }));
-            state.addTimelineEntry({
-              gameTime: state.clock.currentTime,
-              type: "player_action",
-              content: "📞 你打電話通知學長，準備 SBAR 交班",
-              sender: "player",
-              isImportant: true,
-            });
-            state.openModal("sbar");
-          }
+          // Always open ConsultModal — player chooses call senior / SBAR from there
+          state.openModal("consult");
           break;
-        }
         case "5":
           e.preventDefault();
           state.openModal("defibrillator");
