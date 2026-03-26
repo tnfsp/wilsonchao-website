@@ -107,31 +107,11 @@ export default async function Home() {
                 priority
               />
             </div>
-            <div className="min-w-0 flex-1">
+            <div>
               <h1 className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">
                 嗨，我是玴祥
               </h1>
               <p className="text-sm text-[var(--muted)]">心臟外科醫師 · 對世界好奇的人</p>
-            </div>
-            {/* Social Icons */}
-            <div className="shrink-0 flex items-center gap-2">
-              {[
-                { label: "Instagram", href: "https://www.instagram.com/momobear_doctor", ext: true, d: <><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="5" /><circle cx="17.5" cy="6.5" r="1.25" fill="currentColor" stroke="none" /></> },
-                { label: "Telegram", href: "https://t.me/doctormomo", ext: true, d: <><path d="M22 2L11 13" /><path d="M22 2L15 22L11 13L2 9L22 2Z" /></> },
-                { label: "RSS", href: "/feed", ext: false, d: <><path d="M4 11a9 9 0 0 1 9 9" /><path d="M4 4a16 16 0 0 1 16 16" /><circle cx="5" cy="19" r="1.5" fill="currentColor" stroke="none" /></> },
-                { label: "Email", href: "mailto:aa2670095@gmail.com", ext: true, d: <><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></> },
-              ].map((s) => (
-                <a
-                  key={s.label}
-                  href={s.href}
-                  title={s.label}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--surface)]"
-                  target={s.ext ? "_blank" : undefined}
-                  rel={s.ext ? "noreferrer" : undefined}
-                >
-                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">{s.d}</svg>
-                </a>
-              ))}
             </div>
           </div>
 
@@ -143,7 +123,28 @@ export default async function Home() {
             <RandomTagline />
           </div>
 
-          {/* Navigation pills */}
+          {/* Row 1: Social Icons */}
+          <div className="flex items-center gap-2">
+            {[
+              { label: "Instagram", href: "https://www.instagram.com/momobear_doctor", ext: true, d: <><rect x="2" y="2" width="20" height="20" rx="5" /><circle cx="12" cy="12" r="5" /><circle cx="17.5" cy="6.5" r="1.25" fill="currentColor" stroke="none" /></> },
+              { label: "Telegram", href: "https://t.me/doctormomo", ext: true, d: <><path d="M22 2L11 13" /><path d="M22 2L15 22L11 13L2 9L22 2Z" /></> },
+              { label: "RSS", href: "/feed", ext: false, d: <><path d="M4 11a9 9 0 0 1 9 9" /><path d="M4 4a16 16 0 0 1 16 16" /><circle cx="5" cy="19" r="1.5" fill="currentColor" stroke="none" /></> },
+              { label: "Email", href: "mailto:aa2670095@gmail.com", ext: true, d: <><rect x="2" y="4" width="20" height="16" rx="2" /><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7" /></> },
+            ].map((s) => (
+              <a
+                key={s.label}
+                href={s.href}
+                title={s.label}
+                className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--surface)]"
+                target={s.ext ? "_blank" : undefined}
+                rel={s.ext ? "noreferrer" : undefined}
+              >
+                <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" strokeLinejoin="round">{s.d}</svg>
+              </a>
+            ))}
+          </div>
+
+          {/* Row 2: Navigation pills */}
           <div className="flex flex-wrap gap-2">
             {[
               { label: "Blog", href: "/blog" },
@@ -161,6 +162,7 @@ export default async function Home() {
             ))}
           </div>
 
+          {/* Row 3: Navigation descriptions */}
           <nav className="max-w-md space-y-1 text-sm text-[var(--muted)]">
             <div><Link href="/blog" className="subtle-link">Blog</Link> — 想好了才寫的長文</div>
             <div><Link href="/stream" className="subtle-link">Stream</Link> — 每天的腦內碎片</div>
