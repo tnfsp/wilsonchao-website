@@ -398,6 +398,10 @@ export const normalSaline: OrderDefinition = {
     isCorrectTreatment: true,
     vitalChanges: { sbp: 8, map: 5, cvp: 2 },
   },
+  scenarioOverrides: {
+    surgical_bleeding: { duration: 20, severityChange: -3 },
+    cardiac_tamponade: { duration: 20, severityChange: -2 },
+  },
 };
 
 export const lactatedRingers: OrderDefinition = {
@@ -423,6 +427,10 @@ export const lactatedRingers: OrderDefinition = {
     duration: 60,
     isCorrectTreatment: true,
     vitalChanges: { sbp: 8, map: 5, cvp: 2 },
+  },
+  scenarioOverrides: {
+    surgical_bleeding: { duration: 20, severityChange: -3 },
+    cardiac_tamponade: { duration: 20, severityChange: -2 },
   },
 };
 

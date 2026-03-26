@@ -222,6 +222,9 @@ export function getOrderEffect(
     if (override.severityChange !== undefined) {
       activeEffect.severityChange = override.severityChange;
     }
+    if (override.duration !== undefined) {
+      activeEffect.duration = override.duration;
+    }
     if (override.vitalChanges) {
       activeEffect.vitalChanges = { ...activeEffect.vitalChanges, ...override.vitalChanges };
     }

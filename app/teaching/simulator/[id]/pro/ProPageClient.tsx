@@ -197,7 +197,8 @@ function InfoRow({
 
 // ─── Engine Mode ─────────────────────────────────────────────────────────────
 
-/** Check if BioGears engine should be used (query param ?engine=biogears) */
+/** BioGears engine mode. Currently opt-in (?engine=biogears) until order dispatch wiring is complete.
+ *  TODO: Switch to default-on once dispatchOrderToBioGears is wired into store pipeline. */
 function useBioGearsMode(): boolean {
   const [enabled, setEnabled] = useState(false);
   useEffect(() => {
@@ -211,6 +212,24 @@ function useBioGearsMode(): boolean {
 
 // ─── Auto-tick: advance game time every 5 seconds by 1 minute ────────────────
 
+// Module-level engine status for cross-component visibility
+type EngineStatus = "pending" | "biogears" | "formula";
+let _engineStatus: EngineStatus = "pending";
+const _engineListeners = new Set<() => void>();
+function setEngineStatus(s: EngineStatus) {
+  _engineStatus = s;
+  _engineListeners.forEach((fn) => fn());
+}
+function useEngineStatus(): EngineStatus {
+  const [status, setStatus] = useState(_engineStatus);
+  useEffect(() => {
+    const fn = () => setStatus(_engineStatus);
+    _engineListeners.add(fn);
+    return () => { _engineListeners.delete(fn); };
+  }, []);
+  return status;
+}
+
 /** Slow background tick: 1 game-minute every 15 real-seconds.
  *  Pauses when modal is open. Main time progression comes from actions.
  *  Supports two modes: formula (default) and biogears (physics engine). */
@@ -223,14 +242,21 @@ function useGameTick() {
 
   // ── BioGears initialization ──
   useEffect(() => {
-    if (!useBioGears || phase !== "playing" || bgInitRef.current) return;
+    if (!useBioGears) { setEngineStatus("formula"); return; }
+    if (phase !== "playing" || bgInitRef.current) return;
 
     let cancelled = false;
     const init = async () => {
       try {
         const client = getBioGearsClient();
         if (!client.isReady) {
-          await client.connect();
+          // 5-second timeout — fall back to formula if server unreachable
+          await Promise.race([
+            client.connect(),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("BioGears connection timeout (5s)")), 5000)
+            ),
+          ]);
         }
         if (!client.isInitialized && !cancelled) {
           console.log("[BioGears] Initializing patient...");
@@ -239,6 +265,7 @@ function useGameTick() {
             console.log("[BioGears] Patient ready, syncing initial vitals");
             syncBioGearsToStore(result);
             bgInitRef.current = true;
+            setEngineStatus("biogears");
 
             // Start hemorrhage if scenario is bleeding-related
             const scenario = useProGameStore.getState().scenario;
@@ -249,6 +276,7 @@ function useGameTick() {
         }
       } catch (err) {
         console.error("[BioGears] Init failed, falling back to formula engine:", err);
+        setEngineStatus("formula");
       }
     };
     init();
@@ -360,15 +388,21 @@ function useGameTick() {
 function GameScreen() {
   useGameTick();
   useKeyboardShortcuts();
-  const isBioGears = useBioGearsMode();
+  const engineStatus = useEngineStatus();
   return (
     <>
-      {/* Engine indicator badge */}
-      {isBioGears && (
-        <div className="fixed top-2 right-2 z-50 px-2 py-1 rounded bg-emerald-900/80 border border-emerald-500/40 text-emerald-400 text-[10px] font-mono uppercase tracking-wider">
-          🧬 BioGears Physics Engine
-        </div>
-      )}
+      {/* Engine indicator badge — always visible so Wilson knows which engine is active */}
+      <div className={`fixed top-2 right-2 z-50 px-2 py-1 rounded border text-[10px] font-mono uppercase tracking-wider ${
+        engineStatus === "biogears"
+          ? "bg-emerald-900/80 border-emerald-500/40 text-emerald-400"
+          : engineStatus === "formula"
+            ? "bg-amber-900/80 border-amber-500/40 text-amber-400"
+            : "bg-zinc-800/80 border-zinc-500/40 text-zinc-400 animate-pulse"
+      }`}>
+        {engineStatus === "biogears" && "BioGears Physics"}
+        {engineStatus === "formula" && "Formula Fallback"}
+        {engineStatus === "pending" && "Connecting..."}
+      </div>
       <TutorialOverlay />
       <FastForwardToast />
       <ProGameLayout

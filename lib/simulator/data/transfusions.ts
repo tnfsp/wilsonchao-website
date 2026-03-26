@@ -35,6 +35,10 @@ export const prbc1u: OrderDefinition = {
     severityChange: -5,
     temperatureChange: -0.3, // 冷血品降溫
   },
+  scenarioOverrides: {
+    surgical_bleeding: { duration: 20 },
+    cardiac_tamponade: { duration: 20 },
+  },
 };
 
 export const prbc2u: OrderDefinition = {
@@ -65,6 +69,10 @@ export const prbc2u: OrderDefinition = {
     vitalChanges: { sbp: 10, map: 8, cvp: 2 },
     severityChange: -10,
     temperatureChange: -0.5,
+  },
+  scenarioOverrides: {
+    surgical_bleeding: { duration: 20 },
+    cardiac_tamponade: { duration: 20 },
   },
 };
 
@@ -99,6 +107,10 @@ export const prbc4u: OrderDefinition = {
     severityChange: -18,
     temperatureChange: -0.8,
   },
+  scenarioOverrides: {
+    surgical_bleeding: { duration: 20 },
+    cardiac_tamponade: { duration: 20 },
+  },
 };
 
 // ============================================================
@@ -127,6 +139,10 @@ export const ffp2u: OrderDefinition = {
     severityChange: -6,
     temperatureChange: -0.2,
   },
+  scenarioOverrides: {
+    surgical_bleeding: { duration: 20 },
+    cardiac_tamponade: { duration: 20 },
+  },
 };
 
 export const ffp4u: OrderDefinition = {
@@ -152,6 +168,10 @@ export const ffp4u: OrderDefinition = {
     vitalChanges: { sbp: 5, map: 4, cvp: 2 },
     severityChange: -10,
     temperatureChange: -0.4,
+  },
+  scenarioOverrides: {
+    surgical_bleeding: { duration: 20 },
+    cardiac_tamponade: { duration: 20 },
   },
 };
 
@@ -179,6 +199,10 @@ export const platelet1dose: OrderDefinition = {
     isCorrectTreatment: true,
     severityChange: -4,
   },
+  scenarioOverrides: {
+    surgical_bleeding: { duration: 20 },
+    cardiac_tamponade: { duration: 20 },
+  },
 };
 
 export const platelet2dose: OrderDefinition = {
@@ -202,6 +226,10 @@ export const platelet2dose: OrderDefinition = {
     duration: 120,
     isCorrectTreatment: true,
     severityChange: -7,
+  },
+  scenarioOverrides: {
+    surgical_bleeding: { duration: 20 },
+    cardiac_tamponade: { duration: 20 },
   },
 };
 
@@ -229,6 +257,10 @@ export const cryo6u: OrderDefinition = {
     isCorrectTreatment: true,
     severityChange: -5,
   },
+  scenarioOverrides: {
+    surgical_bleeding: { duration: 20 },
+    cardiac_tamponade: { duration: 20 },
+  },
 };
 
 export const cryo10u: OrderDefinition = {
@@ -252,6 +284,10 @@ export const cryo10u: OrderDefinition = {
     duration: 90,
     isCorrectTreatment: true,
     severityChange: -8,
+  },
+  scenarioOverrides: {
+    surgical_bleeding: { duration: 20 },
+    cardiac_tamponade: { duration: 20 },
   },
 };
 
@@ -292,7 +328,7 @@ export const initialMTPState: MTPState = {
  */
 export const mtpRoundEffect = {
   type: "blood_product" as const,
-  duration: 60,
+  duration: 20,   // Shortened for acute bleeding — per-min: -0.75 (was -0.25 with 60min)
   isCorrectTreatment: true,
   vitalChanges: { sbp: 12, map: 9, cvp: 3 },
   severityChange: -15,

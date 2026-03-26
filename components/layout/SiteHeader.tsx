@@ -5,6 +5,33 @@ import Image from "next/image";
 import Link from "next/link";
 import { SearchBox } from "@/components/ui/SearchBox";
 
+function RssIcon() {
+  return (
+    <Link
+      href="/feed"
+      className="flex items-center rounded-full px-2 py-1 text-sm text-[var(--muted)] transition-colors hover:bg-[var(--highlight)]/60 hover:text-[var(--accent)]"
+      aria-label="RSS Feed"
+      title="RSS Feed"
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        width="16"
+        height="16"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      >
+        <path d="M4 11a9 9 0 0 1 9 9" />
+        <path d="M4 4a16 16 0 0 1 16 16" />
+        <circle cx="5" cy="19" r="1" />
+      </svg>
+    </Link>
+  );
+}
+
 const links = [
   { href: "/blog", label: "Blog" },
   { href: "/stream", label: "Stream" },
@@ -43,10 +70,12 @@ export function SiteHeader() {
               </Link>
             ))}
             <SearchBox />
+            <RssIcon />
           </nav>
 
           <div className="flex items-center gap-2 md:hidden">
             <SearchBox />
+            <RssIcon />
             <button
               type="button"
               onClick={() => setOpen((prev) => !prev)}
