@@ -181,10 +181,10 @@ export default async function AboutPage() {
         dangerouslySetInnerHTML={{ __html: JSON.stringify(personJsonLd) }}
       />
       <main className="page-shell">
-        {/* Hero: 3-column — Avatar | Name+Intro | Social Icons */}
+        {/* Hero: Avatar left, Name + Intro + Icons stacked right */}
         <header className="pb-8">
           <span className="section-title">About</span>
-          <div className="mt-4 flex items-center gap-5 sm:gap-6">
+          <div className="mt-4 flex items-start gap-5 sm:gap-6">
             {copy.aboutImage ? (
               <Image
                 src={copy.aboutImage}
@@ -196,7 +196,7 @@ export default async function AboutPage() {
                 priority={false}
               />
             ) : null}
-            <div className="min-w-0 flex-1 space-y-1.5">
+            <div className="min-w-0 flex-1 space-y-2">
               <h1 className="text-2xl sm:text-3xl font-semibold text-[var(--foreground)] leading-tight">
                 {copy.aboutName}
               </h1>
@@ -205,21 +205,21 @@ export default async function AboutPage() {
                   {copy.aboutIntro}
                 </p>
               ) : null}
-            </div>
-            {/* Social Icons — IG, Telegram, RSS, Email */}
-            <div className="shrink-0 flex items-center gap-2">
-              {SOCIAL_ICONS.map((item) => (
-                <Link
-                  key={item.label}
-                  href={item.href}
-                  title={item.label}
-                  className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--surface)]"
-                  target={item.external ? "_blank" : undefined}
-                  rel={item.external ? "noreferrer" : undefined}
-                >
-                  {item.icon}
-                </Link>
-              ))}
+              {/* Social Icons — under intro text */}
+              <div className="flex items-center gap-2 pt-1">
+                {SOCIAL_ICONS.map((item) => (
+                  <Link
+                    key={item.label}
+                    href={item.href}
+                    title={item.label}
+                    className="flex h-9 w-9 items-center justify-center rounded-full border border-[var(--border)] text-[var(--muted)] transition-all duration-200 hover:border-[var(--accent)] hover:text-[var(--accent)] hover:bg-[var(--surface)]"
+                    target={item.external ? "_blank" : undefined}
+                    rel={item.external ? "noreferrer" : undefined}
+                  >
+                    {item.icon}
+                  </Link>
+                ))}
+              </div>
             </div>
           </div>
         </header>
