@@ -508,6 +508,7 @@ export default function ACLSModal() {
   const [dopamineActive, setDopamineActive] = useState(false); // toggle on/off, bradycardia/post-ROSC
   const [procainamideGiven, setProcainamideGiven] = useState(0); // max 1 (slow infusion)
   const [diltiazemGiven, setDiltiazemGiven] = useState(0); // max 2 (0.25 then 0.35 mg/kg)
+  const [isuprelActive, setIsuprelActive] = useState(false); // toggle on/off, bradycardia/torsades
 
   // ── Senior arrival resternotomy tracking (tamponade only) ──
   const [seniorResternotomyCountdown, setSeniorResternotomyCountdown] = useState<number | null>(null); // seconds remaining until ROSC
@@ -980,7 +981,7 @@ export default function ACLSModal() {
       const rhythmName =
         RHYTHM_DISPLAY[currentRhythm]?.label ?? currentRhythm;
       setTeachingMessage(
-        `${rhythmName} is non-shockable. Continue CPR and treat reversible causes.`
+        `${rhythmName} 是不可電擊心律。電擊對 PEA/asystole 無效 — 需要的是 CPR + epinephrine + 找出可逆原因（H's and T's）。`
       );
       addEvent(
         `Defibrillation attempted on ${rhythmName} - NON-SHOCKABLE rhythm!`,
@@ -1042,7 +1043,7 @@ export default function ACLSModal() {
     if (lastEpiTime !== null && elapsedSeconds - lastEpiTime < EPI_MIN_INTERVAL_SECONDS) {
       const remaining = EPI_MIN_INTERVAL_SECONDS - (elapsedSeconds - lastEpiTime);
       setTeachingMessage(
-        `Epinephrine interval not met. Wait ${remaining}s (minimum 3-minute interval per AHA 2020).`
+        `Epinephrine 間隔未到：還需等 ${remaining} 秒。AHA 2020 建議每 3-5 分鐘給藥，過於頻繁不會增加療效，反而增加 ROSC 後心肌缺血風險。`
       );
       setTimeout(() => setTeachingMessage(null), 3000);
       return;
@@ -1060,12 +1061,16 @@ export default function ACLSModal() {
       content: `ACLS: Epinephrine 1mg IV (dose #${epinephrineGiven + 1})`,
       sender: "player",
     });
+    setTeachingMessage(
+      "Epinephrine 1mg IV：α1 受體血管收縮 → 提升冠狀動脈灌注壓（CPP），這是 CPR 期間 ROSC 的關鍵。每 3-5 分鐘重複一次，注意 ROSC 後可能出現心搏過速。"
+    );
+    setTimeout(() => setTeachingMessage(null), 5000);
   };
 
   const handleAmiodarone300 = () => {
     if (amiodarone300Given) {
       setTeachingMessage(
-        "Amiodarone 300mg already administered. Consider 150mg second dose if refractory VF/pVT."
+        "Amiodarone 300mg 已給過。若 VF/pVT 仍持續，可考慮第二劑 150mg。總量上限 450mg。"
       );
       setTimeout(() => setTeachingMessage(null), 3000);
       return;
@@ -1080,19 +1085,23 @@ export default function ACLSModal() {
       content: `ACLS: Amiodarone 300mg IV (dose 1/2)${noteTag}`,
       sender: "player",
     });
+    setTeachingMessage(
+      "Amiodarone 300mg IV：Class III 抗心律不整藥（同時具 I/II/IV 特性），延長不應期以穩定心肌電位。用於電擊難治 VF/pVT。注意可能造成低血壓。"
+    );
+    setTimeout(() => setTeachingMessage(null), 5000);
   };
 
   const handleAmiodarone150 = () => {
     if (amiodarone150Given) {
       setTeachingMessage(
-        `Max amiodarone dose reached (${AMIODARONE_MAX_DOSES} doses: 300mg + 150mg = 450mg total). No further doses recommended.`
+        `Amiodarone 已達最大劑量（300mg + 150mg = 450mg）。Amiodarone 半衰期極長（40-55 天），無需追加。`
       );
       setTimeout(() => setTeachingMessage(null), 4000);
       return;
     }
     if (!amiodarone300Given) {
       setTeachingMessage(
-        "Amiodarone 300mg must be given first before the 150mg second dose."
+        "必須先給 Amiodarone 300mg（首劑），才能給 150mg 追加劑。AHA 建議第三次電擊後給首劑。"
       );
       setTimeout(() => setTeachingMessage(null), 3000);
       return;
@@ -1107,11 +1116,15 @@ export default function ACLSModal() {
       content: `ACLS: Amiodarone 150mg IV (dose 2/2 - max reached)${noteTag}`,
       sender: "player",
     });
+    setTeachingMessage(
+      "Amiodarone 150mg（第二劑）：已達急救最大劑量 450mg。K⁺ 通道阻斷提升去顫成功率。ROSC 後考慮維持輸注 1 mg/min × 6hr。"
+    );
+    setTimeout(() => setTeachingMessage(null), 5000);
   };
 
   const handleAtropine = () => {
     if (atropineGiven >= 3) {
-      setTeachingMessage("Atropine max dose reached (3mg total). No further doses recommended.");
+      setTeachingMessage("Atropine 已達最大劑量 3mg（完全迷走神經阻斷）。超過此劑量無額外效益，考慮 dopamine 或經皮 pacing。");
       setTimeout(() => setTeachingMessage(null), 3000);
       return;
     }
@@ -1123,6 +1136,10 @@ export default function ACLSModal() {
       content: `ACLS: Atropine 1mg IV (dose ${atropineGiven + 1}/3)`,
       sender: "player",
     });
+    setTeachingMessage(
+      "Atropine 1mg IV：M₂ 蕈毒鹼受體拮抗劑，解除迷走神經對竇房結/房室結的抑制 → 心率上升。注意：對 infranodal block（寬 QRS）無效。"
+    );
+    setTimeout(() => setTeachingMessage(null), 5000);
   };
 
   const handleCalciumChloride = () => {
@@ -1134,6 +1151,10 @@ export default function ACLSModal() {
       content: `ACLS: CaCl₂ 1g IV (dose ${calciumChlorideGiven + 1})`,
       sender: "player",
     });
+    setTeachingMessage(
+      "CaCl₂ 1g IV：提升細胞外 Ca²⁺ → 穩定心肌細胞膜（升高閾值電位）。用於高血鉀、低血鈣、鈣離子阻斷劑中毒。注意：不降低血鉀，需搭配 insulin + D50W。"
+    );
+    setTimeout(() => setTeachingMessage(null), 5000);
   };
 
   const handleSodiumBicarb = () => {
@@ -1145,6 +1166,10 @@ export default function ACLSModal() {
       content: `ACLS: NaHCO₃ 50mEq IV (dose ${sodiumBicarbGiven + 1})`,
       sender: "player",
     });
+    setTeachingMessage(
+      "NaHCO₃ 50mEq IV：緩衝代謝性酸中毒（HCO₃⁻ + H⁺ → CO₂ + H₂O）。適應症：高血鉀、TCA 中毒（Na⁺ 載入解除 Na⁺ 通道阻斷）、嚴重酸血症。禁止與 epinephrine 或 CaCl₂ 同管線！"
+    );
+    setTimeout(() => setTeachingMessage(null), 5000);
   };
 
   const handleMagnesium = () => {
@@ -1156,6 +1181,10 @@ export default function ACLSModal() {
       content: `ACLS: Magnesium 2g IV (dose ${magnesiumGiven + 1})`,
       sender: "player",
     });
+    setTeachingMessage(
+      "MgSO₄ 2g IV：生理性鈣離子拮抗劑，抑制 early afterdepolarization → Torsades de Pointes（TdP）的首選藥物。即使血鎂正常也有效。注意快速推注可致低血壓。"
+    );
+    setTimeout(() => setTeachingMessage(null), 5000);
   };
 
   const handleLidocaine = () => {
@@ -1169,11 +1198,15 @@ export default function ACLSModal() {
       content: `ACLS: Lidocaine 100mg IV (dose ${lidocaineGiven + 1})${noteTag}`,
       sender: "player",
     });
+    setTeachingMessage(
+      "Lidocaine 100mg IV：Class Ib 抗心律不整藥，選擇性阻斷缺血心肌的 Na⁺ 通道 → 提升 VF 閾值。可替代 amiodarone 用於電擊難治 VF/pVT。最大累積劑量 3 mg/kg。"
+    );
+    setTimeout(() => setTeachingMessage(null), 5000);
   };
 
   const handleVasopressin = () => {
     if (vasopressinGiven) {
-      setTeachingMessage("Vasopressin is a single-dose drug (40U). No further doses recommended.");
+      setTeachingMessage("Vasopressin 僅限單次 40U。與 epinephrine 不同，它不重複給藥。後續劑量請使用 epinephrine。");
       setTimeout(() => setTeachingMessage(null), 3000);
       return;
     }
@@ -1186,7 +1219,7 @@ export default function ACLSModal() {
       sender: "player",
     });
     setTeachingMessage(
-      "Vasopressin 40U can replace the first or second dose of epinephrine in PEA/Asystole/VF/pVT. One-time only."
+      "Vasopressin 40U IV：V₁a 受體血管收縮，不依賴腎上腺素受體（酸中毒下仍有效）。可替代第一或第二劑 epinephrine。無 β 效應 → 不增加心肌氧耗。"
     );
     setTimeout(() => setTeachingMessage(null), 5000);
   };
@@ -1203,7 +1236,7 @@ export default function ACLSModal() {
         isImportant: true,
       });
       setTeachingMessage(
-        "FATAL ERROR: Adenosine is CONTRAINDICATED in asystole! It blocks AV conduction and would worsen the arrest. Adenosine is ONLY for SVT or stable wide-complex tachycardia."
+        "致命錯誤：Adenosine 在 asystole 下絕對禁忌！A₁ 受體活化 → 房室結傳導完全阻斷 → 加重心臟停止。Adenosine 僅用於 SVT（AVNRT/AVRT）。"
       );
       setTimeout(() => setTeachingMessage(null), 8000);
       return;
@@ -1213,13 +1246,13 @@ export default function ACLSModal() {
       const rhythmLabel = RHYTHM_DISPLAY[currentRhythm]?.label ?? currentRhythm;
       addEvent(`WARNING: Adenosine given during ${rhythmLabel} — inappropriate. Use amiodarone or lidocaine instead.`, "error");
       setTeachingMessage(
-        `Adenosine is not indicated for ${rhythmLabel}. It is only effective for SVT or stable wide-complex tachycardia. Consider amiodarone or lidocaine.`
+        `Adenosine 不適用於 ${rhythmLabel}。它只能阻斷房室結（A₁ 受體），對不經過房室結的 VF/VT/PEA 無效。應使用 amiodarone 或 lidocaine。`
       );
       setTimeout(() => setTeachingMessage(null), 6000);
       return;
     }
     if (adenosineGiven >= 3) {
-      setTeachingMessage("Adenosine max 3 doses reached (6mg + 12mg + 12mg = 30mg total).");
+      setTeachingMessage("Adenosine 已達最大劑量（6mg + 12mg + 12mg = 30mg）。半衰期 <10 秒，如仍無效表示非 AV nodal reentry。");
       setTimeout(() => setTeachingMessage(null), 3000);
       return;
     }
@@ -1235,11 +1268,11 @@ export default function ACLSModal() {
     });
     if (doseNum === 1) {
       setTeachingMessage(
-        "Adenosine 6mg rapid IV push with immediate NS flush. Only for SVT/stable wide-complex tachycardia. If ineffective, next dose is 12mg."
+        "Adenosine 6mg 快速 IV push + 20mL NS 沖管：活化 A₁ 受體 → 房室結短暫完全阻斷（6-12 秒），中斷經房室結的 reentry 迴路。預期短暫心搏停止屬正常。"
       );
     } else {
       setTeachingMessage(
-        `Adenosine 12mg rapid IV push with flush. Dose ${doseNum}/3.${doseNum === 3 ? " Max doses reached." : ""}`
+        `Adenosine 12mg 快速 IV push + 沖管（第 ${doseNum}/3 劑）。半衰期 <10 秒，必須快推且從近端 IV 給藥。${doseNum === 3 ? " 已達最大劑量。" : ""}`
       );
     }
     setTimeout(() => setTeachingMessage(null), 5000);
@@ -1247,7 +1280,7 @@ export default function ACLSModal() {
 
   const handleD50W = () => {
     if (d50wGiven >= 2) {
-      setTeachingMessage("D50W max 2 doses given. Recheck blood glucose before further dextrose.");
+      setTeachingMessage("D50W 已給 2 劑（共 50g 葡萄糖）。再次給藥前需重新確認血糖，並警覺 rebound 低血糖（尤其 sulfonylurea 中毒）。");
       setTimeout(() => setTeachingMessage(null), 3000);
       return;
     }
@@ -1260,26 +1293,26 @@ export default function ACLSModal() {
       sender: "player",
     });
     setTeachingMessage(
-      "D50W treats hypoglycemia — one of the H's in reversible causes (Hypo/Hyperkalemia includes glucose disorders). Consider checking glucose in refractory arrest."
+      "D50W 50mL（25g 葡萄糖）：直接補充血糖。低血糖是可逆原因之一（H's）。也是高血鉀治療的必要搭配 — insulin 會驅使 K⁺ 進入細胞，同時消耗葡萄糖。"
     );
     setTimeout(() => setTeachingMessage(null), 5000);
   };
 
   const handleInsulin = () => {
     if (insulinGiven >= 2) {
-      setTeachingMessage("Insulin max 2 doses given. Monitor glucose and potassium closely.");
+      setTeachingMessage("Insulin 已給 2 劑。K⁺ 轉移效果持續 4-6 小時，需密切監測血鉀與血糖（每 15-30 分鐘）。考慮最終移除方式：透析。");
       setTimeout(() => setTeachingMessage(null), 3000);
       return;
     }
     // Teaching: warn if D50W not given
     if (d50wGiven === 0) {
       setTeachingMessage(
-        "WARNING: Giving insulin without D50W risks severe hypoglycemia. Strongly consider giving D50W first or concurrently."
+        "警告：未給 D50W 就給 insulin → 嚴重低血糖風險！Insulin 活化 Na⁺/K⁺-ATPase 驅使 K⁺ 進入細胞，但同時消耗葡萄糖。必須先給或同時給 D50W。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
     } else {
       setTeachingMessage(
-        "Insulin 10U IV for hyperkalemia (one of the H's). Pair with D50W and calcium for full hyperK treatment."
+        "Insulin 10U IV：活化 Na⁺/K⁺-ATPase → K⁺ 進入細胞，15-30 分鐘內降低血鉀 0.5-1.0 mEq/L。高血鉀完整治療：CaCl₂（穩定膜） → NaHCO₃ + Insulin/D50W（降 K⁺）→ 透析（移除）。"
       );
       setTimeout(() => setTeachingMessage(null), 5000);
     }
@@ -1299,7 +1332,7 @@ export default function ACLSModal() {
       // Teaching: epi drip is post-ROSC only
       addEvent("ERROR: Epinephrine drip ordered during active CPR — use push-dose epinephrine instead!", "error");
       setTeachingMessage(
-        "Epinephrine drip (0.1-0.5 mcg/kg/min) is for post-ROSC hemodynamic support ONLY. During active CPR, use push-dose epinephrine 1mg IV."
+        "Epi drip（0.1-0.5 mcg/kg/min）僅用於 ROSC 後血流動力學支持。CPR 中需要的是 push-dose 1mg IV — 因為 drip 的低濃度在無灌流狀態下無法達到足夠冠狀動脈灌注壓。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
       return;
@@ -1314,7 +1347,7 @@ export default function ACLSModal() {
         sender: "player",
       });
       setTeachingMessage(
-        "Epinephrine infusion started for post-ROSC hemodynamic support. Titrate to MAP > 65 mmHg."
+        "Epi drip 開始：低劑量以 β1/β2 效應為主（↑心輸出、輕微血管擴張），高劑量 α1 主導（血管收縮）。滴定目標 MAP > 65 mmHg，監測心律不整與末梢灌流。"
       );
       setTimeout(() => setTeachingMessage(null), 5000);
     } else {
@@ -1329,11 +1362,11 @@ export default function ACLSModal() {
   };
 
   const handleDopamine = () => {
-    // Guard: not during active cardiac arrest (CPR in progress)
-    if (cprActive || (aclsPhase !== "rosc" && aclsPhase !== "arrest_detected")) {
+    // Guard: only allowed post-ROSC (dopamine drip requires perfusion to reach receptors)
+    if (aclsPhase !== "rosc") {
       addEvent("ERROR: Dopamine ordered during active cardiac arrest — not indicated!", "error");
       setTeachingMessage(
-        "Dopamine is for symptomatic bradycardia or post-ROSC hemodynamic support, not during active arrest. Use push-dose epinephrine during CPR."
+        "Dopamine 不用於心臟停止急救！它需持續輸注才有效（非 bolus），且在無灌流狀態下無法到達受體。CPR 中應使用 push-dose epinephrine 1mg IV。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
       return;
@@ -1348,7 +1381,7 @@ export default function ACLSModal() {
         sender: "player",
       });
       setTeachingMessage(
-        "Dopamine: dose-dependent — low dose renal, medium inotropy, high vasopressor. Standard choice for symptomatic bradycardia after atropine fails."
+        "Dopamine 2-20 mcg/kg/min：劑量依賴性 — 低劑量 D₁ 腎臟擴張、中劑量 β1 強心、高劑量 α1 升壓。Atropine 無效後的心搏過緩二線選擇。注意：比 norepinephrine 更易致心律不整（SOAP II trial）。"
       );
       setTimeout(() => setTeachingMessage(null), 5000);
     } else {
@@ -1367,7 +1400,7 @@ export default function ACLSModal() {
     if (currentRhythm === "asystole") {
       addEvent("ERROR: Procainamide given during ASYSTOLE — contraindicated!", "error");
       setTeachingMessage(
-        "Procainamide is for stable VT with pulse, not asystole. It has no role in non-shockable arrest rhythms."
+        "Procainamide 禁用於 asystole！它是 Na⁺ 通道阻斷劑（Class Ia），會進一步抑制已停止的心肌電活動。僅用於有脈搏的穩定 VT。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
       return;
@@ -1376,7 +1409,7 @@ export default function ACLSModal() {
     if (currentRhythm === "pea") {
       addEvent("ERROR: Procainamide given during PEA — contraindicated!", "error");
       setTeachingMessage(
-        "Procainamide is for stable VT with pulse, not PEA. Focus on CPR, epinephrine, and reversible causes."
+        "Procainamide 禁用於 PEA！PEA 的治療是 CPR + epinephrine + 找出可逆原因（H's and T's），不是抗心律不整藥。Procainamide 的負性肌力與低血壓效應會雪上加霜。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
       return;
@@ -1385,7 +1418,7 @@ export default function ACLSModal() {
     if (currentRhythm === "vf") {
       addEvent("WARNING: Procainamide given during VF — not standard indication. Use amiodarone or defibrillation.", "warning");
       setTeachingMessage(
-        "Procainamide is for stable VT, not VF — use amiodarone or defibrillation for ventricular fibrillation."
+        "Procainamide 不適用於 VF！VF 首選電擊 + amiodarone/lidocaine。Procainamide 需緩慢輸注（20-50 mg/min），在急性 VF 中來不及發揮作用。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
       return;
@@ -1394,14 +1427,14 @@ export default function ACLSModal() {
     if (currentRhythm === "vt_pulseless") {
       addEvent("WARNING: Procainamide given during pulseless VT — pulseless VT requires defibrillation!", "warning");
       setTeachingMessage(
-        "Pulseless VT requires defibrillation, not procainamide. Procainamide is only for stable VT with pulse."
+        "無脈搏 VT 需要電擊！Procainamide 僅用於有脈搏的穩定單型 VT（慢速輸注 20-50 mg/min）。無脈搏 = 按 VF 流程處理：電擊 + CPR + epinephrine。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
       return;
     }
     // Max dose check
     if (procainamideGiven >= 1) {
-      setTeachingMessage("Procainamide already infusing (max 17 mg/kg or 1g total). No further doses.");
+      setTeachingMessage("Procainamide 已在輸注中（最大 17 mg/kg 或 1g）。持續監測 QRS 寬度 — 若 QRS 增寬 >50% 立即停止，否則有 VF 風險。");
       setTimeout(() => setTeachingMessage(null), 3000);
       return;
     }
@@ -1414,7 +1447,7 @@ export default function ACLSModal() {
       sender: "player",
     });
     setTeachingMessage(
-      "Procainamide: for stable monomorphic VT with pulse. Infuse slowly (20-50 mg/min). Stop if QRS widens >50%, hypotension, or arrhythmia suppressed."
+      "Procainamide IV 輸注：Class Ia — 阻斷 Na⁺ 通道減慢傳導 + 延長不應期。用於有脈搏的穩定單型 VT 或 WPW+AFib。停藥指標：心律不整終止、QRS 增寬 >50%、低血壓、達最大劑量。"
     );
     setTimeout(() => setTeachingMessage(null), 5000);
   };
@@ -1424,7 +1457,7 @@ export default function ACLSModal() {
     if (currentRhythm === "asystole") {
       addEvent("ERROR: Diltiazem given during ASYSTOLE — contraindicated!", "error");
       setTeachingMessage(
-        "Diltiazem is for narrow complex tachycardia, not asystole. Calcium channel blockers have no role in asystole."
+        "Diltiazem 禁用於 asystole！它阻斷 L-type Ca²⁺ 通道 → 抑制房室結傳導與心肌收縮力，會加重已停止的心臟。鈣離子阻斷劑在心臟停止中無任何角色。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
       return;
@@ -1433,7 +1466,7 @@ export default function ACLSModal() {
     if (currentRhythm === "pea") {
       addEvent("ERROR: Diltiazem given during PEA — contraindicated!", "error");
       setTeachingMessage(
-        "Diltiazem is for narrow complex tachycardia, not PEA. Focus on CPR, epinephrine, and reversible causes."
+        "Diltiazem 禁用於 PEA！Ca²⁺ 通道阻斷 → 負性肌力 + 血管擴張 → 血壓更低。PEA 的處理是 CPR + epinephrine + 可逆原因。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
       return;
@@ -1449,7 +1482,7 @@ export default function ACLSModal() {
         isImportant: true,
       });
       setTeachingMessage(
-        "CRITICAL: Calcium channel blockers in VF can worsen arrest! Use defibrillation and amiodarone for VF."
+        "致命錯誤：鈣離子阻斷劑在 VF 中會惡化心臟停止！負性肌力 + 血管擴張 = 災難。VF 唯一正確處置：電擊 + CPR + epinephrine + amiodarone。"
       );
       setTimeout(() => setTeachingMessage(null), 8000);
       return;
@@ -1465,14 +1498,14 @@ export default function ACLSModal() {
         isImportant: true,
       });
       setTeachingMessage(
-        "CRITICAL: Diltiazem in wide complex tachycardia = potentially fatal if VT misdiagnosed as SVT. This is a classic ACLS teaching error. Use defibrillation for pulseless VT."
+        "致命錯誤：Diltiazem 用於寬 QRS 心搏過速 = 經典 ACLS 致死錯誤！若 VT 被誤診為 SVT，Ca²⁺ 阻斷會導致血流動力學崩潰。無脈搏 VT 必須電擊。"
       );
       setTimeout(() => setTeachingMessage(null), 8000);
       return;
     }
     // Max dose check
     if (diltiazemGiven >= 2) {
-      setTeachingMessage("Diltiazem max 2 doses reached (0.25 mg/kg + 0.35 mg/kg). No further doses.");
+      setTeachingMessage("Diltiazem 已達最大劑量（0.25 + 0.35 mg/kg）。若心率控制仍不佳，考慮持續輸注 5-15 mg/hr 或轉換為 amiodarone。");
       setTimeout(() => setTeachingMessage(null), 3000);
       return;
     }
@@ -1488,14 +1521,67 @@ export default function ACLSModal() {
     });
     if (doseNum === 1) {
       setTeachingMessage(
-        "Diltiazem 0.25 mg/kg for narrow complex tachycardia. Monitor BP closely — can cause hypotension."
+        "Diltiazem 0.25 mg/kg IV：Non-DHP 鈣離子阻斷劑，阻斷房室結 L-type Ca²⁺ 通道 → 減慢心室率。用於窄 QRS 心搏過速（AFib/flutter/SVT）。密切監測血壓 — 可致低血壓。"
       );
     } else {
       setTeachingMessage(
-        "Diltiazem 0.35 mg/kg (repeat dose). Max reached."
+        "Diltiazem 0.35 mg/kg（第二劑）：已達最大 bolus 劑量。記住：絕不可在 15-30 分鐘內同時給 IV β-blocker — 疊加房室結阻斷 → 完全阻滯。"
       );
     }
     setTimeout(() => setTeachingMessage(null), 5000);
+  };
+
+  const handleIsuprel = () => {
+    // Guard: VF — BLOCK
+    if (currentRhythm === "vf") {
+      addEvent("ERROR: Isoproterenol given during VF — contraindicated!", "error");
+      setTeachingMessage(
+        "Isoproterenol 禁用於 VF！純 β 激動劑 → 增加心肌自動性（automaticity）→ 維持甚至惡化 VF。VF 需要電擊 + amiodarone，不是增加心肌興奮性。"
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+      return;
+    }
+    // Guard: pulseless VT — BLOCK
+    if (currentRhythm === "vt_pulseless") {
+      addEvent("ERROR: Isoproterenol given during pulseless VT — not indicated!", "error");
+      setTeachingMessage(
+        "Isoproterenol 不適用於無脈搏 VT！β1 激動增加自動性會惡化 VT。無脈搏 VT = 按 VF 流程：電擊 + CPR + epinephrine + amiodarone。"
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+      return;
+    }
+    // Guard: active CPR arrest (not ROSC) — BLOCK
+    if (cprActive && aclsPhase !== "rosc") {
+      addEvent("ERROR: Isoproterenol ordered during active CPR arrest — not indicated!", "error");
+      setTeachingMessage(
+        "Isoproterenol 不用於 CPR 中！它是純 β 激動劑（無 α） → 血管擴張降低 SVR → 無法維持冠狀動脈灌注壓。CPR 中需要有 α 效應的 epinephrine。"
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+      return;
+    }
+    // Toggle infusion
+    setIsuprelActive((prev) => !prev);
+    if (!isuprelActive) {
+      addEvent("Isoproterenol drip STARTED (2-10 mcg/min) - beta-agonist infusion", "drug");
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "ACLS: Isoproterenol drip started (2-10 mcg/min)",
+        sender: "player",
+      });
+      setTeachingMessage(
+        "Isoproterenol 2-10 mcg/min：純 β1+β2 激動劑，最強效的變時性藥物（chronotrope）。用於難治性心搏過緩或 TdP（加速心率抑制 pause-dependent 觸發）。注意：無 α → ↓SVR、↓DBP，且大幅增加心肌氧耗。"
+      );
+      setTimeout(() => setTeachingMessage(null), 5000);
+    } else {
+      addEvent("Isoproterenol drip STOPPED", "drug");
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "ACLS: Isoproterenol drip stopped",
+        sender: "player",
+      });
+    }
   };
 
   const handleRosc = (method: string) => {
@@ -2385,6 +2471,21 @@ export default function ACLSModal() {
                 {dopamineActive ? "Dopamine ON" : "Dopamine"}
                 <span className="block text-[10px] mt-0.5 text-zinc-500">
                   {dopamineActive ? "2-20 mcg/kg/min" : "Bradycardia / Post-ROSC"}
+                </span>
+              </button>
+              <button
+                onClick={handleIsuprel}
+                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                  isuprelActive
+                    ? "bg-green-800 hover:bg-green-700 text-green-200 border border-green-500/70 ring-1 ring-green-500/40"
+                    : aclsPhase === "rosc"
+                      ? "bg-cyan-900 hover:bg-cyan-800 text-cyan-200 border border-cyan-700/50"
+                      : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:bg-zinc-700/50"
+                }`}
+              >
+                {isuprelActive ? "Isuprel ON" : "Isuprel"}
+                <span className="block text-[10px] mt-0.5 text-zinc-500">
+                  {isuprelActive ? "2-10 mcg/min" : "Bradycardia / Torsades"}
                 </span>
               </button>
               <button
