@@ -16,9 +16,9 @@ import type {
   POCUSView,
   PEFinding,
   DebriefData,
-  EventCondition,
   GuidelineBundle,
 } from "@/lib/simulator/types";
+import type { PhaseTransition } from "@/lib/simulator/engine/phase-engine";
 
 // ============================================================
 // Initial State (same as postop-bleeding Phase 1 start)
@@ -47,79 +47,19 @@ const initialChestTube: ChestTubeState = {
 };
 
 // ============================================================
-// Event Conditions
+// Event Conditions (legacy — most moved to NurseTrigger system)
 // ============================================================
-
-// Phase 1: severity > 40 AND 沒叫學長（門檻低一點，讓護理師催促更容易觸發）
-const conditionHighSeverityNoSenior: EventCondition = {
-  operator: "AND",
-  conditions: [
-    { field: "severity",         op: ">",    value: 40 },
-    { field: "action_not_taken", op: "==",   value: "call_senior" },
-  ],
-};
-
-// Phase 1: 輸血 >= 4U AND 沒追 iCa
-const conditionTransfusionNoiCa: EventCondition = {
-  operator: "AND",
-  conditions: [
-    { field: "blood_units_given", op: ">=",  value: 4 },
-    { field: "action_not_taken",  op: "==",  value: "order_ica" },
-  ],
-};
-
-// Phase 1: 學長到場（叫過學長才觸發）
-const conditionSeniorCalled: EventCondition = {
-  operator: "AND",
-  conditions: [
-    { field: "action_taken", op: "==", value: "call_senior" },
-  ],
-};
-
-// Phase 2: CVP 真的升了（狀態驅動，取代固定時間觸發）
-const conditionCvpRising: EventCondition = {
-  operator: "AND",
-  conditions: [
-    { field: "vitals.cvp", op: ">", value: 12 },
-  ],
-};
-
-// Phase 2: severity > 80（瀕臨 arrest，狀態驅動）
-const conditionPreArrest: EventCondition = {
-  operator: "AND",
-  conditions: [
-    { field: "severity", op: ">", value: 80 },
-  ],
-};
-
-// Phase 2: 沒有 strip/milk CT 且 CT output 掉下來
-const conditionNoStripCTLowOutput: EventCondition = {
-  operator: "AND",
-  conditions: [
-    { field: "action_not_taken",      op: "==", value: "strip_milk_ct" },
-    { field: "chestTube.currentRate", op: "<",  value: 30 },
-  ],
-};
-
-// Phase 2: 沒做 POCUS 且 CT output < 20
-const conditionNoPocusCtLow: EventCondition = {
-  operator: "AND",
-  conditions: [
-    { field: "action_not_taken",      op: "==", value: "cardiac_pocus" },
-    { field: "chestTube.currentRate", op: "<",  value: 20 },
-  ],
-};
+// Kept empty — all conditions are now in nurseTriggers and phaseTransitions
 
 // ============================================================
 // Scripted Events
 // ============================================================
 
+// All nurse dialogue and CT changes are now state-driven via NurseTrigger system
+// and CT output is derived from BioGears hemorrhage + pericardium volume.
+// Only keep: opening nurse call and scripted lab results.
 const events: ScriptedEvent[] = [
-  // ════════════════════════════════════════════════════════════
-  // Phase 1: Surgical Bleeding (0-18 min)
-  // ════════════════════════════════════════════════════════════
-
-  // ── 00:00 ── 護理師 call：CT 突然出很多
+  // ── 00:00 ── 護理師 call：CT 突然出很多（opening event）
   {
     id: "evt-00-nurse-call",
     triggerTime: 0,
@@ -129,25 +69,7 @@ const events: ScriptedEvent[] = [
     severityChange: 0,
   },
 
-  // ── 05:00 ── CT 增加 + 血壓掉 + 鮮紅色有血塊
-  {
-    id: "evt-05-ct-increase",
-    triggerTime: 5,
-    type: "nurse_call",
-    message:
-      "醫師，血壓又掉了一點，{{sbp}}/{{dbp}}。chest tube 出的是鮮紅色的，有看到一些血塊，現在 {{ct_rate}}cc/hr。",
-    chestTubeChanges: {
-      currentRate: 280,
-      totalOutput: 480,
-      color: "bright_red",
-      hasClots: true,
-      isPatent: true,
-    },
-    // severityChange 移除 — severity 由 patient-engine base rate (surgical_bleeding) 驅動
-    // 治療（輸血、volume）可以有效對抗 base rate，讓玩家感受到處置有效
-  },
-
-  // ── 10:00 ── 第一套 Lab 結果回來
+  // ── 10:00 ── 第一套 Lab 結果回來（scripted lab data still needed）
   {
     id: "evt-10-lab-result",
     triggerTime: 10,
@@ -169,146 +91,11 @@ const events: ScriptedEvent[] = [
     },
   },
 
-  // ── 12:00 ── 如果 severity > 70 且沒叫學長 → 護理師報數字
-  {
-    id: "evt-12-nurse-report",
-    triggerTime: 12,
-    triggerCondition: conditionHighSeverityNoSenior,
-    type: "nurse_call",
-    message:
-      "醫師，血壓 {{sbp}}/{{dbp}}，CT 累計 {{ct_total}}cc，這一個小時量一直沒有減少⋯⋯接下來要怎麼處理？",
-    chestTubeChanges: {
-      currentRate: 320,
-      totalOutput: 1100,
-    },
-    // severityChange 移除 — state-driven
-  },
-
-  // ── 15:00 ── 正常推進（無條件）
-  {
-    id: "evt-15-vitals-progress",
-    triggerTime: 15,
-    type: "vitals_change",
-    chestTubeChanges: {
-      currentRate: 310,
-      totalOutput: 1150,
-    },
-    // severityChange 移除 — state-driven
-  },
-
-  // ── 學長到場/離開 ──
-  // 由 ConsultModal 處理（玩家點「叫學長」→ 排程 senior_arrives event → SeniorDialogModal 彈出）
-  // 不用 scripted event，避免學長在沒被叫的情況下自動出現
-
-  // evt-18-second-lab 已移除：30 分鐘遊戲內 scripted 兩次 CBC 不符合臨床實務。
-  // 如果玩家需要追蹤 Hb，可以自行再 order CBC（lab-engine 會動態計算結果）。
-
-  // ── 18:00 ── 輸 >= 4U 血但沒追 iCa → 護理師提醒
-  {
-    id: "evt-18-ica-reminder",
-    triggerTime: 18,
-    triggerCondition: conditionTransfusionNoiCa,
-    type: "nurse_call",
-    message:
-      "醫師，輸了不少血了，要不要追一下 ionized calcium？",
-  },
-
-  // ════════════════════════════════════════════════════════════
-  // Phase 2: Transition & Cardiac Tamponade (19-33 min)
-  // ════════════════════════════════════════════════════════════
-
-  // ── 19:00 ── CT output 逐漸下降（靜默）
-  {
-    id: "evt-19-ct-gradual-decline",
-    triggerTime: 19,
-    type: "vitals_change",
-    chestTubeChanges: {
-      currentRate: 120,
-      color: "dark_red",
-      hasClots: true,
-    },
-  },
-
-  // ── 20:00 ── PATHOLOGY TRANSITION: surgical_bleeding → cardiac_tamponade
-  {
-    id: "evt-20-pathology-transition",
-    triggerTime: 20,
-    type: "vitals_change",
-    pathologyChange: "cardiac_tamponade",
-    severitySet: 25,
-    chestTubeChanges: {
-      currentRate: 40,
-      hasClots: true,
-      isPatent: false,
-    },
-  },
-
-  // ── 21:00 ── 護理師的「好消息」（誤導）
-  {
-    id: "evt-21-nurse-mislead",
-    triggerTime: 21,
-    type: "nurse_call",
-    message:
-      "醫師，好消息欸，CT 量少了很多，只剩 {{ct_rate}}cc/hr，看起來出血有在止了吧？血壓 {{sbp}}/{{dbp}}，也稍微穩了一下。",
-    severityChange: 0,
-  },
-
-  // ── 23:00 ── CVP 上升（狀態驅動：CVP > 12 才觸發）
-  {
-    id: "evt-23-cvp-rising",
-    triggerTime: 23,
-    triggerCondition: conditionCvpRising,
-    type: "nurse_call",
-    message:
-      "醫師，跟你報一下，CVP 現在 {{cvp}}，比剛剛高了一些。血壓 {{sbp}}/{{dbp}}。",
-  },
-
-  // ── 25:00 ── CT 幾乎停了（保留 narrative + chestTubeChanges，severity 由 patient engine 驅動）
-  {
-    id: "evt-25-ct-nearly-zero",
-    triggerTime: 25,
-    type: "nurse_call",
-    message:
-      "醫師！CT 這幾分鐘幾乎沒東西出來了，只有 {{ct_rate}}cc/hr。血壓 {{sbp}}/{{dbp}}，心跳 {{hr}}。",
-    chestTubeChanges: {
-      currentRate: 10,
-      totalOutput: 1200,
-      hasClots: true,
-      isPatent: false,
-    },
-  },
-
-  // ── 27:00 ── 沒有通 CT → 護理師提醒 strip/milk（條件觸發）
-  {
-    id: "evt-27-hint-strip",
-    triggerTime: 27,
-    triggerCondition: conditionNoStripCTLowOutput,
-    type: "nurse_call",
-    message:
-      "醫師，CT 好像不太通的樣子⋯⋯你看要不要先試著 milk 一下 chest tube？有時候是 clot 堵住。",
-  },
-
-  // ── 28:00 ── 沒做 POCUS → 護理師提醒（條件觸發）
-  {
-    id: "evt-28-hint-pocus",
-    triggerTime: 28,
-    triggerCondition: conditionNoPocusCtLow,
-    type: "nurse_call",
-    message:
-      "醫師，超音波機就在旁邊——你要不要照個心臟看看有沒有積液？",
-  },
-
-  // ── 25:00+ ── 瀕臨 PEA arrest（狀態驅動：severity > 80 才觸發，最早 min 25）
-  {
-    id: "evt-30-pre-arrest",
-    triggerTime: 25,
-    triggerCondition: conditionPreArrest,
-    type: "escalation",
-    message:
-      "\u26A0\uFE0F 血壓 {{sbp}}/{{dbp}}，心跳 {{hr}}，意識下降。病人呈現 near-PEA 狀態——心臟在跳但幾乎沒有 output。必須立即行動！",
-  },
-
-  // 死亡由 auto-death 機制處理（ProPageClient.tsx）— 未來接 ACLS mini-game
+  // All other events (nurse reports, CT changes, pathology transitions, hints)
+  // are now handled by:
+  //   - NurseTrigger system (nurse-trigger-engine.ts)
+  //   - PhaseTransition rules (phaseTransitions below)
+  //   - CT output engine (ct-output-engine.ts)
 ];
 
 // ============================================================
@@ -661,6 +448,176 @@ const availableLabs: Record<string, LabPanel> = {
       crossmatch: { value: "Compatible \u2014 4U pRBC reserved", unit: "", normal: "" },
     },
   },
+
+  // ── Expanded labs (BioGears-first GDD) ──
+
+  ntprobnp: {
+    id: "ntprobnp",
+    name: "NT-proBNP",
+    turnaroundTime: 15,
+    results: {
+      ntprobnp: { value: 850, unit: "pg/mL", normal: "< 125", flag: "H" },
+    },
+  },
+  ckmb: {
+    id: "ckmb",
+    name: "CK-MB",
+    turnaroundTime: 15,
+    results: {
+      ckmb: { value: 28, unit: "U/L", normal: "< 25", flag: "H" },
+    },
+  },
+  ddimer: {
+    id: "ddimer",
+    name: "D-dimer",
+    turnaroundTime: 12,
+    results: {
+      ddimer: { value: 4.2, unit: "\u03BCg/mL", normal: "< 0.5", flag: "H" },
+    },
+  },
+  pct: {
+    id: "pct",
+    name: "Procalcitonin (PCT)",
+    turnaroundTime: 15,
+    results: {
+      pct: { value: 0.8, unit: "ng/mL", normal: "< 0.5", flag: "H" },
+    },
+  },
+  crp: {
+    id: "crp",
+    name: "CRP (C-Reactive Protein)",
+    turnaroundTime: 12,
+    results: {
+      crp: { value: 85, unit: "mg/L", normal: "< 5", flag: "H" },
+    },
+  },
+  esr: {
+    id: "esr",
+    name: "ESR",
+    turnaroundTime: 15,
+    results: {
+      esr: { value: 45, unit: "mm/hr", normal: "0-20", flag: "H" },
+    },
+  },
+  mg: {
+    id: "mg",
+    name: "Mg (Magnesium)",
+    turnaroundTime: 10,
+    results: {
+      mg: { value: 1.6, unit: "mg/dL", normal: "1.7-2.2", flag: "L" },
+    },
+  },
+  phosphate: {
+    id: "phosphate",
+    name: "Phosphate (PO\u2084)",
+    turnaroundTime: 10,
+    results: {
+      phosphate: { value: 2.8, unit: "mg/dL", normal: "2.5-4.5" },
+    },
+  },
+  ast: {
+    id: "ast",
+    name: "AST",
+    turnaroundTime: 12,
+    results: {
+      ast: { value: 52, unit: "U/L", normal: "10-40", flag: "H" },
+    },
+  },
+  alt: {
+    id: "alt",
+    name: "ALT",
+    turnaroundTime: 12,
+    results: {
+      alt: { value: 38, unit: "U/L", normal: "7-56" },
+    },
+  },
+  ldh: {
+    id: "ldh",
+    name: "LDH",
+    turnaroundTime: 12,
+    results: {
+      ldh: { value: 280, unit: "U/L", normal: "140-280", flag: "H" },
+    },
+  },
+  uric_acid: {
+    id: "uric_acid",
+    name: "Uric Acid",
+    turnaroundTime: 12,
+    results: {
+      uric_acid: { value: 6.8, unit: "mg/dL", normal: "3.5-7.2" },
+    },
+  },
+  thrombin_time: {
+    id: "thrombin_time",
+    name: "Thrombin Time (TT)",
+    turnaroundTime: 12,
+    results: {
+      tt: { value: 16, unit: "sec", normal: "14-19" },
+    },
+  },
+  ammonia: {
+    id: "ammonia",
+    name: "Ammonia",
+    turnaroundTime: 10,
+    results: {
+      ammonia: { value: 35, unit: "\u03BCmol/L", normal: "15-45" },
+    },
+  },
+  urinalysis: {
+    id: "urinalysis",
+    name: "Urinalysis (UA)",
+    turnaroundTime: 10,
+    results: {
+      appearance: { value: "Clear", unit: "", normal: "Clear" },
+      color: { value: "Yellow", unit: "", normal: "Yellow" },
+      specific_gravity: { value: 1.020, unit: "", normal: "1.005-1.030" },
+      ph: { value: 6.0, unit: "", normal: "4.5-8.0" },
+      protein: { value: "Trace", unit: "", normal: "Negative" },
+      glucose: { value: "Negative", unit: "", normal: "Negative" },
+      blood: { value: "Negative", unit: "", normal: "Negative" },
+    },
+  },
+  urine_electrolytes: {
+    id: "urine_electrolytes",
+    name: "Urine Na / FeNa",
+    turnaroundTime: 12,
+    results: {
+      urine_na: { value: 12, unit: "mEq/L", normal: "20-220" },
+      fena: { value: 0.8, unit: "%", normal: "> 1 (renal)", flag: "L" },
+    },
+  },
+  svo2: {
+    id: "svo2",
+    name: "SvO\u2082 (Mixed Venous O\u2082 Saturation)",
+    turnaroundTime: 5,
+    results: {
+      svo2: { value: 58, unit: "%", normal: "65-75", flag: "L" },
+    },
+  },
+  total_ca: {
+    id: "total_ca",
+    name: "Total Ca (Calcium)",
+    turnaroundTime: 10,
+    results: {
+      total_ca: { value: 7.8, unit: "mg/dL", normal: "8.5-10.5", flag: "L" },
+    },
+  },
+  albumin: {
+    id: "albumin",
+    name: "Albumin",
+    turnaroundTime: 12,
+    results: {
+      albumin: { value: 2.8, unit: "g/dL", normal: "3.5-5.0", flag: "L" },
+    },
+  },
+  tbil: {
+    id: "tbil",
+    name: "T-Bil (Total Bilirubin)",
+    turnaroundTime: 12,
+    results: {
+      tbil: { value: 1.8, unit: "mg/dL", normal: "0.1-1.2", flag: "H" },
+    },
+  },
 };
 
 // ============================================================
@@ -937,6 +894,33 @@ const guidelineBundles: GuidelineBundle[] = [
 ];
 
 // ============================================================
+// BioGears-Driven Phase Transitions
+// ============================================================
+// Replace all scripted triggerTime pathology changes with
+// BioGears state-driven transition rules.
+
+const phaseTransitions: Omit<PhaseTransition, "firedAt">[] = [
+  // ── TRANSITION: surgical_bleeding → cardiac_tamponade ──
+  // Triggers when BioGears shows total blood loss > 800 mL
+  // Actions: stop hemorrhage, start pericardial effusion, change pathology
+  {
+    id: "pt-bleeding-to-tamponade",
+    conditions: [
+      { type: "vitals_threshold", vital: "bloodVolume" as keyof VitalSigns, operator: "<", value: 4700 },
+      // 5500 baseline - 800 = 4700. When blood volume drops below this, transition fires.
+    ],
+    actions: [
+      // Stop hemorrhage in BioGears
+      { type: "send_biogears_command", payload: { cmd: "stop_hemorrhage", compartment: "Aorta" } },
+      // Start pericardial effusion (2.0 mL/min accumulation)
+      { type: "send_biogears_command", payload: { cmd: "pericardial_effusion", rate_mL_per_min: 2.0 } },
+      // Notify store of pathology change via trigger event
+      { type: "trigger_event", payload: { event: "pathology_change:cardiac_tamponade" } },
+    ],
+  },
+];
+
+// ============================================================
 // Scenario Export
 // ============================================================
 
@@ -1017,6 +1001,7 @@ export const bleedingToTamponade: SimScenario = {
   events,
   expectedActions,
   guidelineBundles,
+  phaseTransitions,
 
   availableLabs,
   availableImaging,

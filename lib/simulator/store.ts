@@ -18,6 +18,14 @@ import { evaluateCondition } from "@/lib/simulator/engine/time-engine";
 import type { GameStateSnapshot } from "@/lib/simulator/engine/time-engine";
 import { computeLabSnapshot, buildLabContext } from "@/lib/simulator/engine/lab-engine";
 import { getLastBioGearsState, dispatchOrderToBioGears, adjustBioGearsVentilator, dispatchPericardialEffusion } from "@/lib/simulator/engine/biogears-engine";
+import { recordMilkCt, resetCtOutputEngine } from "@/lib/simulator/engine/ct-output-engine";
+import {
+  evaluateNurseTriggers,
+  updateNurseTriggerState,
+  createNurseTriggerState,
+  bleedingToTamponadeNurseTriggers,
+} from "@/lib/simulator/engine/nurse-trigger-engine";
+import type { NurseTrigger, NurseTriggerState, NurseEvalContext } from "@/lib/simulator/engine/nurse-trigger-engine";
 import { createPhaseEngine, evaluateTransitions, markTransitionsFired } from "@/lib/simulator/engine/phase-engine";
 import type { PhaseTransition, PhaseAction, PhaseEvalState } from "@/lib/simulator/engine/phase-engine";
 import type { LabPanelId } from "@/lib/simulator/engine/lab-engine";
@@ -193,6 +201,10 @@ export interface ProGameStore {
 
   // Phase Transition Engine
   phaseTransitions: PhaseTransition[];
+
+  // Nurse Trigger Engine
+  nurseTriggers: NurseTrigger[];
+  nurseTriggerState: NurseTriggerState;
 
   // UI
   activeModal: ModalType;
@@ -442,6 +454,8 @@ const initialState = {
   deathCause: null as string | null,
   rescueState: null as RescueState | null,
   phaseTransitions: [] as PhaseTransition[],
+  nurseTriggers: [] as NurseTrigger[],
+  nurseTriggerState: createNurseTriggerState(),
   activeModal: null as ModalType,
   _tickPatientFn: null as ((minutes: number) => void) | null,
   ventilator: initialVentilatorState,
@@ -457,6 +471,13 @@ const initialState = {
 let _idCounter = 0;
 function nextId(prefix = "id"): string {
   return `${prefix}_${Date.now()}_${++_idCounter}`;
+}
+
+// M7: Timeline cap — keep at most 200 entries, remove oldest when exceeded
+const MAX_TIMELINE_ENTRIES = 200;
+function capTimeline(timeline: TimelineEntry[]): TimelineEntry[] {
+  if (timeline.length <= MAX_TIMELINE_ENTRIES) return timeline;
+  return timeline.slice(timeline.length - MAX_TIMELINE_ENTRIES);
 }
 
 /** 基礎 guard rail 驗證（不 import order-engine，僅做數字範圍檢查） */
@@ -571,6 +592,21 @@ function computeBasicScore(
   const criticalActions: CriticalAction[] = scenario.expectedActions.map(
     (expected) => {
       const pattern = ACTION_PATTERNS[expected.id];
+
+      // M1 phase guard: act-recall-senior should only count if pathology
+      // has already transitioned to cardiac_tamponade (i.e. Phase 2).
+      // Without this, a Phase 1 "叫學長" message could false-match the Phase 2 recall pattern.
+      if (expected.id === "act-recall-senior" && patient?.pathology !== "cardiac_tamponade") {
+        return {
+          id: expected.id,
+          description: expected.description,
+          met: false,
+          timeToComplete: null,
+          critical: expected.critical,
+          hint: expected.hint,
+        };
+      }
+
       const matchingAction = pattern
         ? playerActions.find((pa) => pattern.test(pa.action))
         : playerActions.find((pa) =>
@@ -657,6 +693,11 @@ function computeBasicScore(
   totalScore -= harmfulOrders.length * 10;
   totalScore -= hintsUsed * 5;
   totalScore = Math.max(0, Math.min(100, totalScore));
+
+  // M3: Death penalty — patient died → score capped at 40
+  if (patientDied) {
+    totalScore = Math.min(totalScore, 40);
+  }
 
   // Stars
   let stars: 1 | 2 | 3;
@@ -868,11 +909,22 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     // Initialize phase transition engine from scenario config
     const phaseTransitions = createPhaseEngine(scenario);
 
+    // Initialize nurse trigger engine — select triggers based on scenario ID
+    const nurseTriggers: NurseTrigger[] = scenario.id.includes("bleeding-to-tamponade")
+      ? bleedingToTamponadeNurseTriggers
+      : [];
+    const nurseTriggerState = createNurseTriggerState();
+
+    // Reset CT output engine for new scenario
+    resetCtOutputEngine(scenario.initialChestTube.totalOutput);
+
     set({
       phase: "playing",
       clock: { ...clock, isPaused: false },
       pendingEvents,
       phaseTransitions,
+      nurseTriggers,
+      nurseTriggerState,
       timeline: [openingEntry],
       playerActions: [{ action: `game_start:${scenario.id}`, gameTime: 0 }],
     });
@@ -887,6 +939,24 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
 
     const newTime = clock.currentTime + minutes;
     const updatedClock: GameClock = { ...clock, currentTime: newTime };
+
+    // M7: Clean up expired activeEffects
+    {
+      const pat = get().patient;
+      if (pat) {
+        const liveEffects = pat.activeEffects.filter(
+          (e) => newTime < e.startTime + e.duration
+        );
+        if (liveEffects.length < pat.activeEffects.length) {
+          set((state) => ({
+            patient: state.patient ? {
+              ...state.patient,
+              activeEffects: liveEffects,
+            } : state.patient,
+          }));
+        }
+      }
+    }
 
     // 找出所有應在 newTime 前觸發、且尚未觸發的事件
     // 同時處理條件型事件：時間到 AND 條件成立才觸發
@@ -1287,14 +1357,38 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
                   }));
                   break;
 
-                case "trigger_event":
+                case "trigger_event": {
+                  const eventStr = action.payload.event as string;
                   set((s) => ({
                     playerActions: [
                       ...s.playerActions,
-                      { action: `phase_transition:event:${action.payload.event}`, gameTime: newTime },
+                      { action: `phase_transition:event:${eventStr}`, gameTime: newTime },
                     ],
                   }));
+                  // Handle pathology_change trigger events
+                  if (eventStr.startsWith("pathology_change:")) {
+                    const newPathology = eventStr.replace("pathology_change:", "") as Pathology;
+                    set((s) => {
+                      if (!s.patient) return {};
+                      // Re-evaluate active effects for new pathology
+                      const updatedEffects = s.patient.activeEffects.map(eff => ({
+                        ...eff,
+                        isCorrectTreatment: eff.isCorrectTreatment
+                          ? isEffectCorrectForNewPathology(eff, newPathology)
+                          : false,
+                      }));
+                      return {
+                        patient: {
+                          ...s.patient,
+                          pathology: newPathology,
+                          severity: 25, // Reset severity for new phase
+                          activeEffects: updatedEffects,
+                        },
+                      };
+                    });
+                  }
                   break;
+                }
 
                 case "update_vitals_target":
                   // Apply vitals delta to current patient state
@@ -1310,15 +1404,29 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
                   });
                   break;
 
-                case "send_biogears_command":
+                case "send_biogears_command": {
                   // Dispatch to BioGears engine (fire-and-forget async)
+                  const bgCmd = action.payload;
                   set((s) => ({
                     playerActions: [
                       ...s.playerActions,
-                      { action: `phase_transition:biogears:${JSON.stringify(action.payload)}`, gameTime: newTime },
+                      { action: `phase_transition:biogears:${JSON.stringify(bgCmd)}`, gameTime: newTime },
                     ],
                   }));
+                  // Actually dispatch the BioGears command
+                  if (bgCmd.cmd === "stop_hemorrhage") {
+                    import("@/lib/simulator/engine/biogears-engine").then(m =>
+                      m.stopBioGearsHemorrhage(bgCmd.compartment as string ?? "Aorta")
+                    );
+                  } else if (bgCmd.cmd === "pericardial_effusion") {
+                    dispatchPericardialEffusion(bgCmd.rate_mL_per_min as number ?? 2.0);
+                  } else if (bgCmd.cmd === "hemorrhage") {
+                    import("@/lib/simulator/engine/biogears-engine").then(m =>
+                      m.startBioGearsHemorrhage(bgCmd.compartment as string ?? "Aorta", bgCmd.rate_mL_per_min as number ?? 150)
+                    );
+                  }
                   break;
+                }
 
                 case "add_message": {
                   const nurseName = get().scenario?.nurseProfile?.name ?? "護理師";
@@ -1345,6 +1453,55 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
               timeline: [...s.timeline, ...phaseEntries],
             }));
           }
+        }
+      }
+    }
+
+    // ── Nurse Trigger Engine evaluation ──
+    // After all state updates, evaluate condition-driven nurse dialogue.
+    {
+      const latestState = get();
+      const { nurseTriggers: nTriggers, nurseTriggerState: nState } = latestState;
+      if (nTriggers.length > 0 && latestState.patient) {
+        // Count blood units given
+        const bloodUnitsGiven = latestState.placedOrders.filter(
+          (o) => o.definition.category === "transfusion" && (o.status === "completed" || o.status === "in_progress")
+        ).length;
+
+        const nurseCtx: NurseEvalContext = {
+          vitals: latestState.patient.vitals,
+          chestTube: latestState.patient.chestTube,
+          severity: latestState.patient.severity,
+          pathology: latestState.patient.pathology,
+          elapsedMinutes: newTime,
+          actionsTaken: latestState.playerActions.map((pa) => pa.action.toLowerCase()),
+          bloodUnitsGiven,
+        };
+
+        const firedNurse = evaluateNurseTriggers(nTriggers, nurseCtx, nState);
+
+        if (firedNurse.length > 0) {
+          const nurseName = latestState.scenario?.nurseProfile?.name ?? "護理師";
+          const nurseEntries: TimelineEntry[] = firedNurse.map((f) => ({
+            id: nextId("tl"),
+            gameTime: newTime,
+            type: (f.category === "escalation" ? "nurse_message" : "nurse_message") as TimelineEntry["type"],
+            content: `${nurseName}：${f.message}`,
+            sender: "nurse" as const,
+            isImportant: f.category === "escalation" || f.category === "observation",
+          }));
+
+          const firedIds = firedNurse.map((f) => f.triggerId);
+          const updatedNurseState = updateNurseTriggerState(nState, firedIds, newTime, nurseCtx);
+
+          set((s) => ({
+            timeline: [...s.timeline, ...nurseEntries],
+            nurseTriggerState: updatedNurseState,
+          }));
+        } else {
+          // Still update prev values for crossed_above/crossed_below tracking
+          const updatedNurseState = updateNurseTriggerState(nState, [], newTime, nurseCtx);
+          set({ nurseTriggerState: updatedNurseState });
         }
       }
     }
@@ -1537,7 +1694,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       ...entry,
     };
     set((state) => ({
-      timeline: [...state.timeline, newEntry],
+      timeline: capTimeline([...state.timeline, newEntry]),
     }));
   },
 
@@ -2190,73 +2347,36 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     const nurseName = scenario?.nurseProfile?.name ?? "護理師";
 
     if (ct.isPatent) {
-      get().addTimelineEntry({
-        gameTime: clock.currentTime,
-        type: "player_action",
-        content: "🔧 Milk CT — 胸管通暢",
-        sender: "player",
-      });
-      get().addTimelineEntry({
-        gameTime: clock.currentTime,
-        type: "nurse_message",
-        content: `${nurseName}：胸管看起來通暢，引流正常，不需要處理。`,
-        sender: "nurse",
-      });
+      // Already patent — no state change needed
     } else if (ct.hasClots) {
       const isTamponade = patient.pathology === "cardiac_tamponade" || patient.pathology === "tamponade";
       if (isTamponade) {
+        // Record milk for ct-output-engine patency window
+        const bgState = getLastBioGearsState();
+        if (bgState) recordMilkCt(bgState.time_s);
         get().updateChestTube({ isPatent: true, currentRate: Math.max(ct.currentRate, 10), totalOutput: ct.totalOutput + 5 });
         get().updatePatientSeverity(Math.max(0, (patient.severity ?? 0) - 8));
         dispatchPericardialEffusion(10);
         setTimeout(() => dispatchPericardialEffusion(15), 3 * 60 * 1000);
-        get().addTimelineEntry({
-          gameTime: clock.currentTime,
-          type: "player_action",
-          content: "🔧 Milk CT — 管路通了但無血塊排出，引流量未恢復。管路不是問題？",
-          sender: "player",
-          isImportant: true,
-        });
-        get().addTimelineEntry({
-          gameTime: clock.currentTime,
-          type: "nurse_message",
-          content: `${nurseName}：醫師，我 milk 了好幾次，管路好像有通，但引流量幾乎沒增加⋯⋯心包壓力暫時有稍微下降。`,
-          sender: "nurse",
-          isImportant: true,
-        });
       } else {
+        // Record milk for ct-output-engine patency window
+        const bgStateNonTamp = getLastBioGearsState();
+        if (bgStateNonTamp) recordMilkCt(bgStateNonTamp.time_s);
         get().updateChestTube({ isPatent: true, totalOutput: ct.totalOutput + 50 });
         get().updatePatientSeverity(Math.max(0, (patient.severity ?? 0) - 5));
-        get().addTimelineEntry({
-          gameTime: clock.currentTime,
-          type: "player_action",
-          content: "🔧 Milk CT — 擠出血塊，引流恢復",
-          sender: "player",
-          isImportant: true,
-        });
-        get().addTimelineEntry({
-          gameTime: clock.currentTime,
-          type: "nurse_message",
-          content: `${nurseName}：胸管 milk 完，擠出血塊了！引流恢復通暢，burst output +50cc。Severity 有改善。`,
-          sender: "nurse",
-          isImportant: true,
-        });
       }
     } else {
       get().updateChestTube({ isPatent: true });
-      get().addTimelineEntry({
-        gameTime: clock.currentTime,
-        type: "player_action",
-        content: "🔧 Milk CT — 管路通暢，無血塊",
-        sender: "player",
-        isImportant: false,
-      });
-      get().addTimelineEntry({
-        gameTime: clock.currentTime,
-        type: "nurse_message",
-        content: `${nurseName}：胸管 milk 完了，管路通暢但沒有明顯血塊排出，引流量沒太大變化。`,
-        sender: "nurse",
-      });
     }
+
+    // Short timeline note + open result modal instead of chat messages
+    get().addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: "🔧 Milk/Strip Chest Tube",
+      sender: "player",
+    });
+    get().openModal("milk_ct_result");
 
     set((state) => ({
       playerActions: [...state.playerActions, { action: "procedure:chest_tube_milk", gameTime: clock.currentTime, category: "procedure" }],
@@ -2358,8 +2478,11 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
 
   deliverShock: (): ShockResult => {
     const { phase, patient, clock, defibrillator } = get();
-    if (phase !== "playing" || !patient) {
-      return { success: false, message: "無法在此狀態下電擊" };
+    if (!patient) {
+      return { success: false, message: "無病人資料" };
+    }
+    if (phase !== "playing" && phase !== "sbar") {
+      return { success: false, message: "遊戲尚未開始或已結束" };
     }
 
     const rhythm = patient.vitals.rhythmStrip;
@@ -2415,16 +2538,17 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       // TODO: call dispatchCardiacArrest(false) once biogears-engine exports it
       dispatchOrderToBioGears("Epinephrine", "1", "medication");
     } else if (rhythm === "asystole" || rhythm === "pea") {
-      result = { success: false, message: "不適合電擊 — Asystole/PEA 為不可電擊節律" };
-      shockEntry.content = `⚡ 電擊 ${energy}J — ⚠ ${rhythm === "asystole" ? "Asystole" : "PEA"} 不可電擊！病人因不當電擊惡化`;
+      // Non-shockable rhythm — shock delivered but ineffective (BioGears handles physiology)
+      // NOT blocking or auto-killing — let the game continue, debrief will flag this as error
+      result = { success: false, message: `⚠ ${rhythm === "asystole" ? "Asystole" : "PEA"} — 電擊無效，非可電擊節律` };
+      shockEntry.content = `⚡ 電擊 ${energy}J — ⚠ 對 ${rhythm === "asystole" ? "Asystole" : "PEA"} 電擊（無效！非可電擊節律）`;
 
-      // Record + trigger death
+      // Record but don't kill — severity may worsen naturally
       set((state) => ({
         defibrillator: { ...state.defibrillator, lastShockAt: clock.currentTime },
         timeline: [...state.timeline, { id: nextId("tl"), ...shockEntry }],
-        playerActions: [...state.playerActions, { action: actionLabel, gameTime: clock.currentTime, category: "acls" }],
+        playerActions: [...state.playerActions, { action: `${actionLabel}:inappropriate`, gameTime: clock.currentTime, category: "acls" }],
       }));
-      get().triggerDeath(`對 ${rhythm === "asystole" ? "Asystole" : "PEA"} 執行電擊，導致病人心臟停止無法恢復`);
       return result;
     } else {
       // Non-shockable rhythm (NSR, sinus tach, afib, etc.) — inappropriate shock causes VF arrest

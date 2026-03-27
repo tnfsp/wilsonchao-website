@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, memo } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { TimelineEntry, TimelineEntryType } from "@/lib/simulator/types";
 
@@ -39,7 +39,7 @@ function SenderIcon({ sender }: { sender?: TimelineEntry["sender"] }) {
 // ─────────────────────────────────────────────
 
 /** nurse_message — left-aligned, slate-700 bg */
-function NurseMessage({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }) {
+const NurseMessage = memo(function NurseMessage({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }) {
   return (
     <div className="flex items-start gap-2 max-w-[85%]">
       <div className="mt-1 text-lg shrink-0">
@@ -56,10 +56,10 @@ function NurseMessage({ entry, timeStr }: { entry: TimelineEntry; timeStr: strin
       </div>
     </div>
   );
-}
+});
 
 /** player_message — right-aligned, cyan bg */
-function PlayerMessage({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }) {
+const PlayerMessage = memo(function PlayerMessage({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }) {
   return (
     <div className="flex items-start gap-2 max-w-[85%] ml-auto flex-row-reverse">
       <div className="mt-1 text-lg shrink-0">
@@ -74,10 +74,10 @@ function PlayerMessage({ entry, timeStr }: { entry: TimelineEntry; timeStr: stri
       </div>
     </div>
   );
-}
+});
 
 /** player_action — right-aligned, semi-transparent border */
-function PlayerAction({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }) {
+const PlayerAction = memo(function PlayerAction({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }) {
   return (
     <div className="flex items-start gap-2 max-w-[85%] ml-auto flex-row-reverse">
       <div className="mt-1 text-lg shrink-0">
@@ -92,10 +92,10 @@ function PlayerAction({ entry, timeStr }: { entry: TimelineEntry; timeStr: strin
       </div>
     </div>
   );
-}
+});
 
 /** system_event — centered, small gray text */
-function SystemEvent({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }) {
+const SystemEvent = memo(function SystemEvent({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }) {
   return (
     <div className="flex flex-col items-center gap-0.5 my-1">
       <div className="flex items-center gap-2 text-xs text-slate-500">
@@ -109,10 +109,10 @@ function SystemEvent({ entry, timeStr }: { entry: TimelineEntry; timeStr: string
       </span>
     </div>
   );
-}
+});
 
 /** lab_result — left-aligned, yellow border */
-function LabResult({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }) {
+const LabResult = memo(function LabResult({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }) {
   return (
     <div className="flex items-start gap-2 max-w-[90%]">
       <div className="mt-1 text-lg shrink-0">🧪</div>
@@ -125,10 +125,10 @@ function LabResult({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }
       </div>
     </div>
   );
-}
+});
 
 /** order_placed — right-aligned, green border */
-function OrderPlaced({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }) {
+const OrderPlaced = memo(function OrderPlaced({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }) {
   return (
     <div className="flex items-start gap-2 max-w-[85%] ml-auto flex-row-reverse">
       <div className="mt-1 text-lg shrink-0">
@@ -143,10 +143,10 @@ function OrderPlaced({ entry, timeStr }: { entry: TimelineEntry; timeStr: string
       </div>
     </div>
   );
-}
+});
 
 /** vitals_update — centered, very small */
-function VitalsUpdate({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }) {
+const VitalsUpdate = memo(function VitalsUpdate({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }) {
   return (
     <div className="flex flex-col items-center gap-0.5 my-0.5">
       <span className="text-[11px] text-slate-500">
@@ -156,10 +156,10 @@ function VitalsUpdate({ entry, timeStr }: { entry: TimelineEntry; timeStr: strin
       </span>
     </div>
   );
-}
+});
 
 /** hint — left-aligned, orange bg, warning feel */
-function HintEntry({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }) {
+const HintEntry = memo(function HintEntry({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }) {
   return (
     <div className="flex items-start gap-2 max-w-[88%]">
       <div className="mt-1 text-lg shrink-0">💡</div>
@@ -173,12 +173,12 @@ function HintEntry({ entry, timeStr }: { entry: TimelineEntry; timeStr: string }
       </div>
     </div>
   );
-}
+});
 
 // ─────────────────────────────────────────────
-// Entry dispatcher
+// Entry dispatcher (M5: memoized to prevent re-renders)
 // ─────────────────────────────────────────────
-function TimelineEntryRow({
+const TimelineEntryRow = memo(function TimelineEntryRow({
   entry,
   startHour,
 }: {
@@ -207,7 +207,7 @@ function TimelineEntryRow({
     default:
       return <SystemEvent entry={entry} timeStr={timeStr} />;
   }
-}
+});
 
 // ─────────────────────────────────────────────
 // Main Component

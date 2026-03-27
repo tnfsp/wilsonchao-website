@@ -9,6 +9,7 @@ import {
   syncBioGearsToStore,
   advanceBioGears,
   startBioGearsHemorrhage,
+  cleanupBioGearsClient,
 } from "@/lib/simulator/engine/biogears-engine";
 
 // Pro components
@@ -33,6 +34,7 @@ import { PEModal } from "@/components/simulator/pro/PEModal";
 // POCUSModal deprecated — merged into ImagingModal (2026-03-25)
 import { ImagingModal } from "@/components/simulator/pro/ImagingModal";
 import { ConsultModal } from "@/components/simulator/pro/ConsultModal";
+import { MilkCTResultModal } from "@/components/simulator/pro/MilkCTResultModal";
 import { PauseThinkModal } from "@/components/simulator/pro/PauseThinkModal";
 import { SeniorDialogModal } from "@/components/simulator/pro/SeniorDialogModal";
 import DefibrillatorModal from "@/components/simulator/pro/DefibrillatorModal";
@@ -426,6 +428,7 @@ function GameScreen() {
       {/* POCUSModal removed — merged into ImagingModal */}
       <ImagingModal />
       <ConsultModal />
+      <MilkCTResultModal />
       <PauseThinkModal />
       <SeniorDialogModal />
       <DefibrillatorModal />
@@ -486,13 +489,11 @@ interface ProPageClientProps {
 }
 
 export default function ProPageClient({ id }: ProPageClientProps) {
-  const {
-    phase,
-    isLoading,
-    loadError,
-    scenario,
-    loadScenario,
-  } = useProGameStore();
+  const phase = useProGameStore((s) => s.phase);
+  const isLoading = useProGameStore((s) => s.isLoading);
+  const loadError = useProGameStore((s) => s.loadError);
+  const scenario = useProGameStore((s) => s.scenario);
+  const loadScenario = useProGameStore((s) => s.loadScenario);
 
   const loaded = useRef(false);
 
@@ -507,6 +508,13 @@ export default function ProPageClient({ id }: ProPageClientProps) {
   useEffect(() => {
     document.body.classList.add("simulator-fullscreen");
     return () => document.body.classList.remove("simulator-fullscreen");
+  }, []);
+
+  // M9: Cleanup BioGears client when ProPageClient unmounts entirely
+  useEffect(() => {
+    return () => {
+      cleanupBioGearsClient();
+    };
   }, []);
 
   // ── Loading ──

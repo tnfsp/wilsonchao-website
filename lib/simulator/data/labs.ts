@@ -321,6 +321,310 @@ export const rotemLab: OrderDefinition = {
 };
 
 // ============================================================
+// NEW LABS — Expanded for BioGears-first GDD
+// ============================================================
+
+/** NT-proBNP (Cardiac biomarker) */
+export const ntprobnpLab: OrderDefinition = {
+  id: "ntprobnp",
+  name: "NT-proBNP",
+  category: "lab",
+  subcategory: "cardiac",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q12H", "Q24H"],
+  timeToEffect: 0,
+  timeToResult: 60,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** CK-MB (Cardiac enzyme) */
+export const ckmbLab: OrderDefinition = {
+  id: "ckmb",
+  name: "CK-MB",
+  category: "lab",
+  subcategory: "cardiac",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Serial Q6H", "Q12H"],
+  timeToEffect: 0,
+  timeToResult: 60,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** D-dimer */
+export const ddimerLab: OrderDefinition = {
+  id: "ddimer",
+  name: "D-dimer",
+  category: "lab",
+  subcategory: "coagulation",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Once"],
+  timeToEffect: 0,
+  timeToResult: 45,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** Procalcitonin */
+export const pctLab: OrderDefinition = {
+  id: "pct",
+  name: "Procalcitonin (PCT)",
+  category: "lab",
+  subcategory: "infection",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q12H", "Q24H"],
+  timeToEffect: 0,
+  timeToResult: 60,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** CRP (C-Reactive Protein) */
+export const crpLab: OrderDefinition = {
+  id: "crp",
+  name: "CRP (C-Reactive Protein)",
+  category: "lab",
+  subcategory: "infection",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q12H", "Q24H"],
+  timeToEffect: 0,
+  timeToResult: 45,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** ESR (Erythrocyte Sedimentation Rate) */
+export const esrLab: OrderDefinition = {
+  id: "esr",
+  name: "ESR (Erythrocyte Sedimentation Rate)",
+  category: "lab",
+  subcategory: "infection",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q24H"],
+  timeToEffect: 0,
+  timeToResult: 60,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** Magnesium */
+export const mgLab: OrderDefinition = {
+  id: "mg",
+  name: "Mg (Magnesium)",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q6H", "Q8H", "Q12H"],
+  timeToEffect: 0,
+  timeToResult: 35,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** Phosphate */
+export const phosphateLab: OrderDefinition = {
+  id: "phosphate",
+  name: "Phosphate (PO₄)",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q8H", "Q12H"],
+  timeToEffect: 0,
+  timeToResult: 35,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** AST */
+export const astLab: OrderDefinition = {
+  id: "ast",
+  name: "AST (Aspartate Aminotransferase)",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q12H", "Q24H"],
+  timeToEffect: 0,
+  timeToResult: 45,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** ALT */
+export const altLab: OrderDefinition = {
+  id: "alt",
+  name: "ALT (Alanine Aminotransferase)",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q12H", "Q24H"],
+  timeToEffect: 0,
+  timeToResult: 45,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** LDH */
+export const ldhLab: OrderDefinition = {
+  id: "ldh",
+  name: "LDH (Lactate Dehydrogenase)",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q24H"],
+  timeToEffect: 0,
+  timeToResult: 45,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** Uric Acid */
+export const uricAcidLab: OrderDefinition = {
+  id: "uric_acid",
+  name: "Uric Acid",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q24H"],
+  timeToEffect: 0,
+  timeToResult: 45,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** Thrombin Time */
+export const thrombinTimeLab: OrderDefinition = {
+  id: "thrombin_time",
+  name: "Thrombin Time (TT)",
+  category: "lab",
+  subcategory: "coagulation",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw (blue-top)",
+  frequencies: ["STAT", "Q6H"],
+  timeToEffect: 0,
+  timeToResult: 45,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** Ammonia */
+export const ammoniaLab: OrderDefinition = {
+  id: "ammonia",
+  name: "Ammonia",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw (on ice)",
+  frequencies: ["STAT", "Q12H"],
+  timeToEffect: 0,
+  timeToResult: 30,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** Urinalysis */
+export const urinalysisLab: OrderDefinition = {
+  id: "urinalysis",
+  name: "Urinalysis (UA)",
+  category: "lab",
+  subcategory: "urine",
+  defaultDose: "1",
+  unit: "sample",
+  route: "Urine collection",
+  frequencies: ["STAT", "Once"],
+  timeToEffect: 0,
+  timeToResult: 30,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** Urine Electrolytes / FeNa */
+export const urineElectrolytesLab: OrderDefinition = {
+  id: "urine_electrolytes",
+  name: "Urine Na / FeNa",
+  category: "lab",
+  subcategory: "urine",
+  defaultDose: "1",
+  unit: "sample",
+  route: "Urine collection + Blood draw",
+  frequencies: ["STAT", "Once"],
+  timeToEffect: 0,
+  timeToResult: 45,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** SvO₂ (Mixed Venous Oxygen Saturation) — BioGears native */
+export const svo2Lab: OrderDefinition = {
+  id: "svo2",
+  name: "SvO₂ (Mixed Venous O₂ Saturation)",
+  category: "lab",
+  subcategory: "blood_gas",
+  defaultDose: "1",
+  unit: "draw",
+  route: "PA catheter / Central line",
+  frequencies: ["STAT", "Q2H", "Q4H"],
+  timeToEffect: 0,
+  timeToResult: 10,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** Total Calcium — BioGears native */
+export const totalCaLab: OrderDefinition = {
+  id: "total_ca",
+  name: "Total Ca (Calcium)",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q6H", "Q12H"],
+  timeToEffect: 0,
+  timeToResult: 35,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** Albumin — BioGears native */
+export const albuminLab: OrderDefinition = {
+  id: "albumin",
+  name: "Albumin",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q12H", "Q24H"],
+  timeToEffect: 0,
+  timeToResult: 45,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+/** Total Bilirubin — BioGears native */
+export const tbilLab: OrderDefinition = {
+  id: "tbil",
+  name: "T-Bil (Total Bilirubin)",
+  category: "lab",
+  subcategory: "chemistry",
+  defaultDose: "1",
+  unit: "test",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q12H", "Q24H"],
+  timeToEffect: 0,
+  timeToResult: 45,
+  effect: { type: "procedure", duration: 0, isCorrectTreatment: true, severityChange: 0 },
+};
+
+// ============================================================
 // ALL LABS EXPORT
 // ============================================================
 
@@ -336,29 +640,54 @@ export const allLabs: OrderDefinition[] = [
   bunLab,
   crLab,
   glucoseLab,
+  mgLab,
+  phosphateLab,
+  astLab,
+  altLab,
+  ldhLab,
+  uricAcidLab,
+  ammoniaLab,
+  totalCaLab,
+  albuminLab,
+  tbilLab,
   // Individual coagulation
   ptInrLab,
   apttLab,
   fibrinogenLab,
-  // Individual others
+  ddimerLab,
+  thrombinTimeLab,
+  // Blood gas
   lactateLab,
   iCaLab,
+  svo2Lab,
+  // Individual others
   actLab,
   troponinLab,
+  ntprobnpLab,
+  ckmbLab,
   typeScreenLab,
   bloodCultureLab,
   tegLab,
   rotemLab,
+  // Infection markers
+  pctLab,
+  crpLab,
+  esrLab,
+  // Urine
+  urinalysisLab,
+  urineElectrolytesLab,
 ];
 
 export const labCategories = {
   hematology: [cbcLab],
-  blood_gas: [abgLab, lactateLab, iCaLab],
-  chemistry: [naLab, kLab, clLab, co2Lab, bunLab, crLab, glucoseLab],
-  coagulation: [ptInrLab, apttLab, fibrinogenLab, actLab, tegLab, rotemLab],
-  cardiac: [troponinLab],
+  blood_gas: [abgLab, lactateLab, iCaLab, svo2Lab],
+  chemistry: [naLab, kLab, clLab, co2Lab, bunLab, crLab, glucoseLab, mgLab, phosphateLab, astLab, altLab, ldhLab, uricAcidLab, ammoniaLab, totalCaLab, albuminLab, tbilLab],
+  coagulation: [ptInrLab, apttLab, fibrinogenLab, ddimerLab, thrombinTimeLab, actLab, tegLab, rotemLab],
+  cardiac: [troponinLab, ntprobnpLab, ckmbLab],
   blood_bank: [typeScreenLab],
   microbiology: [bloodCultureLab],
+  infection: [pctLab, crpLab, esrLab],
+  urine: [urinalysisLab, urineElectrolytesLab],
 };
 
 /**

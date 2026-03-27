@@ -302,6 +302,8 @@ export class BioGearsClient {
   private onMessage: MessageHandler | null = null;
   private onStatus: StatusHandler | null = null;
   private reconnectTimer: ReturnType<typeof setTimeout> | null = null;
+  private _reconnectAttempt = 0;
+  private _maxReconnectAttempts = 5;
   private _isReady = false;
   private _isInitialized = false;
 
@@ -400,6 +402,25 @@ export class BioGearsClient {
         });
         this.pendingRequests.clear();
         this.fifoOrder = [];
+
+        // M14: Auto-reconnect with exponential backoff (max 5 attempts: 1s/2s/4s/8s/16s)
+        if (this._reconnectAttempt < this._maxReconnectAttempts) {
+          const delay = Math.pow(2, this._reconnectAttempt) * 1000;
+          console.log(`[BioGears] Reconnecting in ${delay}ms (attempt ${this._reconnectAttempt + 1}/${this._maxReconnectAttempts})`);
+          this.reconnectTimer = setTimeout(() => {
+            this._reconnectAttempt++;
+            this.connect()
+              .then(() => {
+                console.log("[BioGears] Reconnected successfully");
+                this._reconnectAttempt = 0;
+              })
+              .catch((err) => {
+                console.warn("[BioGears] Reconnect failed:", err);
+              });
+          }, delay);
+        } else {
+          console.error("[BioGears] Max reconnect attempts reached, giving up");
+        }
       };
     });
   }
@@ -686,8 +707,9 @@ function mapBioGearsRhythm(bgRhythm?: string): RhythmType {
 }
 
 /** Convert BioGears vitals to simulator VitalSigns */
-export function biogearsToVitals(bg: BioGearsState): VitalSigns {
-  const v = bg.vitals;
+export function biogearsToVitals(bg: BioGearsState): VitalSigns | null {
+  const v = bg?.vitals;
+  if (!v || v.hr === undefined) return null;
   return {
     hr: Math.round(v.hr),
     sbp: Math.round(v.sbp),

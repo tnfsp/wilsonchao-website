@@ -5,7 +5,8 @@ import { useProGameStore } from "@/lib/simulator/store";
 
 export default function SBARModal() {
   const activeModal = useProGameStore((s) => s.activeModal);
-  const { submitSBAR, scenario } = useProGameStore();
+  const submitSBAR = useProGameStore((s) => s.submitSBAR);
+  const scenario = useProGameStore((s) => s.scenario);
 
   const [report, setReport] = useState("");
   const [submitted, setSubmitted] = useState(false);

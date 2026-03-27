@@ -22,26 +22,47 @@ const LAB_META: Record<string, LabMeta> = {
   na: { emoji: "🧪", desc: "Sodium" },
   k: { emoji: "🧪", desc: "Potassium" },
   cl: { emoji: "🧪", desc: "Chloride" },
-  co2: { emoji: "🧪", desc: "Total CO₂ (Bicarb)" },
   bun: { emoji: "🧪", desc: "Blood Urea Nitrogen" },
   cr: { emoji: "🧪", desc: "Creatinine" },
   glucose: { emoji: "🩸", desc: "Blood Glucose" },
+  mg: { emoji: "🧪", desc: "Magnesium" },
+  phosphate: { emoji: "🧪", desc: "Phosphate" },
+  total_ca: { emoji: "🧪", desc: "Total Calcium" },
+  albumin: { emoji: "🧪", desc: "Albumin" },
+  tbil: { emoji: "🧪", desc: "Total Bilirubin" },
+  ast: { emoji: "🧪", desc: "Aspartate Aminotransferase" },
+  alt: { emoji: "🧪", desc: "Alanine Aminotransferase" },
+  ldh: { emoji: "🧪", desc: "Lactate Dehydrogenase" },
+  uric_acid: { emoji: "🧪", desc: "Uric Acid" },
+  ammonia: { emoji: "🧪", desc: "Ammonia" },
   // Individual coagulation
   pt_inr: { emoji: "🧬", desc: "Prothrombin Time / INR" },
   aptt: { emoji: "🧬", desc: "Activated Partial Thromboplastin Time" },
   fibrinogen: { emoji: "🧬", desc: "Fibrinogen level" },
   act: { emoji: "⏱️", desc: "Activated Clotting Time (bedside)" },
+  ddimer: { emoji: "🧬", desc: "D-Dimer" },
+  thrombin_time: { emoji: "🧬", desc: "Thrombin Time" },
   // Blood gas individual
   lactate: { emoji: "⚗️", desc: "Serum / Arterial Lactate" },
   ica: { emoji: "🦴", desc: "Ionized Ca²⁺" },
+  svo2: { emoji: "🫀", desc: "Mixed Venous O₂ Saturation" },
   // Cardiac
   troponin: { emoji: "❤️", desc: "Troponin I" },
+  ntprobnp: { emoji: "❤️", desc: "NT-proBNP" },
+  ckmb: { emoji: "❤️", desc: "CK-MB" },
   // Blood bank
   type_screen: { emoji: "🅰️", desc: "Type & Screen / Crossmatch / 備血" },
   // Special
   teg: { emoji: "📊", desc: "Thromboelastography" },
   rotem: { emoji: "📈", desc: "ROTEM" },
   blood_culture: { emoji: "🦠", desc: "Blood Culture × 2 sets" },
+  // Infection
+  pct: { emoji: "🔬", desc: "Procalcitonin" },
+  crp: { emoji: "🔬", desc: "C-Reactive Protein" },
+  esr: { emoji: "🔬", desc: "Erythrocyte Sedimentation Rate" },
+  // Urine
+  urinalysis: { emoji: "🚰", desc: "Urinalysis" },
+  urine_electrolytes: { emoji: "🚰", desc: "Urine Na / FeNa" },
 };
 
 // ============================================================
@@ -50,10 +71,13 @@ const LAB_META: Record<string, LabMeta> = {
 
 const LAB_GROUPS: { label: string; ids: string[] }[] = [
   { label: "血液 / 血庫", ids: ["cbc", "type_screen"] },
-  { label: "Blood Gas", ids: ["abg", "lactate", "ica"] },
-  { label: "生化", ids: ["na", "k", "cl", "co2", "bun", "cr", "glucose", "troponin"] },
-  { label: "凝血", ids: ["pt_inr", "aptt", "fibrinogen", "act"] },
-  { label: "特殊", ids: ["teg", "rotem", "blood_culture"] },
+  { label: "Blood Gas", ids: ["abg", "lactate", "ica", "svo2"] },
+  { label: "生化", ids: ["na", "k", "cl", "bun", "cr", "glucose", "mg", "phosphate", "total_ca", "albumin", "tbil", "ast", "alt", "ldh", "uric_acid", "ammonia"] },
+  { label: "心臟", ids: ["troponin", "ntprobnp", "ckmb"] },
+  { label: "凝血", ids: ["pt_inr", "aptt", "fibrinogen", "act", "ddimer", "thrombin_time"] },
+  { label: "感染", ids: ["pct", "crp", "esr", "blood_culture"] },
+  { label: "尿液", ids: ["urinalysis", "urine_electrolytes"] },
+  { label: "特殊", ids: ["teg", "rotem"] },
 ];
 
 // Build lookup

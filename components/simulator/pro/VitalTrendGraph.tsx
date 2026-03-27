@@ -74,7 +74,9 @@ function extractDataPoints(timeline: TimelineEntry[]): DataPoint[] {
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function VitalTrendGraph() {
-  const { timeline, patient, clock } = useProGameStore();
+  const timeline = useProGameStore((s) => s.timeline);
+  const patient = useProGameStore((s) => s.patient);
+  const clock = useProGameStore((s) => s.clock);
   const [expanded, setExpanded] = useState(false);
 
   // Build data — seed with current vitals at time 0

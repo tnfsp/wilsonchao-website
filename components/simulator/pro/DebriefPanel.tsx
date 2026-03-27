@@ -260,6 +260,43 @@ function AnnotatedTimeline({
 }
 
 // ============================================================
+// M2: Expandable rationale + howTo for missed critical actions
+// ============================================================
+
+function ExpandableRationale({ rationale, howTo }: { rationale?: string; howTo?: string }) {
+  const [expanded, setExpanded] = useState(false);
+
+  if (!rationale && !howTo) return null;
+
+  const isLong = (rationale?.length ?? 0) > 120;
+  const displayRationale = !isLong || expanded ? rationale : `${rationale!.slice(0, 120)}...`;
+
+  return (
+    <div className="mt-1 space-y-1">
+      {rationale && (
+        <p className="text-gray-500 leading-relaxed">
+          {displayRationale}
+          {isLong && (
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="ml-1 text-cyan-500 hover:text-cyan-400 underline underline-offset-2"
+            >
+              {expanded ? "收合" : "展開"}
+            </button>
+          )}
+        </p>
+      )}
+      {howTo && (expanded || !isLong) && (
+        <p className="text-teal-500/80 leading-relaxed">
+          <span className="font-semibold text-teal-400">How to: </span>
+          {howTo}
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ============================================================
 // Layer 2 — Section B: Attending Feedback
 // ============================================================
 
@@ -333,9 +370,7 @@ function AttendingFeedback({
                     <span className="text-amber-400 shrink-0">{"\u2717"}</span>
                     <div>
                       <span className="font-medium">{ca.description}</span>
-                      {ea?.rationale && (
-                        <p className="text-gray-500 mt-0.5 leading-relaxed">{ea.rationale.slice(0, 120)}...</p>
-                      )}
+                      <ExpandableRationale rationale={ea?.rationale} howTo={ea?.howTo} />
                     </div>
                   </div>
                 </li>
@@ -1168,7 +1203,14 @@ function AIKeyLessonsSection({ lessons }: { lessons: string[] }) {
 // ============================================================
 
 export default function DebriefPanel() {
-  const { score, scenario, patient, timeline, resetGame, deathCause, playerActions, sbarReport } = useProGameStore();
+  const score = useProGameStore((s) => s.score);
+  const scenario = useProGameStore((s) => s.scenario);
+  const patient = useProGameStore((s) => s.patient);
+  const timeline = useProGameStore((s) => s.timeline);
+  const resetGame = useProGameStore((s) => s.resetGame);
+  const deathCause = useProGameStore((s) => s.deathCause);
+  const playerActions = useProGameStore((s) => s.playerActions);
+  const sbarReport = useProGameStore((s) => s.sbarReport);
 
   // AI debrief
   const aiDebrief = useAIDebrief(score, scenario, timeline, sbarReport, deathCause);

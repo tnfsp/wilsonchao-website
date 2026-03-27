@@ -74,7 +74,10 @@ const SILHOUETTE_BACK =
 
 export function PEModal() {
   const activeModal = useProGameStore((s) => s.activeModal);
-  const { scenario, patient, closeModal, addTimelineEntry } = useProGameStore();
+  const scenario = useProGameStore((s) => s.scenario);
+  const patient = useProGameStore((s) => s.patient);
+  const closeModal = useProGameStore((s) => s.closeModal);
+  const addTimelineEntry = useProGameStore((s) => s.addTimelineEntry);
   const [selected, setSelected] = useState<string | null>(null);
   const [examined, setExamined] = useState<Set<string>>(new Set());
   const [showFinding, setShowFinding] = useState(false);

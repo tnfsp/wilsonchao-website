@@ -6,7 +6,7 @@ import type { PendingEvent } from "@/lib/simulator/types";
 
 // ── Consult options ──────────────────────────────────────────
 
-type ConsultType = "senior" | "vs" | "other";
+type ConsultType = "senior" | "other";
 
 interface ConsultOption {
   type: ConsultType;
@@ -20,25 +20,17 @@ interface ConsultOption {
 const CONSULT_OPTIONS: ConsultOption[] = [
   {
     type: "senior",
-    emoji: "\ud83d\udcde",
-    title: "\u53eb\u5b78\u9577\uff08R4 / Fellow\uff09",
-    subtitle: "\u5e8a\u908a\u5354\u52a9\u8a55\u4f30\u8207\u6c7a\u7b56",
+    emoji: "📞",
+    title: "叫學長",
+    subtitle: "通報現況、SBAR 交班、請學長來評估",
     urgencyColor: "amber",
     arrivalMinutes: 5,
   },
   {
-    type: "vs",
-    emoji: "\ud83d\udcde",
-    title: "\u901a\u77e5\u4e3b\u6cbb\u91ab\u5e2b\uff08VS\uff09",
-    subtitle: "\u9ad8\u5c64\u7d1a escalation \u2014 \u66f4\u5927\u6c7a\u7b56\u9700\u6c42",
-    urgencyColor: "red",
-    arrivalMinutes: 10,
-  },
-  {
     type: "other",
-    emoji: "\ud83d\udccb",
-    title: "\u5176\u4ed6\u79d1 Consult",
-    subtitle: "\u8f38\u5165 consult \u539f\u56e0\uff0c\u9001\u51fa consult \u55ae",
+    emoji: "📋",
+    title: "其他科 Consult",
+    subtitle: "輸入 consult 原因，送出 consult 單",
     urgencyColor: "teal",
   },
 ];
@@ -47,8 +39,12 @@ const CONSULT_OPTIONS: ConsultOption[] = [
 
 export function ConsultModal() {
   const activeModal = useProGameStore((s) => s.activeModal);
-  const { scenario, clock, closeModal, addTimelineEntry, addPendingEvent, openModal } =
-    useProGameStore();
+  const scenario = useProGameStore((s) => s.scenario);
+  const clock = useProGameStore((s) => s.clock);
+  const closeModal = useProGameStore((s) => s.closeModal);
+  const addTimelineEntry = useProGameStore((s) => s.addTimelineEntry);
+  const addPendingEvent = useProGameStore((s) => s.addPendingEvent);
+  const openModal = useProGameStore((s) => s.openModal);
   const patient = useProGameStore((s) => s.patient);
   const pendingEvents = useProGameStore((s) => s.pendingEvents);
   const firedEvents = useProGameStore((s) => s.firedEvents);
@@ -59,6 +55,13 @@ export function ConsultModal() {
   const [consultDept, setConsultDept]   = useState("");
   const [submitted, setSubmitted]       = useState(false);
   const [confirming, setConfirming]     = useState<ConsultType | null>(null);
+
+  // SBAR handoff state (required first time calling senior)
+  const [showSbarForm, setShowSbarForm] = useState(false);
+  const [sbarText, setSbarText] = useState("");
+  const [sbarSubmitting, setSbarSubmitting] = useState(false);
+  const [sbarFeedback, setSbarFeedback] = useState<string | null>(null);
+  const sbarPhase1 = useProGameStore((s) => s.sbarPhase1);
 
   // ── Derived: senior status ─────────────────────────────────
 
@@ -96,6 +99,9 @@ export function ConsultModal() {
 
   const seniorAlreadyCalled = seniorStatus !== "not_called";
   const seniorHasArrived = seniorStatus === "arrived";
+  // Recall = senior has arrived AND we're in Phase 2 (pathology changed)
+  // In Phase 1 of multi-phase scenarios, senior arriving is normal — not a "recall"
+  const isRecallContext = seniorHasArrived && isPhase2;
 
   // ── Handlers ────────────────────────────────────────────────
 
@@ -109,26 +115,53 @@ export function ConsultModal() {
     }
   }
 
-  function handleConfirmCall(type: ConsultType) {
-    if (type === "other") return;
-    const opt = CONSULT_OPTIONS.find((o) => o.type === type)!;
+  // Submit handoff report to API for AI evaluation
+  async function handleSbarSubmit() {
+    setSbarSubmitting(true);
+    try {
+      // Store report for scoring (wrap in SBAR-compatible shape)
+      useProGameStore.setState({ sbarPhase1: { situation: sbarText, background: "", assessment: "", recommendation: "" } });
 
-    // Phase 2 recall: senior just left, comes back faster (3 min)
-    const isRecall = isPhase2 && type === "senior";
-    const arrival = isRecall ? 3 : (opt.arrivalMinutes ?? 5);
-    const callLabel = isRecall
-      ? "\u7dca\u6025\u53eb\u5b78\u9577\u56de\u4f86"
-      : type === "senior" ? "\u53eb\u5b78\u9577\uff08R4/Fellow\uff09" : "\u901a\u77e5\u4e3b\u6cbb\u91ab\u5e2b\uff08VS\uff09";
-    const arrivalLabel =
-      type === "senior" ? "\u5b78\u9577" : "\u4e3b\u6cbb\u91ab\u5e2b\uff08VS\uff09";
+      // Try to get AI feedback (non-blocking)
+      try {
+        const resp = await fetch("/api/evaluate-handoff", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            sbar: { freeText: sbarText },
+            vitals: patient?.vitals,
+            pathology: patient?.pathology,
+            severity: patient?.severity,
+            gameTime: clock.currentTime,
+          }),
+        });
+        if (resp.ok) {
+          const data = await resp.json();
+          setSbarFeedback(data.feedback ?? null);
+        }
+      } catch {
+        // AI feedback is optional; continue without it
+      }
+
+      // Proceed with the call regardless of quality
+      proceedWithSeniorCall(false);
+    } finally {
+      setSbarSubmitting(false);
+    }
+  }
+
+  function proceedWithSeniorCall(isRecall: boolean) {
+    const opt = CONSULT_OPTIONS.find((o) => o.type === "senior")!;
+    const arrival = isRecall ? 3 : 5; // Senior always arrives in 5 min (or 3 for recall)
+
+    const callLabel = isRecall ? "緊急叫學長回來" : "叫學長（R4/Fellow）";
+    const arrivalLabel = "學長";
 
     // Timeline: player action
     addTimelineEntry({
       gameTime: clock.currentTime,
       type: "player_action",
-      content: isRecall
-        ? "\ud83d\udcde \u4f60\u7dca\u6025\u6253\u96fb\u8a71\u53eb\u5b78\u9577\u56de\u4f86"
-        : `\ud83d\udcde \u4f60\u6253\u96fb\u8a71\u7d66${callLabel}\u4e86`,
+      content: isRecall ? "📞 你緊急打電話叫學長回來" : `📞 你打電話給${callLabel}了`,
       sender: "player",
       isImportant: true,
     });
@@ -137,14 +170,12 @@ export function ConsultModal() {
     addTimelineEntry({
       gameTime: clock.currentTime,
       type: "nurse_message",
-      content: `${nurseName}\uff1a\u597d\u7684\uff0c\u6211\u4e5f\u5728\u3002`,
+      content: `${nurseName}：好的，我也在。`,
       sender: "nurse",
     });
 
     // Store playerAction for scoring
-    const actionId = isRecall
-      ? "recall_senior"
-      : type === "senior" ? "call_senior" : "call_vs";
+    const actionId = isRecall ? "recall_senior" : "call_senior";
     useProGameStore.setState((state) => ({
       playerActions: [
         ...state.playerActions,
@@ -152,14 +183,14 @@ export function ConsultModal() {
       ],
     }));
 
-    // Schedule senior_arrives event (fires when game time reaches triggerAt)
+    // Schedule senior_arrives event
     const arrivalEvent: PendingEvent = {
-      id: `ev_${type}_arrives_${Date.now()}`,
+      id: `ev_senior_arrives_${Date.now()}`,
       triggerAt: clock.currentTime + arrival,
       type: "senior_arrives",
       data: {
-        type,
-        message: `\uff08${arrivalLabel}\u63a8\u9580\u9032\u4f86\uff09\u300c\u600e\u9ebc\u4e86\uff0c\u8ddf\u6211\u5831\u544a\u4e00\u4e0b\u3002\u300d`,
+        type: "senior",
+        message: `（${arrivalLabel}推門進來）「怎麼了，跟我報告一下。」`,
         label: arrivalLabel,
       },
       fired: false,
@@ -171,12 +202,26 @@ export function ConsultModal() {
     addTimelineEntry({
       gameTime: clock.currentTime,
       type: "system_event",
-      content: `\u23f0 ${arrivalLabel}\u5df2\u806f\u7e6b\uff0c\u7d04 ${arrival} \u5206\u9418\u5f8c\u5230\u5834\u3002\u7e7c\u7e8c\u8655\u7406\u75c5\u4eba\u3002`,
+      content: `⏰ ${arrivalLabel}已聯繫，約 ${arrival} 分鐘後到場。繼續處理病人。`,
       sender: "system",
     });
 
-    // Close modal — game continues, no time advance
     setSubmitted(true);
+  }
+
+  function handleConfirmCall(type: ConsultType) {
+    if (type === "other") return;
+
+    // Senior call (the only non-other option now)
+    const isRecall = isRecallContext;
+    if (!isRecall && !sbarPhase1) {
+      // First time calling senior — require SBAR
+      setShowSbarForm(true);
+      setConfirming(null);
+      return;
+    }
+    // Already has SBAR or is a recall
+    proceedWithSeniorCall(isRecall);
   }
 
   function handleSubmitOtherConsult() {
@@ -225,7 +270,7 @@ export function ConsultModal() {
             <span className="text-2xl">{"\ud83d\udcde"}</span>
             <div>
               <h2 className="text-white font-semibold text-lg leading-tight">
-                {"\u901a\u5831 / \u53eb\u4eba / \u4ea4\u73ed"}
+                叫學長 / Consult
               </h2>
             </div>
           </div>
@@ -277,24 +322,49 @@ export function ConsultModal() {
               </div>
             )}
 
-            {/* ── SBAR handoff button — always available ── */}
-            <button
-              onClick={() => { closeModal(); openModal("sbar"); }}
-              className="w-full text-left rounded-lg px-4 py-3.5 border transition-all border-teal-800/30 hover:border-teal-600/50 hover:bg-teal-950/20"
-              style={{ backgroundColor: "transparent" }}
-            >
-              <div className="flex items-start gap-3">
-                <span className="text-xl mt-0.5">{"\ud83d\udccb"}</span>
-                <div>
-                  <div className="text-sm font-semibold text-teal-300">
-                    SBAR {"\u4ea4\u73ed\u5831\u544a"}
+            {/* ── SBAR Form (shown when first calling senior) ── */}
+            {showSbarForm && (
+              <div className="rounded-lg border border-amber-700/40 p-4" style={{ backgroundColor: "#1a1000" }}>
+                <h3 className="text-amber-200 font-semibold text-sm mb-2">
+                  📞 學長接起電話了
+                </h3>
+                <p className="text-amber-400/60 text-xs mb-3">
+                  「怎麼了，報告一下。」— 用你自己的話交班，像打電話一樣講就好。
+                </p>
+                <textarea
+                  value={sbarText}
+                  onChange={(e) => setSbarText(e.target.value)}
+                  placeholder="學長好，我是值班 R1，床 3 的林伯伯..."
+                  rows={5}
+                  className="w-full rounded-lg px-3 py-2.5 text-sm text-white border border-amber-800/40 focus:border-amber-600 focus:outline-none transition-colors resize-none leading-relaxed placeholder:text-amber-900/60"
+                  style={{ backgroundColor: "#002030" }}
+                  autoFocus
+                />
+
+                {sbarFeedback && (
+                  <div className="rounded-lg border border-teal-700/40 px-3 py-2.5 mt-3" style={{ backgroundColor: "#001a20" }}>
+                    <p className="text-teal-300 text-xs font-medium mb-1">學長回饋：</p>
+                    <p className="text-teal-400/80 text-xs leading-relaxed">{sbarFeedback}</p>
                   </div>
-                  <div className="text-xs text-teal-500/50 mt-0.5">
-                    {"\u5411\u5b78\u9577\u5831\u544a\u73fe\u6cc1\uff0c\u63d0\u4ea4\u6700\u7d42\u4ea4\u73ed\uff08\u904a\u6232\u7d50\u675f\uff09"}
-                  </div>
+                )}
+
+                <div className="flex gap-2 mt-3">
+                  <button
+                    onClick={handleSbarSubmit}
+                    disabled={sbarSubmitting || sbarText.trim().length < 20}
+                    className="flex-1 py-2.5 rounded-lg bg-amber-700 hover:bg-amber-600 disabled:bg-amber-900/40 disabled:text-amber-600 text-white text-sm font-medium transition-colors border border-amber-600 disabled:border-amber-800/30"
+                  >
+                    {sbarSubmitting ? "報告中..." : "📞 報告完畢"}
+                  </button>
+                  <button
+                    onClick={() => { setShowSbarForm(false); setConfirming(null); }}
+                    className="px-4 py-2.5 rounded-lg text-amber-400 text-sm border border-amber-800/40 hover:border-amber-700/60 transition-colors"
+                  >
+                    取消
+                  </button>
                 </div>
               </div>
-            </button>
+            )}
 
             {/* Confirm card for senior/VS */}
             {confirming && (
@@ -302,43 +372,26 @@ export function ConsultModal() {
                 className="rounded-lg border border-amber-700/40 p-4 mb-1"
                 style={{ backgroundColor: "#1a1000" }}
               >
-                {confirming === "senior" ? (
-                  <>
-                    <p className="text-amber-200 font-medium text-sm mb-1">
-                      {isPhase2 ? "\u78ba\u5b9a\u8981\u7dca\u6025\u53eb\u5b78\u9577\u56de\u4f86\u55ce\uff1f" : "\u78ba\u5b9a\u8981\u53eb\u5b78\u9577\u55ce\uff1f"}
-                    </p>
-                    <p className="text-amber-400/70 text-xs leading-relaxed mb-3">
-                      {isPhase2
-                        ? "\u60c5\u6cc1\u5df2\u7d93\u6539\u8b8a\uff0c\u5b78\u9577\u9700\u8981\u56de\u4f86\u91cd\u65b0\u8a55\u4f30\u3002\u7d04 3 \u5206\u9418\u5f8c\u5230\u5834\u3002"
-                        : "\u5b78\u9577\u7d04 5 \u5206\u9418\u5f8c\u5230\u5834\u3002\u904a\u6232\u7e7c\u7e8c\uff0c\u4f60\u53ef\u4ee5\u7e7c\u7e8c\u8655\u7406\u75c5\u4eba\u3002"}
-                    </p>
-                  </>
-                ) : (
-                  <>
-                    <p className="text-red-300 font-medium text-sm mb-1">
-                      {"\u78ba\u5b9a\u901a\u77e5\u4e3b\u6cbb\u91ab\u5e2b\uff08VS\uff09\uff1f"}
-                    </p>
-                    <p className="text-red-400/70 text-xs leading-relaxed mb-3">
-                      {"\u9019\u662f\u6700\u9ad8\u5c64\u7d1a\u7684 escalation\u3002VS \u7d04 10 \u5206\u9418\u5f8c\u62b5\u9054\u6216\u96fb\u8a71\u6307\u793a\u3002\u8acb\u78ba\u8a8d\u4f60\u5df2\u5145\u5206\u8a55\u4f30\u60c5\u6cc1\uff0c\u4e14\u60c5\u6cc1\u9700\u8981 VS \u6c7a\u7b56\u3002"}
-                    </p>
-                  </>
-                )}
+                <p className="text-amber-200 font-medium text-sm mb-1">
+                  {isRecallContext ? "確定要再叫學長回來嗎？" : "確定要叫學長嗎？"}
+                </p>
+                <p className="text-amber-400/70 text-xs leading-relaxed mb-3">
+                  {isRecallContext
+                    ? "情況有變化，需要學長回來重新評估。約 3 分鐘後到場。"
+                    : "學長約 5 分鐘後到場。遊戲繼續，你可以繼續處理病人。"}
+                </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => handleConfirmCall(confirming)}
-                    className={`flex-1 py-2 rounded-lg text-white text-sm font-medium transition-colors ${
-                      confirming === "vs"
-                        ? "bg-red-700 hover:bg-red-600 border border-red-600"
-                        : "bg-amber-700 hover:bg-amber-600 border border-amber-600"
-                    }`}
+                    className="flex-1 py-2 rounded-lg text-white text-sm font-medium transition-colors bg-amber-700 hover:bg-amber-600 border border-amber-600"
                   >
-                    {"\u78ba\u5b9a\u6253\u96fb\u8a71"}
+                    確定打電話
                   </button>
                   <button
                     onClick={() => setConfirming(null)}
                     className="flex-1 py-2 rounded-lg text-teal-400 text-sm border border-teal-800/40 hover:border-teal-700/60 transition-colors"
                   >
-                    {"\u53d6\u6d88"}
+                    取消
                   </button>
                 </div>
               </div>
@@ -349,27 +402,28 @@ export function ConsultModal() {
               if (confirming === opt.type) return null;
 
               // If senior already called and not yet arrived, disable senior button
-              const isSeniorDisabled = opt.type === "senior" && seniorAlreadyCalled && !isPhase2;
+              // Disable senior button only if already called AND not yet arrived AND not Phase 2
+              // Phase 2: always allow recall (even if senior already arrived — situation changed)
+              // Senior arrived: allow calling again (new situation may need re-escalation)
+              const isSeniorDisabled = opt.type === "senior" && seniorAlreadyCalled && !seniorHasArrived && !isRecallContext;
 
               const colorMap: Record<string, string> = {
                 amber: "border-amber-800/30 hover:border-amber-600/50 hover:bg-amber-950/20",
-                red:   "border-red-800/30 hover:border-red-600/50 hover:bg-red-950/20",
                 teal:  "border-teal-800/30 hover:border-teal-600/50 hover:bg-teal-950/20",
               };
               const textMap: Record<string, string> = {
                 amber: "text-amber-300",
-                red:   "text-red-300",
                 teal:  "text-teal-300",
               };
 
               // Phase 2: override senior option labels
-              const title = (isPhase2 && opt.type === "senior")
-                ? "\u7dca\u6025\u53eb\u5b78\u9577\u56de\u4f86"
+              const title = (isRecallContext && opt.type === "senior")
+                ? "再叫學長回來"
                 : opt.title;
-              const subtitle = (isPhase2 && opt.type === "senior")
-                ? "\u5b78\u9577\u525b\u96e2\u958b\uff0c\u60c5\u6cc1\u6709\u8b8a \u2014 \u53eb\u4ed6\u56de\u4f86\uff01"
+              const subtitle = (isRecallContext && opt.type === "senior")
+                ? "情況有變化，叫學長回來重新評估"
                 : isSeniorDisabled
-                  ? "\u5df2\u806f\u7e6b\u5b78\u9577\uff0c\u7b49\u5f85\u5230\u5834\u4e2d"
+                  ? "已聯繫學長，等待到場中"
                   : opt.subtitle;
 
               return (
@@ -396,7 +450,7 @@ export function ConsultModal() {
                           </div>
                           {opt.arrivalMinutes && !isSeniorDisabled && (
                             <div className="text-xs text-teal-500/40 mt-0.5">
-                              {"\u23f1"} {"\u9810\u8a08"} {(isPhase2 && opt.type === "senior") ? 3 : opt.arrivalMinutes} {"\u5206\u9418\u5f8c\u5230\u5834"}
+                              {"\u23f1"} 預計 {(isRecallContext && opt.type === "senior") ? 3 : opt.arrivalMinutes} 分鐘後到場
                             </div>
                           )}
                         </div>
@@ -439,7 +493,7 @@ export function ConsultModal() {
                               type="text"
                               value={consultDept}
                               onChange={(e) => setConsultDept(e.target.value)}
-                              placeholder="e.g. \u8840\u6db2\u79d1\u3001\u814e\u81df\u79d1..."
+                              placeholder="e.g. 血液科、腎臟科..."
                               className="w-full rounded-lg px-3 py-2 text-sm text-white border border-teal-800/40 focus:border-teal-600 focus:outline-none transition-colors"
                               style={{ backgroundColor: "#002030" }}
                             />

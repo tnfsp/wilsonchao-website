@@ -622,6 +622,13 @@ export interface SimScenario {
     physicalExam?: Record<string, PEFinding>;
     availableImaging?: Record<string, string>;
   }>>;
+
+  /** BioGears-driven phase transition rules (condition-based, replaces scripted triggerTime) */
+  phaseTransitions?: Array<{
+    id: string;
+    conditions: Array<Record<string, unknown>>;
+    actions: Array<Record<string, unknown>>;
+  }>;
 }
 
 export interface PatientInfo {
@@ -747,7 +754,8 @@ export type ModalType =
   | "pause_think"
   | "consult"
   | "defibrillator"
-  | "senior_dialog";
+  | "senior_dialog"
+  | "milk_ct_result";
 
 // ============================================================
 // Defibrillator (ACLS)

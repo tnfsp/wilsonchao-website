@@ -15,13 +15,14 @@
  * - Timeline / chat
  * - Orders / MTP UI flow
  * - Scoring / debrief
- * - Chest tube (BioGears doesn't model chest tubes)
+ * - Chest tube (derived from BioGears hemorrhage rate + pericardium volume)
  */
 
 import { BioGearsClient, biogearsToVitals } from "./biogears-client";
 import type { BioGearsState } from "./biogears-client";
 import { useProGameStore } from "../store";
 import type { VitalSigns, LethalTriadState } from "../types";
+import { deriveCtOutput } from "./ct-output-engine";
 
 // ============================================================
 // Singleton client (shared across hooks)
@@ -67,22 +68,73 @@ export function getLastBioGearsState(): BioGearsState | null {
   return _lastState;
 }
 
+/**
+ * M9: Fully cleanup the singleton BioGears client.
+ * Call on ProPageClient unmount to release WS connection and reset state.
+ */
+export function cleanupBioGearsClient(): void {
+  // Clear any pending throttle timer
+  if (_syncTimer) {
+    clearTimeout(_syncTimer);
+    _syncTimer = null;
+  }
+  _pendingSyncState = null;
+  _lastSyncTime = 0;
+
+  if (_client) {
+    _client.disconnect().catch(() => {});
+    _client = null;
+  }
+  _lastState = null;
+}
+
 // ============================================================
-// State sync: BioGears → Store
+// State sync: BioGears → Store (M6: throttled to max 1 sync per 500ms)
 // ============================================================
+
+let _lastSyncTime = 0;
+let _pendingSyncState: BioGearsState | null = null;
+let _syncTimer: ReturnType<typeof setTimeout> | null = null;
 
 /**
  * Push a BioGears state snapshot into the zustand store.
- * Called on every advance / stream tick.
+ * Throttled: at most once per 500ms. If called more frequently,
+ * the latest state is queued and applied after the throttle window.
  */
 export function syncBioGearsToStore(bgState: BioGearsState): void {
+  // Always update last state (for getLastBioGearsState consumers)
   _lastState = bgState;
 
+  const now = Date.now();
+  const elapsed = now - _lastSyncTime;
+
+  if (elapsed >= 500) {
+    _lastSyncTime = now;
+    _syncBioGearsToStoreImpl(bgState);
+  } else {
+    // Queue the latest state for deferred sync
+    _pendingSyncState = bgState;
+    if (!_syncTimer) {
+      _syncTimer = setTimeout(() => {
+        _syncTimer = null;
+        if (_pendingSyncState) {
+          _lastSyncTime = Date.now();
+          _syncBioGearsToStoreImpl(_pendingSyncState);
+          _pendingSyncState = null;
+        }
+      }, 500 - elapsed);
+    }
+  }
+}
+
+/** Internal: actual sync logic (unthrottled) */
+function _syncBioGearsToStoreImpl(bgState: BioGearsState): void {
   const store = useProGameStore.getState();
   if (!store.patient || store.phase !== "playing") return;
 
-  // 1. Convert vitals
-  const newVitals: VitalSigns = biogearsToVitals(bgState);
+  // 1. Convert vitals (null if BioGears returned incomplete data)
+  const newVitals = biogearsToVitals(bgState);
+  if (!newVitals) return;
 
   // 2. Update lethal triad from BioGears labs
   const labs = bgState.labs;
@@ -126,17 +178,22 @@ export function syncBioGearsToStore(bgState: BioGearsState): void {
 
   severity = Math.max(0, Math.min(100, severity));
 
-  // 4. Update store
+  // 4. Derive chest tube output from BioGears state
+  const currentCt = store.patient.chestTube;
+  const derivedCt = deriveCtOutput(bgState, currentCt);
+
+  // 5. Update store
   useProGameStore.setState((state) => ({
     patient: state.patient ? {
       ...state.patient,
       vitals: newVitals,
       severity,
       lethalTriad,
+      chestTube: derivedCt,
     } : state.patient,
   }));
 
-  // 5. Cardiac arrest check from BioGears events (scenario-aware messages)
+  // 6. Cardiac arrest check from BioGears events (scenario-aware messages)
   // In Pro mode: triggers ACLS flow (cardiac arrest → ACLSModal → 20-min rescue window)
   // In Standard mode: triggerDeath handles rescue window interception
   if (bgState.patient.event_cardiac_arrest || bgState.vitals.map < 25) {
@@ -380,7 +437,7 @@ export async function dispatchPericardialEffusion(rateMlPerMin: number): Promise
   const client = getBioGearsClient();
   if (!client.isInitialized) return;
   try {
-    await (client as any).pericardialEffusion(rateMlPerMin);
+    await client.pericardialEffusion(rateMlPerMin);
   } catch (err) {
     console.error("[BioGears] pericardialEffusion failed:", err);
   }
@@ -395,7 +452,7 @@ export async function dispatchCardiacArrest(active: boolean): Promise<void> {
   const client = getBioGearsClient();
   if (!client.isInitialized) return;
   try {
-    await (client as any).cardiacArrest(active);
+    await client.cardiacArrest(active);
   } catch (err) {
     console.error("[BioGears] cardiacArrest failed:", err);
   }
@@ -414,7 +471,7 @@ export async function dispatchStartCpr(
   const client = getBioGearsClient();
   if (!client.isInitialized) return;
   try {
-    await (client as any).startCpr(forceScale, rateBpm);
+    await client.startCpr(forceScale, rateBpm);
   } catch (err) {
     console.error("[BioGears] startCpr failed:", err);
   }
@@ -427,7 +484,7 @@ export async function dispatchStopCpr(): Promise<void> {
   const client = getBioGearsClient();
   if (!client.isInitialized) return;
   try {
-    await (client as any).stopCpr();
+    await client.stopCpr();
   } catch (err) {
     console.error("[BioGears] stopCpr failed:", err);
   }
@@ -443,7 +500,7 @@ export async function dispatchChestTube(side: string, active: boolean): Promise<
   const client = getBioGearsClient();
   if (!client.isInitialized) return;
   try {
-    await (client as any).chestTube(side, active);
+    await client.chestTube(side, active);
   } catch (err) {
     console.error("[BioGears] chestTube failed:", err);
   }
@@ -459,7 +516,7 @@ export async function dispatchNeedleDecompression(side: string, active: boolean)
   const client = getBioGearsClient();
   if (!client.isInitialized) return;
   try {
-    await (client as any).needleDecompression(side, active);
+    await client.needleDecompression(side, active);
   } catch (err) {
     console.error("[BioGears] needleDecompression failed:", err);
   }

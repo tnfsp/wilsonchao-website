@@ -6,7 +6,8 @@ import { useProGameStore } from "@/lib/simulator/store";
 
 export function PauseThinkModal() {
   const activeModal = useProGameStore((s) => s.activeModal);
-  const { closeModal, usePauseThink } = useProGameStore();
+  const closeModal = useProGameStore((s) => s.closeModal);
+  const usePauseThink = useProGameStore((s) => s.usePauseThink);
 
   if (activeModal !== "pause_think") return null;
 

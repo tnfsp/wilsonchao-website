@@ -97,8 +97,12 @@ function getClipsKey(tab: ImagingTab): PocusCategoryKey | null {
 
 export function ImagingModal() {
   const activeModal = useProGameStore((s) => s.activeModal);
-  const { scenario, patient, clock, closeModal, addTimelineEntry, addPendingEvent } =
-    useProGameStore();
+  const scenario = useProGameStore((s) => s.scenario);
+  const patient = useProGameStore((s) => s.patient);
+  const clock = useProGameStore((s) => s.clock);
+  const closeModal = useProGameStore((s) => s.closeModal);
+  const addTimelineEntry = useProGameStore((s) => s.addTimelineEntry);
+  const addPendingEvent = useProGameStore((s) => s.addPendingEvent);
   const actionAdvance = useProGameStore((s) => s.actionAdvance);
 
   const [activeTab, setActiveTab] = useState<ImagingTab>("cxr");

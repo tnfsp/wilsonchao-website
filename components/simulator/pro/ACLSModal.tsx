@@ -8,6 +8,16 @@ import {
   dispatchStartCpr,
   dispatchStopCpr,
 } from "@/lib/simulator/engine/biogears-engine";
+import {
+  createWaveformState,
+  generateSamples,
+  getDisplayBuffer,
+  SAMPLE_RATE,
+  BUFFER_SIZE,
+  DISPLAY_SECONDS,
+  type WaveformState,
+  type WaveformVitals,
+} from "@/lib/simulator/engine/waveform-synth";
 
 // ─── Types ──────────────────────────────────────────────────────────────────
 
@@ -139,6 +149,295 @@ function isShockable(rhythm: RhythmType): boolean {
   return SHOCKABLE_RHYTHMS.includes(rhythm);
 }
 
+// ─── ACLS Mini Waveform Renderer ────────────────────────────────────────────
+
+interface ACLSTraceConfig {
+  label: string;
+  color: string;
+  heightRatio: number;
+  yMin: number;
+  yMax: number;
+  getBuffer: (state: WaveformState) => Float32Array;
+}
+
+const ACLS_TRACES: ACLSTraceConfig[] = [
+  {
+    label: "II",
+    color: "#22c55e",
+    heightRatio: 0.50,
+    yMin: -0.1,
+    yMax: 1.1,
+    getBuffer: (s) => s.ecg,
+  },
+  {
+    label: "ART",
+    color: "#ef4444",
+    heightRatio: 0.50,
+    yMin: 0.15,
+    yMax: 1.05,
+    getBuffer: (s) => s.arterial,
+  },
+];
+
+function drawACLSWaveforms(
+  canvas: HTMLCanvasElement,
+  wfState: WaveformState,
+) {
+  const ctx = canvas.getContext("2d");
+  if (!ctx) return;
+
+  const W = canvas.width;
+  const H = canvas.height;
+  const dpr = window.devicePixelRatio || 1;
+
+  ctx.fillStyle = "#000d14";
+  ctx.fillRect(0, 0, W, H);
+
+  // Dim grid lines
+  ctx.strokeStyle = "rgba(255,255,255,0.04)";
+  ctx.lineWidth = 1 * dpr;
+  for (let s = 1; s < DISPLAY_SECONDS; s++) {
+    const x = (s / DISPLAY_SECONDS) * W;
+    ctx.beginPath();
+    ctx.moveTo(x, 0);
+    ctx.lineTo(x, H);
+    ctx.stroke();
+  }
+
+  const cursorX = ((wfState.writeIndex % BUFFER_SIZE) / BUFFER_SIZE) * W;
+
+  let yOffset = 0;
+  for (const trace of ACLS_TRACES) {
+    const traceH = H * trace.heightRatio;
+    const y0 = yOffset;
+    const y1 = yOffset + traceH;
+
+    // Separator
+    ctx.strokeStyle = "rgba(255,255,255,0.06)";
+    ctx.beginPath();
+    ctx.moveTo(0, y1);
+    ctx.lineTo(W, y1);
+    ctx.stroke();
+
+    const buffer = getDisplayBuffer(trace.getBuffer(wfState), wfState.writeIndex);
+
+    ctx.strokeStyle = trace.color;
+    ctx.lineWidth = 1.5 * dpr;
+    ctx.lineJoin = "round";
+    ctx.beginPath();
+
+    for (let i = 0; i < BUFFER_SIZE; i++) {
+      const x = (i / BUFFER_SIZE) * W;
+      const distFromCursor = Math.abs(x - cursorX);
+      if (distFromCursor < W * 0.02) continue;
+
+      const val = buffer[i];
+      const normalized = (val - trace.yMin) / (trace.yMax - trace.yMin);
+      const y = y1 - normalized * traceH;
+
+      if (i === 0 || distFromCursor < W * 0.025) {
+        ctx.moveTo(x, y);
+      } else {
+        ctx.lineTo(x, y);
+      }
+    }
+    ctx.stroke();
+
+    // Label
+    ctx.font = `${10 * dpr}px ui-monospace, monospace`;
+    ctx.fillStyle = trace.color;
+    ctx.globalAlpha = 0.6;
+    ctx.fillText(trace.label, 4 * dpr, y0 + 13 * dpr);
+    ctx.globalAlpha = 1;
+
+    yOffset = y1;
+  }
+
+  // Sweep cursor
+  ctx.strokeStyle = "rgba(255,255,255,0.15)";
+  ctx.lineWidth = 2 * dpr;
+  ctx.beginPath();
+  ctx.moveTo(cursorX, 0);
+  ctx.lineTo(cursorX, H);
+  ctx.stroke();
+}
+
+/** Maps ACLSModal rhythm types to waveform-synth rhythm types */
+function mapRhythmToSynth(rhythm: RhythmType): WaveformVitals["rhythm"] {
+  switch (rhythm) {
+    case "vf": return "vfib";
+    case "vt_pulseless": return "vtach";
+    case "asystole": return "asystole";
+    case "pea": return "sinus"; // PEA = electrical activity present (QRS visible) but no pulse
+    case "nsr":
+    case "sinus_tach":
+    default: return "sinus";
+  }
+}
+
+/** Builds waveform vitals based on ACLS state (rhythm, CPR status, arrest/ROSC) */
+function getACLSWaveformVitals(
+  rhythm: RhythmType,
+  cprActive: boolean,
+  isRosc: boolean,
+): WaveformVitals {
+  if (isRosc) {
+    // ROSC: normal sinus rhythm with real arterial pulsations
+    return { hr: 88, sbp: 95, dbp: 55, spo2: 94, rr: 14, etco2: 32, rhythm: "sinus" };
+  }
+
+  const synthRhythm = mapRhythmToSynth(rhythm);
+
+  if (cprActive) {
+    // CPR active: ECG shows underlying rhythm; A-line shows compression artifacts
+    // Compressions at ~110/min → small A-line pulses (~30-40 mmHg)
+    const cprHr = 110; // compression rate
+    return {
+      hr: synthRhythm === "asystole" ? cprHr : (synthRhythm === "vfib" ? 0 : 72),
+      sbp: 40, dbp: 15, // CPR-generated pressures — low amplitude
+      spo2: 70, rr: 10, etco2: 15,
+      rhythm: synthRhythm === "asystole" ? "sinus" : synthRhythm,
+      // For asystole during CPR: we drive the A-line via HR=110 (compression rate)
+      // but ECG stays flat (overridden below)
+    };
+  }
+
+  // No CPR, arrest: flatline A-line, ECG shows underlying rhythm
+  switch (synthRhythm) {
+    case "asystole":
+      return { hr: 0, sbp: 0, dbp: 0, spo2: 0, rr: 0, etco2: 0, rhythm: "asystole" };
+    case "vfib":
+      return { hr: 0, sbp: 0, dbp: 0, spo2: 0, rr: 0, etco2: 0, rhythm: "vfib" };
+    case "vtach":
+      return { hr: 180, sbp: 0, dbp: 0, spo2: 0, rr: 0, etco2: 0, rhythm: "vtach" };
+    case "sinus": // PEA
+      return { hr: 72, sbp: 0, dbp: 0, spo2: 0, rr: 0, etco2: 0, rhythm: "sinus" };
+    default:
+      return { hr: 0, sbp: 0, dbp: 0, spo2: 0, rr: 0, etco2: 0, rhythm: "asystole" };
+  }
+}
+
+/**
+ * Special generate for ACLS: handles asystole-during-CPR case where
+ * ECG must stay flat but A-line must show compression artifacts.
+ */
+function generateACLSSamples(
+  state: WaveformState,
+  rhythm: RhythmType,
+  cprActive: boolean,
+  isRosc: boolean,
+  count: number,
+): void {
+  const vitals = getACLSWaveformVitals(rhythm, cprActive, isRosc);
+
+  if (cprActive && (rhythm === "asystole")) {
+    // Special case: asystole + CPR
+    // Generate A-line with compression artifacts (use "sinus" at 110 bpm for A-line)
+    // But ECG must be flat (asystole)
+    const artVitals: WaveformVitals = {
+      hr: 110, sbp: 40, dbp: 15, spo2: 70, rr: 10, etco2: 15, rhythm: "sinus",
+    };
+    generateSamples(state, artVitals, count);
+    // Now overwrite ECG buffer with flatline
+    for (let i = 0; i < count; i++) {
+      const idx = (state.writeIndex - count + i + BUFFER_SIZE) % BUFFER_SIZE;
+      state.ecg[idx] = 0.15; // asystole baseline
+    }
+  } else if (cprActive && rhythm === "pea") {
+    // PEA during CPR: ECG shows QRS complexes (sinus-like), A-line shows CPR artifacts
+    generateSamples(state, vitals, count);
+  } else {
+    generateSamples(state, vitals, count);
+  }
+}
+
+/** Inline ACLS waveform canvas component */
+function ACLSWaveformCanvas({
+  rhythm,
+  cprActive,
+  isRosc,
+}: {
+  rhythm: RhythmType;
+  cprActive: boolean;
+  isRosc: boolean;
+}) {
+  const canvasRef = useRef<HTMLCanvasElement>(null);
+  const wfStateRef = useRef<WaveformState>(createWaveformState());
+  const animRef = useRef<number>(0);
+  const lastTickRef = useRef<number>(0);
+
+  // Store latest props in refs so animation loop always reads current values
+  const rhythmRef = useRef(rhythm);
+  const cprRef = useRef(cprActive);
+  const roscRef = useRef(isRosc);
+  useEffect(() => { rhythmRef.current = rhythm; }, [rhythm]);
+  useEffect(() => { cprRef.current = cprActive; }, [cprActive]);
+  useEffect(() => { roscRef.current = isRosc; }, [isRosc]);
+
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const dpr = window.devicePixelRatio || 1;
+    const rect = canvas.getBoundingClientRect();
+    canvas.width = rect.width * dpr;
+    canvas.height = rect.height * dpr;
+
+    lastTickRef.current = performance.now();
+
+    const tick = (now: number) => {
+      const elapsed = now - lastTickRef.current;
+      lastTickRef.current = now;
+
+      const samplesToGenerate = Math.round((elapsed / 1000) * SAMPLE_RATE);
+      if (samplesToGenerate > 0) {
+        generateACLSSamples(
+          wfStateRef.current,
+          rhythmRef.current,
+          cprRef.current,
+          roscRef.current,
+          Math.min(samplesToGenerate, SAMPLE_RATE),
+        );
+        drawACLSWaveforms(canvas, wfStateRef.current);
+      }
+
+      animRef.current = requestAnimationFrame(tick);
+    };
+
+    animRef.current = requestAnimationFrame(tick);
+
+    return () => {
+      if (animRef.current) cancelAnimationFrame(animRef.current);
+    };
+  }, []);
+
+  // Handle resize
+  useEffect(() => {
+    const canvas = canvasRef.current;
+    if (!canvas) return;
+
+    const observer = new ResizeObserver(() => {
+      const dpr = window.devicePixelRatio || 1;
+      const rect = canvas.getBoundingClientRect();
+      canvas.width = rect.width * dpr;
+      canvas.height = rect.height * dpr;
+    });
+
+    observer.observe(canvas);
+    return () => observer.disconnect();
+  }, []);
+
+  return (
+    <div className="w-full rounded-lg border border-white/8 bg-[#000d14] overflow-hidden" style={{ height: 120 }}>
+      <canvas
+        ref={canvasRef}
+        className="w-full h-full"
+        style={{ display: "block" }}
+      />
+    </div>
+  );
+}
+
 // ─── Component ──────────────────────────────────────────────────────────────
 
 export default function ACLSModal() {
@@ -190,6 +489,25 @@ export default function ACLSModal() {
   const [hasAchievedRosc, setHasAchievedRosc] = useState(false); // whether ROSC was ever achieved
   const [show15MinWarning, setShow15MinWarning] = useState(false); // arrest-time-limit approaching warning
   const [previousRhythm, setPreviousRhythm] = useState<RhythmType | null>(null); // for rhythm transition detection
+
+  // ── Additional ACLS drug tracking ──
+  const [atropineGiven, setAtropineGiven] = useState(0); // max 3 doses (3mg total)
+  const [calciumChlorideGiven, setCalciumChlorideGiven] = useState(0);
+  const [sodiumBicarbGiven, setSodiumBicarbGiven] = useState(0);
+  const [magnesiumGiven, setMagnesiumGiven] = useState(0);
+  const [lidocaineGiven, setLidocaineGiven] = useState(0);
+
+  // ── Phase 1 additional ACLS drugs ──
+  const [vasopressinGiven, setVasopressinGiven] = useState(false); // max 1 dose (40U)
+  const [adenosineGiven, setAdenosineGiven] = useState(0); // max 3 doses (6mg, 12mg, 12mg)
+  const [d50wGiven, setD50wGiven] = useState(0); // max 2 doses
+  const [insulinGiven, setInsulinGiven] = useState(0); // max 2 doses
+  const [epiDripActive, setEpiDripActive] = useState(false); // toggle on/off, post-ROSC only
+
+  // ── Phase 2 additional ACLS drugs ──
+  const [dopamineActive, setDopamineActive] = useState(false); // toggle on/off, bradycardia/post-ROSC
+  const [procainamideGiven, setProcainamideGiven] = useState(0); // max 1 (slow infusion)
+  const [diltiazemGiven, setDiltiazemGiven] = useState(0); // max 2 (0.25 then 0.35 mg/kg)
 
   // ── Senior arrival resternotomy tracking (tamponade only) ──
   const [seniorResternotomyCountdown, setSeniorResternotomyCountdown] = useState<number | null>(null); // seconds remaining until ROSC
@@ -791,6 +1109,395 @@ export default function ACLSModal() {
     });
   };
 
+  const handleAtropine = () => {
+    if (atropineGiven >= 3) {
+      setTeachingMessage("Atropine max dose reached (3mg total). No further doses recommended.");
+      setTimeout(() => setTeachingMessage(null), 3000);
+      return;
+    }
+    setAtropineGiven((prev) => prev + 1);
+    addEvent(`Atropine 1mg IV - Dose #${atropineGiven + 1} (max 3mg)`, "drug");
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: `ACLS: Atropine 1mg IV (dose ${atropineGiven + 1}/3)`,
+      sender: "player",
+    });
+  };
+
+  const handleCalciumChloride = () => {
+    setCalciumChlorideGiven((prev) => prev + 1);
+    addEvent(`Calcium Chloride 1g IV (10mL of 10%) - Dose #${calciumChlorideGiven + 1}`, "drug");
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: `ACLS: CaCl₂ 1g IV (dose ${calciumChlorideGiven + 1})`,
+      sender: "player",
+    });
+  };
+
+  const handleSodiumBicarb = () => {
+    setSodiumBicarbGiven((prev) => prev + 1);
+    addEvent(`Sodium Bicarbonate 50mEq IV - Dose #${sodiumBicarbGiven + 1}`, "drug");
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: `ACLS: NaHCO₃ 50mEq IV (dose ${sodiumBicarbGiven + 1})`,
+      sender: "player",
+    });
+  };
+
+  const handleMagnesium = () => {
+    setMagnesiumGiven((prev) => prev + 1);
+    addEvent(`Magnesium 2g IV over 5min - Dose #${magnesiumGiven + 1}`, "drug");
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: `ACLS: Magnesium 2g IV (dose ${magnesiumGiven + 1})`,
+      sender: "player",
+    });
+  };
+
+  const handleLidocaine = () => {
+    setLidocaineGiven((prev) => prev + 1);
+    const nonStandard = !isShockable(currentRhythm);
+    const noteTag = nonStandard ? " (non-standard indication)" : "";
+    addEvent(`Lidocaine 100mg IV (1-1.5 mg/kg) - Dose #${lidocaineGiven + 1}${noteTag}`, "drug");
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: `ACLS: Lidocaine 100mg IV (dose ${lidocaineGiven + 1})${noteTag}`,
+      sender: "player",
+    });
+  };
+
+  const handleVasopressin = () => {
+    if (vasopressinGiven) {
+      setTeachingMessage("Vasopressin is a single-dose drug (40U). No further doses recommended.");
+      setTimeout(() => setTeachingMessage(null), 3000);
+      return;
+    }
+    setVasopressinGiven(true);
+    addEvent("Vasopressin 40U IV - Single dose (alternative to epinephrine)", "drug");
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: "ACLS: Vasopressin 40U IV (single dose, epi alternative)",
+      sender: "player",
+    });
+    setTeachingMessage(
+      "Vasopressin 40U can replace the first or second dose of epinephrine in PEA/Asystole/VF/pVT. One-time only."
+    );
+    setTimeout(() => setTeachingMessage(null), 5000);
+  };
+
+  const handleAdenosine = () => {
+    // CRITICAL: Adenosine in asystole = fatal error (teaching moment)
+    if (currentRhythm === "asystole") {
+      addEvent("CRITICAL ERROR: Adenosine given during ASYSTOLE — contraindicated! Would worsen bradycardia.", "error");
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "ACLS: CRITICAL ERROR — Adenosine given during asystole (contraindicated)",
+        sender: "player",
+        isImportant: true,
+      });
+      setTeachingMessage(
+        "FATAL ERROR: Adenosine is CONTRAINDICATED in asystole! It blocks AV conduction and would worsen the arrest. Adenosine is ONLY for SVT or stable wide-complex tachycardia."
+      );
+      setTimeout(() => setTeachingMessage(null), 8000);
+      return;
+    }
+    // Adenosine in VF/VT/PEA = inappropriate (all are arrest rhythms)
+    if (currentRhythm === "vf" || currentRhythm === "vt_pulseless" || currentRhythm === "pea") {
+      const rhythmLabel = RHYTHM_DISPLAY[currentRhythm]?.label ?? currentRhythm;
+      addEvent(`WARNING: Adenosine given during ${rhythmLabel} — inappropriate. Use amiodarone or lidocaine instead.`, "error");
+      setTeachingMessage(
+        `Adenosine is not indicated for ${rhythmLabel}. It is only effective for SVT or stable wide-complex tachycardia. Consider amiodarone or lidocaine.`
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+      return;
+    }
+    if (adenosineGiven >= 3) {
+      setTeachingMessage("Adenosine max 3 doses reached (6mg + 12mg + 12mg = 30mg total).");
+      setTimeout(() => setTeachingMessage(null), 3000);
+      return;
+    }
+    const doseNum = adenosineGiven + 1;
+    const doseMg = doseNum === 1 ? 6 : 12;
+    setAdenosineGiven((prev) => prev + 1);
+    addEvent(`Adenosine ${doseMg}mg rapid IV push + flush - Dose #${doseNum}/3`, "drug");
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: `ACLS: Adenosine ${doseMg}mg rapid IV push (dose ${doseNum}/3)`,
+      sender: "player",
+    });
+    if (doseNum === 1) {
+      setTeachingMessage(
+        "Adenosine 6mg rapid IV push with immediate NS flush. Only for SVT/stable wide-complex tachycardia. If ineffective, next dose is 12mg."
+      );
+    } else {
+      setTeachingMessage(
+        `Adenosine 12mg rapid IV push with flush. Dose ${doseNum}/3.${doseNum === 3 ? " Max doses reached." : ""}`
+      );
+    }
+    setTimeout(() => setTeachingMessage(null), 5000);
+  };
+
+  const handleD50W = () => {
+    if (d50wGiven >= 2) {
+      setTeachingMessage("D50W max 2 doses given. Recheck blood glucose before further dextrose.");
+      setTimeout(() => setTeachingMessage(null), 3000);
+      return;
+    }
+    setD50wGiven((prev) => prev + 1);
+    addEvent(`D50W 50mL IV (25g glucose) - Dose #${d50wGiven + 1}/2`, "drug");
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: `ACLS: D50W 50mL IV (dose ${d50wGiven + 1}/2)`,
+      sender: "player",
+    });
+    setTeachingMessage(
+      "D50W treats hypoglycemia — one of the H's in reversible causes (Hypo/Hyperkalemia includes glucose disorders). Consider checking glucose in refractory arrest."
+    );
+    setTimeout(() => setTeachingMessage(null), 5000);
+  };
+
+  const handleInsulin = () => {
+    if (insulinGiven >= 2) {
+      setTeachingMessage("Insulin max 2 doses given. Monitor glucose and potassium closely.");
+      setTimeout(() => setTeachingMessage(null), 3000);
+      return;
+    }
+    // Teaching: warn if D50W not given
+    if (d50wGiven === 0) {
+      setTeachingMessage(
+        "WARNING: Giving insulin without D50W risks severe hypoglycemia. Strongly consider giving D50W first or concurrently."
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+    } else {
+      setTeachingMessage(
+        "Insulin 10U IV for hyperkalemia (one of the H's). Pair with D50W and calcium for full hyperK treatment."
+      );
+      setTimeout(() => setTeachingMessage(null), 5000);
+    }
+    setInsulinGiven((prev) => prev + 1);
+    const warningTag = d50wGiven === 0 ? " (WARNING: no D50W given — hypoglycemia risk!)" : "";
+    addEvent(`Regular Insulin 10U IV - Dose #${insulinGiven + 1}/2 (hyperkalemia Tx)${warningTag}`, "drug");
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: `ACLS: Insulin 10U IV (dose ${insulinGiven + 1}/2)${warningTag}`,
+      sender: "player",
+    });
+  };
+
+  const handleEpiDrip = () => {
+    if (aclsPhase !== "rosc") {
+      // Teaching: epi drip is post-ROSC only
+      addEvent("ERROR: Epinephrine drip ordered during active CPR — use push-dose epinephrine instead!", "error");
+      setTeachingMessage(
+        "Epinephrine drip (0.1-0.5 mcg/kg/min) is for post-ROSC hemodynamic support ONLY. During active CPR, use push-dose epinephrine 1mg IV."
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+      return;
+    }
+    setEpiDripActive((prev) => !prev);
+    if (!epiDripActive) {
+      addEvent("Epinephrine drip STARTED (0.1-0.5 mcg/kg/min) - post-ROSC vasopressor", "drug");
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "ACLS: Epinephrine drip started (0.1-0.5 mcg/kg/min)",
+        sender: "player",
+      });
+      setTeachingMessage(
+        "Epinephrine infusion started for post-ROSC hemodynamic support. Titrate to MAP > 65 mmHg."
+      );
+      setTimeout(() => setTeachingMessage(null), 5000);
+    } else {
+      addEvent("Epinephrine drip STOPPED", "drug");
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "ACLS: Epinephrine drip stopped",
+        sender: "player",
+      });
+    }
+  };
+
+  const handleDopamine = () => {
+    // Guard: not during active cardiac arrest (CPR in progress)
+    if (cprActive || (aclsPhase !== "rosc" && aclsPhase !== "arrest_detected")) {
+      addEvent("ERROR: Dopamine ordered during active cardiac arrest — not indicated!", "error");
+      setTeachingMessage(
+        "Dopamine is for symptomatic bradycardia or post-ROSC hemodynamic support, not during active arrest. Use push-dose epinephrine during CPR."
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+      return;
+    }
+    setDopamineActive((prev) => !prev);
+    if (!dopamineActive) {
+      addEvent("Dopamine drip STARTED (2-20 mcg/kg/min) - dose-dependent effects", "drug");
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "ACLS: Dopamine drip started (2-20 mcg/kg/min)",
+        sender: "player",
+      });
+      setTeachingMessage(
+        "Dopamine: dose-dependent — low dose renal, medium inotropy, high vasopressor. Standard choice for symptomatic bradycardia after atropine fails."
+      );
+      setTimeout(() => setTeachingMessage(null), 5000);
+    } else {
+      addEvent("Dopamine drip STOPPED", "drug");
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "ACLS: Dopamine drip stopped",
+        sender: "player",
+      });
+    }
+  };
+
+  const handleProcainamide = () => {
+    // Guard: asystole — BLOCK
+    if (currentRhythm === "asystole") {
+      addEvent("ERROR: Procainamide given during ASYSTOLE — contraindicated!", "error");
+      setTeachingMessage(
+        "Procainamide is for stable VT with pulse, not asystole. It has no role in non-shockable arrest rhythms."
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+      return;
+    }
+    // Guard: PEA — BLOCK
+    if (currentRhythm === "pea") {
+      addEvent("ERROR: Procainamide given during PEA — contraindicated!", "error");
+      setTeachingMessage(
+        "Procainamide is for stable VT with pulse, not PEA. Focus on CPR, epinephrine, and reversible causes."
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+      return;
+    }
+    // Guard: VF — WARNING
+    if (currentRhythm === "vf") {
+      addEvent("WARNING: Procainamide given during VF — not standard indication. Use amiodarone or defibrillation.", "warning");
+      setTeachingMessage(
+        "Procainamide is for stable VT, not VF — use amiodarone or defibrillation for ventricular fibrillation."
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+      return;
+    }
+    // Guard: pulseless VT — WARNING
+    if (currentRhythm === "vt_pulseless") {
+      addEvent("WARNING: Procainamide given during pulseless VT — pulseless VT requires defibrillation!", "warning");
+      setTeachingMessage(
+        "Pulseless VT requires defibrillation, not procainamide. Procainamide is only for stable VT with pulse."
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+      return;
+    }
+    // Max dose check
+    if (procainamideGiven >= 1) {
+      setTeachingMessage("Procainamide already infusing (max 17 mg/kg or 1g total). No further doses.");
+      setTimeout(() => setTeachingMessage(null), 3000);
+      return;
+    }
+    setProcainamideGiven(1);
+    addEvent("Procainamide 20-50 mg/min IV infusion started (max 17 mg/kg or 1g total)", "drug");
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: "ACLS: Procainamide IV infusion started (20-50 mg/min, max 17 mg/kg)",
+      sender: "player",
+    });
+    setTeachingMessage(
+      "Procainamide: for stable monomorphic VT with pulse. Infuse slowly (20-50 mg/min). Stop if QRS widens >50%, hypotension, or arrhythmia suppressed."
+    );
+    setTimeout(() => setTeachingMessage(null), 5000);
+  };
+
+  const handleDiltiazem = () => {
+    // Guard: asystole — BLOCK
+    if (currentRhythm === "asystole") {
+      addEvent("ERROR: Diltiazem given during ASYSTOLE — contraindicated!", "error");
+      setTeachingMessage(
+        "Diltiazem is for narrow complex tachycardia, not asystole. Calcium channel blockers have no role in asystole."
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+      return;
+    }
+    // Guard: PEA — BLOCK
+    if (currentRhythm === "pea") {
+      addEvent("ERROR: Diltiazem given during PEA — contraindicated!", "error");
+      setTeachingMessage(
+        "Diltiazem is for narrow complex tachycardia, not PEA. Focus on CPR, epinephrine, and reversible causes."
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+      return;
+    }
+    // Guard: VF — BLOCK (critical)
+    if (currentRhythm === "vf") {
+      addEvent("CRITICAL ERROR: Diltiazem given during VF — calcium channel blockers can worsen arrest!", "error");
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "ACLS: CRITICAL ERROR — Diltiazem given during VF (can worsen arrest)",
+        sender: "player",
+        isImportant: true,
+      });
+      setTeachingMessage(
+        "CRITICAL: Calcium channel blockers in VF can worsen arrest! Use defibrillation and amiodarone for VF."
+      );
+      setTimeout(() => setTeachingMessage(null), 8000);
+      return;
+    }
+    // Guard: pulseless VT — BLOCK (critical teaching moment)
+    if (currentRhythm === "vt_pulseless") {
+      addEvent("CRITICAL ERROR: Diltiazem given during pulseless VT — potentially fatal if VT misdiagnosed as SVT!", "error");
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "ACLS: CRITICAL ERROR — Diltiazem in wide complex tachycardia (potentially fatal)",
+        sender: "player",
+        isImportant: true,
+      });
+      setTeachingMessage(
+        "CRITICAL: Diltiazem in wide complex tachycardia = potentially fatal if VT misdiagnosed as SVT. This is a classic ACLS teaching error. Use defibrillation for pulseless VT."
+      );
+      setTimeout(() => setTeachingMessage(null), 8000);
+      return;
+    }
+    // Max dose check
+    if (diltiazemGiven >= 2) {
+      setTeachingMessage("Diltiazem max 2 doses reached (0.25 mg/kg + 0.35 mg/kg). No further doses.");
+      setTimeout(() => setTeachingMessage(null), 3000);
+      return;
+    }
+    const doseNum = diltiazemGiven + 1;
+    const doseMgKg = doseNum === 1 ? "0.25" : "0.35";
+    setDiltiazemGiven((prev) => prev + 1);
+    addEvent(`Diltiazem ${doseMgKg} mg/kg IV - Dose #${doseNum}/2`, "drug");
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: `ACLS: Diltiazem ${doseMgKg} mg/kg IV (dose ${doseNum}/2)`,
+      sender: "player",
+    });
+    if (doseNum === 1) {
+      setTeachingMessage(
+        "Diltiazem 0.25 mg/kg for narrow complex tachycardia. Monitor BP closely — can cause hypotension."
+      );
+    } else {
+      setTeachingMessage(
+        "Diltiazem 0.35 mg/kg (repeat dose). Max reached."
+      );
+    }
+    setTimeout(() => setTeachingMessage(null), 5000);
+  };
+
   const handleRosc = (method: string) => {
     setAclsPhase("rosc");
     setCprActive(false);
@@ -870,34 +1577,36 @@ export default function ACLSModal() {
   const isInActiveArrest = aclsPhase !== "rosc" && aclsPhase !== "death";
 
   // ── Minimized floating bar ──
+  // Positioned above ActionBar (bottom-[52px]) so ActionBar remains fully accessible.
+  // On desktop (lg+), ActionBar is inside the right column so we use bottom-[52px] consistently.
   if (isMinimized) {
     return (
       <div
-        className="fixed bottom-0 left-0 right-0 z-[60] h-[60px] flex items-center justify-between px-4 md:px-6 border-t-2"
+        className="fixed bottom-[52px] left-0 right-0 z-[60] h-[44px] flex items-center justify-between px-3 md:px-5 border-y"
         style={{
           background: "linear-gradient(180deg, #0a0000 0%, #001219 100%)",
           borderColor: aclsPhase === "rosc" ? "#22c55e" : "#dc2626",
           boxShadow:
             aclsPhase === "rosc"
-              ? "0 -4px 30px rgba(34, 197, 94, 0.3)"
-              : "0 -4px 30px rgba(220, 38, 38, 0.3)",
+              ? "0 -2px 20px rgba(34, 197, 94, 0.25)"
+              : "0 -2px 20px rgba(220, 38, 38, 0.25)",
         }}
       >
         {/* Left: status indicator + rhythm */}
-        <div className="flex items-center gap-3 min-w-0">
+        <div className="flex items-center gap-2 min-w-0">
           <div
-            className={`w-2.5 h-2.5 rounded-full flex-shrink-0 ${
+            className={`w-2 h-2 rounded-full flex-shrink-0 ${
               aclsPhase === "rosc"
                 ? "bg-green-500"
                 : "bg-red-500 animate-pulse"
             }`}
           />
-          <span className="text-white font-bold text-sm truncate">ACLS</span>
-          <span className={`text-xs font-semibold ${rhythmInfo.color} truncate`}>
+          <span className="text-white font-bold text-xs truncate">ACLS</span>
+          <span className={`text-[11px] font-semibold ${rhythmInfo.color} truncate hidden sm:inline`}>
             {rhythmInfo.label}
           </span>
           <span
-            className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded ${
+            className={`text-[9px] font-bold uppercase px-1 py-px rounded ${
               rhythmInfo.shockable
                 ? "bg-red-900/60 text-red-300 border border-red-700"
                 : aclsPhase === "rosc"
@@ -905,22 +1614,22 @@ export default function ACLSModal() {
                   : "bg-amber-900/60 text-amber-300 border border-amber-700"
             }`}
           >
-            {aclsPhase === "rosc" ? "ROSC" : rhythmInfo.shockable ? "SHOCKABLE" : "NON-SHOCKABLE"}
+            {aclsPhase === "rosc" ? "ROSC" : rhythmInfo.shockable ? "SHOCK" : "NON-SHOCK"}
           </span>
         </div>
 
         {/* Center: CPR timer + elapsed */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3">
           {cprActive && (
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 rounded-full bg-blue-400 animate-pulse" />
-              <span className="text-blue-300 text-xs font-mono">
+            <div className="flex items-center gap-1.5">
+              <div className="w-1.5 h-1.5 rounded-full bg-blue-400 animate-pulse" />
+              <span className="text-blue-300 text-[11px] font-mono">
                 CPR {formatTime(Math.min(cprCycleSeconds, CPR_CYCLE_SECONDS))}/{formatTime(CPR_CYCLE_SECONDS)}
               </span>
             </div>
           )}
           <span
-            className={`font-mono font-bold text-sm ${
+            className={`font-mono font-bold text-xs ${
               elapsedSeconds > MAX_ARREST_SECONDS
                 ? "text-red-400"
                 : elapsedSeconds > WARNING_ARREST_SECONDS
@@ -935,9 +1644,9 @@ export default function ACLSModal() {
         {/* Right: expand button */}
         <button
           onClick={() => setIsMinimized(false)}
-          className="flex-shrink-0 px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white text-sm font-semibold border border-zinc-600 transition-all"
+          className="flex-shrink-0 px-3 py-1 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-white text-xs font-semibold border border-zinc-600 transition-all"
         >
-          展開 ACLS
+          展開
         </button>
       </div>
     );
@@ -1113,6 +1822,17 @@ export default function ACLSModal() {
             </p>
           </div>
         )}
+
+        {/* ═══════════════════════════════════════════════════════════════════
+            Waveform Display (ECG Lead II + A-line)
+            ═══════════════════════════════════════════════════════════════════ */}
+        <div className="flex-shrink-0 px-3 py-2 md:px-6 md:py-3">
+          <ACLSWaveformCanvas
+            rhythm={currentRhythm}
+            cprActive={cprActive}
+            isRosc={aclsPhase === "rosc"}
+          />
+        </div>
 
         {/* ═══════════════════════════════════════════════════════════════════
             SECTIONS 2 & 3: CPR Status + Actions (Center)
@@ -1489,6 +2209,219 @@ export default function ACLSModal() {
                     Give 300mg first
                   </span>
                 ) : null}
+              </button>
+              {/* ── Additional ACLS Drugs ── */}
+              <button
+                onClick={handleAtropine}
+                disabled={aclsPhase === "rosc" || atropineGiven >= 3}
+                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                  aclsPhase === "rosc" || atropineGiven >= 3
+                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                    : "bg-blue-900 hover:bg-blue-800 text-blue-200 border border-blue-700/50"
+                }`}
+              >
+                Atropine 1mg
+                {atropineGiven > 0 && (
+                  <span className={`block text-[10px] mt-0.5 ${atropineGiven >= 3 ? "text-red-500" : "text-zinc-500"}`}>
+                    {atropineGiven}/3 doses{atropineGiven >= 3 ? " (max)" : ""}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={handleCalciumChloride}
+                disabled={aclsPhase === "rosc"}
+                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                  aclsPhase === "rosc"
+                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                    : "bg-yellow-900 hover:bg-yellow-800 text-yellow-200 border border-yellow-700/50"
+                }`}
+              >
+                CaCl₂ 1g
+                {calciumChlorideGiven > 0 && (
+                  <span className="block text-[10px] text-zinc-500 mt-0.5">
+                    x{calciumChlorideGiven}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={handleSodiumBicarb}
+                disabled={aclsPhase === "rosc"}
+                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                  aclsPhase === "rosc"
+                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                    : "bg-zinc-700 hover:bg-zinc-600 text-zinc-200 border border-zinc-500/50"
+                }`}
+              >
+                NaHCO₃ 50mEq
+                {sodiumBicarbGiven > 0 && (
+                  <span className="block text-[10px] text-zinc-500 mt-0.5">
+                    x{sodiumBicarbGiven}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={handleMagnesium}
+                disabled={aclsPhase === "rosc"}
+                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                  aclsPhase === "rosc"
+                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                    : "bg-violet-900 hover:bg-violet-800 text-violet-200 border border-violet-700/50"
+                }`}
+              >
+                Mg 2g
+                {magnesiumGiven > 0 && (
+                  <span className="block text-[10px] text-zinc-500 mt-0.5">
+                    x{magnesiumGiven}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={handleLidocaine}
+                disabled={aclsPhase === "rosc"}
+                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                  aclsPhase === "rosc"
+                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                    : "bg-orange-900 hover:bg-orange-800 text-orange-200 border border-orange-700/50"
+                }`}
+              >
+                Lidocaine 100mg
+                {lidocaineGiven > 0 && (
+                  <span className="block text-[10px] text-zinc-500 mt-0.5">
+                    x{lidocaineGiven}
+                  </span>
+                )}
+              </button>
+              {/* ── Phase 1 Additional ACLS Drugs ── */}
+              <button
+                onClick={handleVasopressin}
+                disabled={aclsPhase === "rosc" || vasopressinGiven}
+                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                  aclsPhase === "rosc" || vasopressinGiven
+                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                    : "bg-emerald-900 hover:bg-emerald-800 text-emerald-200 border border-emerald-700/50"
+                }`}
+              >
+                Vasopressin 40U
+                {vasopressinGiven && (
+                  <span className="block text-[10px] text-red-500 mt-0.5">
+                    Single dose given
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={handleAdenosine}
+                disabled={aclsPhase === "rosc" || adenosineGiven >= 3}
+                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                  aclsPhase === "rosc" || adenosineGiven >= 3
+                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                    : "bg-pink-900 hover:bg-pink-800 text-pink-200 border border-pink-700/50"
+                }`}
+              >
+                Adenosine {adenosineGiven === 0 ? "6mg" : "12mg"}
+                {adenosineGiven > 0 && (
+                  <span className={`block text-[10px] mt-0.5 ${adenosineGiven >= 3 ? "text-red-500" : "text-zinc-500"}`}>
+                    {adenosineGiven}/3 doses{adenosineGiven >= 3 ? " (max)" : ""}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={handleD50W}
+                disabled={aclsPhase === "rosc" || d50wGiven >= 2}
+                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                  aclsPhase === "rosc" || d50wGiven >= 2
+                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                    : "bg-amber-900 hover:bg-amber-800 text-amber-200 border border-amber-700/50"
+                }`}
+              >
+                D50W 50mL
+                {d50wGiven > 0 && (
+                  <span className={`block text-[10px] mt-0.5 ${d50wGiven >= 2 ? "text-red-500" : "text-zinc-500"}`}>
+                    {d50wGiven}/2 doses{d50wGiven >= 2 ? " (max)" : ""}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={handleInsulin}
+                disabled={aclsPhase === "rosc" || insulinGiven >= 2}
+                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                  aclsPhase === "rosc" || insulinGiven >= 2
+                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                    : "bg-teal-900 hover:bg-teal-800 text-teal-200 border border-teal-700/50"
+                }`}
+              >
+                Insulin 10U
+                {insulinGiven > 0 && (
+                  <span className={`block text-[10px] mt-0.5 ${insulinGiven >= 2 ? "text-red-500" : "text-zinc-500"}`}>
+                    {insulinGiven}/2 doses{insulinGiven >= 2 ? " (max)" : ""}
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={handleEpiDrip}
+                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                  epiDripActive
+                    ? "bg-green-800 hover:bg-green-700 text-green-200 border border-green-500/70 ring-1 ring-green-500/40"
+                    : aclsPhase === "rosc"
+                      ? "bg-emerald-900 hover:bg-emerald-800 text-emerald-200 border border-emerald-700/50"
+                      : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:bg-zinc-700/50"
+                }`}
+              >
+                {epiDripActive ? "Epi Drip ON" : "Epi Drip"}
+                <span className="block text-[10px] mt-0.5 text-zinc-500">
+                  {epiDripActive ? "0.1-0.5 mcg/kg/min" : "Post-ROSC only"}
+                </span>
+              </button>
+              {/* ── Phase 2 Additional ACLS Drugs ── */}
+              <button
+                onClick={handleDopamine}
+                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                  dopamineActive
+                    ? "bg-green-800 hover:bg-green-700 text-green-200 border border-green-500/70 ring-1 ring-green-500/40"
+                    : aclsPhase === "rosc"
+                      ? "bg-orange-900 hover:bg-orange-800 text-orange-200 border border-orange-700/50"
+                      : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:bg-zinc-700/50"
+                }`}
+              >
+                {dopamineActive ? "Dopamine ON" : "Dopamine"}
+                <span className="block text-[10px] mt-0.5 text-zinc-500">
+                  {dopamineActive ? "2-20 mcg/kg/min" : "Bradycardia / Post-ROSC"}
+                </span>
+              </button>
+              <button
+                onClick={handleProcainamide}
+                disabled={aclsPhase === "rosc" || procainamideGiven >= 1}
+                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                  aclsPhase === "rosc" || procainamideGiven >= 1
+                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                    : "bg-violet-900 hover:bg-violet-800 text-violet-200 border border-violet-700/50"
+                }`}
+              >
+                Procainamide
+                {procainamideGiven >= 1 ? (
+                  <span className="block text-[10px] text-red-500 mt-0.5">
+                    Infusing (max reached)
+                  </span>
+                ) : (
+                  <span className="block text-[10px] text-zinc-500 mt-0.5">
+                    20-50 mg/min IV
+                  </span>
+                )}
+              </button>
+              <button
+                onClick={handleDiltiazem}
+                disabled={aclsPhase === "rosc" || diltiazemGiven >= 2}
+                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                  aclsPhase === "rosc" || diltiazemGiven >= 2
+                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                    : "bg-rose-900 hover:bg-rose-800 text-rose-200 border border-rose-700/50"
+                }`}
+              >
+                Diltiazem {diltiazemGiven === 0 ? "0.25" : "0.35"} mg/kg
+                {diltiazemGiven > 0 && (
+                  <span className={`block text-[10px] mt-0.5 ${diltiazemGiven >= 2 ? "text-red-500" : "text-zinc-500"}`}>
+                    {diltiazemGiven}/2 doses{diltiazemGiven >= 2 ? " (max)" : ""}
+                  </span>
+                )}
               </button>
             </div>
 

@@ -107,6 +107,23 @@ function ActionPopover({
   );
 }
 
+// ─── Custom Tooltip ──────────────────────────────────────────────────────────
+
+function Tooltip({ label, shortcut }: { label: string; shortcut?: string }) {
+  return (
+    <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 z-[80] pointer-events-none whitespace-nowrap">
+      <div className="px-2.5 py-1.5 rounded-lg bg-slate-900 border border-white/10 shadow-xl text-xs">
+        <span className="text-slate-200">{label}</span>
+        {shortcut && (
+          <span className="ml-1.5 px-1 py-0.5 rounded bg-slate-700 text-slate-400 font-mono text-[10px]">
+            {shortcut}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Icon Button ─────────────────────────────────────────────────────────────
 
 interface IconBtnProps {
@@ -120,6 +137,8 @@ interface IconBtnProps {
 }
 
 function IconBtn({ icon, label, onClick, disabled, variant, active, shortcut }: IconBtnProps) {
+  const [showTooltip, setShowTooltip] = useState(false);
+
   let cls =
     "relative flex items-center justify-center w-10 h-10 rounded-lg text-lg transition-all select-none";
 
@@ -140,8 +159,9 @@ function IconBtn({ icon, label, onClick, disabled, variant, active, shortcut }: 
       className={cls}
       onClick={disabled ? undefined : onClick}
       disabled={disabled}
-      title={`${label}${shortcut ? ` (${shortcut})` : ""}`}
       aria-label={label}
+      onMouseEnter={() => setShowTooltip(true)}
+      onMouseLeave={() => setShowTooltip(false)}
     >
       {icon}
       {shortcut && (
@@ -149,6 +169,7 @@ function IconBtn({ icon, label, onClick, disabled, variant, active, shortcut }: 
           {shortcut}
         </span>
       )}
+      {showTooltip && !disabled && <Tooltip label={label} shortcut={shortcut} />}
     </button>
   );
 }
@@ -250,7 +271,7 @@ export default function ActionBar() {
     openModal("consult");
   };
 
-  // Treatment popover items (orders only — CT milking is a separate ActionBar button)
+  // Treatment popover items (includes CT milking, orders, transfusion, MTP, ventilator)
   const treatmentItems: PopoverItem[] = [
     { icon: "\ud83d\udc8a", label: "\u958b\u85e5", onClick: () => openModal("order") },
     { icon: "\ud83e\ude78", label: "\u8f38\u8840", onClick: () => openModal("order") },
@@ -263,6 +284,13 @@ export default function ActionBar() {
       variant: "danger",
     },
     { icon: "\ud83c\udf2c\ufe0f", label: "\u547c\u5438\u5668", onClick: () => { sessionStorage.setItem("sim-order-tab", "ventilator"); openModal("order"); } },
+    {
+      icon: "\ud83d\udd27",
+      label: "Milk CT",
+      onClick: handleMilkCT,
+      disabled: !patient?.chestTube,
+      disabledReason: "沒有 chest tube",
+    },
   ];
 
   return (
@@ -300,10 +328,10 @@ export default function ActionBar() {
             shortcut="2"
           />
 
-          {/* Treatment with popover */}
+          {/* Treatment with popover (⚕️ 處置) */}
           <div className="relative">
             <IconBtn
-              icon="💊" label="處置"
+              icon="⚕️" label="處置"
               onClick={() => setActivePopover(activePopover === "treatment" ? null : "treatment")}
               disabled={!isPlaying}
               active={activePopover === "treatment"}
@@ -317,11 +345,6 @@ export default function ActionBar() {
             )}
           </div>
 
-          <IconBtn
-            icon="🔧" label="Milk CT"
-            onClick={handleMilkCT}
-            disabled={!isPlaying || !patient?.chestTube}
-          />
           <IconBtn
             icon="📞" label="通報交班"
             onClick={handleCallAndSBAR}
