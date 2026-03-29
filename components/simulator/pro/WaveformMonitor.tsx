@@ -2,6 +2,7 @@
 
 import { useEffect, useRef, useCallback, useMemo, memo } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
+import type { RhythmType } from "@/lib/simulator/types";
 import {
   createWaveformState,
   generateSamples,
@@ -177,6 +178,22 @@ function drawWaveforms(
 
 // ─── Component ──────────────────────────────────────────────────────────────
 
+/** Maps store RhythmType to waveform synth rhythm */
+function mapRhythmToWaveform(rhythm?: RhythmType): WaveformVitals["rhythm"] {
+  switch (rhythm) {
+    case "vf": return "vfib";
+    case "vt_pulseless":
+    case "vt_pulse": return "vtach";
+    case "asystole": return "asystole";
+    case "afib": return "afib";
+    case "pea": return "sinus"; // PEA = electrical activity present but no pulse
+    case "nsr":
+    case "sinus_tach":
+    case "sinus_brady":
+    default: return "sinus";
+  }
+}
+
 interface WaveformMonitorProps {
   className?: string;
   /** Height in pixels (CSS). Default: 320. */
@@ -214,7 +231,7 @@ function WaveformMonitorInner({ className = "", height = 320 }: WaveformMonitorP
       spo2: vitals.spo2,
       rr: vitals.rr,
       etco2: vitals.etco2 ?? 38,
-      rhythm: "sinus", // TODO: map from patient state
+      rhythm: mapRhythmToWaveform(vitals.rhythmStrip),
     };
   }, [vitals]);
 

@@ -710,14 +710,18 @@ function mapBioGearsRhythm(bgRhythm?: string): RhythmType {
 export function biogearsToVitals(bg: BioGearsState): VitalSigns | null {
   const v = bg?.vitals;
   if (!v || v.hr === undefined) return null;
+  // BioGears can return negative pressures during cardiac arrest — clamp to 0
+  const sbp = Math.max(0, Math.round(v.sbp));
+  const dbp = Math.max(0, Math.round(v.dbp));
+  const map = Math.max(0, Math.round(v.map));
   return {
-    hr: Math.round(v.hr),
-    sbp: Math.round(v.sbp),
-    dbp: Math.round(v.dbp),
-    map: Math.round(v.map),
+    hr: Math.max(0, Math.round(v.hr)),
+    sbp,
+    dbp,
+    map,
     spo2: Math.round(v.spo2 * 100 * 10) / 10,  // fraction → percentage
     cvp: Math.round(v.cvp * 10) / 10,
-    rr: Math.round(v.rr),
+    rr: Math.max(0, Math.round(v.rr)),
     temperature: Math.round(v.temperature * 10) / 10,
     etco2: Math.round(v.etco2_mmHg),  // already in mmHg from bridge
     bloodVolume: Math.round(v.blood_volume_mL),

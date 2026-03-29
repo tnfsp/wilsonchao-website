@@ -472,6 +472,7 @@ export default function ACLSModal() {
   const [lastEpiTime, setLastEpiTime] = useState<number | null>(null);
   const [roscProbability, setRoscProbability] = useState(0);
   const [showReversibleCauses, setShowReversibleCauses] = useState(false);
+  const [drugTab, setDrugTab] = useState<"core" | "vasopressors" | "antiarrhythmics" | "electrolytes">("core");
   const [reversibleCauses, setReversibleCauses] = useState<ReversibleCause[]>(
     () => INITIAL_REVERSIBLE_CAUSES.map((c) => ({ ...c }))
   );
@@ -509,6 +510,14 @@ export default function ACLSModal() {
   const [procainamideGiven, setProcainamideGiven] = useState(0); // max 1 (slow infusion)
   const [diltiazemGiven, setDiltiazemGiven] = useState(0); // max 2 (0.25 then 0.35 mg/kg)
   const [isuprelActive, setIsuprelActive] = useState(false); // toggle on/off, bradycardia/torsades
+
+  // ── Phase 3 additional ACLS drugs ──
+  const [protamineGiven, setProtamineGiven] = useState(0); // max 2 doses (50mg each, titrate to ACT)
+  const [neDripActive, setNeDripActive] = useState(false); // toggle on/off, post-ROSC vasopressor
+  const [esmololGiven, setEsmololGiven] = useState(0); // bolus count (max 3, 500mcg/kg each)
+  const [esmololDripActive, setEsmololDripActive] = useState(false); // toggle drip
+  const [phenylephrineGiven, setPhenylephrineGiven] = useState(0); // bolus (max 3, 100-200mcg each)
+  const [calciumGluconateGiven, setCalciumGluconateGiven] = useState(0); // max 3 doses (3g total)
 
   // ── Senior arrival resternotomy tracking (tamponade only) ──
   const [seniorResternotomyCountdown, setSeniorResternotomyCountdown] = useState<number | null>(null); // seconds remaining until ROSC
@@ -1239,7 +1248,6 @@ export default function ACLSModal() {
         "致命錯誤：Adenosine 在 asystole 下絕對禁忌！A₁ 受體活化 → 房室結傳導完全阻斷 → 加重心臟停止。Adenosine 僅用於 SVT（AVNRT/AVRT）。"
       );
       setTimeout(() => setTeachingMessage(null), 8000);
-      return;
     }
     // Adenosine in VF/VT/PEA = inappropriate (all are arrest rhythms)
     if (currentRhythm === "vf" || currentRhythm === "vt_pulseless" || currentRhythm === "pea") {
@@ -1249,7 +1257,6 @@ export default function ACLSModal() {
         `Adenosine 不適用於 ${rhythmLabel}。它只能阻斷房室結（A₁ 受體），對不經過房室結的 VF/VT/PEA 無效。應使用 amiodarone 或 lidocaine。`
       );
       setTimeout(() => setTeachingMessage(null), 6000);
-      return;
     }
     if (adenosineGiven >= 3) {
       setTeachingMessage("Adenosine 已達最大劑量（6mg + 12mg + 12mg = 30mg）。半衰期 <10 秒，如仍無效表示非 AV nodal reentry。");
@@ -1335,7 +1342,6 @@ export default function ACLSModal() {
         "Epi drip（0.1-0.5 mcg/kg/min）僅用於 ROSC 後血流動力學支持。CPR 中需要的是 push-dose 1mg IV — 因為 drip 的低濃度在無灌流狀態下無法達到足夠冠狀動脈灌注壓。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
-      return;
     }
     setEpiDripActive((prev) => !prev);
     if (!epiDripActive) {
@@ -1369,7 +1375,6 @@ export default function ACLSModal() {
         "Dopamine 不用於心臟停止急救！它需持續輸注才有效（非 bolus），且在無灌流狀態下無法到達受體。CPR 中應使用 push-dose epinephrine 1mg IV。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
-      return;
     }
     setDopamineActive((prev) => !prev);
     if (!dopamineActive) {
@@ -1403,7 +1408,6 @@ export default function ACLSModal() {
         "Procainamide 禁用於 asystole！它是 Na⁺ 通道阻斷劑（Class Ia），會進一步抑制已停止的心肌電活動。僅用於有脈搏的穩定 VT。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
-      return;
     }
     // Guard: PEA — BLOCK
     if (currentRhythm === "pea") {
@@ -1412,7 +1416,6 @@ export default function ACLSModal() {
         "Procainamide 禁用於 PEA！PEA 的治療是 CPR + epinephrine + 找出可逆原因（H's and T's），不是抗心律不整藥。Procainamide 的負性肌力與低血壓效應會雪上加霜。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
-      return;
     }
     // Guard: VF — WARNING
     if (currentRhythm === "vf") {
@@ -1421,7 +1424,6 @@ export default function ACLSModal() {
         "Procainamide 不適用於 VF！VF 首選電擊 + amiodarone/lidocaine。Procainamide 需緩慢輸注（20-50 mg/min），在急性 VF 中來不及發揮作用。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
-      return;
     }
     // Guard: pulseless VT — WARNING
     if (currentRhythm === "vt_pulseless") {
@@ -1430,7 +1432,6 @@ export default function ACLSModal() {
         "無脈搏 VT 需要電擊！Procainamide 僅用於有脈搏的穩定單型 VT（慢速輸注 20-50 mg/min）。無脈搏 = 按 VF 流程處理：電擊 + CPR + epinephrine。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
-      return;
     }
     // Max dose check
     if (procainamideGiven >= 1) {
@@ -1460,7 +1461,6 @@ export default function ACLSModal() {
         "Diltiazem 禁用於 asystole！它阻斷 L-type Ca²⁺ 通道 → 抑制房室結傳導與心肌收縮力，會加重已停止的心臟。鈣離子阻斷劑在心臟停止中無任何角色。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
-      return;
     }
     // Guard: PEA — BLOCK
     if (currentRhythm === "pea") {
@@ -1469,7 +1469,6 @@ export default function ACLSModal() {
         "Diltiazem 禁用於 PEA！Ca²⁺ 通道阻斷 → 負性肌力 + 血管擴張 → 血壓更低。PEA 的處理是 CPR + epinephrine + 可逆原因。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
-      return;
     }
     // Guard: VF — BLOCK (critical)
     if (currentRhythm === "vf") {
@@ -1485,7 +1484,6 @@ export default function ACLSModal() {
         "致命錯誤：鈣離子阻斷劑在 VF 中會惡化心臟停止！負性肌力 + 血管擴張 = 災難。VF 唯一正確處置：電擊 + CPR + epinephrine + amiodarone。"
       );
       setTimeout(() => setTeachingMessage(null), 8000);
-      return;
     }
     // Guard: pulseless VT — BLOCK (critical teaching moment)
     if (currentRhythm === "vt_pulseless") {
@@ -1501,7 +1499,6 @@ export default function ACLSModal() {
         "致命錯誤：Diltiazem 用於寬 QRS 心搏過速 = 經典 ACLS 致死錯誤！若 VT 被誤診為 SVT，Ca²⁺ 阻斷會導致血流動力學崩潰。無脈搏 VT 必須電擊。"
       );
       setTimeout(() => setTeachingMessage(null), 8000);
-      return;
     }
     // Max dose check
     if (diltiazemGiven >= 2) {
@@ -1539,7 +1536,6 @@ export default function ACLSModal() {
         "Isoproterenol 禁用於 VF！純 β 激動劑 → 增加心肌自動性（automaticity）→ 維持甚至惡化 VF。VF 需要電擊 + amiodarone，不是增加心肌興奮性。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
-      return;
     }
     // Guard: pulseless VT — BLOCK
     if (currentRhythm === "vt_pulseless") {
@@ -1548,7 +1544,6 @@ export default function ACLSModal() {
         "Isoproterenol 不適用於無脈搏 VT！β1 激動增加自動性會惡化 VT。無脈搏 VT = 按 VF 流程：電擊 + CPR + epinephrine + amiodarone。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
-      return;
     }
     // Guard: active CPR arrest (not ROSC) — BLOCK
     if (cprActive && aclsPhase !== "rosc") {
@@ -1557,7 +1552,6 @@ export default function ACLSModal() {
         "Isoproterenol 不用於 CPR 中！它是純 β 激動劑（無 α） → 血管擴張降低 SVR → 無法維持冠狀動脈灌注壓。CPR 中需要有 α 效應的 epinephrine。"
       );
       setTimeout(() => setTeachingMessage(null), 6000);
-      return;
     }
     // Toggle infusion
     setIsuprelActive((prev) => !prev);
@@ -1582,6 +1576,161 @@ export default function ACLSModal() {
         sender: "player",
       });
     }
+  };
+
+  // ── Phase 3 Drug Handlers ──
+
+  const handleProtamine = () => {
+    // Guard: only makes sense post-heparin (cardiac surgery context)
+    if (currentRhythm === "vf" || currentRhythm === "vt_pulseless") {
+      addEvent("WARNING: Protamine during VF/pVT — address rhythm first (defibrillation + CPR)!", "warning");
+      setTeachingMessage(
+        "Protamine 不是急救用藥！應先處理 VF/pVT（電擊 + CPR + epinephrine）。Protamine 用於逆轉 heparin 引起的出血。"
+      );
+      setTimeout(() => setTeachingMessage(null), 5000);
+    }
+    if (protamineGiven >= 2) {
+      setTeachingMessage("Protamine 已給 2 劑（共 100mg）。過量 protamine 本身有抗凝效果（heparin rebound）。應以 ACT/aPTT 引導追加劑量。");
+      setTimeout(() => setTeachingMessage(null), 3000);
+      return;
+    }
+    setProtamineGiven((prev) => prev + 1);
+    addEvent(`Protamine 50mg IV slow push - Dose #${protamineGiven + 1}/2`, "drug");
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: `ACLS: Protamine 50mg IV (dose ${protamineGiven + 1}/2)`,
+      sender: "player",
+    });
+    setTeachingMessage(
+      "Protamine 50mg IV 慢推（>10 min）：正電荷多肽與負電荷 heparin 形成離子鍵複合物 → 中和抗凝作用。劑量：1mg protamine / 100U heparin（最後 2-3 小時內給的量）。快推致命：組織胺釋放 → 低血壓 + 支氣管痙攣 + 肺動脈高壓。魚過敏/vasectomy 患者風險更高。"
+    );
+    setTimeout(() => setTeachingMessage(null), 6000);
+  };
+
+  const handleNeDrip = () => {
+    // Guard: NE drip is post-ROSC vasopressor support
+    if (aclsPhase !== "rosc") {
+      addEvent("ERROR: Norepinephrine drip during active arrest — not indicated!", "error");
+      setTeachingMessage(
+        "Norepinephrine drip 不用於心臟停止急救！需持續灌流才能到達受體。CPR 中應使用 push-dose epinephrine 1mg IV。NE drip 僅限 ROSC 後維持 MAP > 65 mmHg。"
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+    }
+    setNeDripActive((prev) => !prev);
+    if (!neDripActive) {
+      addEvent("Norepinephrine drip STARTED (0.1-0.5 mcg/kg/min) - first-line vasopressor", "drug");
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "ACLS: Norepinephrine drip started (0.1-0.5 mcg/kg/min)",
+        sender: "player",
+      });
+      setTeachingMessage(
+        "Norepinephrine 0.1-0.5 mcg/kg/min：強效 α1 血管收縮 + 中度 β1 強心 → ↑SVR + ↑MAP，是感染性休克與 post-ROSC 低血壓的一線升壓藥（Surviving Sepsis 2021）。優於 dopamine（SOAP II trial：較少心律不整，28天死亡率較低）。滴定目標 MAP > 65 mmHg。"
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+    } else {
+      addEvent("Norepinephrine drip STOPPED", "drug");
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "player_action",
+        content: "ACLS: Norepinephrine drip stopped",
+        sender: "player",
+      });
+    }
+  };
+
+  const handleEsmolol = () => {
+    // Guard: arrest rhythms — generally contraindicated
+    if (currentRhythm === "asystole" || currentRhythm === "pea") {
+      addEvent("CRITICAL ERROR: Esmolol given during asystole/PEA — β-blocker worsens arrest!", "error");
+      setTeachingMessage(
+        "Esmolol 禁用於 asystole/PEA！β1 阻斷 → 負性變時 + 負性肌力 → 加重心輸出衰竭。Asystole/PEA 需要的是 epinephrine（增強 α/β 效應），不是抑制。"
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+    }
+    if (currentRhythm === "vf") {
+      addEvent("ERROR: Esmolol during VF — use amiodarone or defibrillation!", "error");
+      setTeachingMessage(
+        "Esmolol 在急性 VF 中非首選！首選電擊 + amiodarone。但有研究顯示 refractory VF 加 esmolol（BRASH protocol 的一部分）可能改善 ROSC 率 — 需在電擊 + amiodarone 失敗後考慮。"
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+    }
+    // Bolus
+    if (esmololGiven >= 3) {
+      setTeachingMessage("Esmolol 已給 3 次 bolus。考慮持續輸注 50-200 mcg/kg/min 或換用長效 β-blocker（metoprolol）。超短效半衰期（9 min）是它的優勢也是限制。");
+      setTimeout(() => setTeachingMessage(null), 3000);
+      return;
+    }
+    setEsmololGiven((prev) => prev + 1);
+    addEvent(`Esmolol 500 mcg/kg IV bolus over 1min - Dose #${esmololGiven + 1}/3`, "drug");
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: `ACLS: Esmolol 500 mcg/kg IV bolus (dose ${esmololGiven + 1}/3)`,
+      sender: "player",
+    });
+    setTeachingMessage(
+      "Esmolol 500 mcg/kg IV bolus：超短效選擇性 β1 阻斷劑（半衰期 9 min，紅血球酯酶代謝）。用於 SVT/AFib 心率控制、圍術期高血壓、甲狀腺風暴。優點：效果不佳可迅速消退。注意：一律先 bolus，再開 drip（50-200 mcg/kg/min）。"
+    );
+    setTimeout(() => setTeachingMessage(null), 6000);
+  };
+
+  const handlePhenylephrine = () => {
+    // Guard: bradycardia — phenylephrine reflex bradycardia can worsen
+    if (currentRhythm === "asystole") {
+      addEvent("ERROR: Phenylephrine during asystole — no cardiac output to augment!", "error");
+      setTeachingMessage(
+        "Phenylephrine 在 asystole 無效！純 α1 激動 → 只升高 SVR，但沒有心輸出就沒有灌流。需要 epinephrine（α + β）來同時強心和升壓。"
+      );
+      setTimeout(() => setTeachingMessage(null), 6000);
+    }
+    if (currentRhythm === "pea") {
+      addEvent("WARNING: Phenylephrine during PEA — epinephrine preferred (has β1 for contractility)!", "warning");
+      setTeachingMessage(
+        "PEA 優先用 epinephrine！Phenylephrine 只有 α1（升壓），缺乏 β1 強心效果。PEA 通常心肌收縮力已不足，需要 β1 來增強。"
+      );
+      setTimeout(() => setTeachingMessage(null), 5000);
+    }
+    if (phenylephrineGiven >= 3) {
+      setTeachingMessage("Phenylephrine 已給 3 次 bolus。若需持續升壓，考慮 phenylephrine drip（0.5-5 mcg/kg/min）或轉 norepinephrine（加上 β1 強心效果）。");
+      setTimeout(() => setTeachingMessage(null), 3000);
+      return;
+    }
+    setPhenylephrineGiven((prev) => prev + 1);
+    const doseMcg = 100 + (phenylephrineGiven * 50); // escalating: 100, 150, 200
+    addEvent(`Phenylephrine ${doseMcg} mcg IV push - Dose #${phenylephrineGiven + 1}/3`, "drug");
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: `ACLS: Phenylephrine ${doseMcg} mcg IV (dose ${phenylephrineGiven + 1}/3)`,
+      sender: "player",
+    });
+    setTeachingMessage(
+      `Phenylephrine ${doseMcg} mcg IV push：純 α1 激動劑 → 動靜脈收縮 → ↑SVR + ↑venous return。無 β 效應 → 不增加心率（可能反射性心搏過緩）。用於麻醉引起的低血壓、SVT 伴低血壓（升壓終止 reentry）。脊髓麻醉低血壓首選。`
+    );
+    setTimeout(() => setTeachingMessage(null), 6000);
+  };
+
+  const handleCalciumGluconate = () => {
+    if (calciumGluconateGiven >= 3) {
+      setTeachingMessage("Ca Gluconate 已給 3 劑（3g）。監測 iCa²⁺ 指導追加。注意：過量鈣與 digoxin 交互作用 → 致死性心律不整（stone heart）。");
+      setTimeout(() => setTeachingMessage(null), 3000);
+      return;
+    }
+    setCalciumGluconateGiven((prev) => prev + 1);
+    addEvent(`Calcium Gluconate 1g IV over 10min - Dose #${calciumGluconateGiven + 1}/3`, "drug");
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: `ACLS: Ca Gluconate 1g IV (dose ${calciumGluconateGiven + 1}/3)`,
+      sender: "player",
+    });
+    setTeachingMessage(
+      "Calcium Gluconate 1g IV over 10min：提供 93mg 元素鈣（CaCl₂ 的 1/3）。穩定心肌膜電位 → 預防高血鉀致 VF。比 CaCl₂ 安全：不需中心靜脈（周邊外滲不致組織壞死）、pH 中性。缺點：作用較慢，急性高血鉀致心臟停止時仍優先 CaCl₂。大量輸血後低鈣的首選補充。"
+    );
+    setTimeout(() => setTeachingMessage(null), 6000);
   };
 
   const handleRosc = (method: string) => {
@@ -2236,294 +2385,393 @@ export default function ACLSModal() {
               </button>
             )}
 
-            {/* Drugs — 2-col on mobile, 3-col on tablet+ */}
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-              <button
-                onClick={handleEpinephrine}
-                disabled={aclsPhase === "rosc" || epiCooldown > 0}
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  aclsPhase === "rosc" || epiCooldown > 0
-                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                    : "bg-emerald-800 hover:bg-emerald-700 text-emerald-200 border border-emerald-700/50"
-                }`}
-              >
-                Epinephrine 1mg
-                {epiCooldown > 0 && (
-                  <span className="block text-[10px] text-zinc-500 mt-0.5">
-                    {formatTime(epiCooldown)}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={handleAmiodarone300}
-                disabled={aclsPhase === "rosc" || amiodarone300Given}
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  aclsPhase === "rosc" || amiodarone300Given
-                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                    : "bg-purple-900 hover:bg-purple-800 text-purple-200 border border-purple-700/50"
-                }`}
-              >
-                Amiodarone 300mg
-                {amiodarone300Given && (
-                  <span className="block text-[10px] text-zinc-500 mt-0.5">
-                    Given
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={handleAmiodarone150}
-                disabled={
-                  aclsPhase === "rosc" ||
-                  !amiodarone300Given ||
-                  amiodarone150Given
-                }
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  aclsPhase === "rosc" ||
-                  !amiodarone300Given ||
-                  amiodarone150Given
-                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                    : "bg-purple-900 hover:bg-purple-800 text-purple-200 border border-purple-700/50"
-                }`}
-              >
-                Amiodarone 150mg
-                {amiodarone150Given ? (
-                  <span className="block text-[10px] text-red-500 mt-0.5">
-                    Max dose reached
-                  </span>
-                ) : !amiodarone300Given ? (
-                  <span className="block text-[10px] text-zinc-600 mt-0.5">
-                    Give 300mg first
-                  </span>
-                ) : null}
-              </button>
-              {/* ── Additional ACLS Drugs ── */}
-              <button
-                onClick={handleAtropine}
-                disabled={aclsPhase === "rosc" || atropineGiven >= 3}
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  aclsPhase === "rosc" || atropineGiven >= 3
-                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                    : "bg-blue-900 hover:bg-blue-800 text-blue-200 border border-blue-700/50"
-                }`}
-              >
-                Atropine 1mg
-                {atropineGiven > 0 && (
-                  <span className={`block text-[10px] mt-0.5 ${atropineGiven >= 3 ? "text-red-500" : "text-zinc-500"}`}>
-                    {atropineGiven}/3 doses{atropineGiven >= 3 ? " (max)" : ""}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={handleCalciumChloride}
-                disabled={aclsPhase === "rosc"}
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  aclsPhase === "rosc"
-                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                    : "bg-yellow-900 hover:bg-yellow-800 text-yellow-200 border border-yellow-700/50"
-                }`}
-              >
-                CaCl₂ 1g
-                {calciumChlorideGiven > 0 && (
-                  <span className="block text-[10px] text-zinc-500 mt-0.5">
-                    x{calciumChlorideGiven}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={handleSodiumBicarb}
-                disabled={aclsPhase === "rosc"}
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  aclsPhase === "rosc"
-                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                    : "bg-zinc-700 hover:bg-zinc-600 text-zinc-200 border border-zinc-500/50"
-                }`}
-              >
-                NaHCO₃ 50mEq
-                {sodiumBicarbGiven > 0 && (
-                  <span className="block text-[10px] text-zinc-500 mt-0.5">
-                    x{sodiumBicarbGiven}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={handleMagnesium}
-                disabled={aclsPhase === "rosc"}
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  aclsPhase === "rosc"
-                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                    : "bg-violet-900 hover:bg-violet-800 text-violet-200 border border-violet-700/50"
-                }`}
-              >
-                Mg 2g
-                {magnesiumGiven > 0 && (
-                  <span className="block text-[10px] text-zinc-500 mt-0.5">
-                    x{magnesiumGiven}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={handleLidocaine}
-                disabled={aclsPhase === "rosc"}
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  aclsPhase === "rosc"
-                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                    : "bg-orange-900 hover:bg-orange-800 text-orange-200 border border-orange-700/50"
-                }`}
-              >
-                Lidocaine 100mg
-                {lidocaineGiven > 0 && (
-                  <span className="block text-[10px] text-zinc-500 mt-0.5">
-                    x{lidocaineGiven}
-                  </span>
-                )}
-              </button>
-              {/* ── Phase 1 Additional ACLS Drugs ── */}
-              <button
-                onClick={handleVasopressin}
-                disabled={aclsPhase === "rosc" || vasopressinGiven}
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  aclsPhase === "rosc" || vasopressinGiven
-                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                    : "bg-emerald-900 hover:bg-emerald-800 text-emerald-200 border border-emerald-700/50"
-                }`}
-              >
-                Vasopressin 40U
-                {vasopressinGiven && (
-                  <span className="block text-[10px] text-red-500 mt-0.5">
-                    Single dose given
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={handleAdenosine}
-                disabled={aclsPhase === "rosc" || adenosineGiven >= 3}
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  aclsPhase === "rosc" || adenosineGiven >= 3
-                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                    : "bg-pink-900 hover:bg-pink-800 text-pink-200 border border-pink-700/50"
-                }`}
-              >
-                Adenosine {adenosineGiven === 0 ? "6mg" : "12mg"}
-                {adenosineGiven > 0 && (
-                  <span className={`block text-[10px] mt-0.5 ${adenosineGiven >= 3 ? "text-red-500" : "text-zinc-500"}`}>
-                    {adenosineGiven}/3 doses{adenosineGiven >= 3 ? " (max)" : ""}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={handleD50W}
-                disabled={aclsPhase === "rosc" || d50wGiven >= 2}
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  aclsPhase === "rosc" || d50wGiven >= 2
-                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                    : "bg-amber-900 hover:bg-amber-800 text-amber-200 border border-amber-700/50"
-                }`}
-              >
-                D50W 50mL
-                {d50wGiven > 0 && (
-                  <span className={`block text-[10px] mt-0.5 ${d50wGiven >= 2 ? "text-red-500" : "text-zinc-500"}`}>
-                    {d50wGiven}/2 doses{d50wGiven >= 2 ? " (max)" : ""}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={handleInsulin}
-                disabled={aclsPhase === "rosc" || insulinGiven >= 2}
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  aclsPhase === "rosc" || insulinGiven >= 2
-                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                    : "bg-teal-900 hover:bg-teal-800 text-teal-200 border border-teal-700/50"
-                }`}
-              >
-                Insulin 10U
-                {insulinGiven > 0 && (
-                  <span className={`block text-[10px] mt-0.5 ${insulinGiven >= 2 ? "text-red-500" : "text-zinc-500"}`}>
-                    {insulinGiven}/2 doses{insulinGiven >= 2 ? " (max)" : ""}
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={handleEpiDrip}
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  epiDripActive
-                    ? "bg-green-800 hover:bg-green-700 text-green-200 border border-green-500/70 ring-1 ring-green-500/40"
-                    : aclsPhase === "rosc"
-                      ? "bg-emerald-900 hover:bg-emerald-800 text-emerald-200 border border-emerald-700/50"
-                      : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:bg-zinc-700/50"
-                }`}
-              >
-                {epiDripActive ? "Epi Drip ON" : "Epi Drip"}
-                <span className="block text-[10px] mt-0.5 text-zinc-500">
-                  {epiDripActive ? "0.1-0.5 mcg/kg/min" : "Post-ROSC only"}
-                </span>
-              </button>
-              {/* ── Phase 2 Additional ACLS Drugs ── */}
-              <button
-                onClick={handleDopamine}
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  dopamineActive
-                    ? "bg-green-800 hover:bg-green-700 text-green-200 border border-green-500/70 ring-1 ring-green-500/40"
-                    : aclsPhase === "rosc"
-                      ? "bg-orange-900 hover:bg-orange-800 text-orange-200 border border-orange-700/50"
-                      : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:bg-zinc-700/50"
-                }`}
-              >
-                {dopamineActive ? "Dopamine ON" : "Dopamine"}
-                <span className="block text-[10px] mt-0.5 text-zinc-500">
-                  {dopamineActive ? "2-20 mcg/kg/min" : "Bradycardia / Post-ROSC"}
-                </span>
-              </button>
-              <button
-                onClick={handleIsuprel}
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  isuprelActive
-                    ? "bg-green-800 hover:bg-green-700 text-green-200 border border-green-500/70 ring-1 ring-green-500/40"
-                    : aclsPhase === "rosc"
-                      ? "bg-cyan-900 hover:bg-cyan-800 text-cyan-200 border border-cyan-700/50"
-                      : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:bg-zinc-700/50"
-                }`}
-              >
-                {isuprelActive ? "Isuprel ON" : "Isuprel"}
-                <span className="block text-[10px] mt-0.5 text-zinc-500">
-                  {isuprelActive ? "2-10 mcg/min" : "Bradycardia / Torsades"}
-                </span>
-              </button>
-              <button
-                onClick={handleProcainamide}
-                disabled={aclsPhase === "rosc" || procainamideGiven >= 1}
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  aclsPhase === "rosc" || procainamideGiven >= 1
-                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                    : "bg-violet-900 hover:bg-violet-800 text-violet-200 border border-violet-700/50"
-                }`}
-              >
-                Procainamide
-                {procainamideGiven >= 1 ? (
-                  <span className="block text-[10px] text-red-500 mt-0.5">
-                    Infusing (max reached)
-                  </span>
-                ) : (
-                  <span className="block text-[10px] text-zinc-500 mt-0.5">
-                    20-50 mg/min IV
-                  </span>
-                )}
-              </button>
-              <button
-                onClick={handleDiltiazem}
-                disabled={aclsPhase === "rosc" || diltiazemGiven >= 2}
-                className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
-                  aclsPhase === "rosc" || diltiazemGiven >= 2
-                    ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
-                    : "bg-rose-900 hover:bg-rose-800 text-rose-200 border border-rose-700/50"
-                }`}
-              >
-                Diltiazem {diltiazemGiven === 0 ? "0.25" : "0.35"} mg/kg
-                {diltiazemGiven > 0 && (
-                  <span className={`block text-[10px] mt-0.5 ${diltiazemGiven >= 2 ? "text-red-500" : "text-zinc-500"}`}>
-                    {diltiazemGiven}/2 doses{diltiazemGiven >= 2 ? " (max)" : ""}
-                  </span>
-                )}
-              </button>
+            {/* Drug Category Tabs */}
+            <div className="space-y-2">
+              <div className="flex gap-1 overflow-x-auto" style={{ scrollbarWidth: "none" }}>
+                {([
+                  { id: "core" as const, label: "Core ACLS", badge: epinephrineGiven + (amiodarone300Given ? 1 : 0) + (amiodarone150Given ? 1 : 0) + atropineGiven + lidocaineGiven + (vasopressinGiven ? 1 : 0) },
+                  { id: "vasopressors" as const, label: "Vasopressors", badge: (epiDripActive ? 1 : 0) + (neDripActive ? 1 : 0) + (dopamineActive ? 1 : 0) + (isuprelActive ? 1 : 0) + phenylephrineGiven },
+                  { id: "antiarrhythmics" as const, label: "Antiarrhythmic", badge: procainamideGiven + diltiazemGiven + esmololGiven + adenosineGiven },
+                  { id: "electrolytes" as const, label: "Lytes & Reversal", badge: calciumChlorideGiven + calciumGluconateGiven + sodiumBicarbGiven + magnesiumGiven + d50wGiven + insulinGiven + protamineGiven },
+                ] as const).map((tab) => (
+                  <button
+                    key={tab.id}
+                    onClick={() => setDrugTab(tab.id)}
+                    className={`flex-shrink-0 px-3 py-1.5 rounded-lg text-xs font-semibold transition-all whitespace-nowrap ${
+                      drugTab === tab.id
+                        ? "bg-zinc-700 text-white border border-zinc-500/50"
+                        : "bg-zinc-900/60 text-zinc-500 border border-zinc-800 hover:text-zinc-400"
+                    }`}
+                  >
+                    {tab.label}
+                    {tab.badge > 0 && (
+                      <span className="ml-1.5 inline-flex items-center justify-center w-4 h-4 rounded-full bg-emerald-800 text-emerald-300 text-[9px]">
+                        {tab.badge}
+                      </span>
+                    )}
+                  </button>
+                ))}
+              </div>
+
+              {/* ── Core ACLS ── */}
+              {drugTab === "core" && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  <button
+                    onClick={handleEpinephrine}
+                    disabled={aclsPhase === "rosc" || epiCooldown > 0}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      aclsPhase === "rosc" || epiCooldown > 0
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-emerald-800 hover:bg-emerald-700 text-emerald-200 border border-emerald-700/50"
+                    }`}
+                  >
+                    Epinephrine 1mg
+                    {epiCooldown > 0 && (
+                      <span className="block text-[10px] text-zinc-500 mt-0.5">
+                        {formatTime(epiCooldown)}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleAmiodarone300}
+                    disabled={aclsPhase === "rosc" || amiodarone300Given}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      aclsPhase === "rosc" || amiodarone300Given
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-purple-900 hover:bg-purple-800 text-purple-200 border border-purple-700/50"
+                    }`}
+                  >
+                    Amiodarone 300mg
+                    {amiodarone300Given && (
+                      <span className="block text-[10px] text-zinc-500 mt-0.5">Given</span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleAmiodarone150}
+                    disabled={aclsPhase === "rosc" || !amiodarone300Given || amiodarone150Given}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      aclsPhase === "rosc" || !amiodarone300Given || amiodarone150Given
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-purple-900 hover:bg-purple-800 text-purple-200 border border-purple-700/50"
+                    }`}
+                  >
+                    Amiodarone 150mg
+                    {amiodarone150Given ? (
+                      <span className="block text-[10px] text-red-500 mt-0.5">Max dose reached</span>
+                    ) : !amiodarone300Given ? (
+                      <span className="block text-[10px] text-zinc-600 mt-0.5">Give 300mg first</span>
+                    ) : null}
+                  </button>
+                  <button
+                    onClick={handleAtropine}
+                    disabled={aclsPhase === "rosc" || atropineGiven >= 3}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      aclsPhase === "rosc" || atropineGiven >= 3
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-blue-900 hover:bg-blue-800 text-blue-200 border border-blue-700/50"
+                    }`}
+                  >
+                    Atropine 1mg
+                    {atropineGiven > 0 && (
+                      <span className={`block text-[10px] mt-0.5 ${atropineGiven >= 3 ? "text-red-500" : "text-zinc-500"}`}>
+                        {atropineGiven}/3 doses{atropineGiven >= 3 ? " (max)" : ""}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleLidocaine}
+                    disabled={aclsPhase === "rosc"}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      aclsPhase === "rosc"
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-orange-900 hover:bg-orange-800 text-orange-200 border border-orange-700/50"
+                    }`}
+                  >
+                    Lidocaine 100mg
+                    {lidocaineGiven > 0 && (
+                      <span className="block text-[10px] text-zinc-500 mt-0.5">x{lidocaineGiven}</span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleVasopressin}
+                    disabled={aclsPhase === "rosc" || vasopressinGiven}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      aclsPhase === "rosc" || vasopressinGiven
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-emerald-900 hover:bg-emerald-800 text-emerald-200 border border-emerald-700/50"
+                    }`}
+                  >
+                    Vasopressin 40U
+                    {vasopressinGiven && (
+                      <span className="block text-[10px] text-red-500 mt-0.5">Single dose given</span>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* ── Vasopressors & Drips ── */}
+              {drugTab === "vasopressors" && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  <button
+                    onClick={handleEpiDrip}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      epiDripActive
+                        ? "bg-green-800 hover:bg-green-700 text-green-200 border border-green-500/70 ring-1 ring-green-500/40"
+                        : aclsPhase === "rosc"
+                          ? "bg-emerald-900 hover:bg-emerald-800 text-emerald-200 border border-emerald-700/50"
+                          : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:bg-zinc-700/50"
+                    }`}
+                  >
+                    {epiDripActive ? "Epi Drip ON" : "Epi Drip"}
+                    <span className="block text-[10px] mt-0.5 text-zinc-500">
+                      {epiDripActive ? "0.1-0.5 mcg/kg/min" : "Post-ROSC only"}
+                    </span>
+                  </button>
+                  <button
+                    onClick={handleNeDrip}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      neDripActive
+                        ? "bg-green-800 hover:bg-green-700 text-green-200 border border-green-500/70 ring-1 ring-green-500/40"
+                        : aclsPhase === "rosc"
+                          ? "bg-red-900 hover:bg-red-800 text-red-200 border border-red-700/50"
+                          : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:bg-zinc-700/50"
+                    }`}
+                  >
+                    {neDripActive ? "NE Drip ON" : "NE Drip"}
+                    <span className="block text-[10px] mt-0.5 text-zinc-500">
+                      {neDripActive ? "0.1-0.5 mcg/kg/min" : "Post-ROSC vasopressor"}
+                    </span>
+                  </button>
+                  <button
+                    onClick={handleDopamine}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      dopamineActive
+                        ? "bg-green-800 hover:bg-green-700 text-green-200 border border-green-500/70 ring-1 ring-green-500/40"
+                        : aclsPhase === "rosc"
+                          ? "bg-orange-900 hover:bg-orange-800 text-orange-200 border border-orange-700/50"
+                          : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:bg-zinc-700/50"
+                    }`}
+                  >
+                    {dopamineActive ? "Dopamine ON" : "Dopamine"}
+                    <span className="block text-[10px] mt-0.5 text-zinc-500">
+                      {dopamineActive ? "2-20 mcg/kg/min" : "Bradycardia / Post-ROSC"}
+                    </span>
+                  </button>
+                  <button
+                    onClick={handleIsuprel}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      isuprelActive
+                        ? "bg-green-800 hover:bg-green-700 text-green-200 border border-green-500/70 ring-1 ring-green-500/40"
+                        : aclsPhase === "rosc"
+                          ? "bg-cyan-900 hover:bg-cyan-800 text-cyan-200 border border-cyan-700/50"
+                          : "bg-zinc-800 border border-zinc-700 text-zinc-400 hover:bg-zinc-700/50"
+                    }`}
+                  >
+                    {isuprelActive ? "Isuprel ON" : "Isuprel"}
+                    <span className="block text-[10px] mt-0.5 text-zinc-500">
+                      {isuprelActive ? "2-10 mcg/min" : "Bradycardia / Torsades"}
+                    </span>
+                  </button>
+                  <button
+                    onClick={handlePhenylephrine}
+                    disabled={phenylephrineGiven >= 3}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      phenylephrineGiven >= 3
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-fuchsia-900 hover:bg-fuchsia-800 text-fuchsia-200 border border-fuchsia-700/50"
+                    }`}
+                  >
+                    Phenylephrine {100 + phenylephrineGiven * 50}mcg
+                    {phenylephrineGiven > 0 && (
+                      <span className={`block text-[10px] mt-0.5 ${phenylephrineGiven >= 3 ? "text-red-500" : "text-zinc-500"}`}>
+                        {phenylephrineGiven}/3 doses{phenylephrineGiven >= 3 ? " (max)" : ""}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* ── Antiarrhythmics ── */}
+              {drugTab === "antiarrhythmics" && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  <button
+                    onClick={handleProcainamide}
+                    disabled={aclsPhase === "rosc" || procainamideGiven >= 1}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      aclsPhase === "rosc" || procainamideGiven >= 1
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-violet-900 hover:bg-violet-800 text-violet-200 border border-violet-700/50"
+                    }`}
+                  >
+                    Procainamide
+                    {procainamideGiven >= 1 ? (
+                      <span className="block text-[10px] text-red-500 mt-0.5">Infusing (max reached)</span>
+                    ) : (
+                      <span className="block text-[10px] text-zinc-500 mt-0.5">20-50 mg/min IV</span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleDiltiazem}
+                    disabled={aclsPhase === "rosc" || diltiazemGiven >= 2}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      aclsPhase === "rosc" || diltiazemGiven >= 2
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-rose-900 hover:bg-rose-800 text-rose-200 border border-rose-700/50"
+                    }`}
+                  >
+                    Diltiazem {diltiazemGiven === 0 ? "0.25" : "0.35"} mg/kg
+                    {diltiazemGiven > 0 && (
+                      <span className={`block text-[10px] mt-0.5 ${diltiazemGiven >= 2 ? "text-red-500" : "text-zinc-500"}`}>
+                        {diltiazemGiven}/2 doses{diltiazemGiven >= 2 ? " (max)" : ""}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleEsmolol}
+                    disabled={esmololGiven >= 3}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      esmololGiven >= 3
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-indigo-900 hover:bg-indigo-800 text-indigo-200 border border-indigo-700/50"
+                    }`}
+                  >
+                    Esmolol 500mcg/kg
+                    {esmololGiven > 0 && (
+                      <span className={`block text-[10px] mt-0.5 ${esmololGiven >= 3 ? "text-red-500" : "text-zinc-500"}`}>
+                        {esmololGiven}/3 bolus{esmololGiven >= 3 ? " (max)" : ""}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleAdenosine}
+                    disabled={aclsPhase === "rosc" || adenosineGiven >= 3}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      aclsPhase === "rosc" || adenosineGiven >= 3
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-pink-900 hover:bg-pink-800 text-pink-200 border border-pink-700/50"
+                    }`}
+                  >
+                    Adenosine {adenosineGiven === 0 ? "6mg" : "12mg"}
+                    {adenosineGiven > 0 && (
+                      <span className={`block text-[10px] mt-0.5 ${adenosineGiven >= 3 ? "text-red-500" : "text-zinc-500"}`}>
+                        {adenosineGiven}/3 doses{adenosineGiven >= 3 ? " (max)" : ""}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              )}
+
+              {/* ── Electrolytes & Reversal ── */}
+              {drugTab === "electrolytes" && (
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
+                  <button
+                    onClick={handleCalciumChloride}
+                    disabled={aclsPhase === "rosc"}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      aclsPhase === "rosc"
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-yellow-900 hover:bg-yellow-800 text-yellow-200 border border-yellow-700/50"
+                    }`}
+                  >
+                    CaCl₂ 1g
+                    {calciumChlorideGiven > 0 && (
+                      <span className="block text-[10px] text-zinc-500 mt-0.5">x{calciumChlorideGiven}</span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleCalciumGluconate}
+                    disabled={calciumGluconateGiven >= 3}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      calciumGluconateGiven >= 3
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-lime-900 hover:bg-lime-800 text-lime-200 border border-lime-700/50"
+                    }`}
+                  >
+                    Ca Gluconate 1g
+                    {calciumGluconateGiven > 0 && (
+                      <span className={`block text-[10px] mt-0.5 ${calciumGluconateGiven >= 3 ? "text-red-500" : "text-zinc-500"}`}>
+                        {calciumGluconateGiven}/3 doses{calciumGluconateGiven >= 3 ? " (max)" : ""}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleSodiumBicarb}
+                    disabled={aclsPhase === "rosc"}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      aclsPhase === "rosc"
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-zinc-700 hover:bg-zinc-600 text-zinc-200 border border-zinc-500/50"
+                    }`}
+                  >
+                    NaHCO₃ 50mEq
+                    {sodiumBicarbGiven > 0 && (
+                      <span className="block text-[10px] text-zinc-500 mt-0.5">x{sodiumBicarbGiven}</span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleMagnesium}
+                    disabled={aclsPhase === "rosc"}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      aclsPhase === "rosc"
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-violet-900 hover:bg-violet-800 text-violet-200 border border-violet-700/50"
+                    }`}
+                  >
+                    Mg 2g
+                    {magnesiumGiven > 0 && (
+                      <span className="block text-[10px] text-zinc-500 mt-0.5">x{magnesiumGiven}</span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleD50W}
+                    disabled={aclsPhase === "rosc" || d50wGiven >= 2}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      aclsPhase === "rosc" || d50wGiven >= 2
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-amber-900 hover:bg-amber-800 text-amber-200 border border-amber-700/50"
+                    }`}
+                  >
+                    D50W 50mL
+                    {d50wGiven > 0 && (
+                      <span className={`block text-[10px] mt-0.5 ${d50wGiven >= 2 ? "text-red-500" : "text-zinc-500"}`}>
+                        {d50wGiven}/2 doses{d50wGiven >= 2 ? " (max)" : ""}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleInsulin}
+                    disabled={aclsPhase === "rosc" || insulinGiven >= 2}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      aclsPhase === "rosc" || insulinGiven >= 2
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-teal-900 hover:bg-teal-800 text-teal-200 border border-teal-700/50"
+                    }`}
+                  >
+                    Insulin 10U
+                    {insulinGiven > 0 && (
+                      <span className={`block text-[10px] mt-0.5 ${insulinGiven >= 2 ? "text-red-500" : "text-zinc-500"}`}>
+                        {insulinGiven}/2 doses{insulinGiven >= 2 ? " (max)" : ""}
+                      </span>
+                    )}
+                  </button>
+                  <button
+                    onClick={handleProtamine}
+                    disabled={aclsPhase === "rosc" || protamineGiven >= 2}
+                    className={`min-h-[44px] py-3 rounded-lg text-sm font-semibold transition-all ${
+                      aclsPhase === "rosc" || protamineGiven >= 2
+                        ? "bg-zinc-800 text-zinc-600 cursor-not-allowed"
+                        : "bg-sky-900 hover:bg-sky-800 text-sky-200 border border-sky-700/50"
+                    }`}
+                  >
+                    Protamine 50mg
+                    {protamineGiven > 0 && (
+                      <span className={`block text-[10px] mt-0.5 ${protamineGiven >= 2 ? "text-red-500" : "text-zinc-500"}`}>
+                        {protamineGiven}/2 doses{protamineGiven >= 2 ? " (max)" : ""}
+                      </span>
+                    )}
+                  </button>
+                </div>
+              )}
             </div>
 
             {/* Reversible Causes (H's and T's) */}

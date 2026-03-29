@@ -17,7 +17,7 @@ import { checkRescueActivation, evaluateRescueActions, getRescueStabilizeValues 
 import { evaluateCondition } from "@/lib/simulator/engine/time-engine";
 import type { GameStateSnapshot } from "@/lib/simulator/engine/time-engine";
 import { computeLabSnapshot, buildLabContext } from "@/lib/simulator/engine/lab-engine";
-import { getLastBioGearsState, dispatchOrderToBioGears, adjustBioGearsVentilator, dispatchPericardialEffusion } from "@/lib/simulator/engine/biogears-engine";
+import { getLastBioGearsState, dispatchOrderToBioGears, adjustBioGearsVentilator, dispatchPericardialEffusion, dispatchCardiacArrest } from "@/lib/simulator/engine/biogears-engine";
 import { recordMilkCt, resetCtOutputEngine } from "@/lib/simulator/engine/ct-output-engine";
 import {
   evaluateNurseTriggers,
@@ -2514,8 +2514,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       }));
 
       // ROSC — notify BioGears of successful defibrillation
-      // TODO: call dispatchCardiacArrest(false) once biogears-engine exports it
-      dispatchOrderToBioGears("Epinephrine", "1", "medication");
+      dispatchCardiacArrest(false);
     } else if (rhythm === "vt_pulse") {
       // Sync cardioversion for VT with pulse → convert to NSR
       const postRhythm = mode === "sync" ? "nsr" as const : "sinus_tach" as const;
@@ -2535,8 +2534,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       }));
 
       // ROSC — notify BioGears of successful cardioversion
-      // TODO: call dispatchCardiacArrest(false) once biogears-engine exports it
-      dispatchOrderToBioGears("Epinephrine", "1", "medication");
+      dispatchCardiacArrest(false);
     } else if (rhythm === "asystole" || rhythm === "pea") {
       // Non-shockable rhythm — shock delivered but ineffective (BioGears handles physiology)
       // NOT blocking or auto-killing — let the game continue, debrief will flag this as error
