@@ -7,11 +7,11 @@ const BASE_URL = process.env.NEXT_PUBLIC_SITE_URL || "https://wilsonchao.com";
 
 export const metadata: Metadata = {
   title: "部落卷 /blogroll",
-  description: "我推薦的獨立部落格。每個連結都是手工挑選，沒有演算法。",
+  description: "精選 30+ 個獨立部落格 — 科技、醫學、寫作、生活。手工挑選，沒有演算法。",
   alternates: { canonical: `${BASE_URL}/blogroll` },
   openGraph: {
     title: "部落卷 /blogroll — Wilson Chao",
-    description: "我推薦的獨立部落格。每個連結都是手工挑選，沒有演算法。",
+    description: "精選 30+ 個獨立部落格 — 科技、醫學、寫作、生活。手工挑選，沒有演算法。",
     url: `${BASE_URL}/blogroll`,
     type: "website",
   },

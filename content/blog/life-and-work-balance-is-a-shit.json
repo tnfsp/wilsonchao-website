@@ -10,5 +10,8 @@
   "description": "Totally shit",
   "excerpt": "Totally shit",
   "readingTime": "3 min",
-  "tags": []
+  "tags": [],
+  "relatedSlugs": [
+    "not-privilege"
+  ]
 }
