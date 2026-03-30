@@ -1008,6 +1008,7 @@ export const bleedingToTamponade: SimScenario = {
   },
 
   pathology: "surgical_bleeding",
+  isPostSternotomy: true,
   ischemicRisk: true, // CABG x3 = CAD → severity 60-89 may produce VF
   startHour: 2, // 02:00 AM
 

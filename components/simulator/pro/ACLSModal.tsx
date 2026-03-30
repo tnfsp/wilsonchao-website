@@ -456,6 +456,7 @@ export default function ACLSModal() {
     scenario?.pathology === "tamponade" ||
     patient?.pathology === "cardiac_tamponade" ||
     patient?.pathology === "tamponade";
+  const isPostSternotomy = scenario?.isPostSternotomy ?? false;
 
   // ── ACLS internal state ──
   const [aclsPhase, setAclsPhase] = useState<ACLSPhase>("arrest_detected");
@@ -725,16 +726,16 @@ export default function ACLSModal() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [patient?.vitals.rhythmStrip]);
 
-  // ── Senior arrival detection (tamponade resternotomy mechanic) ──
-  // Derive senior status from store events
-  const seniorHasArrived = firedEvents.some((e) => e.type === "senior_arrives");
-  const seniorEnRoute = pendingEvents.some((e) => e.type === "senior_arrives" && !e.fired);
+  // ── Senior arrival detection (resternotomy mechanic) ──
+  const seniorPresence = useProGameStore((s) => s.seniorPresence);
+  const seniorAtBedside = seniorPresence === "present";
+  const seniorEnRoute = seniorPresence === "en_route" || seniorPresence === "rushing_back";
   // Compute ETA for senior en route (game-minutes remaining)
   const seniorEtaMinutes = seniorEnRoute
     ? Math.max(
         0,
         Math.ceil(
-          (pendingEvents.find((e) => e.type === "senior_arrives" && !e.fired)?.triggerAt ?? clock.currentTime) -
+          (pendingEvents.find((e) => (e.type === "senior_arrives" || e.type === "senior_rushback") && !e.fired)?.triggerAt ?? clock.currentTime) -
             clock.currentTime
         )
       )
@@ -742,13 +743,13 @@ export default function ACLSModal() {
 
   // Detection: senior arrived → start resternotomy (one-shot, no cleanup that kills the timer)
   useEffect(() => {
-    if (!isVisible || !isTamponade || seniorArrivalHandled) return;
+    if (!isVisible || !isPostSternotomy || seniorArrivalHandled) return;
     if (aclsPhase === "rosc" || aclsPhase === "death") return;
-    if (!seniorHasArrived) return;
+    if (!seniorAtBedside) return;
 
     // Senior just arrived during active arrest
     setSeniorArrivalHandled(true);
-    setSeniorResternotomyCountdown(30);
+    setSeniorResternotomyCountdown(50);
 
     const id1 = ++eventIdRef.current;
     setAclsTimeline((prev) => [
@@ -782,7 +783,7 @@ export default function ACLSModal() {
       });
     }, 1000);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isVisible, seniorHasArrived, isTamponade, seniorArrivalHandled]);
+  }, [isVisible, seniorAtBedside, isPostSternotomy, seniorArrivalHandled]);
 
   // Cleanup interval on unmount only
   useEffect(() => {
@@ -828,22 +829,26 @@ export default function ACLSModal() {
 
       handleRosc("學長完成 resternotomy，tamponade relieved");
 
-      // Resternotomy = definitive treatment for tamponade → auto-trigger SBAR after delay
+      // Resternotomy = definitive treatment for tamponade
+      // Senior is already present → skip SBAR, go directly to outcome after brief delay
       setTimeout(() => {
         const store = useProGameStore.getState();
         if (store.phase === "playing") {
           store.addTimelineEntry({
             gameTime: store.clock.currentTime,
             type: "nurse_message",
-            content: "林姐：學長說 tamponade 已經解除了，病人穩定中。要不要做個交班報告？",
+            content: "林姐：學長說 tamponade 已經解除了，病人穩定中。準備後續處理。",
             sender: "nurse",
             isImportant: true,
           });
-          // Auto-open SBAR modal for final handoff
+          // Transition directly to outcome — senior already present, no SBAR needed
           setTimeout(() => {
             const s2 = useProGameStore.getState();
             if (s2.phase === "playing") {
-              s2.openModal("sbar");
+              useProGameStore.setState({
+                phase: "outcome" as const,
+                activeModal: null,
+              });
             }
           }, 3000);
         }
@@ -2044,10 +2049,13 @@ export default function ACLSModal() {
             </p>
           </div>
         )}
-        {isTamponade && isInActiveArrest && seniorEnRoute && !seniorHasArrived && (
+        {isPostSternotomy && isInActiveArrest && seniorEnRoute && !seniorAtBedside && (
           <div className="flex-shrink-0 px-3 py-2 md:px-6 md:py-3 bg-zinc-900/50 border-b border-zinc-700/50 text-center">
             <p className="text-zinc-300 text-sm font-semibold">
-              學長在路上（預計 {seniorEtaMinutes} 分鐘）— 繼續 ACLS
+              {seniorPresence === "rushing_back"
+                ? `⚡ 學長從 OR 衝回來中（${seniorEtaMinutes} min）`
+                : `📞 學長在路上（${seniorEtaMinutes} min）`
+              }
             </p>
           </div>
         )}

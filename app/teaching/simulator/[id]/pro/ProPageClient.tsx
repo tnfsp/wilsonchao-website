@@ -272,10 +272,14 @@ function useGameTick() {
             bgInitRef.current = true;
             setEngineStatus("biogears");
 
-            // Start hemorrhage if scenario is bleeding-related
+            // Start BioGears physiology based on scenario pathology
             const scenario = useProGameStore.getState().scenario;
             if (scenario?.pathology === "surgical_bleeding") {
               await startBioGearsHemorrhage("Aorta", 150);
+            } else if (scenario?.pathology === "cardiac_tamponade") {
+              // Tamponade: start pericardial effusion (BioGears drives hemodynamic compromise)
+              const { dispatchPericardialEffusion } = await import("@/lib/simulator/engine/biogears-engine");
+              await dispatchPericardialEffusion(2.5);
             }
           }
         }

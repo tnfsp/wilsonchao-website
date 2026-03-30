@@ -665,6 +665,7 @@ export const cardiacTamponade: SimScenario = {
   },
 
   pathology: "cardiac_tamponade",
+  isPostSternotomy: true,
   startHour: 3.5, // 03:30 AM
 
   nurseProfile: {

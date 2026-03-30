@@ -99,7 +99,7 @@ export function PEModal() {
     if (!region) return;
 
     const actionAdvance = useProGameStore.getState().actionAdvance;
-    actionAdvance(2);
+    actionAdvance(0.5);
 
     addTimelineEntry({
       gameTime: useProGameStore.getState().clock.currentTime,

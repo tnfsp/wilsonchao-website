@@ -293,9 +293,19 @@ export type GameEventType =
   | "chest_tube_change"
   | "escalation"
   | "senior_arrives"
+  | "senior_rushback"
+  | "or_ready"
   | "effect_start"
   | "effect_end"
   | "order_effect";
+
+/** Senior/attending presence state machine */
+export type SeniorPresence =
+  | "absent"         // 沒叫過
+  | "en_route"       // 已叫，在路上
+  | "present"        // 在 bedside
+  | "left_for_or"    // 去備 OR（不在 bedside）
+  | "rushing_back";  // OR prep 中 arrest，學長衝回來中
 
 export interface EventCondition {
   operator: "AND" | "OR";
@@ -625,6 +635,9 @@ export interface SimScenario {
 
   /** Patient has CAD or other ischemic risk → severity 60-89 may produce VF instead of PEA */
   ischemicRisk?: boolean;
+
+  /** Post-sternotomy scenario → arrest triggers resternotomy (not just tamponade) */
+  isPostSternotomy?: boolean;
 
   /** BioGears-driven phase transition rules (condition-based, replaces scripted triggerTime) */
   phaseTransitions?: Array<{

@@ -59,6 +59,7 @@ import type {
   DifficultyLevel,
   DifficultyConfig,
   RescueState,
+  SeniorPresence,
 } from "./types";
 
 // ============================================================
@@ -222,6 +223,9 @@ export interface ProGameStore {
   rescueState: RescueState | null;
   rescueCount: number; // Track rescue attempts to prevent infinite rescue loops
 
+  // Senior presence state machine
+  seniorPresence: SeniorPresence;
+
   // Phase Transition Engine
   phaseTransitions: PhaseTransition[];
 
@@ -303,6 +307,9 @@ export interface ProGameStore {
 
   /** Set rescue window state (Standard mode) */
   setRescueState: (state: RescueState | null) => void;
+
+  /** Set senior presence state */
+  setSeniorPresence: (presence: SeniorPresence) => void;
 
   /** Tick rescue countdown (call every real-time second) */
   tickRescueCountdown: () => void;
@@ -484,6 +491,7 @@ const initialState = {
   mapBelowThresholdSince: null as number | null,
   rescueState: null as RescueState | null,
   rescueCount: 0,
+  seniorPresence: "absent" as SeniorPresence,
   phaseTransitions: [] as PhaseTransition[],
   nurseTriggers: [] as NurseTrigger[],
   nurseTriggerState: createNurseTriggerState(),
@@ -888,6 +896,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         mapBelowThresholdSince: null,
         rescueState: null,
         rescueCount: 0,
+        seniorPresence: "absent" as SeniorPresence,
         activeModal: null,
         _tickPatientFn: null,
         defibrillator: initialDefibrillatorState,
@@ -1055,11 +1064,16 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
           }
 
           // ── severity: severitySet（絕對值）優先於 severityChange（delta） ──
+          // BioGears mode: skip scripted severity bumps — BioGears computes severity
+          // from physiology (blood volume, lactate, pH). Scripted bumps would oscillate.
+          const bioGearsActive = !!getLastBioGearsState();
           let newSeverity = patientUpdate.severity;
-          if (severitySet !== undefined) {
-            newSeverity = Math.max(0, Math.min(100, severitySet));
-          } else if (severityChange) {
-            newSeverity = Math.max(0, Math.min(100, newSeverity + severityChange));
+          if (!bioGearsActive) {
+            if (severitySet !== undefined) {
+              newSeverity = Math.max(0, Math.min(100, severitySet));
+            } else if (severityChange) {
+              newSeverity = Math.max(0, Math.min(100, newSeverity + severityChange));
+            }
           }
 
           let newChestTube = patientUpdate.chestTube;
@@ -1242,10 +1256,62 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
           sender: "senior",
           isImportant: true,
         });
-        // Auto-open senior dialog modal (multi-phase scenarios use this for immersive cutscenes)
-        if (scenario?.phasedFindings) {
+
+        // Update senior presence state machine
+        const currentPresence = get().seniorPresence;
+        if (currentPresence === "en_route") {
+          set({ seniorPresence: "present" as SeniorPresence });
+        }
+
+        // Open SeniorDialog if patient NOT in arrest
+        const arrPat = get().patient;
+        const arrRhythm = arrPat?.vitals.rhythmStrip ?? "nsr";
+        const inArrest = arrPat?.vitals.hr === 0 ||
+          ["vf", "vt_pulseless", "pea", "asystole"].includes(arrRhythm);
+        if (!inArrest) {
           set({ activeModal: "senior_dialog" });
         }
+        // If in arrest → ACLSModal will detect seniorPresence === "present"
+
+      } else if (ev.type === "senior_rushback") {
+        // Senior rushing back from OR after arrest
+        set({ seniorPresence: "present" as SeniorPresence });
+        firedEntries.push({
+          id: nextId("tl"),
+          gameTime: newTime,
+          type: "nurse_message",
+          content: "（學長衝進來）「Arrest 了？我來！開 resternotomy tray！」",
+          sender: "senior",
+          isImportant: true,
+        });
+
+      } else if (ev.type === "or_ready") {
+        // OR is ready — senior returns, transport patient
+        const orData = ev.data as ScriptedEventData;
+        firedEntries.push({
+          id: nextId("tl"),
+          gameTime: newTime,
+          type: "nurse_message",
+          content: orData?.message ?? "學長回來了：「OR ready，走吧。」",
+          sender: "senior",
+          isImportant: true,
+        });
+        set({ seniorPresence: "present" as SeniorPresence });
+
+        // If patient still alive → transition to outcome after brief delay
+        const orPat = get().patient;
+        const orRhythm = orPat?.vitals.rhythmStrip ?? "nsr";
+        const orInArrest = orPat?.vitals.hr === 0 ||
+          ["vf", "vt_pulseless", "pea", "asystole"].includes(orRhythm);
+        if (!orInArrest && get().phase === "playing") {
+          setTimeout(() => {
+            const s = useProGameStore.getState();
+            if (s.phase === "playing") {
+              useProGameStore.setState({ phase: "outcome" as GamePhase, activeModal: null });
+            }
+          }, 3000);
+        }
+        // If in arrest → ACLSModal handles resternotomy (senior now present)
       }
     }
 
@@ -2070,6 +2136,26 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         : s.patient,
       timeline: [...s.timeline, arrestEntry, nurseEntry],
     }));
+
+    // If senior is prepping OR → auto rush back (nurse notifies)
+    if (get().seniorPresence === "left_for_or") {
+      set({ seniorPresence: "rushing_back" as SeniorPresence });
+      get().addPendingEvent({
+        id: `ev_senior_rushback_${Date.now()}`,
+        triggerAt: state.clock.currentTime + 2, // 2 game-min
+        type: "senior_rushback",
+        data: { message: "（學長從 OR 衝回來）" },
+        fired: false,
+        priority: 0,
+      });
+      get().addTimelineEntry({
+        gameTime: state.clock.currentTime,
+        type: "system_event",
+        content: "⚠️ 護理師緊急通知學長——學長從 OR 趕回來中（約 2 分鐘）",
+        sender: "nurse",
+        isImportant: true,
+      });
+    }
   },
 
   // ----------------------------------------------------------
@@ -2150,6 +2236,10 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
   // ----------------------------------------------------------
   setRescueState: (rescueState: RescueState | null) => {
     set({ rescueState });
+  },
+
+  setSeniorPresence: (seniorPresence: SeniorPresence) => {
+    set({ seniorPresence });
   },
 
   // ----------------------------------------------------------

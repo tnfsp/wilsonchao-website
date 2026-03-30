@@ -36,6 +36,8 @@ export function SeniorDialogModal() {
   const placedOrders = useProGameStore((s) => s.placedOrders);
   const playerActions = useProGameStore((s) => s.playerActions);
   const sbarPhase1 = useProGameStore((s) => s.sbarPhase1);
+  const addPendingEvent = useProGameStore((s) => s.addPendingEvent);
+  const pendingEvents = useProGameStore((s) => s.pendingEvents);
 
   const [messages, setMessages] = useState<ChatMessage[]>([]);
   const [input, setInput] = useState("");
@@ -132,19 +134,40 @@ export function SeniorDialogModal() {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
   }, [messages]);
 
+  // Reset state when dialog becomes visible (prevent stale state from previous opening)
+  useEffect(() => {
+    if (isVisible) {
+      setMessages([]);
+      setInput("");
+      setIsDone(false);
+      setTurnCount(0);
+    }
+  }, [isVisible]);
+
   // Determine if senior should make a decision (after 2+ turns)
   const shouldDecide = turnCount >= 2;
 
   // Rule-based decision guard
   function getSeniorDecision(): { action: string; message: string } {
     const pathology = patient?.pathology ?? "";
+    const orAlreadyPrepping = pendingEvents.some(
+      (e) => e.type === "or_ready" && !e.fired
+    );
+
     if (pathology === "cardiac_tamponade" || pathology === "tamponade") {
+      if (orAlreadyPrepping) {
+        // B2T recall: senior comes back, OR already prepping → stay at bedside
+        return {
+          action: "stay_at_bedside",
+          message: "「不只是出血了，是 tamponade。OR 差不多好了，我留在這裡。繼續 resuscitate，有什麼變化我直接處理。」",
+        };
+      }
       return {
-        action: "bedside_procedure",
-        message: "「這是 tamponade，要趕快處理。我去叫開刀房、通知麻醉科，準備 bedside re-sternotomy。你繼續 resuscitate，有什麼變化立刻叫我。」",
+        action: "go_to_or",
+        message: "「Tamponade。通知 OR，準備 re-sternotomy。你繼續 resuscitate，volume 不要停。我去準備。」",
       };
     }
-    if (pathology === "surgical_bleeding" && (patient?.severity ?? 0) > 50) {
+    if (pathology === "surgical_bleeding" && (patient?.severity ?? 0) > 30) {
       return {
         action: "go_to_or",
         message: "「出血量太大，保守治療不夠。我去聯絡開刀房 re-explore，你先繼續穩住他——血品繼續跑，Norepi 不要停。」",
@@ -187,11 +210,6 @@ export function SeniorDialogModal() {
 
   function handleClose() {
     // Record timeline
-    const chatSummary = messages
-      .filter((m) => !m.isAction)
-      .map((m) => `${m.role === "senior" ? "學長" : "你"}：${m.content}`)
-      .join("\n");
-
     addTimelineEntry({
       gameTime: clock.currentTime,
       type: "system_event",
@@ -200,10 +218,53 @@ export function SeniorDialogModal() {
       isImportant: true,
     });
 
-    // Severity -5 (calming effect)
+    // Severity -5 (calming effect of senior presence)
     if (patient) {
       updatePatientSeverity(Math.max(0, patient.severity - 5));
     }
+
+    const decision = getSeniorDecision();
+
+    if (decision.action === "go_to_or") {
+      // Senior leaves to prep OR
+      useProGameStore.setState({ seniorPresence: "left_for_or" as any });
+
+      addPendingEvent({
+        id: `ev_or_ready_${Date.now()}`,
+        triggerAt: clock.currentTime + 15, // 15 game-min OR prep
+        type: "or_ready" as any,
+        data: { message: "學長回來了：「OR ready，anesthesia 在等了。搬病人，走。」" },
+        fired: false,
+        priority: 0,
+      });
+
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "system_event",
+        content: "🏥 學長離開去準備 OR，預估 15 分鐘。繼續 resuscitate。",
+        sender: "system",
+        isImportant: true,
+      });
+    } else if (decision.action === "stay_at_bedside") {
+      // Senior stays — OR already prepping (B2T recall scenario)
+      // seniorPresence stays "present" (already set when senior arrived)
+      addTimelineEntry({
+        gameTime: clock.currentTime,
+        type: "system_event",
+        content: "🩺 學長留在 bedside 監控。OR 準備中。",
+        sender: "system",
+        isImportant: true,
+      });
+    }
+    // "continue_monitoring" → seniorPresence stays "present", no OR scheduling
+
+    // Record playerAction
+    useProGameStore.setState((state) => ({
+      playerActions: [
+        ...state.playerActions,
+        { action: `senior_decision:${decision.action}`, gameTime: clock.currentTime, category: "consult" as const },
+      ],
+    }));
 
     // Reset for next use
     setMessages([]);

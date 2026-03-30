@@ -772,6 +772,7 @@ export const postopBleeding: SimScenario = {
   },
 
   pathology: "surgical_bleeding",
+  isPostSternotomy: true,
   startHour: 2, // 02:00 AM
 
   nurseProfile: {

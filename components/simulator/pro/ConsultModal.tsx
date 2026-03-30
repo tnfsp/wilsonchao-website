@@ -261,6 +261,9 @@ export function ConsultModal() {
       ],
     }));
 
+    // Update authoritative senior presence state machine
+    useProGameStore.setState({ seniorPresence: "en_route" });
+
     // Schedule senior_arrives event
     const arrivalEvent: PendingEvent = {
       id: `ev_senior_arrives_${Date.now()}`,
