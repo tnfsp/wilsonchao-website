@@ -317,14 +317,22 @@ export default function ProVitalsPanel({
     );
   }
 
-  const mapVal = vitals.map ?? calcMAP(vitals.sbp, vitals.dbp);
+  // During cardiac arrest, force hemodynamic vitals to 0
+  // (formula engine may produce non-zero values from baseline computation)
+  const arrestRhythms = ["vf", "vt_pulseless", "pea", "asystole"];
+  const isArrest = vitals.hr === 0 || arrestRhythms.includes(vitals.rhythmStrip);
+  const displayVitals = isArrest
+    ? { ...vitals, hr: 0, sbp: 0, dbp: 0, map: 0 }
+    : vitals;
 
-  const hrLevel = getVitalLevel("hr", vitals.hr);
-  const bpLevel = getVitalLevel("sbp", vitals.sbp);
-  const spo2Level = getVitalLevel("spo2", vitals.spo2);
-  const cvpLevel = getVitalLevel("cvp", vitals.cvp);
+  const mapVal = displayVitals.map ?? calcMAP(displayVitals.sbp, displayVitals.dbp);
+
+  const hrLevel = getVitalLevel("hr", displayVitals.hr);
+  const bpLevel = getVitalLevel("sbp", displayVitals.sbp);
+  const spo2Level = getVitalLevel("spo2", displayVitals.spo2);
+  const cvpLevel = getVitalLevel("cvp", displayVitals.cvp);
   const mapLevel = getVitalLevel("map", mapVal);
-  const tempLevel = getVitalLevel("temp", vitals.temperature);
+  const tempLevel = getVitalLevel("temp", displayVitals.temperature);
 
   const hrArrow = trend(vitals.hr, prevVitals?.hr, 5);
   const bpArrow = trend(vitals.sbp, prevVitals?.sbp, 5);
@@ -367,7 +375,7 @@ export default function ProVitalsPanel({
         <div className="grid grid-cols-2 gap-2">
           <VitalCard
             label="HR"
-            value={vitals.hr}
+            value={displayVitals.hr}
             unit="bpm"
             valueColor={hrLevel === "critical" ? "text-red-400" : hrLevel === "warning" ? "text-yellow-400" : "text-red-300"}
             alertLevel={hrLevel}
@@ -376,7 +384,7 @@ export default function ProVitalsPanel({
           />
           <VitalCard
             label="BP (A-line)"
-            value={`${vitals.sbp}/${vitals.dbp}`}
+            value={`${displayVitals.sbp}/${displayVitals.dbp}`}
             unit="mmHg"
             valueColor={bpLevel === "critical" ? "text-red-400" : bpLevel === "warning" ? "text-yellow-400" : "text-white"}
             alertLevel={bpLevel}

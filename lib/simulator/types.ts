@@ -623,6 +623,9 @@ export interface SimScenario {
     availableImaging?: Record<string, string>;
   }>>;
 
+  /** Patient has CAD or other ischemic risk → severity 60-89 may produce VF instead of PEA */
+  ischemicRisk?: boolean;
+
   /** BioGears-driven phase transition rules (condition-based, replaces scripted triggerTime) */
   phaseTransitions?: Array<{
     id: string;

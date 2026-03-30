@@ -249,12 +249,17 @@ export default function ActionBar() {
   const patient = useProGameStore((s) => s.patient);
   const phase = useProGameStore((s) => s.phase);
   const hintsUsed = useProGameStore((s) => s.hintsUsed);
+  const hintLoading = useProGameStore((s) => s.hintLoading);
   const useHint = useProGameStore((s) => s.useHint);
 
   const [showMTPConfirm, setShowMTPConfirm] = useState(false);
   const [activePopover, setActivePopover] = useState<"treatment" | null>(null);
 
   const isPlaying = phase === "playing";
+
+  // Disable fast-forward during cardiac arrest (ACLS timer is separate)
+  const arrestRhythms = ["vf", "vt_pulseless", "pea", "asystole"];
+  const isInArrest = patient?.vitals.hr === 0 || arrestRhythms.includes(patient?.vitals.rhythmStrip ?? "");
 
   // Show prominent MTP button for hemorrhage-related pathologies
   const showMTPButton = isPlaying && !mtpState.activated && (
@@ -400,16 +405,16 @@ export default function ActionBar() {
             shortcut="Space"
           />
           <IconBtn
-            icon="💡" label={`提示 ${3 - hintsUsed}/3`}
+            icon={hintLoading ? "⏳" : "💡"} label={hintLoading ? "思考中..." : `提示 ${3 - hintsUsed}/3`}
             onClick={useHint}
-            disabled={!isPlaying || hintsUsed >= 3}
+            disabled={!isPlaying || hintsUsed >= 3 || hintLoading}
             variant="muted"
             shortcut="H"
           />
           <IconBtn
             icon="⏩" label="快轉5分"
             onClick={() => useProGameStore.getState().actionAdvance(5)}
-            disabled={!isPlaying}
+            disabled={!isPlaying || isInArrest}
             variant="muted"
             shortcut="F"
           />

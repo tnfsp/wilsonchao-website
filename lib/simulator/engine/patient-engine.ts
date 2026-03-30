@@ -452,6 +452,8 @@ function computeALineWaveform(
 
 /** 強制數值在生理範圍內 */
 function clampVitals(vitals: VitalSigns): VitalSigns {
+  // Note: during cardiac arrest, the formula tick is skipped entirely
+  // (guard in tickPatientFormula). These minimums are for living patients only.
   return {
     ...vitals,
     hr: Math.max(20, Math.min(200, vitals.hr)),

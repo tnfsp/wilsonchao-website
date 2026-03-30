@@ -116,10 +116,15 @@ export default function MobileMonitorPanel() {
 
   if (!vitals) return null;
 
-  const map = vitals.map ?? calcMAP(vitals.sbp, vitals.dbp);
-  const hr = Math.round(vitals.hr);
-  const sbp = Math.round(vitals.sbp);
-  const dbp = Math.round(vitals.dbp);
+  // During cardiac arrest, force hemodynamic vitals to 0
+  const arrestRhythms = ["vf", "vt_pulseless", "pea", "asystole"];
+  const isArrest = vitals.hr === 0 || arrestRhythms.includes(vitals.rhythmStrip);
+  const dv = isArrest ? { ...vitals, hr: 0, sbp: 0, dbp: 0, map: 0 } : vitals;
+
+  const map = dv.map ?? calcMAP(dv.sbp, dv.dbp);
+  const hr = Math.round(dv.hr);
+  const sbp = Math.round(dv.sbp);
+  const dbp = Math.round(dv.dbp);
   const spo2 = Math.round(vitals.spo2);
   const cvp = Math.round(vitals.cvp);
   const temp = vitals.temperature;

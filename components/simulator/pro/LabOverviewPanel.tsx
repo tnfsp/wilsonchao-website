@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { LabValue } from "@/lib/simulator/types";
 import { getLabDisplayName } from "@/lib/simulator/engine/lab-engine";
@@ -42,6 +42,15 @@ const TREND_KEYS: { key: string; aliases: string[]; label: string; color: string
   { key: "pH", aliases: ["pH"], label: "pH", color: "#10b981", normalLow: 7.35, normalHigh: 7.45 },
   { key: "inr", aliases: ["inr", "INR"], label: "INR", color: "#f472b6", normalLow: 0.9, normalHigh: 1.1 },
 ];
+
+/** Lookup map: alias → { color, normalLow?, normalHigh? } */
+const TREND_CONFIG = new Map<string, { color: string; normalLow?: number; normalHigh?: number }>();
+for (const tk of TREND_KEYS) {
+  for (const alias of tk.aliases) {
+    TREND_CONFIG.set(alias, { color: tk.color, normalLow: tk.normalLow, normalHigh: tk.normalHigh });
+  }
+}
+const DEFAULT_TREND_COLOR = "#94a3b8";
 
 // ============================================================
 // Helpers
@@ -357,9 +366,11 @@ function Sparkline({ points, color, normalLow, normalHigh, baseline, startHour }
 interface SummaryTableProps {
   dataPoints: LabDataPoint[];
   timeSeries: Map<string, LabTimeSeries>;
+  startHour: number;
 }
 
-function SummaryTable({ dataPoints, timeSeries }: SummaryTableProps) {
+function SummaryTable({ dataPoints, timeSeries, startHour }: SummaryTableProps) {
+  const [expandedKey, setExpandedKey] = useState<string | null>(null);
   if (dataPoints.length === 0) {
     return (
       <div className="flex flex-col items-center justify-center py-8 gap-2">
@@ -446,34 +457,63 @@ function SummaryTable({ dataPoints, timeSeries }: SummaryTableProps) {
             {/* Lab rows */}
             <table className="w-full text-xs">
               <tbody>
-                {group.items.map(({ key, lv, trend }) => (
-                  <tr
-                    key={key}
-                    className={`border-b border-[#0e2535] last:border-0 ${
-                      lv.flag === "critical" ? "bg-red-950/20" : ""
-                    }`}
-                  >
-                    {/* Name */}
-                    <td className="py-1.5 pl-3 pr-2 text-zinc-400 font-medium whitespace-nowrap">
-                      {getLabDisplayName(key)}
-                    </td>
-                    {/* Value + trend arrow */}
-                    <td className={`py-1.5 pr-1 text-right font-mono ${valueColor(lv.flag)}`}>
-                      {String(lv.value)}
-                      {trend && (
-                        <span className="text-zinc-500 text-[10px]">{trend}</span>
+                {group.items.map(({ key, lv, trend }) => {
+                  const isExpanded = expandedKey === key;
+                  const series = timeSeries.get(key);
+                  const hasTrend = series && series.points.length > 0;
+                  return (
+                    <React.Fragment key={key}>
+                      <tr
+                        onClick={() => setExpandedKey(isExpanded ? null : key)}
+                        className={`border-b border-[#0e2535] cursor-pointer transition-colors hover:bg-white/5 ${
+                          lv.flag === "critical" ? "bg-red-950/20" : ""
+                        } ${isExpanded ? "bg-teal-950/15" : ""}`}
+                      >
+                        {/* Name */}
+                        <td className="py-1.5 pl-3 pr-2 text-zinc-400 font-medium whitespace-nowrap">
+                          <span className={`inline-block text-[8px] text-zinc-600 mr-1 transition-transform ${isExpanded ? "rotate-90" : ""}`}>
+                            ▶
+                          </span>
+                          {getLabDisplayName(key)}
+                        </td>
+                        {/* Value + trend arrow */}
+                        <td className={`py-1.5 pr-1 text-right font-mono ${valueColor(lv.flag)}`}>
+                          {String(lv.value)}
+                          {trend && (
+                            <span className="text-zinc-500 text-[10px]">{trend}</span>
+                          )}
+                        </td>
+                        {/* Unit */}
+                        <td className="py-1.5 pr-1 text-zinc-600 whitespace-nowrap">
+                          {lv.unit}
+                        </td>
+                        {/* Flag */}
+                        <td className="py-1.5 pr-2">
+                          <FlagBadge flag={lv.flag} />
+                        </td>
+                      </tr>
+                      {isExpanded && (
+                        <tr className="bg-black/30">
+                          <td colSpan={4} className="px-2 py-1">
+                            {hasTrend ? (
+                              <Sparkline
+                                points={series!.points}
+                                color={TREND_CONFIG.get(key)?.color ?? DEFAULT_TREND_COLOR}
+                                normalLow={TREND_CONFIG.get(key)?.normalLow}
+                                normalHigh={TREND_CONFIG.get(key)?.normalHigh}
+                                startHour={startHour}
+                              />
+                            ) : (
+                              <div className="h-[40px] flex items-center justify-center text-zinc-600 text-[10px]">
+                                No trend data
+                              </div>
+                            )}
+                          </td>
+                        </tr>
                       )}
-                    </td>
-                    {/* Unit */}
-                    <td className="py-1.5 pr-1 text-zinc-600 whitespace-nowrap">
-                      {lv.unit}
-                    </td>
-                    {/* Flag */}
-                    <td className="py-1.5 pr-2">
-                      <FlagBadge flag={lv.flag} />
-                    </td>
-                  </tr>
-                ))}
+                    </React.Fragment>
+                  );
+                })}
               </tbody>
             </table>
           </div>
@@ -582,8 +622,6 @@ export default function LabOverviewPanel() {
   const startHour = scenario?.startHour ?? 2;
   const { dataPoints, timeSeries } = useLabData();
 
-  const [tab, setTab] = useState<"summary" | "trends">("summary");
-
   if (activeModal !== "lab_overview") return null;
 
   return (
@@ -612,41 +650,12 @@ export default function LabOverviewPanel() {
           </button>
         </div>
 
-        {/* Tab bar */}
-        <div className="flex gap-1 px-4 pt-3 pb-1 flex-shrink-0">
-          <button
-            onClick={() => setTab("summary")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-              tab === "summary"
-                ? "bg-teal-600/30 text-teal-300 border border-teal-500/40"
-                : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
-            }`}
-          >
-            Summary
-          </button>
-          <button
-            onClick={() => setTab("trends")}
-            className={`px-3 py-1.5 rounded-lg text-xs font-semibold transition-colors ${
-              tab === "trends"
-                ? "bg-teal-600/30 text-teal-300 border border-teal-500/40"
-                : "text-zinc-500 hover:text-zinc-300 hover:bg-white/5"
-            }`}
-          >
-            Trends
-          </button>
-        </div>
-
         {/* Content (scrollable) */}
         <div
           className="flex-1 overflow-y-auto px-4 py-3"
           style={{ scrollbarWidth: "thin", scrollbarColor: "#ffffff1a transparent" }}
         >
-          {tab === "summary" && (
-            <SummaryTable dataPoints={dataPoints} timeSeries={timeSeries} />
-          )}
-          {tab === "trends" && (
-            <TrendCharts timeSeries={timeSeries} startHour={startHour} />
-          )}
+          <SummaryTable dataPoints={dataPoints} timeSeries={timeSeries} startHour={startHour} />
         </div>
       </div>
     </div>

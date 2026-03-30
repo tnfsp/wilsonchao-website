@@ -65,9 +65,14 @@ export default function MiniVitalsBar() {
 
   if (!vitals) return null;
 
+  // During cardiac arrest, force hemodynamic vitals to 0
+  const arrestRhythms = ["vf", "vt_pulseless", "pea", "asystole"];
+  const isArrest = vitals.hr === 0 || arrestRhythms.includes(vitals.rhythmStrip);
+  const dv = isArrest ? { ...vitals, hr: 0, sbp: 0, dbp: 0, map: 0 } : vitals;
+
   const items = [
-    { label: "HR", value: String(Math.round(vitals.hr)), severity: hrSeverity(vitals.hr) },
-    { label: "BP", value: `${Math.round(vitals.sbp)}/${Math.round(vitals.dbp)}`, severity: sbpSeverity(vitals.sbp) },
+    { label: "HR", value: String(Math.round(dv.hr)), severity: hrSeverity(dv.hr) },
+    { label: "BP", value: `${Math.round(dv.sbp)}/${Math.round(dv.dbp)}`, severity: sbpSeverity(dv.sbp) },
     { label: "SpO₂", value: `${Math.round(vitals.spo2)}%`, severity: spo2Severity(vitals.spo2) },
     { label: "CVP", value: String(Math.round(vitals.cvp)), severity: cvpSeverity(vitals.cvp) },
   ];

@@ -13,8 +13,8 @@ function getOrderDefinitionById(id: string) {
 }
 
 // Words that mean "yes / confirm / go ahead"
-const CONFIRM_WORDS = ["好", "對", "確認", "ok", "yes", "run", "開", "沒錯", "正確", "go"];
-const CONFIRM_PHRASES = ["好的", "好吧", "好啊", "ok開", "沒問題", "可以", "行", "開吧", "給他開", "幫我開"];
+const CONFIRM_WORDS = ["好", "對", "確認", "ok", "yes", "run", "開", "沒錯", "正確", "go", "嗯", "是", "要"];
+const CONFIRM_PHRASES = ["好的", "好吧", "好啊", "ok開", "沒問題", "可以", "行", "開吧", "給他開", "幫我開", "先開", "嗯嗯", "是的", "對啊", "要的"];
 
 function isConfirmReply(text: string): boolean {
   const normalized = text.trim().toLowerCase().replace(/\s/g, "");

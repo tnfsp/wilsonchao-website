@@ -1,52 +1,28 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useRef, useEffect, useCallback } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 
 /**
- * SeniorDialogModal — 學長到場的沉浸式對話視窗
+ * SeniorDialogModal — AI-driven 學長到場對話
  *
- * Multi-phase scenario 用：學長到場 → 評估 → 說明 → 離開。
- * 分 3 個 stage（到場、評估、離開），玩家逐步點「繼續」推進劇情。
+ * 學長到場後的互動式對話，基於 /api/simulator/senior-chat (mode: "in_person")。
+ * 玩家報告情況 → 學長追問/評估 → 學長做決定離開。
+ *
+ * Fallback: API 失敗 8 秒後降級回 scripted 對話。
  */
 
-interface DialogStage {
-  speaker: string;
-  emoji: string;
-  lines: string[];
-  buttonText: string;
+interface ChatMessage {
+  role: "senior" | "player";
+  content: string;
+  isAction?: boolean; // 動作描述（斜體）
 }
 
-const STAGES: DialogStage[] = [
-  {
-    speaker: "學長",
-    emoji: "🩺",
-    lines: [
-      "（推門進來，快步走到床邊）",
-      "「怎麼了，跟我報告一下。」",
-    ],
-    buttonText: "報告現況",
-  },
-  {
-    speaker: "學長",
-    emoji: "🩺",
-    lines: [
-      "（聽完報告，看了 CT output 趨勢、vitals、labs）",
-      "「嗯⋯⋯CT 持續出，鮮紅色有塊，量一直在增加。看起來是 surgical bleeding，不是 coagulopathy 的問題。」",
-      "「這個量、這個趨勢，可能需要回 OR re-explore。」",
-    ],
-    buttonText: "繼續",
-  },
-  {
-    speaker: "學長",
-    emoji: "🚶",
-    lines: [
-      "「我去聯絡開刀房，看 OR 有沒有空位，順便通知麻醉科。」",
-      "「你先繼續顧著——血品繼續跑，有什麼變化馬上叫我。」",
-      "（學長走出 ICU，門關上了。你又是一個人了。）",
-    ],
-    buttonText: "知道了",
-  },
+// Scripted fallback（API 失敗時使用）
+const FALLBACK_LINES = [
+  "（看了一眼監視器）「跟我報告一下目前狀況。」",
+  "「嗯⋯⋯我看看 CT 和 vitals。」",
+  "「好，我去聯絡開刀房，有變化馬上叫我。」",
 ];
 
 export function SeniorDialogModal() {
@@ -56,85 +32,265 @@ export function SeniorDialogModal() {
   const updatePatientSeverity = useProGameStore((s) => s.updatePatientSeverity);
   const patient = useProGameStore((s) => s.patient);
   const clock = useProGameStore((s) => s.clock);
-  const [stage, setStage] = useState(0);
+  const scenario = useProGameStore((s) => s.scenario);
+  const placedOrders = useProGameStore((s) => s.placedOrders);
+  const playerActions = useProGameStore((s) => s.playerActions);
+  const sbarPhase1 = useProGameStore((s) => s.sbarPhase1);
 
-  if (activeModal !== "senior_dialog") return null;
+  const [messages, setMessages] = useState<ChatMessage[]>([]);
+  const [input, setInput] = useState("");
+  const [isLoading, setIsLoading] = useState(false);
+  const [isDone, setIsDone] = useState(false);
+  const [turnCount, setTurnCount] = useState(0);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
 
-  const current = STAGES[stage];
-  const isLast = stage === STAGES.length - 1;
+  const isVisible = activeModal === "senior_dialog";
 
-  function handleNext() {
-    if (isLast) {
-      // 學長離開 → severity -5（安定效果）+ timeline entry + 關閉 modal
-      if (patient) {
-        updatePatientSeverity(Math.max(0, patient.severity - 5));
-      }
-      addTimelineEntry({
-        gameTime: clock.currentTime,
-        type: "system_event",
-        content: "🚶 學長離開 ICU，去聯絡開刀房。",
-        sender: "system",
-        isImportant: true,
+  // Build game state for API
+  const buildGameState = useCallback(() => ({
+    vitals: patient?.vitals,
+    chestTube: patient?.chestTube,
+    clock: { currentTime: clock.currentTime },
+    labs: placedOrders
+      .filter((o) => o.definition.category === "lab" && o.status === "completed")
+      .map((o) => ({ name: o.definition.name, summary: o.result ? String(o.result) : undefined })),
+    orders: placedOrders.map((o) => ({ name: o.definition.name, status: o.status })),
+    pathology: patient?.pathology,
+    scenario: { patientInfo: scenario?.patient ? `${scenario.patient.age}${scenario.patient.sex === "M" ? "M" : "F"}, ${scenario.patient.surgery}` : undefined },
+    severity: patient?.severity,
+    playerActions: playerActions.slice(-10).map((a) => a.action),
+    sbarPhase1: sbarPhase1 ? Object.values(sbarPhase1).join(" ") : undefined,
+  }), [patient, clock, placedOrders, playerActions, scenario, sbarPhase1]);
+
+  // AI chat call
+  const callSeniorAI = useCallback(async (
+    userMessage: string,
+    history: ChatMessage[],
+    mode: "in_person" | "arrival_greeting",
+  ): Promise<string> => {
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 8000);
+
+    try {
+      const conversationHistory = history
+        .filter((m) => !m.isAction)
+        .map((m) => ({
+          role: m.role === "senior" ? "assistant" as const : "user" as const,
+          content: m.content,
+        }));
+
+      const res = await fetch("/api/simulator/senior-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: userMessage,
+          gameState: buildGameState(),
+          conversationHistory,
+          mode,
+          turnCount: history.filter((m) => m.role === "player").length,
+        }),
+        signal: controller.signal,
       });
-      setStage(0);
-      closeModal();
-    } else {
-      setStage((s) => s + 1);
+
+      clearTimeout(timeout);
+      if (!res.ok) throw new Error(`API ${res.status}`);
+      const data = await res.json();
+      return data.reply ?? FALLBACK_LINES[1];
+    } catch {
+      clearTimeout(timeout);
+      // Fallback
+      const fallbackIdx = Math.min(history.filter((m) => m.role === "senior").length, FALLBACK_LINES.length - 1);
+      return FALLBACK_LINES[fallbackIdx];
     }
+  }, [buildGameState]);
+
+  // Initial greeting when modal opens
+  useEffect(() => {
+    if (!isVisible || messages.length > 0) return;
+
+    const greet = async () => {
+      setIsLoading(true);
+      const greeting = await callSeniorAI(
+        "學長剛到場，請基於目前病人狀態生成到場開場白。",
+        [],
+        "arrival_greeting",
+      );
+      setMessages([
+        { role: "senior", content: "（推門進來，快步走到床邊看了一眼監視器）", isAction: true },
+        { role: "senior", content: greeting },
+      ]);
+      setIsLoading(false);
+      inputRef.current?.focus();
+    };
+    greet();
+  }, [isVisible, messages.length, callSeniorAI]);
+
+  // Auto-scroll
+  useEffect(() => {
+    scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: "smooth" });
+  }, [messages]);
+
+  // Determine if senior should make a decision (after 2+ turns)
+  const shouldDecide = turnCount >= 2;
+
+  // Rule-based decision guard
+  function getSeniorDecision(): { action: string; message: string } {
+    const pathology = patient?.pathology ?? "";
+    if (pathology === "cardiac_tamponade" || pathology === "tamponade") {
+      return {
+        action: "bedside_procedure",
+        message: "「這是 tamponade，要趕快處理。我去叫開刀房、通知麻醉科，準備 bedside re-sternotomy。你繼續 resuscitate，有什麼變化立刻叫我。」",
+      };
+    }
+    if (pathology === "surgical_bleeding" && (patient?.severity ?? 0) > 50) {
+      return {
+        action: "go_to_or",
+        message: "「出血量太大，保守治療不夠。我去聯絡開刀房 re-explore，你先繼續穩住他——血品繼續跑，Norepi 不要停。」",
+      };
+    }
+    return {
+      action: "continue_monitoring",
+      message: "「好，目前先繼續觀察和 resuscitate。有什麼變化馬上再叫我。我去聯絡一下 OR 備著。」",
+    };
   }
+
+  async function handleSend() {
+    if (!input.trim() || isLoading || isDone) return;
+    const msg = input.trim();
+    setInput("");
+
+    const newMessages: ChatMessage[] = [...messages, { role: "player", content: msg }];
+    setMessages(newMessages);
+    setTurnCount((t) => t + 1);
+    setIsLoading(true);
+
+    // Get AI response
+    const reply = await callSeniorAI(msg, newMessages, "in_person");
+
+    const updatedMessages: ChatMessage[] = [...newMessages, { role: "senior", content: reply }];
+
+    // After 3+ player turns, senior makes a decision
+    if (turnCount + 1 >= 3) {
+      const decision = getSeniorDecision();
+      updatedMessages.push(
+        { role: "senior", content: decision.message },
+        { role: "senior", content: "（學長快步離開 ICU）", isAction: true },
+      );
+      setIsDone(true);
+    }
+
+    setMessages(updatedMessages);
+    setIsLoading(false);
+  }
+
+  function handleClose() {
+    // Record timeline
+    const chatSummary = messages
+      .filter((m) => !m.isAction)
+      .map((m) => `${m.role === "senior" ? "學長" : "你"}：${m.content}`)
+      .join("\n");
+
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "system_event",
+      content: `🩺 學長到場對話（${messages.filter((m) => m.role === "player").length} 輪）`,
+      sender: "system",
+      isImportant: true,
+    });
+
+    // Severity -5 (calming effect)
+    if (patient) {
+      updatePatientSeverity(Math.max(0, patient.severity - 5));
+    }
+
+    // Reset for next use
+    setMessages([]);
+    setInput("");
+    setIsDone(false);
+    setTurnCount(0);
+    closeModal();
+  }
+
+  if (!isVisible) return null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur-sm p-4">
-      <div className="w-full max-w-md bg-[#1a1a2e] border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
+      <div className="w-full max-w-md bg-[#1a1a2e] border border-white/10 rounded-2xl shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
         {/* Header */}
-        <div className="px-6 pt-5 pb-3 border-b border-white/5">
+        <div className="px-6 pt-5 pb-3 border-b border-white/5 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <span className="text-2xl">{current.emoji}</span>
+            <span className="text-2xl">🩺</span>
             <div>
-              <h3 className="text-white font-bold text-lg">{current.speaker}</h3>
-              <p className="text-gray-400 text-xs">R4 / Fellow</p>
+              <h3 className="text-white font-bold text-lg">學長（現場）</h3>
+              <p className="text-gray-400 text-xs">R4 / Fellow — 在你旁邊</p>
             </div>
           </div>
+          {isDone && (
+            <span className="text-xs px-2 py-1 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30">
+              對話結束
+            </span>
+          )}
         </div>
 
-        {/* Dialog content */}
-        <div className="px-6 py-5 space-y-3 min-h-[160px]">
-          {current.lines.map((line, i) => (
-            <p
-              key={i}
-              className={`text-sm leading-relaxed ${
-                line.startsWith("（")
-                  ? "text-gray-500 italic"
-                  : "text-gray-200"
-              }`}
-            >
-              {line}
-            </p>
-          ))}
-        </div>
-
-        {/* Progress dots + button */}
-        <div className="px-6 pb-5 flex items-center justify-between">
-          <div className="flex gap-1.5">
-            {STAGES.map((_, i) => (
+        {/* Chat area */}
+        <div ref={scrollRef} className="flex-1 overflow-y-auto px-6 py-4 space-y-3 min-h-[200px]">
+          {messages.map((msg, i) => (
+            <div key={i} className={`flex ${msg.role === "player" ? "justify-end" : "justify-start"}`}>
               <div
-                key={i}
-                className={`w-2 h-2 rounded-full transition-colors ${
-                  i === stage
-                    ? "bg-teal-400"
-                    : i < stage
-                      ? "bg-teal-700"
-                      : "bg-white/10"
+                className={`max-w-[85%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+                  msg.isAction
+                    ? "text-gray-500 italic bg-transparent px-0"
+                    : msg.role === "senior"
+                      ? "bg-white/5 text-gray-200 rounded-bl-sm"
+                      : "bg-teal-700/40 text-white rounded-br-sm"
                 }`}
+              >
+                {msg.content}
+              </div>
+            </div>
+          ))}
+          {isLoading && (
+            <div className="flex justify-start">
+              <div className="px-4 py-2.5 rounded-2xl bg-white/5 text-gray-400 text-sm animate-pulse">
+                學長正在看⋯⋯
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Input / Close */}
+        <div className="px-6 pb-5 pt-3 border-t border-white/5">
+          {isDone ? (
+            <button
+              onClick={handleClose}
+              className="w-full px-5 py-3 rounded-xl bg-teal-700 hover:bg-teal-600 active:scale-[0.97] text-white text-sm font-medium transition-all"
+            >
+              知道了，繼續處理
+            </button>
+          ) : (
+            <form
+              onSubmit={(e) => { e.preventDefault(); handleSend(); }}
+              className="flex gap-2"
+            >
+              <input
+                ref={inputRef}
+                type="text"
+                value={input}
+                onChange={(e) => setInput(e.target.value)}
+                placeholder="跟學長報告⋯⋯"
+                disabled={isLoading}
+                className="flex-1 px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-gray-500 focus:outline-none focus:border-teal-500/50 disabled:opacity-50"
               />
-            ))}
-          </div>
-          <button
-            onClick={handleNext}
-            className="px-5 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-600 active:scale-[0.97] text-white text-sm font-medium transition-all"
-          >
-            {current.buttonText}
-          </button>
+              <button
+                type="submit"
+                disabled={!input.trim() || isLoading}
+                className="px-4 py-2.5 rounded-xl bg-teal-700 hover:bg-teal-600 disabled:opacity-30 disabled:cursor-not-allowed text-white text-sm font-medium transition-all"
+              >
+                送出
+              </button>
+            </form>
+          )}
         </div>
       </div>
     </div>

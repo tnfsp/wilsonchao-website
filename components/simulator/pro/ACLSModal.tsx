@@ -557,7 +557,7 @@ export default function ACLSModal() {
         addTimelineEntry({
           gameTime: clock.currentTime,
           type: "system_event",
-          content: `RE-ARREST - Cardiac arrest #${arrestCount + 2} detected. Resuming ACLS protocol.`,
+          content: `RE-ARREST - Cardiac arrest #${arrestCount + 1} detected. Resuming ACLS protocol.`,
           sender: "system",
           isImportant: true,
         });
@@ -1739,6 +1739,8 @@ export default function ACLSModal() {
     setHasAchievedRosc(true);
     dispatchStopCpr();
     dispatchCardiacArrest(false);
+    // Cap severity + grace period to prevent immediate re-arrest loop
+    useProGameStore.getState().notifyRosc();
 
     const arrestInfo = arrestCount > 1
       ? ` (arrest episode #${arrestCount})`
@@ -2336,7 +2338,8 @@ export default function ACLSModal() {
           </div>
 
           {/* ── Actions (right on tablet+, bottom on mobile) ── */}
-          <div className="md:w-1/2 p-3 md:p-5 flex flex-col gap-2 md:gap-3 overflow-y-auto border-t md:border-t-0 border-white/5">
+          <div className="md:w-1/2 flex flex-col border-t md:border-t-0 border-white/5">
+          <div className="flex-1 p-3 md:p-5 flex flex-col gap-2 md:gap-3 overflow-y-auto">
             <h3 className="text-zinc-400 text-xs uppercase tracking-widest">
               Interventions
             </h3>
@@ -2856,31 +2859,49 @@ export default function ACLSModal() {
               )}
             </div>
 
-            {/* Termination prompt */}
+            {/* Termination prompt (auto-shown at 20 min OR manually triggered) */}
             {showTerminationPrompt && aclsPhase !== "rosc" && (
               <div className="rounded-xl border border-red-800/60 bg-red-950/40 p-3 md:p-4">
                 <p className="text-red-300 text-sm font-semibold mb-2">
-                  Arrest duration exceeds time limit.
+                  {elapsedSeconds >= MAX_ARREST_SECONDS
+                    ? "Arrest duration exceeds time limit."
+                    : "確定要放棄急救嗎？"}
                 </p>
                 <p className="text-red-400/70 text-xs mb-3">
-                  Consider termination of resuscitation efforts.
+                  {elapsedSeconds >= MAX_ARREST_SECONDS
+                    ? "Consider termination of resuscitation efforts."
+                    : "病人將被宣告死亡，進入 Debrief 評分。"}
                 </p>
                 <div className="flex gap-2">
                   <button
                     onClick={() => setShowTerminationPrompt(false)}
                     className="flex-1 min-h-[44px] py-2 rounded-lg border border-zinc-600 text-zinc-300 text-xs font-medium hover:bg-zinc-800 transition"
                   >
-                    Continue Resuscitation
+                    繼續急救
                   </button>
                   <button
                     onClick={handleTerminate}
                     className="flex-1 min-h-[44px] py-2 rounded-lg bg-red-800 hover:bg-red-700 text-white text-xs font-bold transition"
                   >
-                    Terminate Efforts
+                    放棄急救
                   </button>
                 </div>
               </div>
             )}
+
+          </div>
+
+          {/* Fixed bottom — always visible terminate button */}
+          {!showTerminationPrompt && aclsPhase !== "rosc" && isInActiveArrest && (
+            <div className="flex-shrink-0 p-3 md:px-5 md:pb-4 border-t border-zinc-800/50 bg-gradient-to-t from-black/80 to-transparent">
+              <button
+                onClick={() => setShowTerminationPrompt(true)}
+                className="w-full min-h-[44px] py-2 rounded-lg border border-red-900/40 text-red-400/70 text-xs hover:bg-red-950/30 hover:text-red-300 transition"
+              >
+                放棄急救
+              </button>
+            </div>
+          )}
           </div>
         </div>
 

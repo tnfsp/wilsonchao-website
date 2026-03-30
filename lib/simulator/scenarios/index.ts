@@ -1,9 +1,7 @@
 import { Scenario } from "../types-legacy";
-import { bleedingVsTamponade } from "./bleeding-vs-tamponade";
 
-export const scenarios: Record<string, Scenario> = {
-  "bleeding-vs-tamponade": bleedingVsTamponade,
-};
+// Legacy scenarios archived — bleeding-vs-tamponade replaced by pro multi-phase version
+export const scenarios: Record<string, Scenario> = {};
 
 export const scenarioList = Object.values(scenarios).map((s) => ({
   id: s.id,

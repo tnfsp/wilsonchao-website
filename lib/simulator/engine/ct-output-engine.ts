@@ -164,10 +164,11 @@ export function deriveCtOutput(
 }
 
 /**
- * Get the current hemorrhage rate in mL/min (for nurse trigger conditions).
+ * Get the total blood volume lost so far in mL (for nurse trigger conditions).
+ * Note: this is cumulative total, not instantaneous rate.
  */
-export function getCurrentHemorrhageRate(): number {
-  return _prevBloodVolumeLost; // This is total lost, not rate
+export function getTotalBloodVolumeLost(): number {
+  return _prevBloodVolumeLost;
 }
 
 /**

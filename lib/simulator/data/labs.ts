@@ -636,7 +636,7 @@ export const allLabs: OrderDefinition[] = [
   naLab,
   kLab,
   clLab,
-  co2Lab,
+  // co2Lab removed from allLabs (Session 051: ABG covers PaCO₂/HCO₃)
   bunLab,
   crLab,
   glucoseLab,
@@ -681,7 +681,8 @@ export const allLabs: OrderDefinition[] = [
 export const labCategories = {
   hematology: [cbcLab],
   blood_gas: [abgLab, lactateLab, iCaLab, svo2Lab],
-  chemistry: [naLab, kLab, clLab, co2Lab, bunLab, crLab, glucoseLab, mgLab, phosphateLab, astLab, altLab, ldhLab, uricAcidLab, ammoniaLab, totalCaLab, albuminLab, tbilLab],
+  // co2Lab removed: ABG already provides PaCO₂/HCO₃ (Session 051 decision)
+  chemistry: [naLab, kLab, clLab, bunLab, crLab, glucoseLab, mgLab, phosphateLab, astLab, altLab, ldhLab, uricAcidLab, ammoniaLab, totalCaLab, albuminLab, tbilLab],
   coagulation: [ptInrLab, apttLab, fibrinogenLab, ddimerLab, thrombinTimeLab, actLab, tegLab, rotemLab],
   cardiac: [troponinLab, ntprobnpLab, ckmbLab],
   blood_bank: [typeScreenLab],

@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { PendingEvent } from "@/lib/simulator/types";
 
@@ -56,12 +56,19 @@ export function ConsultModal() {
   const [submitted, setSubmitted]       = useState(false);
   const [confirming, setConfirming]     = useState<ConsultType | null>(null);
 
-  // SBAR handoff state (required first time calling senior)
+  // Phone call chat state
   const [showSbarForm, setShowSbarForm] = useState(false);
   const [sbarText, setSbarText] = useState("");
   const [sbarSubmitting, setSbarSubmitting] = useState(false);
   const [sbarFeedback, setSbarFeedback] = useState<string | null>(null);
   const sbarPhase1 = useProGameStore((s) => s.sbarPhase1);
+
+  // AI chat state for senior phone call
+  const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
+  const [chatInput, setChatInput] = useState("");
+  const [chatSending, setChatSending] = useState(false);
+  const chatScrollRef = useRef<HTMLDivElement>(null);
+  const placedOrders = useProGameStore((s) => s.placedOrders);
 
   // ── Derived: senior status ─────────────────────────────────
 
@@ -86,6 +93,13 @@ export function ConsultModal() {
     const remainingMin = pending ? Math.max(0, Math.ceil(pending.triggerAt - clock.currentTime)) : 0;
     return { status: "en_route" as const, remainingMin };
   }, [playerActions, pendingEvents, firedEvents, clock.currentTime]);
+
+  // Scroll chat to bottom when messages change (must be before early return)
+  useEffect(() => {
+    if (chatScrollRef.current) {
+      chatScrollRef.current.scrollTop = chatScrollRef.current.scrollHeight;
+    }
+  }, [chatMessages]);
 
   if (activeModal !== "consult" || !scenario) return null;
 
@@ -115,39 +129,88 @@ export function ConsultModal() {
     }
   }
 
-  // Submit handoff report to API for AI evaluation
-  async function handleSbarSubmit() {
-    setSbarSubmitting(true);
-    try {
-      // Store report for scoring (wrap in SBAR-compatible shape)
-      useProGameStore.setState({ sbarPhase1: { situation: sbarText, background: "", assessment: "", recommendation: "" } });
+  // Build game state for senior chat API
+  function buildSeniorChatGameState() {
+    const labSummaries = placedOrders
+      .filter((o) => o.definition.category === "lab" && o.status === "completed" && o.result)
+      .map((o) => {
+        const entries = Object.entries(o.result as Record<string, { value: number | string; flag?: string }>);
+        const summary = entries
+          .filter(([, v]) => v.flag)
+          .map(([k, v]) => `${k}: ${v.value} (${v.flag})`)
+          .join(", ");
+        return { name: o.definition.name, summary: summary || "all normal" };
+      });
 
-      // Try to get AI feedback (non-blocking)
-      try {
-        const resp = await fetch("/api/evaluate-handoff", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            sbar: { freeText: sbarText },
-            vitals: patient?.vitals,
-            pathology: patient?.pathology,
-            severity: patient?.severity,
-            gameTime: clock.currentTime,
-          }),
-        });
-        if (resp.ok) {
-          const data = await resp.json();
-          setSbarFeedback(data.feedback ?? null);
-        }
-      } catch {
-        // AI feedback is optional; continue without it
-      }
+    const orderSummaries = placedOrders
+      .filter((o) => o.definition.category !== "lab" && o.status !== "cancelled")
+      .map((o) => ({ name: o.definition.name }));
 
-      // Proceed with the call regardless of quality
-      proceedWithSeniorCall(false);
-    } finally {
-      setSbarSubmitting(false);
+    return {
+      vitals: patient?.vitals,
+      chestTube: patient?.chestTube,
+      clock: { currentTime: clock.currentTime },
+      labs: labSummaries,
+      orders: orderSummaries,
+      pathology: patient?.pathology,
+      scenario: {
+        patientInfo: `${scenario?.patient.age}y ${scenario?.patient.sex}, ${scenario?.patient.surgery}, POD${scenario?.patient.postOpDay}`,
+      },
+    };
+  }
+
+  // Send message to senior via AI
+  async function handleSendChat() {
+    const text = chatInput.trim();
+    if (!text || chatSending) return;
+
+    const userMsg = { role: "user" as const, content: text };
+    setChatMessages((prev) => [...prev, userMsg]);
+    setChatInput("");
+    setChatSending(true);
+
+    // Store first message as SBAR for scoring
+    if (chatMessages.filter((m) => m.role === "user").length === 0) {
+      useProGameStore.setState({ sbarPhase1: { situation: text, background: "", assessment: "", recommendation: "" } });
     }
+
+    try {
+      const resp = await fetch("/api/simulator/senior-chat", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          message: text,
+          gameState: buildSeniorChatGameState(),
+          conversationHistory: chatMessages,
+        }),
+        signal: AbortSignal.timeout(15000),
+      });
+      const data = await resp.json();
+      const reply = data.reply ?? "嗯，我聽到了。繼續。";
+      setChatMessages((prev) => [...prev, { role: "assistant", content: reply }]);
+    } catch {
+      setChatMessages((prev) => [...prev, { role: "assistant", content: "（訊號不太好）...你說什麼？再講一次。" }]);
+    } finally {
+      setChatSending(false);
+    }
+  }
+
+  // End the phone call and schedule senior arrival
+  function handleHangUp() {
+    // Record all chat content to timeline
+    const chatSummary = chatMessages
+      .map((m) => m.role === "user" ? `R1: ${m.content}` : `學長: ${m.content}`)
+      .join("\n");
+
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "player_action",
+      content: `📞 電話交班紀錄：\n${chatSummary}`,
+      sender: "player",
+      isImportant: true,
+    });
+
+    proceedWithSeniorCall(isRecallContext);
   }
 
   function proceedWithSeniorCall(isRecall: boolean) {
@@ -212,16 +275,13 @@ export function ConsultModal() {
   function handleConfirmCall(type: ConsultType) {
     if (type === "other") return;
 
-    // Senior call (the only non-other option now)
-    const isRecall = isRecallContext;
-    if (!isRecall && !sbarPhase1) {
-      // First time calling senior — require SBAR
-      setShowSbarForm(true);
-      setConfirming(null);
-      return;
-    }
-    // Already has SBAR or is a recall
-    proceedWithSeniorCall(isRecall);
+    // Senior call — open phone chat UI
+    const greeting = isRecallContext
+      ? "怎麼了？又有狀況？"
+      : "怎麼了，報告一下。";
+    setChatMessages([{ role: "assistant", content: greeting }]);
+    setShowSbarForm(true);
+    setConfirming(null);
   }
 
   function handleSubmitOtherConsult() {
@@ -322,43 +382,81 @@ export function ConsultModal() {
               </div>
             )}
 
-            {/* ── SBAR Form (shown when first calling senior) ── */}
+            {/* ── Phone Call Chat UI (shown when calling senior) ── */}
             {showSbarForm && (
-              <div className="rounded-lg border border-amber-700/40 p-4" style={{ backgroundColor: "#1a1000" }}>
-                <h3 className="text-amber-200 font-semibold text-sm mb-2">
-                  📞 學長接起電話了
-                </h3>
-                <p className="text-amber-400/60 text-xs mb-3">
-                  「怎麼了，報告一下。」— 用你自己的話交班，像打電話一樣講就好。
-                </p>
-                <textarea
-                  value={sbarText}
-                  onChange={(e) => setSbarText(e.target.value)}
-                  placeholder="學長好，我是值班 R1，床 3 的林伯伯..."
-                  rows={5}
-                  className="w-full rounded-lg px-3 py-2.5 text-sm text-white border border-amber-800/40 focus:border-amber-600 focus:outline-none transition-colors resize-none leading-relaxed placeholder:text-amber-900/60"
-                  style={{ backgroundColor: "#002030" }}
-                  autoFocus
-                />
+              <div className="rounded-lg border border-amber-700/40 overflow-hidden flex flex-col" style={{ backgroundColor: "#1a1000", maxHeight: "60vh" }}>
+                {/* Phone header */}
+                <div className="flex items-center gap-2 px-4 py-2.5 border-b border-amber-900/30" style={{ backgroundColor: "#0d0800" }}>
+                  <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse" />
+                  <span className="text-amber-200 text-sm font-semibold">學長（R4/Fellow）</span>
+                  <span className="text-amber-600 text-xs ml-auto">通話中</span>
+                </div>
 
-                {sbarFeedback && (
-                  <div className="rounded-lg border border-teal-700/40 px-3 py-2.5 mt-3" style={{ backgroundColor: "#001a20" }}>
-                    <p className="text-teal-300 text-xs font-medium mb-1">學長回饋：</p>
-                    <p className="text-teal-400/80 text-xs leading-relaxed">{sbarFeedback}</p>
-                  </div>
-                )}
+                {/* Chat messages */}
+                <div
+                  ref={chatScrollRef}
+                  className="flex-1 overflow-y-auto px-3 py-3 flex flex-col gap-2.5 min-h-[120px]"
+                  style={{ scrollbarWidth: "thin", scrollbarColor: "#ffffff1a transparent" }}
+                >
+                  {chatMessages.map((msg, i) => (
+                    <div key={i} className={`flex ${msg.role === "user" ? "justify-end" : "justify-start"}`}>
+                      <div
+                        className={`max-w-[85%] rounded-xl px-3 py-2 text-sm leading-relaxed ${
+                          msg.role === "user"
+                            ? "bg-teal-800/40 text-teal-100 border border-teal-700/30"
+                            : "bg-amber-900/40 text-amber-100 border border-amber-700/30"
+                        }`}
+                      >
+                        {msg.role === "assistant" && (
+                          <span className="text-amber-400 text-xs font-semibold block mb-0.5">學長</span>
+                        )}
+                        {msg.content}
+                      </div>
+                    </div>
+                  ))}
+                  {chatSending && (
+                    <div className="flex justify-start">
+                      <div className="bg-amber-900/40 border border-amber-700/30 rounded-xl px-3 py-2 text-amber-400 text-sm">
+                        <span className="animate-pulse">學長正在回應...</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
 
-                <div className="flex gap-2 mt-3">
+                {/* Input area */}
+                <div className="border-t border-amber-900/30 px-3 py-2.5 flex gap-2" style={{ backgroundColor: "#0d0800" }}>
+                  <input
+                    type="text"
+                    value={chatInput}
+                    onChange={(e) => setChatInput(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleSendChat(); } }}
+                    placeholder="跟學長報告..."
+                    className="flex-1 rounded-lg px-3 py-2 text-sm text-white border border-amber-800/40 focus:border-amber-600 focus:outline-none transition-colors"
+                    style={{ backgroundColor: "#002030" }}
+                    autoFocus
+                    disabled={chatSending}
+                  />
                   <button
-                    onClick={handleSbarSubmit}
-                    disabled={sbarSubmitting || sbarText.trim().length < 20}
-                    className="flex-1 py-2.5 rounded-lg bg-amber-700 hover:bg-amber-600 disabled:bg-amber-900/40 disabled:text-amber-600 text-white text-sm font-medium transition-colors border border-amber-600 disabled:border-amber-800/30"
+                    onClick={handleSendChat}
+                    disabled={chatSending || !chatInput.trim()}
+                    className="px-3 py-2 rounded-lg bg-amber-700 hover:bg-amber-600 disabled:bg-amber-900/40 disabled:text-amber-600 text-white text-sm font-medium transition-colors"
                   >
-                    {sbarSubmitting ? "報告中..." : "📞 報告完畢"}
+                    送出
+                  </button>
+                </div>
+
+                {/* Hang up button */}
+                <div className="px-3 py-2.5 border-t border-amber-900/30 flex gap-2">
+                  <button
+                    onClick={handleHangUp}
+                    disabled={chatMessages.filter((m) => m.role === "user").length === 0}
+                    className="flex-1 py-2 rounded-lg bg-red-800 hover:bg-red-700 disabled:bg-red-900/30 disabled:text-red-600 text-white text-sm font-medium transition-colors"
+                  >
+                    📞 掛電話（學長 5 分鐘後到）
                   </button>
                   <button
-                    onClick={() => { setShowSbarForm(false); setConfirming(null); }}
-                    className="px-4 py-2.5 rounded-lg text-amber-400 text-sm border border-amber-800/40 hover:border-amber-700/60 transition-colors"
+                    onClick={() => { setShowSbarForm(false); setChatMessages([]); setConfirming(null); }}
+                    className="px-4 py-2 rounded-lg text-amber-400 text-sm border border-amber-800/40 hover:border-amber-700/60 transition-colors"
                   >
                     取消
                   </button>
@@ -397,8 +495,8 @@ export function ConsultModal() {
               </div>
             )}
 
-            {/* Option buttons */}
-            {CONSULT_OPTIONS.map((opt) => {
+            {/* Option buttons (hidden during phone call) */}
+            {!showSbarForm && CONSULT_OPTIONS.map((opt) => {
               if (confirming === opt.type) return null;
 
               // If senior already called and not yet arrived, disable senior button

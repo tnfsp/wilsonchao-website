@@ -26,7 +26,7 @@ import {
   bleedingToTamponadeNurseTriggers,
 } from "@/lib/simulator/engine/nurse-trigger-engine";
 import type { NurseTrigger, NurseTriggerState, NurseEvalContext } from "@/lib/simulator/engine/nurse-trigger-engine";
-import { createPhaseEngine, evaluateTransitions, markTransitionsFired } from "@/lib/simulator/engine/phase-engine";
+import { createPhaseEngine, evaluateTransitions, markTransitionsFired, severityToRhythm } from "@/lib/simulator/engine/phase-engine";
 import type { PhaseTransition, PhaseAction, PhaseEvalState } from "@/lib/simulator/engine/phase-engine";
 import type { LabPanelId } from "@/lib/simulator/engine/lab-engine";
 import type {
@@ -99,8 +99,9 @@ const ACTION_PATTERNS: Record<string, RegExp> = {
   // ── Bleeding-to-Tamponade (Phase 2) ──
   "act-strip-milk-ct-p2": /procedure:.*(?:chest.?tube.?milk|strip|milk)|milk.*ct/i,
   "act-cardiac-pocus-p2": /pocus:cardiac/i,
-  // Phase 2 recall: 只 match「再」叫學長或 recall_senior action（不能被 Phase 1 的 call_senior 滿足）
-  "act-recall-senior": /recall_senior|message:.*再.*叫.*學長|message:.*再.*通知.*學長|message:.*學長.*回來/i,
+  // Phase 2 recall: match recall_senior action 或「再」叫學長
+  // Fallback: 若 Phase 1 未叫過學長，Phase 2 首次 call_senior 也算
+  "act-recall-senior": /recall_senior|message:.*再.*叫.*學長|message:.*再.*通知.*學長|message:.*學長.*回來|call_senior/i,
   "act-volume-challenge-p2": /order:fluid:.*(?:ns|lr|normal.?saline|lactated|albumin)|order:transfusion/i,
   "act-prepare-resternotomy": /senior_call_correct_plan|message:.*(?:tamponade|心包填塞|pericardial|resternotomy|re.?sternotomy|開胸|開刀房|準備.*手術|送手術)|order:procedure:.*resternotomy/i,
   "act-abg-lactate-p2": /order:lab:.*(?:abg|blood.?gas|lactate)/i,
@@ -146,6 +147,21 @@ function formatGameTime(elapsedMinutes: number, startHour = 2): string {
   const ampm = h < 12 ? "AM" : "PM";
   const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h;
   return `${String(h12).padStart(2, "0")}:${String(m).padStart(2, "0")} ${ampm}`;
+}
+
+/** Build rhythm context for severityToRhythm — ischemic risk + prolonged hypotension */
+function buildRhythmContext(state: {
+  scenario: { ischemicRisk?: boolean } | null;
+  mapBelowThresholdSince: number | null;
+  clock: { currentTime: number };
+}): { hasCAD?: boolean; prolongedHypotension?: boolean } {
+  return {
+    hasCAD: state.scenario?.ischemicRisk ?? false,
+    prolongedHypotension: !!(
+      state.mapBelowThresholdSince != null &&
+      state.clock.currentTime - state.mapBelowThresholdSince >= 5
+    ),
+  };
 }
 
 // ============================================================
@@ -196,8 +212,15 @@ export interface ProGameStore {
   // Death
   deathCause: string | null;
 
+  // ROSC grace period — game time until which arrest re-triggering is suppressed
+  roscGraceUntil: number | null;
+
+  // MAP-below-threshold tracker for prolonged hypotension detection (VF branch)
+  mapBelowThresholdSince: number | null;
+
   // Rescue Window (Standard mode delayed death)
   rescueState: RescueState | null;
+  rescueCount: number; // Track rescue attempts to prevent infinite rescue loops
 
   // Phase Transition Engine
   phaseTransitions: PhaseTransition[];
@@ -337,7 +360,8 @@ export interface ProGameStore {
   milkChestTube: () => void;
 
   // ---- Hint System ----
-  /** 使用提示（最多 3 次），找到第一個未完成的 critical action 並顯示 hint */
+  /** 使用提示（最多 3 次），AI 生成 contextual hint */
+  hintLoading: boolean;
   useHint: () => void;
 
   // ---- Defibrillator (ACLS) ----
@@ -352,6 +376,9 @@ export interface ProGameStore {
 
   /** 執行電擊 */
   deliverShock: () => ShockResult;
+
+  /** ROSC 通知 — cap severity 並設定 grace period 防止 immediate re-arrest */
+  notifyRosc: () => void;
 }
 
 // ============================================================
@@ -447,12 +474,16 @@ const initialState = {
   timeline: [] as TimelineEntry[],
   playerActions: [] as TrackedAction[],
   hintsUsed: 0,
+  hintLoading: false,
   pauseThinkUsed: false,
   sbarReport: null as Record<string, string> | null,
   sbarPhase1: null as Record<string, string> | null,
   score: null as GameScore | null,
   deathCause: null as string | null,
+  roscGraceUntil: null as number | null,
+  mapBelowThresholdSince: null as number | null,
   rescueState: null as RescueState | null,
+  rescueCount: 0,
   phaseTransitions: [] as PhaseTransition[],
   nurseTriggers: [] as NurseTrigger[],
   nurseTriggerState: createNurseTriggerState(),
@@ -848,10 +879,15 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
         timeline: [],
         playerActions: [],
         hintsUsed: 0,
+        hintLoading: false,
         pauseThinkUsed: false,
         sbarReport: null,
         score: null,
         deathCause: null,
+        roscGraceUntil: null,
+        mapBelowThresholdSince: null,
+        rescueState: null,
+        rescueCount: 0,
         activeModal: null,
         _tickPatientFn: null,
         defibrillator: initialDefibrillatorState,
@@ -1400,6 +1436,11 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
                         (merged as unknown as Record<string, number>)[key] += delta;
                       }
                     }
+                    // Clamp BP/MAP to prevent negative values
+                    if (typeof merged.sbp === "number") merged.sbp = Math.max(0, merged.sbp);
+                    if (typeof merged.dbp === "number") merged.dbp = Math.max(0, merged.dbp);
+                    if (typeof merged.map === "number") merged.map = Math.max(0, merged.map);
+                    if (typeof merged.hr === "number") merged.hr = Math.max(0, merged.hr);
                     return { patient: { ...s.patient, vitals: merged } };
                   });
                   break;
@@ -1725,12 +1766,16 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     set((state) => {
       if (!state.patient) return state;
       const newVitals = { ...state.patient.vitals, ...changes };
-      // 更新 temperature 到 patient 頂層
+      // Track MAP < 40 for prolonged hypotension (VF risk)
+      const effectiveMap = changes.map ?? state.patient.vitals.map;
+      const newMapTracker = effectiveMap < 40
+        ? (state.mapBelowThresholdSince ?? state.clock.currentTime)
+        : null;
       const newPatient = {
         ...state.patient,
         vitals: newVitals,
       };
-      return { patient: newPatient };
+      return { patient: newPatient, mapBelowThresholdSince: newMapTracker };
     });
   },
 
@@ -1962,10 +2007,15 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       return; // ACLS is already handling this
     }
 
+    // Guard: ROSC grace period — prevent immediate re-arrest after ROSC
+    if (state.roscGraceUntil && state.clock.currentTime < state.roscGraceUntil) {
+      return;
+    }
+
     // Determine arrest rhythm from severity via severityToRhythm
-    const { severityToRhythm } = require("./engine/phase-engine");
     const severity = state.patient.severity ?? 0;
-    let arrestRhythm = severityToRhythm(severity);
+    const rhythmCtx = buildRhythmContext(state);
+    let arrestRhythm = severityToRhythm(severity, rhythmCtx);
     // If severityToRhythm returns a non-arrest rhythm (e.g. severity < 80),
     // force PEA as the default arrest rhythm
     if (!arrestRhythms.includes(arrestRhythm)) {
@@ -2016,7 +2066,9 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     if (state.phase !== "playing") return;
 
     // Standard mode: intercept death → activate rescue window instead
-    if (state.difficulty !== "pro" && state.difficultyConfig.rescueWindowSeconds && !state.rescueState) {
+    // Limit to 2 rescue attempts to prevent infinite rescue loops
+    const maxRescues = 2;
+    if (state.difficulty !== "pro" && state.difficultyConfig.rescueWindowSeconds && !state.rescueState && state.rescueCount < maxRescues) {
       const rescueState: RescueState = {
         active: true,
         startedAt: state.clock.currentTime,
@@ -2123,6 +2175,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
 
         set((s) => ({
           rescueState: null,
+          rescueCount: s.rescueCount + 1,
           patient: {
             ...currentPatient,
             vitals: stabilizedVitals,
@@ -2133,6 +2186,7 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
       } else {
         set((s) => ({
           rescueState: null,
+          rescueCount: s.rescueCount + 1,
           timeline: [...s.timeline, stabilizeEntry],
         }));
       }
@@ -2204,9 +2258,17 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     set((state) => {
       if (!state.patient) return state;
       // I3: Auto-update rhythm based on severity (severity→rhythm→arrest chain)
-      const { severityToRhythm } = require("./engine/phase-engine");
-      const newRhythm = severityToRhythm(severity);
+      const rhythmCtx = buildRhythmContext(state);
+      const newRhythm = severityToRhythm(severity, rhythmCtx);
+
+      // Track MAP < 40 duration for prolonged hypotension detection
+      const currentMap = state.patient.vitals.map;
+      const newMapTracker = currentMap < 40
+        ? (state.mapBelowThresholdSince ?? state.clock.currentTime)
+        : null;
+
       return {
+        mapBelowThresholdSince: newMapTracker,
         patient: {
           ...state.patient,
           severity,
@@ -2428,13 +2490,13 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
   },
 
   // ----------------------------------------------------------
-  // useHint — 使用提示（最多 3 次）
+  // useHint — AI-powered contextual hint (最多 3 次)
   // ----------------------------------------------------------
   useHint: () => {
-    const { phase, hintsUsed, scenario, playerActions, clock } = get();
-    if (phase !== "playing" || hintsUsed >= get().difficultyConfig.hintLimit || !scenario) return;
+    const { phase, hintsUsed, scenario, playerActions, clock, hintLoading } = get();
+    if (phase !== "playing" || hintsUsed >= get().difficultyConfig.hintLimit || !scenario || hintLoading) return;
 
-    // 用 scoring 邏輯找第一個未完成的 critical action（使用 module-level ACTION_PATTERNS）
+    // Find first unmet critical action
     const unmetAction = scenario.expectedActions.find((expected) => {
       if (!expected.critical) return false;
       const pattern = ACTION_PATTERNS[expected.id];
@@ -2446,19 +2508,96 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
 
     if (!unmetAction) return;
 
-    const hintEntry: Omit<TimelineEntry, "id"> = {
-      gameTime: clock.currentTime,
-      type: "hint",
-      content: `💡 提示：${unmetAction.hint}`,
-      sender: "system",
-      isImportant: true,
+    // Immediately increment hintsUsed and set loading to prevent double-click
+    set({ hintLoading: true, hintsUsed: get().hintsUsed + 1 });
+
+    // Build request body
+    const state = get();
+    const patient = state.patient;
+    const v = patient?.vitals;
+    const labOrders = state.placedOrders.filter(
+      (o) => o.definition.category === "lab" && o.status === "completed" && o.result
+    );
+    const labSummaryParts: string[] = [];
+    for (const order of labOrders) {
+      const results = order.result as Record<string, { value: number | string; flag?: string; unit?: string }>;
+      for (const [k, v] of Object.entries(results)) {
+        if (v.flag) labSummaryParts.push(`${k}: ${v.value}${v.unit ? " " + v.unit : ""} (${v.flag})`);
+      }
+    }
+
+    const allExpectedActions = scenario.expectedActions.map((ea) => {
+      const pattern = ACTION_PATTERNS[ea.id];
+      const met = pattern
+        ? playerActions.some((pa) => pattern.test(pa.action))
+        : playerActions.some((pa) => pa.action.toLowerCase().includes(ea.action.toLowerCase()));
+      return { id: ea.id, description: ea.description, met, critical: ea.critical };
+    });
+
+    const recentTimeline = state.timeline.slice(-5).map((t) => `[${t.type}] ${t.content}`);
+
+    const body = {
+      unmetAction: {
+        id: unmetAction.id,
+        description: unmetAction.description,
+        hint: unmetAction.hint,
+        rationale: unmetAction.rationale,
+        howTo: unmetAction.howTo,
+      },
+      gameState: {
+        vitals: v ? { hr: v.hr, sbp: v.sbp, dbp: v.dbp, spo2: v.spo2, rr: v.rr, temperature: v.temperature } : {},
+        chestTube: patient?.chestTube ? { currentRate: patient.chestTube.currentRate, totalOutput: patient.chestTube.totalOutput, color: patient.chestTube.color } : undefined,
+        elapsedMinutes: clock.currentTime,
+        pathology: patient?.pathology ?? "unknown",
+      },
+      playerActions: playerActions.slice(-10).map((pa) => pa.action),
+      recentTimeline,
+      labSummary: labSummaryParts.join(", ") || "No labs yet",
+      scenarioInfo: {
+        correctDiagnosis: scenario.debrief?.correctDiagnosis ?? "",
+        patientSummary: `${scenario.patient.age}y ${scenario.patient.sex}, ${scenario.patient.surgery}, POD${scenario.patient.postOpDay}`,
+      },
+      allExpectedActions,
     };
 
-    set((state) => ({
-      hintsUsed: state.hintsUsed + 1,
-      timeline: [...state.timeline, { id: nextId("tl"), ...hintEntry }],
-      playerActions: [...state.playerActions, { action: `hint:${unmetAction.id}`, gameTime: clock.currentTime }],
-    }));
+    // Async fetch — fire-and-forget pattern (store action stays sync)
+    fetch("/api/simulator/hint", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(body),
+      signal: AbortSignal.timeout(15000),
+    })
+      .then((res) => res.json())
+      .then((data) => {
+        const hintText = data.hint || unmetAction.hint;
+        const hintEntry: Omit<TimelineEntry, "id"> = {
+          gameTime: clock.currentTime,
+          type: "hint",
+          content: `💡 提示：${hintText}`,
+          sender: "system",
+          isImportant: true,
+        };
+        set((s) => ({
+          hintLoading: false,
+          timeline: [...s.timeline, { id: nextId("tl"), ...hintEntry }],
+          playerActions: [...s.playerActions, { action: `hint:${unmetAction.id}`, gameTime: clock.currentTime }],
+        }));
+      })
+      .catch(() => {
+        // Fallback to static hint on any failure
+        const hintEntry: Omit<TimelineEntry, "id"> = {
+          gameTime: clock.currentTime,
+          type: "hint",
+          content: `💡 提示：${unmetAction.hint}`,
+          sender: "system",
+          isImportant: true,
+        };
+        set((s) => ({
+          hintLoading: false,
+          timeline: [...s.timeline, { id: nextId("tl"), ...hintEntry }],
+          playerActions: [...s.playerActions, { action: `hint:${unmetAction.id}`, gameTime: clock.currentTime }],
+        }));
+      });
   },
 
   // ----------------------------------------------------------
@@ -2610,5 +2749,38 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
     get().actionAdvance(1);
 
     return result;
+  },
+
+  // ----------------------------------------------------------
+  // notifyRosc — cap severity + set grace period after ROSC
+  // Prevents immediate re-arrest loop (severity still high → next tick re-triggers arrest)
+  // ----------------------------------------------------------
+  notifyRosc: () => {
+    const state = get();
+    if (!state.patient) return;
+
+    // Cap severity to 70 (below arrest threshold of 80)
+    const cappedSeverity = Math.min(state.patient.severity, 70);
+    // Grace period: 2 minutes game time — no re-arrest during post-ROSC stabilization
+    const graceUntil = state.clock.currentTime + 2;
+
+    set((s) => ({
+      roscGraceUntil: graceUntil,
+      patient: s.patient
+        ? {
+            ...s.patient,
+            severity: cappedSeverity,
+            vitals: {
+              ...s.patient.vitals,
+              // Restore minimal hemodynamics post-ROSC
+              hr: s.patient.vitals.hr === 0 ? 110 : s.patient.vitals.hr,
+              sbp: s.patient.vitals.sbp === 0 ? 75 : s.patient.vitals.sbp,
+              dbp: s.patient.vitals.dbp === 0 ? 45 : s.patient.vitals.dbp,
+              map: s.patient.vitals.map === 0 ? 55 : s.patient.vitals.map,
+              rhythmStrip: "sinus_tach",
+            },
+          }
+        : s.patient,
+    }));
   },
 }));

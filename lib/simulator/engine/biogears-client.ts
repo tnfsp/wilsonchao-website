@@ -703,6 +703,9 @@ function mapBioGearsRhythm(bgRhythm?: string): RhythmType {
     "StableVentricularTachycardia": "vt_pulse",
     "UnstableVentricularTachycardia": "vt_pulseless",
   };
+  if (bgRhythm && !map[bgRhythm]) {
+    console.warn(`[BioGears] Unknown rhythm: "${bgRhythm}", defaulting to NSR`);
+  }
   return map[bgRhythm ?? ""] ?? "nsr";
 }
 

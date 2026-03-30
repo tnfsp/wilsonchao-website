@@ -292,13 +292,22 @@ function useGameTick() {
   const tickPatientFormula = useCallback((minutes = 1) => {
     const state = useProGameStore.getState();
     if (!state.patient || state.phase !== "playing") return;
-    
+
+    // Guard: skip vital computation during cardiac arrest — ACLS modal handles vitals
+    const arrestRhythmsBefore = ["vf", "vt_pulseless", "pea", "asystole"];
+    if (
+      state.patient.vitals.hr === 0 ||
+      arrestRhythmsBefore.includes(state.patient.vitals.rhythmStrip)
+    ) {
+      return;
+    }
+
     const newPatient = updatePatientState(state.patient, {
       minutesPassed: minutes,
       currentGameMinutes: state.clock.currentTime + minutes,
       ventilator: state.ventilator,
     });
-    
+
     useProGameStore.setState({ patient: newPatient });
 
     // Cardiac arrest check — triggers ACLS flow instead of direct death.
@@ -314,7 +323,11 @@ function useGameTick() {
     const alreadyInArrest =
       vitals.hr === 0 || arrestRhythms.includes(vitals.rhythmStrip);
 
-    if (!alreadyInArrest) {
+    // Respect ROSC grace period
+    const roscGrace = useProGameStore.getState().roscGraceUntil;
+    const isInRoscGrace = roscGrace && useProGameStore.getState().clock.currentTime < roscGrace;
+
+    if (!alreadyInArrest && !isInRoscGrace) {
       // Thresholds account for +/-5% noise in patient-engine vitals
       if (
         severity >= 95 ||

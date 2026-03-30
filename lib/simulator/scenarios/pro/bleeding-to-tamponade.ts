@@ -901,7 +901,7 @@ const guidelineBundles: GuidelineBundle[] = [
 
 const phaseTransitions: Omit<PhaseTransition, "firedAt">[] = [
   // ── TRANSITION: surgical_bleeding → cardiac_tamponade ──
-  // Triggers when BioGears shows total blood loss > 800 mL
+  // Primary trigger: BioGears blood volume drops below 4700 mL (800 mL loss)
   // Actions: stop hemorrhage, start pericardial effusion, change pathology
   {
     id: "pt-bleeding-to-tamponade",
@@ -910,11 +910,28 @@ const phaseTransitions: Omit<PhaseTransition, "firedAt">[] = [
       // 5500 baseline - 800 = 4700. When blood volume drops below this, transition fires.
     ],
     actions: [
-      // Stop hemorrhage in BioGears
       { type: "send_biogears_command", payload: { cmd: "stop_hemorrhage", compartment: "Aorta" } },
-      // Start pericardial effusion (2.0 mL/min accumulation)
       { type: "send_biogears_command", payload: { cmd: "pericardial_effusion", rate_mL_per_min: 2.0 } },
-      // Notify store of pathology change via trigger event
+      { type: "trigger_event", payload: { event: "pathology_change:cardiac_tamponade" } },
+    ],
+  },
+  // ── FALLBACK: time-based transition when BioGears is offline ──
+  // If BioGears is disconnected, bloodVolume never updates → primary transition never fires.
+  // This ensures the scenario still progresses at ~12 min (generous estimate for hemorrhage + resuscitation).
+  // Guard: the evaluateTransitions loop only fires transitions with firedAt == null,
+  // and markTransitionsFired is called for both when primary fires. To prevent double-fire,
+  // we add a severity_above guard (severity resets to 25 on pathology change).
+  {
+    id: "pt-bleeding-to-tamponade-fallback",
+    conditions: [
+      { type: "time_elapsed", value: 12 },
+      // severity > 50 = patient still in bleeding phase and deteriorating
+      // (after pathology_change, severity resets to 25, so this won't match)
+      { type: "severity_above", value: 50 },
+    ],
+    actions: [
+      { type: "send_biogears_command", payload: { cmd: "stop_hemorrhage", compartment: "Aorta" } },
+      { type: "send_biogears_command", payload: { cmd: "pericardial_effusion", rate_mL_per_min: 2.0 } },
       { type: "trigger_event", payload: { event: "pathology_change:cardiac_tamponade" } },
     ],
   },
@@ -991,6 +1008,7 @@ export const bleedingToTamponade: SimScenario = {
   },
 
   pathology: "surgical_bleeding",
+  ischemicRisk: true, // CABG x3 = CAD → severity 60-89 may produce VF
   startHour: 2, // 02:00 AM
 
   nurseProfile: {
