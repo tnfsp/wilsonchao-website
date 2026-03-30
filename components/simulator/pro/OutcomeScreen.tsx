@@ -36,6 +36,8 @@ function selectOutcome(
   outcomes: ScenarioOutcome[] | undefined,
   patientDied: boolean,
   calledSenior: boolean,
+  hadArrest: boolean,
+  recalledSenior: boolean,
 ): ScenarioOutcome {
   const pool = outcomes && outcomes.length > 0 ? outcomes : DEFAULT_OUTCOMES;
 
@@ -43,7 +45,14 @@ function selectOutcome(
     return pool.find((o) => o.condition === "died") ?? DEFAULT_OUTCOMES[2];
   }
 
-  // 核心判定：有叫學長 = survived_good（學長是 definitive treatment 的關鍵）
+  // Arrest → survived via bedside resternotomy
+  if (hadArrest && calledSenior) {
+    return pool.find((o) => o.condition === "survived_arrest_rescue")
+      ?? pool.find((o) => o.condition === "survived_poor")
+      ?? DEFAULT_OUTCOMES[1];
+  }
+
+  // 核心判定：有叫學長且情況得到控制 = survived_good
   if (calledSenior) {
     return pool.find((o) => o.condition === "survived_good") ?? DEFAULT_OUTCOMES[0];
   }
@@ -82,6 +91,7 @@ export default function OutcomeScreen() {
   const deathCause = useProGameStore((s) => s.deathCause);
   const playerActions = useProGameStore((s) => s.playerActions);
   const endGame = useProGameStore((s) => s.endGame);
+  const roscGraceUntil = useProGameStore((s) => s.roscGraceUntil);
 
   // 判定是否有叫學長（outcome 核心條件）
   const calledSenior = playerActions.some((pa) => {
@@ -89,8 +99,10 @@ export default function OutcomeScreen() {
     return a.includes("consult") || a.includes("叫學長") || a.includes("call_senior") || a.includes("通知學長") || a.includes("通知vs");
   });
 
+  const recalledSenior = playerActions.some((pa) => pa.action === "recall_senior");
+  const hadArrest = roscGraceUntil !== null; // arrest + ROSC happened
   const patientDied = !!deathCause;
-  const outcome = selectOutcome(scenario?.outcomes, patientDied, calledSenior);
+  const outcome = selectOutcome(scenario?.outcomes, patientDied, calledSenior, hadArrest, recalledSenior);
 
   const { displayed, done } = useTypewriter(outcome.narrative, 25);
 
@@ -111,7 +123,7 @@ export default function OutcomeScreen() {
         {/* Title */}
         <h1
           className={`text-3xl font-bold tracking-tight ${
-            patientDied ? "text-red-400" : calledSenior ? "text-emerald-400" : "text-amber-400"
+            patientDied ? "text-red-400" : hadArrest ? "text-amber-400" : calledSenior ? "text-emerald-400" : "text-amber-400"
           }`}
         >
           {outcome.title}

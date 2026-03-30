@@ -242,6 +242,32 @@ function evaluateEscalationTiming(
   return "late";
 }
 
+/** Evaluate Phase 2 recall timing (B2T scenario: re-calling senior after situation changes). */
+function evaluateRecallTiming(
+  playerActions: PlayerAction[],
+  scenario: SimScenario,
+): EscalationTiming {
+  // Only applicable if scenario has recall action
+  const recallExpected = scenario.expectedActions.find(
+    (ea) => ea.id === "act-recall-senior",
+  );
+  if (!recallExpected) return "appropriate"; // no recall expected → neutral
+
+  const recallAction = playerActions.find(
+    (pa) =>
+      pa.orderId === "recall_senior" ||
+      pa.orderName.toLowerCase().includes("recall") ||
+      pa.orderName.toLowerCase().includes("再叫") ||
+      pa.orderName.toLowerCase().includes("叫回來"),
+  );
+
+  if (!recallAction) return "never";
+
+  const deadline = recallExpected.deadline ?? 28;
+  if (recallAction.placedAt <= deadline) return "appropriate";
+  return "late";
+}
+
 // ============================================================
 // Helpers — Lethal Triad (GRADED: 1/3=3, 2/3=7, 3/3=10)
 // ============================================================
@@ -557,6 +583,7 @@ function computeNumericScoreV2(
   correctDiagnosis: boolean,
   timeToFirstAction: number,
   diagnosticWorkupScore: number,
+  recallTiming: EscalationTiming = "appropriate",
 ): { total: number; breakdown: ScoreBreakdown } {
   // --- Critical actions (30 pts) ---
   const totalCritical = criticalActions.filter((ca) => ca.critical).length;
@@ -580,14 +607,26 @@ function computeNumericScoreV2(
     (sbarScore.anticipatory ? 2 : 0),
   );
 
-  // --- Escalation (15 pts) ---
-  const escalationPoints: Record<EscalationTiming, number> = {
-    appropriate: 15,
-    early: 8,
-    late: 3,
+  // --- Escalation (15 pts total: Phase 1 call 8 pts + Phase 2 recall 7 pts) ---
+  const hasRecallAction = recallTiming !== "appropriate" || criticalActions.some(
+    (ca) => ca.id === "act-recall-senior"
+  );
+  const phase1Max = hasRecallAction ? 8 : 15; // no recall expected → all 15 pts to Phase 1
+  const phase2Max = hasRecallAction ? 7 : 0;
+
+  const escalationPointsP1: Record<EscalationTiming, number> = {
+    appropriate: phase1Max,
+    early: Math.round(phase1Max * 0.6),
+    late: Math.round(phase1Max * 0.2),
     never: 0,
   };
-  const escalationEarned = escalationPoints[escalationTiming];
+  const recallPointsP2: Record<EscalationTiming, number> = {
+    appropriate: phase2Max,
+    early: phase2Max,
+    late: Math.round(phase2Max * 0.4),
+    never: 0,
+  };
+  const escalationEarned = escalationPointsP1[escalationTiming] + recallPointsP2[recallTiming];
 
   // --- Lethal triad (10 pts, graded) ---
   const lethalTriadEarned = getLethalTriadScore(lethalTriadCount);
@@ -679,6 +718,8 @@ export function calculateScore(
     scenario,
   );
 
+  const recallTiming = evaluateRecallTiming(playerActions, scenario);
+
   const lethalTriadCount = evaluateLethalTriadCount(playerActions);
   const lethalTriadManaged = lethalTriadCount >= 2;
 
@@ -714,6 +755,7 @@ export function calculateScore(
     correctDiagnosis,
     timeToFirstAction,
     diagnosticWorkupScore,
+    recallTiming,
   );
 
   const overall: GameScore["overall"] =

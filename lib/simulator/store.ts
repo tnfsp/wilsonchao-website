@@ -66,7 +66,7 @@ import type {
 // Shared ACTION_PATTERNS — used by both scoring and hint system
 // ============================================================
 
-const ACTION_PATTERNS: Record<string, RegExp> = {
+export const ACTION_PATTERNS: Record<string, RegExp> = {
   // ── Sepsis / General scenarios ──
   "act-blood-culture": /order:lab:.*blood.?culture|lab:.*blood.?culture/i,
   "act-antibiotics": /order:medication:.*(?:vancomycin|piptazo|ceftriaxone|pip.*tazo|meropenem|cefepime)/i,
@@ -104,7 +104,9 @@ const ACTION_PATTERNS: Record<string, RegExp> = {
   // Fallback: 若 Phase 1 未叫過學長，Phase 2 首次 call_senior 也算
   "act-recall-senior": /recall_senior|message:.*再.*叫.*學長|message:.*再.*通知.*學長|message:.*學長.*回來|call_senior/i,
   "act-volume-challenge-p2": /order:fluid:.*(?:ns|lr|normal.?saline|lactated|albumin)|order:transfusion/i,
-  "act-prepare-resternotomy": /senior_call_correct_plan|message:.*(?:tamponade|心包填塞|pericardial|resternotomy|re.?sternotomy|開胸|開刀房|準備.*手術|送手術)|order:procedure:.*resternotomy/i,
+  "act-notify-anesthesia": /message:.*(?:麻醉|anesthesia|anesthesiology|麻科)|order:consult:.*(?:麻醉|anesthesia)/i,
+  "act-prepare-sternal-tray": /message:.*(?:開胸包|開胸器械|sternal.*(?:tray|wire.*cutter)|retractor|器械包)|order:procedure:.*(?:sternal.*tray|開胸包)/i,
+  "act-prepare-resternotomy": /senior_call_correct_plan|message:.*(?:tamponade|心包填塞|pericardial|resternotomy|re.?sternotomy|開刀房|準備.*手術|送手術|通知.*OR|notify.*OR)|order:procedure:.*resternotomy/i,
   "act-abg-lactate-p2": /order:lab:.*(?:abg|blood.?gas|lactate)/i,
   "act-vent-fio2": /vent:.*fio2=/i,
 
@@ -680,6 +682,7 @@ function computeBasicScore(
     : scenario.pathology === patient?.pathology;
 
   // 5. Escalation timing (now using actual gameTime from TrackedAction)
+  // Phase 1: first call_senior
   const escalationAction = playerActions.find((pa) =>
     pa.action.includes("叫學長") || pa.action.includes("consult") || pa.action.includes("通知VS") || pa.action.includes("call_senior") || pa.action.includes("call_vs")
   );
@@ -689,6 +692,17 @@ function computeBasicScore(
     else if (escalationAction.gameTime <= 20) escalationTiming = "appropriate";
     else escalationTiming = "late";
   }
+  // Phase 2: recall_senior (if applicable) — with timing
+  const recallAction = playerActions.find((pa) => pa.action === "recall_senior");
+  const hasRecallExpected = scenario.expectedActions.some((ea) => ea.id === "act-recall-senior");
+  const recallDeadline = scenario.expectedActions.find((ea) => ea.id === "act-recall-senior")?.deadline ?? 28;
+  let recallPoints = 0; // out of 7
+  if (!hasRecallExpected) {
+    recallPoints = 0; // no recall expected → 0 (all 15 go to Phase 1)
+  } else if (recallAction) {
+    recallPoints = recallAction.gameTime <= recallDeadline ? 7 : 3; // on time: 7, late: 3
+  }
+  // else: never recalled → 0
 
   // 6. Lethal triad managed
   const lethalTriadManaged = patient?.lethalTriad.count === 0;
@@ -722,10 +736,19 @@ function computeBasicScore(
   totalScore += Math.round((sbar.completeness / 100) * 15);
   totalScore += sbar.quantitative ? 5 : 0;
   totalScore += sbar.anticipatory ? 5 : 0;
-  // Escalation (15 pts)
-  if (escalationTiming === "appropriate") totalScore += 15;
-  else if (escalationTiming === "early") totalScore += 10;
-  else if (escalationTiming === "late") totalScore += 5;
+  // Escalation (15 pts: Phase 1 call 8 pts + Phase 2 recall 7 pts if applicable)
+  if (hasRecallExpected) {
+    // Split scoring — aligned with score-engine's computeNumericScoreV2
+    if (escalationTiming === "appropriate") totalScore += 8;
+    else if (escalationTiming === "early") totalScore += 5;
+    else if (escalationTiming === "late") totalScore += 2;
+    totalScore += recallPoints;
+  } else {
+    // All 15 pts to Phase 1
+    if (escalationTiming === "appropriate") totalScore += 15;
+    else if (escalationTiming === "early") totalScore += 9; // aligned: Math.round(15 * 0.6)
+    else if (escalationTiming === "late") totalScore += 5;
+  }
   // Lethal triad (10 pts)
   if (lethalTriadManaged) totalScore += 10;
   // Deductions

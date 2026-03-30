@@ -735,7 +735,7 @@ export interface WhatIfBranch {
 
 export interface ScenarioOutcome {
   /** Condition key: "survived_good" | "survived_poor" | "died" */
-  condition: "survived_good" | "survived_poor" | "died";
+  condition: "survived_good" | "survived_poor" | "survived_arrest_rescue" | "died";
   /** Title shown on outcome screen */
   title: string;
   /** Narrative description (2-4 sentences, what happened after handoff) */

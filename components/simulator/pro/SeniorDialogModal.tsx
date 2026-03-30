@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect, useCallback } from "react";
-import { useProGameStore } from "@/lib/simulator/store";
+import { useProGameStore, ACTION_PATTERNS } from "@/lib/simulator/store";
 
 /**
  * SeniorDialogModal — AI-driven 學長到場對話
@@ -231,19 +231,42 @@ export function SeniorDialogModal() {
       // Senior leaves to prep OR
       useProGameStore.getState().setSeniorPresence("left_for_or");
 
+      // Dynamic OR prep time: 30 min base, -5 for each preparation action already done
+      const actions = useProGameStore.getState().playerActions;
+      let orPrepMinutes = 30;
+      const anesthesiaPattern = ACTION_PATTERNS["act-notify-anesthesia"];
+      const sternalTrayPattern = ACTION_PATTERNS["act-prepare-sternal-tray"];
+      const notifiedAnesthesia = anesthesiaPattern && actions.some((a) => anesthesiaPattern.test(a.action));
+      const preparedSternalTray = sternalTrayPattern && actions.some((a) => sternalTrayPattern.test(a.action));
+      if (notifiedAnesthesia) orPrepMinutes -= 5;
+      if (preparedSternalTray) orPrepMinutes -= 5;
+      orPrepMinutes = Math.max(20, orPrepMinutes); // minimum 20 min
+
+      const orReadyMsg = notifiedAnesthesia
+        ? "學長回來了：「OR ready，anesthesia 在等了。搬病人，走。」"
+        : "學長回來了：「OR ready 了。搬病人，走。」";
+
       addPendingEvent({
         id: `ev_or_ready_${Date.now()}`,
-        triggerAt: clock.currentTime + 15, // 15 game-min OR prep
+        triggerAt: clock.currentTime + orPrepMinutes,
         type: "or_ready",
-        data: { message: "學長回來了：「OR ready，anesthesia 在等了。搬病人，走。」" },
+        data: { message: orReadyMsg },
         fired: false,
         priority: 0,
       });
 
+      // Timeline feedback — acknowledge player's preparation
+      const prepDetails: string[] = [];
+      if (notifiedAnesthesia) prepDetails.push("麻醉科已 standby");
+      if (preparedSternalTray) prepDetails.push("開胸包已備好");
+      const prepNote = prepDetails.length > 0
+        ? `（${prepDetails.join("、")}，準備時間縮短）`
+        : "";
+
       addTimelineEntry({
         gameTime: clock.currentTime,
         type: "system_event",
-        content: "🏥 學長離開去準備 OR，預估 15 分鐘。繼續 resuscitate。",
+        content: `🏥 學長離開去準備 OR，預估 ${orPrepMinutes} 分鐘。${prepNote}繼續 resuscitate。`,
         sender: "system",
         isImportant: true,
       });

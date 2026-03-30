@@ -47,8 +47,7 @@ export function ConsultModal() {
   const openModal = useProGameStore((s) => s.openModal);
   const patient = useProGameStore((s) => s.patient);
   const pendingEvents = useProGameStore((s) => s.pendingEvents);
-  const firedEvents = useProGameStore((s) => s.firedEvents);
-  const playerActions = useProGameStore((s) => s.playerActions);
+  // firedEvents + playerActions removed — seniorPresence from store is the single source of truth
 
   const [selected, setSelected] = useState<ConsultType | null>(null);
   const [consultReason, setConsultReason] = useState("");
@@ -61,8 +60,6 @@ export function ConsultModal() {
   const [sbarText, setSbarText] = useState("");
   const [sbarSubmitting, setSbarSubmitting] = useState(false);
   const [sbarFeedback, setSbarFeedback] = useState<string | null>(null);
-  const sbarPhase1 = useProGameStore((s) => s.sbarPhase1);
-
   // AI chat state for senior phone call
   const [chatMessages, setChatMessages] = useState<Array<{ role: "user" | "assistant"; content: string }>>([]);
   const [chatInput, setChatInput] = useState("");
@@ -85,29 +82,18 @@ export function ConsultModal() {
     }
   }, [activeModal]);
 
-  // ── Derived: senior status ─────────────────────────────────
+  // ── Derived: senior status (single source of truth: store) ──
 
-  const seniorStatus = useMemo(() => {
-    // Check if senior has been called
-    const hasCalled = playerActions.some(
-      (pa) => pa.action === "call_senior" || pa.action === "recall_senior"
-    );
-    if (!hasCalled) return "not_called" as const;
+  const seniorPresence = useProGameStore((s) => s.seniorPresence);
 
-    // Check if senior_arrives event has fired
-    const seniorArrivesEvent = [...firedEvents, ...pendingEvents].find(
-      (ev) => ev.type === "senior_arrives" && (ev.data as Record<string, unknown>)?.type === "senior"
-    );
-
-    if (seniorArrivesEvent?.fired) return "arrived" as const;
-
-    // Senior called but not yet arrived — compute remaining time
+  // Remaining time for en_route / rushing_back display
+  const seniorRemainingMin = useMemo(() => {
+    if (seniorPresence !== "en_route" && seniorPresence !== "rushing_back") return 0;
     const pending = pendingEvents.find(
       (ev) => ev.type === "senior_arrives" && !ev.fired && (ev.data as Record<string, unknown>)?.type === "senior"
     );
-    const remainingMin = pending ? Math.max(0, Math.ceil(pending.triggerAt - clock.currentTime)) : 0;
-    return { status: "en_route" as const, remainingMin };
-  }, [playerActions, pendingEvents, firedEvents, clock.currentTime]);
+    return pending ? Math.max(0, Math.ceil(pending.triggerAt - clock.currentTime)) : 0;
+  }, [seniorPresence, pendingEvents, clock.currentTime]);
 
   // Scroll chat to bottom when messages change (must be before early return)
   useEffect(() => {
@@ -126,11 +112,13 @@ export function ConsultModal() {
   const isMultiPhase = !!scenario.phasedFindings;
   const isPhase2 = isMultiPhase && patient?.pathology !== scenario.pathology;
 
-  const seniorAlreadyCalled = seniorStatus !== "not_called";
-  const seniorHasArrived = seniorStatus === "arrived";
-  // Recall = senior has arrived AND we're in Phase 2 (pathology changed)
-  // In Phase 1 of multi-phase scenarios, senior arriving is normal — not a "recall"
-  const isRecallContext = seniorHasArrived && isPhase2;
+  const seniorAlreadyCalled = seniorPresence !== "absent";
+  const seniorEnRoute = seniorPresence === "en_route";
+  const seniorAtBedside = seniorPresence === "present";
+  const seniorLeftForOR = seniorPresence === "left_for_or";
+  const seniorRushingBack = seniorPresence === "rushing_back";
+  // Recall context: senior has left for OR and situation changed, OR senior is at bedside but phase changed
+  const isRecallContext = (seniorLeftForOR && isPhase2) || (seniorAtBedside && isPhase2);
 
   // ── Handlers ────────────────────────────────────────────────
 
@@ -378,24 +366,43 @@ export function ConsultModal() {
           <div className="flex-1 overflow-y-auto p-5 flex flex-col gap-3">
 
             {/* ── Senior status banner ── */}
-            {seniorAlreadyCalled && !seniorHasArrived && typeof seniorStatus === "object" && (
+            {/* Senior en_route */}
+            {seniorEnRoute && (
               <div className="rounded-lg border border-amber-700/40 px-4 py-3 mb-1" style={{ backgroundColor: "#1a1000" }}>
                 <div className="flex items-center gap-2">
                   <span className="text-base animate-pulse">{"\ud83d\udeb6"}</span>
                   <p className="text-amber-300 text-sm font-medium">
-                    {"\u5b78\u9577\u5df2\u806f\u7e6b\uff0c"}
-                    {seniorStatus.remainingMin > 0
-                      ? `\u7d04 ${seniorStatus.remainingMin} \u5206\u9418\u5f8c\u5230\u5834`
-                      : "\u5373\u5c07\u5230\u5834"}
+                    學長已聯繫，{seniorRemainingMin > 0 ? `約 ${seniorRemainingMin} 分鐘後到場` : "即將到場"}
                   </p>
                 </div>
               </div>
             )}
-            {seniorHasArrived && (
+            {/* Senior rushing back */}
+            {seniorRushingBack && (
+              <div className="rounded-lg border border-red-700/40 px-4 py-3 mb-1" style={{ backgroundColor: "#1a0000" }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-base animate-pulse">🏃</span>
+                  <p className="text-red-300 text-sm font-medium">
+                    學長正在趕回來！{seniorRemainingMin > 0 ? `約 ${seniorRemainingMin} 分鐘` : "即將到場"}
+                  </p>
+                </div>
+              </div>
+            )}
+            {/* Senior at bedside */}
+            {seniorAtBedside && (
               <div className="rounded-lg border border-green-700/40 px-4 py-3 mb-1" style={{ backgroundColor: "#001a10" }}>
                 <div className="flex items-center gap-2">
-                  <span className="text-base">{"\u2705"}</span>
-                  <p className="text-green-300 text-sm font-medium">{"\u5b78\u9577\u5df2\u5230\u5834"}</p>
+                  <span className="text-base">✅</span>
+                  <p className="text-green-300 text-sm font-medium">學長已到場</p>
+                </div>
+              </div>
+            )}
+            {/* Senior left for OR */}
+            {seniorLeftForOR && (
+              <div className="rounded-lg border border-blue-700/40 px-4 py-3 mb-1" style={{ backgroundColor: "#000a1a" }}>
+                <div className="flex items-center gap-2">
+                  <span className="text-base">🏥</span>
+                  <p className="text-blue-300 text-sm font-medium">學長去聯絡開刀房了</p>
                 </div>
               </div>
             )}
@@ -470,7 +477,7 @@ export function ConsultModal() {
                     disabled={chatMessages.filter((m) => m.role === "user").length === 0}
                     className="flex-1 py-2 rounded-lg bg-red-800 hover:bg-red-700 disabled:bg-red-900/30 disabled:text-red-600 text-white text-sm font-medium transition-colors"
                   >
-                    📞 掛電話（學長 5 分鐘後到）
+                    📞 掛電話（學長 {isRecallContext ? 3 : 5} 分鐘後到）
                   </button>
                   <button
                     onClick={() => { setShowSbarForm(false); setChatMessages([]); setConfirming(null); }}
@@ -521,7 +528,9 @@ export function ConsultModal() {
               // Disable senior button only if already called AND not yet arrived AND not Phase 2
               // Phase 2: always allow recall (even if senior already arrived — situation changed)
               // Senior arrived: allow calling again (new situation may need re-escalation)
-              const isSeniorDisabled = opt.type === "senior" && seniorAlreadyCalled && !seniorHasArrived && !isRecallContext;
+              // Disable: already en_route or rushing_back (can't call again while in transit)
+              // Allow: absent (first call), present (re-escalate), left_for_or (recall)
+              const isSeniorDisabled = opt.type === "senior" && (seniorEnRoute || seniorRushingBack);
 
               const colorMap: Record<string, string> = {
                 amber: "border-amber-800/30 hover:border-amber-600/50 hover:bg-amber-950/20",
