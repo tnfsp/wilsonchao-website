@@ -6,6 +6,39 @@ import BioGearsStatusBadge from "./BioGearsStatusBadge";
 import ACLSModal from "./ACLSModal";
 import { useProGameStore } from "@/lib/simulator/store";
 
+/** Floating OR countdown banner — shows time remaining until OR ready */
+function ORCountdownBanner() {
+  const pendingEvents = useProGameStore((s) => s.pendingEvents);
+  const currentTime = useProGameStore((s) => s.clock.currentTime);
+  const seniorPresence = useProGameStore((s) => s.seniorPresence);
+  const phase = useProGameStore((s) => s.phase);
+
+  if (phase !== "playing") return null;
+
+  const orEvent = pendingEvents.find((e) => e.type === "or_ready" && !e.fired);
+  if (!orEvent) return null;
+
+  const remainingMin = Math.max(0, Math.ceil(orEvent.triggerAt - currentTime));
+  const isUrgent = remainingMin <= 3;
+  const seniorGone = seniorPresence === "left_for_or";
+
+  return (
+    <div
+      className={[
+        "fixed top-10 left-1/2 -translate-x-1/2 z-[55] px-4 py-2 rounded-xl border text-xs font-mono tracking-wide",
+        "transition-all duration-500 shadow-lg",
+        isUrgent
+          ? "bg-amber-900/90 border-amber-500/50 text-amber-200 animate-pulse"
+          : "bg-slate-900/90 border-slate-600/40 text-slate-300",
+      ].join(" ")}
+    >
+      <span className="mr-2">{seniorGone ? "🏥" : "🩺"}</span>
+      OR ready in <span className={`font-bold ${isUrgent ? "text-amber-100" : "text-white"}`}>{remainingMin}</span> min
+      {seniorGone && <span className="ml-2 text-slate-500">| 學長在備 OR</span>}
+    </div>
+  );
+}
+
 interface ProGameLayoutProps {
   /** Mobile top area: vitals rows + waveform + CT status (fixed, no scroll) */
   monitorPanel: React.ReactNode;
@@ -69,6 +102,9 @@ export default function ProGameLayout({
       <div className="fixed top-1.5 right-2 z-[56]">
         <BioGearsStatusBadge />
       </div>
+
+      {/* OR countdown banner — shows when OR is being prepped */}
+      <ORCountdownBanner />
 
       {/* ═══ Desktop (lg+): side-by-side ═══ */}
       <div className="hidden lg:flex flex-1 overflow-hidden">

@@ -44,6 +44,7 @@ export function SeniorDialogModal() {
   const [isLoading, setIsLoading] = useState(false);
   const [isDone, setIsDone] = useState(false);
   const [turnCount, setTurnCount] = useState(0);
+  const [capturedDecision, setCapturedDecision] = useState<{ action: string; message: string } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -141,11 +142,9 @@ export function SeniorDialogModal() {
       setInput("");
       setIsDone(false);
       setTurnCount(0);
+      setCapturedDecision(null);
     }
   }, [isVisible]);
-
-  // Determine if senior should make a decision (after 2+ turns)
-  const shouldDecide = turnCount >= 2;
 
   // Rule-based decision guard
   function getSeniorDecision(): { action: string; message: string } {
@@ -194,12 +193,14 @@ export function SeniorDialogModal() {
 
     const updatedMessages: ChatMessage[] = [...newMessages, { role: "senior", content: reply }];
 
-    // After 3+ player turns, senior makes a decision
+    // After 3+ player turns, senior makes a decision (capture once to prevent divergence)
     if (turnCount + 1 >= 3) {
       const decision = getSeniorDecision();
+      setCapturedDecision(decision);
+      const isLeaving = decision.action === "go_to_or";
       updatedMessages.push(
         { role: "senior", content: decision.message },
-        { role: "senior", content: "（學長快步離開 ICU）", isAction: true },
+        { role: "senior", content: isLeaving ? "（學長快步離開 ICU）" : "（學長留在床邊）", isAction: true },
       );
       setIsDone(true);
     }
@@ -223,16 +224,17 @@ export function SeniorDialogModal() {
       updatePatientSeverity(Math.max(0, patient.severity - 5));
     }
 
-    const decision = getSeniorDecision();
+    // Use captured decision from handleSend (prevents divergence if state changed between send and close)
+    const decision = capturedDecision ?? getSeniorDecision();
 
     if (decision.action === "go_to_or") {
       // Senior leaves to prep OR
-      useProGameStore.setState({ seniorPresence: "left_for_or" as any });
+      useProGameStore.getState().setSeniorPresence("left_for_or");
 
       addPendingEvent({
         id: `ev_or_ready_${Date.now()}`,
         triggerAt: clock.currentTime + 15, // 15 game-min OR prep
-        type: "or_ready" as any,
+        type: "or_ready",
         data: { message: "學長回來了：「OR ready，anesthesia 在等了。搬病人，走。」" },
         fired: false,
         priority: 0,
@@ -271,6 +273,7 @@ export function SeniorDialogModal() {
     setInput("");
     setIsDone(false);
     setTurnCount(0);
+    setCapturedDecision(null);
     closeModal();
   }
 
