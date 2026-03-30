@@ -74,6 +74,14 @@ const conditionNoStripCT: EventCondition = {
   ],
 };
 
+// Condition: 開了抗生素（對 tamponade 無效）
+const conditionAntibioticsGiven: EventCondition = {
+  operator: "AND",
+  conditions: [
+    { field: "action_taken", op: "==", value: "order_antibiotics" },
+  ],
+};
+
 const events: ScriptedEvent[] = [
   // ── 00:00 ── 交班。CT output 看起來還行
   {
@@ -81,7 +89,7 @@ const events: ScriptedEvent[] = [
     triggerTime: 0,
     type: "nurse_call",
     message:
-      "醫師，bed 5 的陳阿姨，MVR + CABG ×2，POD#0。目前 CT 引流每小時大概 150cc，鮮紅色沒有塊。A-line 波形有點 dampened，血壓勉強維持。你先來看一下好嗎？",
+      "醫師，bed 5 的陳阿姨，MVR + CABG ×2，POD#0。目前 CT 引流每小時大概 150cc，鮮紅色沒有塊。A-line 波形有點 dampened，血壓勉強維持。對了，白班學長交班有提到她術中 pericardium 比較 oozy，叫我們多注意一下。你先來看一下好嗎？",
     severityChange: 0,
   },
 
@@ -172,6 +180,16 @@ const events: ScriptedEvent[] = [
     type: "nurse_call",
     message:
       "醫師，超音波機就在旁邊——你要不要照個心臟看看有沒有積液？",
+  },
+
+  // ── Nurse feedback: 開了抗生素但對 tamponade 無效（條件觸發）
+  {
+    id: "evt-antibiotics-ineffective",
+    triggerTime: 10,
+    triggerCondition: conditionAntibioticsGiven,
+    type: "nurse_call",
+    message:
+      "醫師，抗生素已經給了⋯⋯不過血壓還是一直掉，病人看起來沒有比較好。你覺得會不會不是感染的問題？",
   },
 
   // ── 20:00 ── 若未處理 → 瀕臨 PEA arrest
