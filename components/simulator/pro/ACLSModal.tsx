@@ -740,63 +740,81 @@ export default function ACLSModal() {
       )
     : 0;
 
+  // Detection: senior arrived → start resternotomy (one-shot, no cleanup that kills the timer)
   useEffect(() => {
     if (!isVisible || !isTamponade || seniorArrivalHandled) return;
     if (aclsPhase === "rosc" || aclsPhase === "death") return;
+    if (!seniorHasArrived) return;
 
-    if (seniorHasArrived) {
-      // Senior just arrived (or was already present) during active arrest
-      setSeniorArrivalHandled(true);
-      setSeniorResternotomyCountdown(30); // 2 min AHA → 30s game time (4:1 compression)
+    // Senior just arrived during active arrest
+    setSeniorArrivalHandled(true);
+    setSeniorResternotomyCountdown(30);
 
-      // Add timeline events
-      const id1 = ++eventIdRef.current;
-      setAclsTimeline((prev) => [
-        ...prev,
-        {
-          id: id1,
-          timestamp: elapsedSeconds,
-          text: "學長已到達 — 評估後決定 emergent resternotomy",
-          type: "system" as const,
-        },
-      ]);
-      addTimelineEntry({
-        gameTime: clock.currentTime,
-        type: "system_event",
-        content: "學長到達，評估後決定 emergent resternotomy。正在準備中...",
-        sender: "senior",
-        isImportant: true,
-      });
+    const id1 = ++eventIdRef.current;
+    setAclsTimeline((prev) => [
+      ...prev,
+      {
+        id: id1,
+        timestamp: elapsedSeconds,
+        text: "學長已到達 — 評估後決定 emergent resternotomy",
+        type: "system" as const,
+      },
+    ]);
+    addTimelineEntry({
+      gameTime: clock.currentTime,
+      type: "system_event",
+      content: "學長到達，評估後決定 emergent resternotomy。正在準備中...",
+      sender: "senior",
+      isImportant: true,
+    });
 
-      // Start 30-second countdown (4:1 time compression)
-      resternotomyTimerRef.current = setInterval(() => {
-        setSeniorResternotomyCountdown((prev) => {
-          if (prev === null || prev <= 1) {
-            // Timer done — clear interval and trigger ROSC
-            if (resternotomyTimerRef.current) {
-              clearInterval(resternotomyTimerRef.current);
-              resternotomyTimerRef.current = null;
-            }
-            return 0;
+    // Start countdown in a ref-based interval (survives re-renders)
+    resternotomyTimerRef.current = setInterval(() => {
+      setSeniorResternotomyCountdown((prev) => {
+        if (prev === null || prev <= 1) {
+          if (resternotomyTimerRef.current) {
+            clearInterval(resternotomyTimerRef.current);
+            resternotomyTimerRef.current = null;
           }
-          return prev - 1;
-        });
-      }, 1000);
-    }
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isVisible, seniorHasArrived, isTamponade, seniorArrivalHandled]);
 
+  // Cleanup interval on unmount only
+  useEffect(() => {
     return () => {
       if (resternotomyTimerRef.current) {
         clearInterval(resternotomyTimerRef.current);
         resternotomyTimerRef.current = null;
       }
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isVisible, seniorHasArrived, isTamponade, seniorArrivalHandled, aclsPhase]);
+  }, []);
 
-  // ── Trigger ROSC when resternotomy countdown reaches 0 ──
+  // ── Trigger ROSC when resternotomy countdown reaches 0 (only if CPR active) ──
   useEffect(() => {
     if (seniorResternotomyCountdown === 0 && seniorArrivalHandled && aclsPhase !== "rosc" && aclsPhase !== "death") {
-      // Resternotomy complete — ROSC
+      if (!cprActive) {
+        // Player wasn't doing CPR during resternotomy → resternotomy failed (no perfusion)
+        const failId = ++eventIdRef.current;
+        setAclsTimeline((prev) => [
+          ...prev,
+          {
+            id: failId,
+            timestamp: elapsedSeconds,
+            text: "Resternotomy 完成但未恢復循環 — CPR 中斷導致器官灌流不足",
+            type: "system" as const,
+          },
+        ]);
+        // Reset countdown to give another chance (senior retries in 15s)
+        setSeniorResternotomyCountdown(15);
+        return;
+      }
+
+      // CPR was active → Resternotomy + adequate perfusion = ROSC
       const id1 = ++eventIdRef.current;
       setAclsTimeline((prev) => [
         ...prev,
@@ -808,30 +826,31 @@ export default function ACLSModal() {
         },
       ]);
 
-      // Use the same ROSC flow
-      setAclsPhase("rosc");
-      setCprActive(false);
-      setHasAchievedRosc(true);
-      dispatchStopCpr();
-      dispatchCardiacArrest(false);
+      handleRosc("學長完成 resternotomy，tamponade relieved");
 
-      const arrestInfo = arrestCount > 1 ? ` (arrest episode #${arrestCount})` : "";
-      addTimelineEntry({
-        gameTime: clock.currentTime,
-        type: "system_event",
-        content: `ROSC achieved - 學長完成 resternotomy，tamponade relieved. Total arrest time: ${formatTime(elapsedSeconds)}${arrestInfo}`,
-        sender: "system",
-        isImportant: true,
-      });
-
-      // Auto-dismiss after 3 seconds
-      roscDismissTimerRef.current = setTimeout(() => {
-        setIsVisible(false);
-        roscDismissTimerRef.current = null;
-      }, 3000);
+      // Resternotomy = definitive treatment for tamponade → auto-trigger SBAR after delay
+      setTimeout(() => {
+        const store = useProGameStore.getState();
+        if (store.phase === "playing") {
+          store.addTimelineEntry({
+            gameTime: store.clock.currentTime,
+            type: "nurse_message",
+            content: "林姐：學長說 tamponade 已經解除了，病人穩定中。要不要做個交班報告？",
+            sender: "nurse",
+            isImportant: true,
+          });
+          // Auto-open SBAR modal for final handoff
+          setTimeout(() => {
+            const s2 = useProGameStore.getState();
+            if (s2.phase === "playing") {
+              s2.openModal("sbar");
+            }
+          }, 3000);
+        }
+      }, 5000);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [seniorResternotomyCountdown, seniorArrivalHandled, aclsPhase]);
+  }, [seniorResternotomyCountdown, seniorArrivalHandled, aclsPhase, cprActive]);
 
   // ── Event helpers ──
   const addEvent = useCallback(
@@ -2016,12 +2035,12 @@ export default function ACLSModal() {
             Senior Arrival / Resternotomy Banner (tamponade only)
             ═══════════════════════════════════════════════════════════════════ */}
         {isTamponade && isInActiveArrest && seniorResternotomyCountdown !== null && seniorResternotomyCountdown > 0 && (
-          <div className="flex-shrink-0 px-3 py-3 md:px-6 md:py-4 bg-cyan-950/50 border-b border-cyan-700/50 text-center">
-            <p className="text-cyan-300 text-base md:text-lg font-bold tracking-wide">
-              學長已到達！正在準備 emergent resternotomy...
+          <div className="flex-shrink-0 px-3 py-1.5 md:px-6 md:py-2 bg-cyan-950/40 border-b border-cyan-700/30 flex items-center justify-between">
+            <p className="text-cyan-300 text-xs md:text-sm font-semibold">
+              🔪 學長準備 resternotomy... {formatTime(seniorResternotomyCountdown)}
             </p>
-            <p className="text-cyan-400/70 text-xs md:text-sm mt-1">
-              準備中... {formatTime(seniorResternotomyCountdown)} — 繼續 CPR
+            <p className="text-cyan-400/60 text-xs">
+              繼續 CPR！
             </p>
           </div>
         )}
@@ -2061,9 +2080,9 @@ export default function ACLSModal() {
         )}
 
         {/* ═══════════════════════════════════════════════════════════════════
-            Waveform Display (ECG Lead II + A-line)
+            Waveform Display (ECG Lead II + A-line) — compact during active ACLS
             ═══════════════════════════════════════════════════════════════════ */}
-        <div className="flex-shrink-0 px-3 py-2 md:px-6 md:py-3">
+        <div className="flex-shrink-0 px-3 py-1 md:px-6 md:py-1.5" style={{ maxHeight: isInActiveArrest ? 70 : undefined, overflow: "hidden" }}>
           <ACLSWaveformCanvas
             rhythm={currentRhythm}
             cprActive={cprActive}
@@ -2932,7 +2951,7 @@ export default function ACLSModal() {
           <div
             ref={timelineRef}
             className={`overflow-y-auto px-3 pb-2 md:px-5 md:pb-3 transition-all ${
-              showTimeline ? "h-28 md:h-28" : "h-0 md:h-28 overflow-hidden"
+              showTimeline ? "h-28 md:h-28" : "h-0 overflow-hidden"
             }`}
             style={{ scrollbarWidth: "thin", scrollbarColor: "#ffffff1a transparent" }}
           >

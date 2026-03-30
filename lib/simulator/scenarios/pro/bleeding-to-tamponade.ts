@@ -945,8 +945,8 @@ export const bleedingToTamponade: SimScenario = {
   id: "pro-bleeding-to-tamponade-01",
   title: "術後出血 \u2192 心包填塞",
   subtitle: "CABG POD#0 \u2014 出血處理後的致命陷阱",
-  hiddenTitle: "術後急變 Case D",
-  hiddenSubtitle: "CABG POD#0 \u2014 你能看穿假象嗎？",
+  hiddenTitle: "術後急變",
+  hiddenSubtitle: "CABG POD#0 — 你能看穿假象嗎？",
   difficulty: "advanced",
   duration: "30min",
   tags: [

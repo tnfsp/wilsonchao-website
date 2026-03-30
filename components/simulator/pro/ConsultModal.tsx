@@ -70,6 +70,21 @@ export function ConsultModal() {
   const chatScrollRef = useRef<HTMLDivElement>(null);
   const placedOrders = useProGameStore((s) => s.placedOrders);
 
+  // Reset all state when modal re-opens (e.g., Phase 2 recall after Phase 1 call)
+  useEffect(() => {
+    if (activeModal === "consult") {
+      setSubmitted(false);
+      setConfirming(null);
+      setSelected(null);
+      setShowSbarForm(false);
+      setSbarText("");
+      setSbarFeedback(null);
+      setChatMessages([]);
+      setChatInput("");
+      setChatSending(false);
+    }
+  }, [activeModal]);
+
   // ── Derived: senior status ─────────────────────────────────
 
   const seniorStatus = useMemo(() => {

@@ -99,8 +99,9 @@ export function SeniorDialogModal() {
       return data.reply ?? FALLBACK_LINES[1];
     } catch {
       clearTimeout(timeout);
-      // Fallback
-      const fallbackIdx = Math.min(history.filter((m) => m.role === "senior").length, FALLBACK_LINES.length - 1);
+      // Fallback — count only player turns (not greeting) to pick the right line
+      const playerTurns = history.filter((m) => m.role === "player").length;
+      const fallbackIdx = Math.min(playerTurns, FALLBACK_LINES.length - 1);
       return FALLBACK_LINES[fallbackIdx];
     }
   }, [buildGameState]);
@@ -226,6 +227,13 @@ export function SeniorDialogModal() {
               <p className="text-gray-400 text-xs">R4 / Fellow — 在你旁邊</p>
             </div>
           </div>
+          <button
+            onClick={handleClose}
+            className="text-gray-500 hover:text-white transition-colors text-xl"
+            aria-label="關閉"
+          >
+            ✕
+          </button>
           {isDone && (
             <span className="text-xs px-2 py-1 rounded-full bg-teal-500/20 text-teal-300 border border-teal-500/30">
               對話結束

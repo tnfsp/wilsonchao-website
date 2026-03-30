@@ -1413,12 +1413,26 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
                           ? isEffectCorrectForNewPathology(eff, newPathology)
                           : false,
                       }));
+
+                      // Tamponade: CT becomes obstructed (clot in pericardium compresses drain)
+                      const isTamponade = newPathology === "cardiac_tamponade" || newPathology === "tamponade";
+                      const newChestTube = isTamponade
+                        ? {
+                            ...s.patient.chestTube,
+                            hasClots: true,
+                            isPatent: false,
+                            currentRate: Math.max(10, Math.round(s.patient.chestTube.currentRate * 0.15)),
+                            color: "dark_red" as const,
+                          }
+                        : s.patient.chestTube;
+
                       return {
                         patient: {
                           ...s.patient,
                           pathology: newPathology,
                           severity: 25, // Reset severity for new phase
                           activeEffects: updatedEffects,
+                          chestTube: newChestTube,
                         },
                       };
                     });
