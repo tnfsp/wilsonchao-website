@@ -326,6 +326,18 @@ export class BioGearsClient {
 
   /** Connect to the WebSocket server */
   async connect(): Promise<void> {
+    // Guard: if already connected/ready, resolve immediately
+    if (this._isReady) return;
+    // Guard: if a WebSocket is already open/connecting, wait for it instead of creating a new one
+    if (this.ws && (this.ws.readyState === WebSocket.CONNECTING || this.ws.readyState === WebSocket.OPEN)) {
+      return new Promise((resolve, reject) => {
+        const check = setInterval(() => {
+          if (this._isReady) { clearInterval(check); resolve(); }
+        }, 100);
+        setTimeout(() => { clearInterval(check); reject(new Error("Existing WebSocket did not become ready")); }, 5000);
+      });
+    }
+
     return new Promise((resolve, reject) => {
       this.onStatus?.("connecting");
 
