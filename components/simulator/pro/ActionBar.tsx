@@ -263,8 +263,8 @@ export default function ActionBar() {
   const arrestRhythms = ["vf", "vt_pulseless", "pea", "asystole"];
   const isInArrest = patient?.vitals.hr === 0 || arrestRhythms.includes(patient?.vitals.rhythmStrip ?? "");
 
-  // Show prominent MTP button for hemorrhage-related pathologies (Pro only)
-  const showMTPButton = !isStandard && isPlaying && !mtpState.activated && (
+  // Show prominent MTP button for hemorrhage-related pathologies
+  const showMTPButton = isPlaying && !mtpState.activated && (
     patient?.pathology === "surgical_bleeding" ||
     patient?.pathology === "coagulopathy"
   );
@@ -278,22 +278,18 @@ export default function ActionBar() {
     openModal("consult");
   };
 
-  // Treatment popover items — Standard omits MTP (presets handle transfusion)
+  // Treatment popover items (identical for Standard and Pro)
   const treatmentItems: PopoverItem[] = [
     { icon: "💊", label: "開藥", onClick: () => openModal("order") },
     { icon: "🩸", label: "輸血", onClick: () => openModal("order") },
-    ...(!isStandard
-      ? [
-          {
-            icon: "🚨",
-            label: mtpState.activated ? "MTP中" : "大量輸血 MTP",
-            onClick: () => setShowMTPConfirm(true),
-            disabled: mtpState.activated,
-            disabledReason: "大量輸血 Protocol 已啟動中",
-            variant: "danger" as const,
-          },
-        ]
-      : []),
+    {
+      icon: "🚨",
+      label: mtpState.activated ? "MTP中" : "大量輸血 MTP",
+      onClick: () => setShowMTPConfirm(true),
+      disabled: mtpState.activated,
+      disabledReason: "大量輸血 Protocol 已啟動中",
+      variant: "danger" as const,
+    },
     { icon: "🌬️", label: "呼吸器", onClick: () => { sessionStorage.setItem("sim-order-tab", "ventilator"); openModal("order"); } },
     {
       icon: "🔧",
@@ -306,20 +302,18 @@ export default function ActionBar() {
 
   return (
     <>
-      {!isStandard && showMTPConfirm && (
+      {showMTPConfirm && (
         <MTPConfirmDialog
           onConfirm={() => { activateMTP(); setShowMTPConfirm(false); }}
           onCancel={() => setShowMTPConfirm(false)}
         />
       )}
 
-      {/* ── MTP Phase progression banner (Pro only) ── */}
-      {!isStandard && (
-        <MTPPhaseBanner
-          roundsDelivered={mtpState.roundsDelivered}
-          activated={mtpState.activated}
-        />
-      )}
+      {/* ── MTP Phase progression banner ── */}
+      <MTPPhaseBanner
+        roundsDelivered={mtpState.roundsDelivered}
+        activated={mtpState.activated}
+      />
 
       <div
         id="action-bar"
