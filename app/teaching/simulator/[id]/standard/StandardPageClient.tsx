@@ -4,6 +4,13 @@ import { useEffect, useRef, useCallback, useState } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { SimScenario, StandardOverlay } from "@/lib/simulator/types";
 import { updatePatientState } from "@/lib/simulator/engine/patient-engine";
+import {
+  getBioGearsClient,
+  syncBioGearsToStore,
+  advanceBioGears,
+  startBioGearsHemorrhage,
+  cleanupBioGearsClient,
+} from "@/lib/simulator/engine/biogears-engine";
 import { evaluateGuidance } from "@/lib/simulator/engine/guidance-engine";
 import {
   computeStandardScore,
@@ -192,7 +199,20 @@ function IntroScreen({ scenario }: { scenario: SimScenario }) {
   );
 }
 
-// ── Game tick (simplified: no BioGears, standard uses formula engine only) ──
+// ── BioGears mode check ─────────────────────────────────────────────────────
+
+function useBioGearsMode(): boolean {
+  const [enabled, setEnabled] = useState(true); // default ON
+  useEffect(() => {
+    if (typeof window !== "undefined") {
+      const params = new URLSearchParams(window.location.search);
+      if (params.get("engine") === "formula") setEnabled(false);
+    }
+  }, []);
+  return enabled;
+}
+
+// ── Game tick (BioGears + guidance + urgency + rescue window) ────────────────
 
 function useStandardGameTick(
   overlay: StandardOverlay | null,
@@ -203,17 +223,16 @@ function useStandardGameTick(
   const advanceTime = useProGameStore((s) => s.advanceTime);
   const difficultyConfig = useProGameStore((s) => s.difficultyConfig);
   const playerActions = useProGameStore((s) => s.playerActions);
+  const useBioGears = useBioGearsMode();
+  const bgInitRef = useRef(false);
 
-  // Map<key, lastFiredGameTime> — allows re-firing after cooldown
+  // Guidance state
   const lastGuidanceRef = useRef<Map<string, number>>(new Map());
   const lastGuidanceTimeRef = useRef<number>(0);
   const lastPlayerActionTimeRef = useRef<number>(0);
   const firedUrgencyIdsRef = useRef<Set<string>>(new Set());
-
-  // Guidance re-fire cooldown: same trigger can fire again after N game-minutes
   const GUIDANCE_COOLDOWN_MINUTES = 5;
 
-  // Clear guidance dedup map when phase resets (not_started) so guidance can re-fire next playthrough
   useEffect(() => {
     if (phase === "not_started") {
       lastGuidanceRef.current.clear();
@@ -221,25 +240,58 @@ function useStandardGameTick(
     }
   }, [phase]);
 
-  // Update lastPlayerActionTime whenever playerActions length changes
   useEffect(() => {
     const state = useProGameStore.getState();
     lastPlayerActionTimeRef.current = state.clock.currentTime;
   }, [playerActions.length]);
 
-  const tickPatient = useCallback((minutes = 1) => {
-    const state = useProGameStore.getState();
-    if (!state.patient || state.phase !== "playing") return;
+  // ── BioGears initialization (same as Pro) ──
+  useEffect(() => {
+    if (!useBioGears) return;
+    if (phase !== "playing" || bgInitRef.current) return;
 
-    const newPatient = updatePatientState(state.patient, {
-      minutesPassed: minutes,
-      currentGameMinutes: state.clock.currentTime + minutes,
-      ventilator: state.ventilator,
-    });
+    let cancelled = false;
+    const init = async () => {
+      try {
+        const client = getBioGearsClient();
+        if (!client.isReady) {
+          await Promise.race([
+            client.connect(),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("BioGears connection timeout (5s)")), 5000)
+            ),
+          ]);
+        }
+        if (!client.isInitialized && !cancelled) {
+          console.log("[BioGears/Standard] Initializing patient...");
+          const result = await client.initPatient("StandardMale");
+          if (result.ok && !cancelled) {
+            console.log("[BioGears/Standard] Patient ready, syncing initial vitals");
+            syncBioGearsToStore(result);
+            bgInitRef.current = true;
 
-    useProGameStore.setState({ patient: newPatient });
+            const scenario = useProGameStore.getState().scenario;
+            if (scenario?.pathology === "surgical_bleeding") {
+              await startBioGearsHemorrhage("Aorta", 150);
+            } else if (scenario?.pathology === "cardiac_tamponade") {
+              const { dispatchPericardialEffusion } = await import("@/lib/simulator/engine/biogears-engine");
+              await dispatchPericardialEffusion(2.5);
+            }
+          }
+        }
+      } catch (err) {
+        console.error("[BioGears/Standard] Init failed, using formula engine:", err);
+      }
+    };
+    init();
+    return () => { cancelled = true; };
+  }, [useBioGears, phase]);
 
-    // Guidance engine: evaluate all 7 triggers → push to ChatTimeline as nurse messages
+  // ── Post-tick: guidance + urgency + rescue (Standard-specific) ──
+  const runStandardPostTick = useCallback((state: ReturnType<typeof useProGameStore.getState>, newPatient: typeof state.patient) => {
+    if (!newPatient) return;
+
+    // Guidance engine
     if (overlay && state.scenario) {
       const guidanceMsgs = evaluateGuidance(
         newPatient,
@@ -249,45 +301,33 @@ function useStandardGameTick(
         state.clock.currentTime,
         lastGuidanceTimeRef.current,
       );
-
-      if (guidanceMsgs.length > 0) {
-        // Dedup with cooldown: same trigger can re-fire after GUIDANCE_COOLDOWN_MINUTES
-        const currentTime = state.clock.currentTime;
-        for (const gm of guidanceMsgs) {
-          const key = `${gm.trigger}:${gm.relatedAction ?? ""}`;
-          const lastFired = lastGuidanceRef.current.get(key);
-          if (lastFired !== undefined && (currentTime - lastFired) < GUIDANCE_COOLDOWN_MINUTES) {
-            continue; // Still in cooldown, skip
-          }
-          {
-            lastGuidanceRef.current.set(key, currentTime);
-            lastGuidanceTimeRef.current = currentTime;
-            useProGameStore.getState().addTimelineEntry({
-              type: "nurse_message",
-              sender: "nurse",
-              content: gm.message,
-              gameTime: state.clock.currentTime,
-            });
-            // Also push to GuidanceBubble overlay
-            if (onGuidance) {
-              onGuidance(gm);
-            }
-          }
-        }
+      const currentTime = state.clock.currentTime;
+      for (const gm of guidanceMsgs) {
+        const key = `${gm.trigger}:${gm.relatedAction ?? ""}`;
+        const lastFired = lastGuidanceRef.current.get(key);
+        if (lastFired !== undefined && (currentTime - lastFired) < GUIDANCE_COOLDOWN_MINUTES) continue;
+        lastGuidanceRef.current.set(key, currentTime);
+        lastGuidanceTimeRef.current = currentTime;
+        useProGameStore.getState().addTimelineEntry({
+          type: "nurse_message",
+          sender: "nurse",
+          content: gm.message,
+          gameTime: state.clock.currentTime,
+        });
+        if (onGuidance) onGuidance(gm);
       }
     }
 
-    // Urgency engine: fire nurse messages when player is idle too long
+    // Urgency engine
     if (overlay?.nurseUrgencyEvents && overlay.nurseUrgencyEvents.length > 0) {
       const { toFire, updatedFiredIds } = evaluateUrgency(
         overlay.nurseUrgencyEvents,
         {
-          currentGameMinutes: state.clock.currentTime + minutes,
+          currentGameMinutes: state.clock.currentTime + 1,
           lastPlayerActionTime: lastPlayerActionTimeRef.current,
           firedUrgencyIds: firedUrgencyIdsRef.current,
         },
       );
-
       if (toFire.length > 0) {
         firedUrgencyIdsRef.current = updatedFiredIds;
         for (const evt of toFire) {
@@ -295,16 +335,14 @@ function useStandardGameTick(
             type: "nurse_message",
             sender: "nurse",
             content: evt.message,
-            gameTime: state.clock.currentTime + minutes,
+            gameTime: state.clock.currentTime + 1,
           });
         }
       }
     }
 
-    // Death check with rescue window support (store.triggerDeath intercepts for Standard)
-    // Skip death check while rescue countdown is active (rescue engine handles expiry)
+    // Death check with rescue window
     if (useProGameStore.getState().rescueState?.active) return;
-
     const vitals = newPatient.vitals;
     const severity = newPatient.severity ?? 0;
     const threshold = difficultyConfig.rescueThreshold;
@@ -319,23 +357,59 @@ function useStandardGameTick(
       const scenarioId = state.scenario?.id ?? "";
       let cause: string;
       if (severity >= 95) {
-        if (scenarioId.includes("septic")) {
-          cause = "\u75C5\u4EBA\u56E0\u6557\u8840\u6027\u4F11\u514B\u60E1\u5316\uFF0C\u591A\u91CD\u5668\u5B98\u8870\u7AED\u3002";
-        } else if (scenarioId.includes("tamponade")) {
-          cause = "\u5FC3\u5305\u586B\u585E\u672A\u53CA\u6642\u8655\u7406\uFF0C\u5FC3\u8F38\u51FA\u91CF\u8870\u7AED\u3002";
-        } else {
-          cause = "\u75C5\u4EBA\u56E0\u6301\u7E8C\u51FA\u8840\u672A\u63A7\u5236\uFF0C\u8840\u6D41\u52D5\u529B\u5B78\u8870\u7AED\u3002";
-        }
+        if (scenarioId.includes("septic")) cause = "病人因敗血性休克惡化，多重器官衰竭。";
+        else if (scenarioId.includes("tamponade")) cause = "心包填塞未及時處理，心輸出量衰竭。";
+        else cause = "病人因持續出血未控制，血流動力學衰竭。";
       } else {
         cause = vitals.map < 30
-          ? "MAP \u904E\u4F4E\uFF0C\u5668\u5B98\u704C\u6D41\u4E0D\u8DB3\u5C0E\u81F4\u591A\u91CD\u5668\u5B98\u8870\u7AED\u3002"
-          : "\u81F4\u6B7B\u6027\u5FC3\u5F8B\u4E0D\u6574\u3002";
+          ? "MAP 過低，器官灌流不足導致多重器官衰竭。"
+          : "致死性心律不整。";
       }
       useProGameStore.getState().triggerDeath(cause);
     }
-  }, [difficultyConfig, overlay]);
+  }, [difficultyConfig, overlay, onGuidance]);
 
-  // Register tickPatient in store so actionAdvance can call it
+  // ── Formula tick ──
+  const tickPatientFormula = useCallback((minutes = 1) => {
+    const state = useProGameStore.getState();
+    if (!state.patient || state.phase !== "playing") return;
+
+    const newPatient = updatePatientState(state.patient, {
+      minutesPassed: minutes,
+      currentGameMinutes: state.clock.currentTime + minutes,
+      ventilator: state.ventilator,
+    });
+    useProGameStore.setState({ patient: newPatient });
+    runStandardPostTick(state, newPatient);
+  }, [runStandardPostTick]);
+
+  // ── BioGears tick ──
+  const tickPatientBioGears = useCallback(async (minutes = 1) => {
+    const state = useProGameStore.getState();
+    if (!state.patient || state.phase !== "playing") return;
+    if (!bgInitRef.current) return;
+
+    try {
+      await advanceBioGears(minutes);
+      // Post-tick with updated patient from store (BioGears syncs to store)
+      const updatedState = useProGameStore.getState();
+      runStandardPostTick(updatedState, updatedState.patient);
+    } catch (err) {
+      console.error("[BioGears/Standard] Advance failed:", err);
+      tickPatientFormula(minutes);
+    }
+  }, [tickPatientFormula, runStandardPostTick]);
+
+  // ── Unified tick dispatcher ──
+  const tickPatient = useCallback((minutes = 1) => {
+    if (useBioGears && bgInitRef.current) {
+      tickPatientBioGears(minutes);
+    } else {
+      tickPatientFormula(minutes);
+    }
+  }, [useBioGears, tickPatientFormula, tickPatientBioGears]);
+
+  // Register tick
   const registerTickPatient = useProGameStore((s) => s.registerTickPatient);
   useEffect(() => {
     registerTickPatient(tickPatient);
@@ -354,6 +428,16 @@ function useStandardGameTick(
 
     return () => clearInterval(interval);
   }, [phase, activeModal, advanceTime, tickPatient]);
+
+  // Cleanup BioGears on unmount
+  useEffect(() => {
+    return () => {
+      if (useBioGears && bgInitRef.current) {
+        getBioGearsClient().disconnect().catch(() => {});
+        bgInitRef.current = false;
+      }
+    };
+  }, [useBioGears]);
 }
 
 // ── Game Screen ─────────────────────────────────────────────────────────────
@@ -580,6 +664,11 @@ export default function StandardPageClient({ id }: { id: string }) {
   useEffect(() => {
     document.body.classList.add("simulator-fullscreen");
     return () => document.body.classList.remove("simulator-fullscreen");
+  }, []);
+
+  // Cleanup BioGears client on unmount
+  useEffect(() => {
+    return () => { cleanupBioGearsClient(); };
   }, []);
 
   if (isLoading) return <LoadingScreen />;
