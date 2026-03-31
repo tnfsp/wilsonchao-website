@@ -44,7 +44,7 @@ const VALID_MEDICATION_IDS = new Set([
   "epinephrine-ivp", "atropine", "amiodarone-ivp", "nicardipine", "labetalol", "nitroglycerin",
   "heparin", "tpa", "aspirin", "clopidogrel", "hydrocortisone",
   // Labs
-  "cbc", "abg",
+  "cbc", "abg", "coag",
   "na", "k", "cl", "co2", "bun", "cr", "glucose",
   "pt_inr", "aptt", "fibrinogen",
   "lactate", "ica", "act", "troponin", "type_screen", "blood_culture", "teg", "rotem",
@@ -316,11 +316,24 @@ prbc_1u, prbc_2u, prbc_4u, ffp_2u, ffp_4u, platelet_1dose, platelet_2dose, cryo_
     let parsed: NurseChatResponse;
     try {
       // Strip markdown code fences if present
-      const cleaned = responseText
+      let cleaned = responseText
         .replace(/^```(?:json)?\s*/i, "")
         .replace(/\s*```\s*$/, "")
         .trim();
-      parsed = JSON.parse(cleaned);
+
+      // If direct parse fails, try extracting JSON object from within the text
+      // (handles cases where AI wraps JSON in extra text like "Here is the JSON:")
+      try {
+        parsed = JSON.parse(cleaned);
+      } catch {
+        const jsonMatch = cleaned.match(/\{[\s\S]*\}/);
+        if (jsonMatch) {
+          parsed = JSON.parse(jsonMatch[0]);
+        } else {
+          throw new Error("no JSON object found");
+        }
+      }
+
       // Ensure required fields exist
       if (typeof parsed.reply !== "string") throw new Error("missing reply");
       if (!Array.isArray(parsed.actions)) parsed.actions = [];

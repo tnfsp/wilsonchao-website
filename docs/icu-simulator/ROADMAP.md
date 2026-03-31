@@ -1,6 +1,6 @@
 # ICU Simulator — Roadmap
 
-> 最後更新：2026-03-25
+> 最後更新：2026-03-31
 > 來源：DESIGN-DIFFICULTY-SYSTEM.md + 2026-03-25-fix-plan.md + 2026-03-25-standard-walkthrough.md
 
 ---
@@ -38,19 +38,20 @@
 - **hiddenTitle 系統**：遊戲中不爆雷診斷
 - **護理師 AI 對話**（Phase 3 preview）：`/api/simulator/chat`，Claude Sonnet
 
-### ✅ Standard 模式（架構完成）
+### ✅ Standard 模式（UI 統一完成，2026-03-31）
 
-- **3 個 Standard Overlay**：postop-bleeding、cardiac-tamponade、septic-shock
-- **StandardGameLayout**：Desktop 雙欄 / Mobile 堆疊
-- **ColorVitalsPanel**：顏色標示（綠/黃/紅）+ trend arrow + 正常值
-- **SimplifiedActionBar**：7 個 preset 按鈕
-- **PresetOrderPanel**：一鍵 preset order（正確 + 干擾選項）
-- **GuidanceBubble**：護理師引導提示
+- **UI 統一**：Standard 與 Pro 共用完全相同的 layout（ProGameLayout, ProVitalsPanel, WaveformMonitor, ActionBar, MobileMonitorPanel, ChestTubePanel, VentilatorPanel）
+- **差異僅在操作**：Standard 用 PresetOrderPanel（一鍵下單）而非 Pro 的 OrderModal（自選劑量）
+- **ActionBar 自適應**：偵測 `difficulty === "standard"` 時，處置按鈕直接開 PresetOrderPanel（無 popover），隱藏 MTP
+- **1 個 Standard Overlay**：bleeding-to-tamponade（15 preset orders + 7 guidance steps + 3 urgency events）
+- **PresetOrderPanel**：一鍵 preset order（正確 + 干擾選項 + 教學回饋）
+- **GuidanceBubble**：護理師引導提示（7 triggers）
 - **RescueCountdown**：60 秒搶救窗口
-- **StandardImagingModal**：CXR + Echo，含真實圖片 + teaching notes
-- **StandardDebriefPanel**：GuidedReview（rationale + howTo）+ checklist + progress 持久化（localStorage）
-- **Standard Score Engine**：checklist-based，stars 1-3
+- **Pro Modals 共用**：PE / Imaging / Defibrillator / Consult / Lab / SeniorDialog 全用 Pro 版
+- **StandardDebriefPanel**：checklist + progress 持久化（localStorage）
+- **Standard Score Engine**：checklist-based，stars 1-3，支援 ID 正規化匹配
 - **Fog of War `light`**：Standard 模式用
+- **已刪除**：StandardGameLayout, ColorVitalsPanel, SimplifiedActionBar, MiniWaveform, StandardPEModal, StandardImagingModal, StandardDefibrillatorModal（7 個元件）
 
 ### ✅ 其他
 
@@ -65,21 +66,23 @@
 
 > 來源：2026-03-25-fix-plan.md + 2026-03-25-standard-walkthrough.md
 
-### 🔴 P1（需立即修）
+### ✅ 已修復 Bugs（2026-03-31）
 
-| # | 問題 | 檔案 | 工作量 |
-|---|------|------|--------|
-| Fix-01 | `route.ts` JSON parse 失敗靜默，護理師 AI 所有 actions 消失 | `app/api/simulator/chat/route.ts` | 5 min |
-| Fix-03 | `MessageInput.tsx` 的 `definition!` 非空斷言在 AI 幻覺 ID 時 crash | `components/simulator/pro/MessageInput.tsx` | 10 min |
+| # | 問題 | 狀態 |
+|---|------|------|
+| Fix-01 | `route.ts` JSON parse — 新增 regex JSON 提取（AI 在 JSON 前後加文字時也能 parse） | ✅ 已修 |
+| Fix-03 | `MessageInput.tsx` definition null check — 已用 optional chaining + graceful fallback | ✅ 已修 |
+| Fix-04 | `pendingConfirm` — 已升級為 `pendingConfirmQueue` 陣列，支援多個同時 confirm | ✅ 已修 |
+| Fix-05 | `isConfirmReply` — 已加入「好的」「沒問題」「可以」「行」等 15 個 confirm phrases | ✅ 已修 |
+| Fix-06 | `SimplifiedActionBar` 7 按鈕視覺不對稱 — 元件已刪除，Standard 改用 Pro ActionBar | ✅ 不再適用 |
+| Fix-07 | `lastGuidanceRef` — 已改為 Map<key, lastFiredGameTime> + cooldown 機制，可重觸發 | ✅ 已修 |
+| Scoring | `call_senior` 等 non-order actions 在 debrief 永遠 ❌ — matchAction 新增 ID 正規化（strip act-/preset- + 統一 separator）| ✅ 已修 |
+| Scoring | patientDied 保護 — score engine 已有 `patientDied → max 1⭐` 邏輯 | ✅ 已修 |
 
 ### 🟠 P2（近期修）
 
 | # | 問題 | 檔案 | 工作量 |
 |---|------|------|--------|
-| Fix-04 | `pendingConfirm` 只支援單一 pending（Claude 回傳 2 個 confirm_order 時第一個被吞）| MessageInput.tsx | 20 min |
-| Fix-05 | `isConfirmReply` 匹配過窄（「好的」「沒問題」等不匹配，玩家卡住）| MessageInput.tsx | 10 min |
-| Fix-06 | `SimplifiedActionBar` 7 個按鈕在 `grid-cols-4` 視覺不對稱（第二行空白）| SimplifiedActionBar.tsx | 10 min |
-| Fix-07 | `lastGuidanceRef` Set 只增不減，同一 guidance trigger 整場只觸發一次（phase 切換後無法重觸發）| StandardPageClient.tsx | 15 min |
 | Fix-08 | Scenario wrong preset 用了不存在的 definitionId（warfarin, hold_transfusion 等），penalty 生效但 timeline 無視覺確認 | medications.ts + scenarios | 20 min |
 
 ### 🔴 P0 UX（手機版 + Onboarding）
@@ -102,12 +105,12 @@
 
 ### ⚠️ 已知設計缺陷（不 crash 但教學有缺）
 
-| 問題 | 位置 |
-|------|------|
-| `call_senior` 等 non-order critical actions 在 Standard Debrief checklist 永遠 ❌ | StandardDebriefWrapper + standard-score-engine.ts |
-| 死亡後 Standard Score 可能顯示高星（無 `patientDied` 保護）| StandardDebriefWrapper |
-| `handlePresetOrder` loop 中多 sub-orders 可能有 state race condition | StandardPageClient.tsx |
-| 快進 5 分時病人可能「跳過」死亡閾值（一次 tick 5 分鐘）| useStandardGameTick |
+| 問題 | 位置 | 狀態 |
+|------|------|------|
+| ~~`call_senior` 等 non-order critical actions 在 Standard Debrief checklist 永遠 ❌~~ | ~~standard-score-engine.ts~~ | ✅ 已修（ID 正規化） |
+| ~~死亡後 Standard Score 可能顯示高星~~ | ~~StandardDebriefWrapper~~ | ✅ 已修（patientDied cap） |
+| `handlePresetOrder` loop 中多 sub-orders 可能有 state race condition | StandardPageClient.tsx | 未修 |
+| 快進 5 分時病人可能「跳過」死亡閾值（一次 tick 5 分鐘）| useStandardGameTick | 未修 |
 
 ---
 
@@ -122,9 +125,11 @@
 
 ### 🟡 Phase 1 — Standard 模式打磨
 
-- [ ] 修完 P0/P1 bug（見上方清單）
-- [ ] `call_senior` scoring gap 修復
-- [ ] 死亡後 Standard stars 保護（patientDied → max 1⭐）
+- [x] UI 統一（Standard 用 Pro layout）— 2026-03-31
+- [x] Standard overlay for bleeding-to-tamponade — 2026-03-31
+- [x] P1 bugs 修復 — 2026-03-31
+- [x] `call_senior` scoring gap 修復（ID 正規化）— 2026-03-31
+- [x] 死亡後 Standard stars 保護（patientDied → max 1⭐）— 已存在
 - [ ] StandardDebriefPanel：CTA 改進（Try Again / Choose Another / Challenge Pro）
 - [ ] Standard 模式的 Tutorial Overlay（首次進入自動觸發）
 - [ ] Micro Survey 收集（satisfaction 1-5, difficulty）
@@ -226,4 +231,4 @@
 
 ---
 
-*Roadmap 由 Owl 整理，2026-03-25。*
+*Roadmap 由 Owl 整理，2026-03-25。Updated 2026-03-31（Standard UI 統一 + bug fixes）。*

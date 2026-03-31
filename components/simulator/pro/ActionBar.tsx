@@ -251,6 +251,8 @@ export default function ActionBar() {
   const hintsUsed = useProGameStore((s) => s.hintsUsed);
   const hintLoading = useProGameStore((s) => s.hintLoading);
   const useHint = useProGameStore((s) => s.useHint);
+  const difficulty = useProGameStore((s) => s.difficulty);
+  const isStandard = difficulty === "standard";
 
   const [showMTPConfirm, setShowMTPConfirm] = useState(false);
   const [activePopover, setActivePopover] = useState<"treatment" | null>(null);
@@ -261,8 +263,8 @@ export default function ActionBar() {
   const arrestRhythms = ["vf", "vt_pulseless", "pea", "asystole"];
   const isInArrest = patient?.vitals.hr === 0 || arrestRhythms.includes(patient?.vitals.rhythmStrip ?? "");
 
-  // Show prominent MTP button for hemorrhage-related pathologies
-  const showMTPButton = isPlaying && !mtpState.activated && (
+  // Show prominent MTP button for hemorrhage-related pathologies (Pro only)
+  const showMTPButton = !isStandard && isPlaying && !mtpState.activated && (
     patient?.pathology === "surgical_bleeding" ||
     patient?.pathology === "coagulopathy"
   );
@@ -300,18 +302,20 @@ export default function ActionBar() {
 
   return (
     <>
-      {showMTPConfirm && (
+      {!isStandard && showMTPConfirm && (
         <MTPConfirmDialog
           onConfirm={() => { activateMTP(); setShowMTPConfirm(false); }}
           onCancel={() => setShowMTPConfirm(false)}
         />
       )}
 
-      {/* ── MTP Phase progression banner ── */}
-      <MTPPhaseBanner
-        roundsDelivered={mtpState.roundsDelivered}
-        activated={mtpState.activated}
-      />
+      {/* ── MTP Phase progression banner (Pro only) ── */}
+      {!isStandard && (
+        <MTPPhaseBanner
+          roundsDelivered={mtpState.roundsDelivered}
+          activated={mtpState.activated}
+        />
+      )}
 
       <div
         id="action-bar"
@@ -333,22 +337,31 @@ export default function ActionBar() {
             shortcut="2"
           />
 
-          {/* Treatment with popover (⚕️ 處置) */}
-          <div className="relative">
+          {/* Treatment: Standard → direct order modal; Pro → popover submenu */}
+          {isStandard ? (
             <IconBtn
               icon="⚕️" label="處置"
-              onClick={() => setActivePopover(activePopover === "treatment" ? null : "treatment")}
+              onClick={() => openModal("order")}
               disabled={!isPlaying}
-              active={activePopover === "treatment"}
               shortcut="3"
             />
-            {activePopover === "treatment" && isPlaying && (
-              <ActionPopover
-                items={treatmentItems}
-                onClose={() => setActivePopover(null)}
+          ) : (
+            <div className="relative">
+              <IconBtn
+                icon="⚕️" label="處置"
+                onClick={() => setActivePopover(activePopover === "treatment" ? null : "treatment")}
+                disabled={!isPlaying}
+                active={activePopover === "treatment"}
+                shortcut="3"
               />
-            )}
-          </div>
+              {activePopover === "treatment" && isPlaying && (
+                <ActionPopover
+                  items={treatmentItems}
+                  onClose={() => setActivePopover(null)}
+                />
+              )}
+            </div>
+          )}
 
           <IconBtn
             icon="📞" label="通報交班"

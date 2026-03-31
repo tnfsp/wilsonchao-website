@@ -37,22 +37,63 @@ export interface StandardScore {
 // Helpers
 // ============================================================
 
+/** Normalize an action/order ID for fuzzy matching:
+ *  strip "act-" / "preset-" prefixes, strip trailing phase markers (_p2 etc),
+ *  replace hyphens with underscores, lowercase. */
+function normalizeId(id: string): string {
+  return id
+    .toLowerCase()
+    .replace(/^(act|preset)-/, "")
+    .replace(/-/g, "_")
+    .replace(/_p\d+$/, ""); // strip phase suffix: _p2, _p3
+}
+
+/** Explicit aliases for IDs that can't be matched by normalization alone.
+ *  Key = normalized expectedAction ID, Values = player action IDs that satisfy it. */
+const ACTION_ALIASES: Record<string, string[]> = {
+  // Short IDs (< 4 chars) that fail substring match
+  cbc_stat: ["cbc", "cbc_stat"],
+  abg_lactate: ["abg", "abg_lactate", "lactate"],
+  // Word-order mismatch
+  cardiac_pocus: ["pocus_cardiac", "cardiac_pocus"],
+  // Category-based: any fluid or blood product counts as volume resuscitation
+  volume_resuscitation: ["lr", "ns", "albumin_5", "prbc", "prbc_1u", "prbc_2u", "prbc_4u", "ffp_2u", "ffp_4u"],
+  // Phase 2 volume challenge — same fluids/blood
+  volume_challenge: ["lr", "ns", "albumin_5", "prbc", "prbc_1u", "prbc_2u", "prbc_4u", "ffp_2u", "ffp_4u"],
+};
+
 function matchAction(
   expected: ExpectedAction,
   playerActions: PlayerAction[],
 ): { matched: boolean; time?: number } {
+  const expectedNorm = normalizeId(expected.id);
+
   const match = playerActions.find((pa) => {
     // 1. Exact ID match (most reliable)
     if (pa.orderId === expected.id) return true;
 
+    const paNorm = normalizeId(pa.orderId);
+
+    // 2. Normalized ID match (handles "call_senior" vs "act-call-senior")
+    if (paNorm === expectedNorm) return true;
+
+    // 3. Alias match (handles short IDs, word-order, category-based)
+    const aliases = ACTION_ALIASES[expectedNorm];
+    if (aliases && aliases.includes(paNorm)) return true;
+
+    // 4. Substring match — only for strings >= 4 chars to avoid
+    //    false positives like "epi" matching "norepinephrine"
+    if (paNorm.length >= 4 && expectedNorm.length >= 4) {
+      if (paNorm.includes(expectedNorm) || expectedNorm.includes(paNorm)) return true;
+    }
+
     const paName = pa.orderName.toLowerCase().trim();
     const eaAction = expected.action.toLowerCase().trim();
 
-    // 2. Exact name match
+    // 5. Exact name match
     if (paName === eaAction) return true;
 
-    // 3. Substring match — only for strings >= 4 chars to avoid
-    //    false positives like "epi" matching "norepinephrine"
+    // 6. Substring name match (>= 4 chars)
     if (paName.length >= 4 && eaAction.length >= 4) {
       if (paName.includes(eaAction) || eaAction.includes(paName)) return true;
     }

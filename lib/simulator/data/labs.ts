@@ -48,6 +48,26 @@ export const abgLab: OrderDefinition = {
   },
 };
 
+/** Coag Panel (PT/INR + aPTT + Fibrinogen) — bundle for Standard mode presets */
+export const coagLab: OrderDefinition = {
+  id: "coag",
+  name: "Coagulation Panel (PT/INR, aPTT, Fibrinogen)",
+  category: "lab",
+  subcategory: "coagulation",
+  defaultDose: "1",
+  unit: "panel",
+  route: "Blood draw",
+  frequencies: ["STAT", "Q6H", "Q12H"],
+  timeToEffect: 0,
+  timeToResult: 15,
+  effect: {
+    type: "procedure",
+    duration: 0,
+    isCorrectTreatment: true,
+    severityChange: 0,
+  },
+};
+
 // ============================================================
 // INDIVIDUAL CHEMISTRY — 原 BCS panel 拆開
 // ============================================================
@@ -632,6 +652,7 @@ export const allLabs: OrderDefinition[] = [
   // Bundles
   cbcLab,
   abgLab,
+  coagLab,
   // Individual chemistry
   naLab,
   kLab,

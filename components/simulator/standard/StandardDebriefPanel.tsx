@@ -713,28 +713,90 @@ export default function StandardDebriefPanel({
 
         <div className="border-t border-white/8" />
 
-        {/* Action Buttons */}
+        {/* Star-dependent encouragement + Action Buttons */}
         <div className="flex flex-col gap-3 pb-8">
-          <button
-            onClick={onRestart}
-            className="w-full py-3 rounded-xl bg-cyan-700 hover:bg-cyan-600 text-white font-bold transition-colors"
-          >
-            {"\uD83D\uDD04"} 再試一次
-          </button>
+          {/* Contextual message based on performance */}
+          {score.stars === 3 && (
+            <div className="rounded-xl bg-green-900/20 border border-green-500/30 p-3 text-center">
+              <p className="text-green-300 text-sm font-medium">
+                表現優秀！準備好挑戰進階模式了嗎？
+              </p>
+              <p className="text-green-400/60 text-xs mt-1">
+                Pro 模式需要自己選藥物和劑量，沒有護理師提示
+              </p>
+            </div>
+          )}
+          {score.stars === 2 && (
+            <div className="rounded-xl bg-cyan-900/20 border border-cyan-500/30 p-3 text-center">
+              <p className="text-cyan-300 text-sm font-medium">
+                不錯！關鍵步驟都做對了，但還有些 important 項目可以加強
+              </p>
+              <p className="text-cyan-400/60 text-xs mt-1">
+                回顧黃色標記的項目，下次試著在時限內完成更多
+              </p>
+            </div>
+          )}
+          {score.stars === 1 && !score.patientDied && (
+            <div className="rounded-xl bg-amber-900/20 border border-amber-500/30 p-3 text-center">
+              <p className="text-amber-300 text-sm font-medium">
+                還有進步空間！注意 checklist 中紅色的項目
+              </p>
+              <p className="text-amber-400/60 text-xs mt-1">
+                重點：時間內完成 critical actions，護理師的提示會幫你抓方向
+              </p>
+            </div>
+          )}
+          {score.patientDied && (
+            <div className="rounded-xl bg-red-900/20 border border-red-500/30 p-3 text-center">
+              <p className="text-red-300 text-sm font-medium">
+                病人沒能撐過來。回顧 checklist，看看哪些關鍵步驟沒做到
+              </p>
+              <p className="text-red-400/60 text-xs mt-1">
+                再試一次，注意優先處理 critical 項目
+              </p>
+            </div>
+          )}
+
+          {/* Primary CTA: stars >= 3 → Pro challenge first; otherwise retry first */}
+          {score.stars >= 3 && onUpgradeToPro ? (
+            <>
+              <button
+                onClick={onUpgradeToPro}
+                className="w-full py-3 rounded-xl bg-amber-600 hover:bg-amber-500 text-white font-bold transition-colors"
+              >
+                ⚔️ 挑戰 Pro 模式
+              </button>
+              <button
+                onClick={onRestart}
+                className="w-full py-3 rounded-xl border border-slate-600 text-slate-300 hover:bg-slate-800 transition-colors"
+              >
+                🔄 再玩一次 Standard
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={onRestart}
+                className="w-full py-3 rounded-xl bg-cyan-700 hover:bg-cyan-600 text-white font-bold transition-colors"
+              >
+                🔄 再試一次
+              </button>
+              {onUpgradeToPro && (
+                <button
+                  onClick={onUpgradeToPro}
+                  className="w-full py-3 rounded-xl border border-amber-600/50 bg-amber-900/20 text-amber-300 hover:bg-amber-900/40 transition-colors font-medium"
+                >
+                  ⚔️ 挑戰進階模式
+                </button>
+              )}
+            </>
+          )}
           <button
             onClick={onBackToList}
             className="w-full py-3 rounded-xl border border-slate-600 text-slate-300 hover:bg-slate-800 transition-colors"
           >
-            {"\u2190"} 選擇其他情境
+            ← 選擇其他情境
           </button>
-          {onUpgradeToPro && (
-            <button
-              onClick={onUpgradeToPro}
-              className="w-full py-3 rounded-xl border border-amber-600/50 bg-amber-900/20 text-amber-300 hover:bg-amber-900/40 transition-colors font-medium"
-            >
-              {"\u2694\uFE0F"} 挑戰進階模式
-            </button>
-          )}
         </div>
       </div>
     </div>

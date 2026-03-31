@@ -19,27 +19,36 @@ import { getTransfusionById } from "@/lib/simulator/data/transfusions";
 import type { OrderDefinition } from "@/lib/simulator/types";
 import type { GuidanceMessage } from "@/lib/simulator/engine/guidance-engine";
 
-// Standard components
-import StandardGameLayout from "@/components/simulator/standard/StandardGameLayout";
-import ColorVitalsPanel from "@/components/simulator/standard/ColorVitalsPanel";
-import SimplifiedActionBar from "@/components/simulator/standard/SimplifiedActionBar";
+// Standard-specific components (kept: preset orders, guidance, rescue, debrief)
 import PresetOrderPanel from "@/components/simulator/standard/PresetOrderPanel";
 import RescueCountdown from "@/components/simulator/standard/RescueCountdown";
 import StandardDebriefPanel from "@/components/simulator/standard/StandardDebriefPanel";
-import StandardPEModal from "@/components/simulator/standard/StandardPEModal";
-import StandardImagingModal from "@/components/simulator/standard/StandardImagingModal";
 import GuidanceBubble from "@/components/simulator/standard/GuidanceBubble";
 import type { GuidanceMessage as BubbleMessage } from "@/components/simulator/standard/GuidanceBubble";
 
-// Re-use Pro components where appropriate
+// Pro components (shared UI — Standard now uses the same layout as Pro)
+import ProGameLayout from "@/components/simulator/pro/ProGameLayout";
+import ProVitalsPanel from "@/components/simulator/pro/ProVitalsPanel";
+import ActionBar from "@/components/simulator/pro/ActionBar";
+import WaveformMonitor from "@/components/simulator/pro/WaveformMonitor";
+import MobileMonitorPanel from "@/components/simulator/pro/MobileMonitorPanel";
+import ChestTubePanel from "@/components/simulator/pro/ChestTubePanel";
+import VentilatorPanel from "@/components/simulator/pro/VentilatorPanel";
 import ChatTimeline from "@/components/simulator/pro/ChatTimeline";
 import MessageInput from "@/components/simulator/pro/MessageInput";
 import SBARModal from "@/components/simulator/pro/SBARModal";
 import DeathScreen from "@/components/simulator/pro/DeathScreen";
 import LabOrderModal from "@/components/simulator/pro/LabOrderModal";
+import { PEModal } from "@/components/simulator/pro/PEModal";
+import { ImagingModal } from "@/components/simulator/pro/ImagingModal";
 import { ConsultModal } from "@/components/simulator/pro/ConsultModal";
 import { PauseThinkModal } from "@/components/simulator/pro/PauseThinkModal";
-import StandardDefibrillatorModal from "@/components/simulator/standard/DefibrillatorModal";
+import { SeniorDialogModal } from "@/components/simulator/pro/SeniorDialogModal";
+import { MilkCTResultModal } from "@/components/simulator/pro/MilkCTResultModal";
+import DefibrillatorModal from "@/components/simulator/pro/DefibrillatorModal";
+import LabOverviewPanel from "@/components/simulator/pro/LabOverviewPanel";
+import FastForwardToast from "@/components/simulator/pro/FastForwardToast";
+import TutorialOverlay from "@/components/simulator/pro/TutorialOverlay";
 
 // ── Tags to hide from pre-game display ───────────────────────────────────────
 
@@ -104,10 +113,10 @@ function IntroScreen({ scenario }: { scenario: SimScenario }) {
       <div className="max-w-lg w-full">
         {/* Header */}
         <div className="text-center mb-8">
-          <div className="text-5xl mb-4">{"\uD83E\uDE7A"}</div>
+          <div className="text-5xl mb-4">🏥</div>
           <div className="flex items-center justify-center gap-2 mb-2">
             <span className="text-xs px-2 py-0.5 rounded-full bg-amber-900/40 text-amber-400 border border-amber-500/30">
-              {"\u6559\u5B78\u6A21\u5F0F"}
+              標準模式
             </span>
             <span className="text-gray-500 text-xs">{scenario.duration}</span>
           </div>
@@ -125,39 +134,73 @@ function IntroScreen({ scenario }: { scenario: SimScenario }) {
           style={{ background: "rgba(255,255,255,0.03)" }}
         >
           <h2 className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-4">
-            {"\u75C5\u4EBA\u8CC7\u6599"}
+            病人資料
           </h2>
           <div className="grid grid-cols-2 gap-3 text-sm">
-            <InfoRow label={"\u5E8A\u4F4D"} value={scenario.patient.bed} />
+            <InfoRow label="床位" value={scenario.patient.bed} />
             <InfoRow
-              label={"\u75C5\u4EBA"}
-              value={`${scenario.patient.age}\u6B72 ${scenario.patient.sex === "M" ? "\u7537" : "\u5973"} \u00B7 ${scenario.patient.weight}kg`}
+              label="病人"
+              value={`${scenario.patient.age}歲 ${scenario.patient.sex === "M" ? "男" : "女"} · ${scenario.patient.weight}kg`}
             />
-            <InfoRow label={"\u8853\u5F0F"} value={scenario.patient.surgery} />
-            <InfoRow label={"\u8853\u5F8C"} value={scenario.patient.postOpDay} />
+            <InfoRow label="術式" value={scenario.patient.surgery} />
+            <InfoRow label="術後" value={scenario.patient.postOpDay} />
             <div className="col-span-2">
-              <InfoRow label={"\u75C5\u53F2"} value={scenario.patient.history} />
+              <InfoRow label="病史" value={scenario.patient.history} />
             </div>
+            {scenario.patient.allergies.length > 0 && (
+              <div className="col-span-2">
+                <InfoRow
+                  label="過敏"
+                  value={scenario.patient.allergies.join("、")}
+                  highlight
+                />
+              </div>
+            )}
           </div>
         </div>
 
-        {/* Standard mode info */}
+        {/* Scenario context (matches Pro) */}
+        <div
+          className="rounded-2xl border border-white/10 p-5 mb-6"
+          style={{ background: "rgba(255,255,255,0.03)" }}
+        >
+          <h2 className="text-gray-400 text-xs font-semibold uppercase tracking-widest mb-3">
+            情境說明
+          </h2>
+          <p className="text-gray-300 text-sm leading-relaxed">
+            你是 ICU 的值班住院醫師，現在是凌晨{" "}
+            <span className="text-teal-400 font-mono">
+              {String(scenario.startHour).padStart(2, "0")}:00
+            </span>
+            。護理師{" "}
+            <span className="text-white font-medium">
+              {scenario.nurseProfile.name}
+            </span>{" "}
+            剛打電話給你。
+          </p>
+          <p className="text-gray-500 text-xs mt-3 leading-relaxed">
+            評估病人、下 order、管理血流動力學，在適當時機交班給學長。
+            最後進行 SBAR 交班報告並進入 Debrief 評分。
+          </p>
+        </div>
+
+        {/* Standard mode features callout */}
         <div
           className="rounded-2xl border border-amber-500/20 p-5 mb-6"
           style={{ background: "rgba(245, 158, 11, 0.05)" }}
         >
           <h2 className="text-amber-400 text-xs font-semibold uppercase tracking-widest mb-3">
-            {"\u6559\u5B78\u6A21\u5F0F\u7279\u8272"}
+            標準模式特色
           </h2>
           <ul className="text-gray-300 text-sm space-y-2 leading-relaxed">
-            <li>{"\uD83D\uDC69\u200D\u2695\uFE0F \u8B77\u7406\u5E2B\u6703\u4E3B\u52D5\u63D0\u793A\u4F60\u4E0B\u4E00\u6B65\u8A72\u505A\u4EC0\u9EBC"}</li>
-            <li>{"\uD83D\uDFE2 Vitals \u984F\u8272\u6A19\u793A\uFF0C\u7DA0=\u6B63\u5E38 \u9EC3=\u6CE8\u610F \u7D05=\u5371\u6025"}</li>
-            <li>{"\u23F3 \u6642\u9593\u901F\u5EA6\u8F03\u6162\uFF0C\u7D66\u4F60\u66F4\u591A\u601D\u8003\u6642\u9593"}</li>
-            <li>{"\uD83D\uDEE1\uFE0F 60\u79D2\u6436\u6551\u7A97\u53E3\uFF0C\u4E0D\u6703\u7ACB\u5373\u6B7B\u4EA1"}</li>
+            <li>👩‍⚕️ 護理師會主動提示你下一步該做什麼</li>
+            <li>⏳ 時間速度較慢，給你更多思考時間</li>
+            <li>🛡️ 60秒搶救窗口，不會立即死亡</li>
+            <li>💊 簡化處置：預設選單一鍵下單</li>
           </ul>
         </div>
 
-        {/* Tags */}
+        {/* Tags (filtered to hide diagnostic spoilers) */}
         {scenario.tags.length > 0 && (
           <div className="flex flex-wrap gap-1.5 mb-7">
             {scenario.tags.filter((t) => !DIAGNOSTIC_TAGS.has(t)).map((tag) => (
@@ -174,14 +217,14 @@ function IntroScreen({ scenario }: { scenario: SimScenario }) {
         {/* Start button */}
         <button
           onClick={startGame}
-          className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-amber-600 hover:bg-amber-500 active:scale-[0.98] text-white font-bold text-base transition-all shadow-xl shadow-amber-900/50"
+          className="w-full flex items-center justify-center gap-3 py-4 rounded-2xl bg-teal-700 hover:bg-teal-600 active:scale-[0.98] text-white font-bold text-base transition-all shadow-xl shadow-teal-900/50"
         >
-          <span className="text-xl">{"\u25B6"}</span>
-          {"\u958B\u59CB\u6559\u5B78\u6A21\u64EC"}
+          <span className="text-xl">▶</span>
+          開始模擬
         </button>
 
         <p className="text-gray-600 text-xs text-center mt-3">
-          {"\u904A\u6232\u4E2D\u53EF\u96A8\u6642\u66AB\u505C\uFF0C\u8B77\u7406\u5E2B\u6703\u5F15\u5C0E\u4F60\u5B8C\u6210\u6A21\u64EC"}
+          遊戲中可隨時暫停，護理師會引導你完成模擬
         </p>
       </div>
     </div>
@@ -524,17 +567,21 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
 
   return (
     <>
-      <StandardGameLayout
-        vitalsPanel={<ColorVitalsPanel />}
-        chatTimeline={
-          <div className="flex flex-col h-full">
-            <div className="flex-1 overflow-hidden">
-              <ChatTimeline />
-            </div>
-            <MessageInput />
-          </div>
+      <TutorialOverlay />
+      <FastForwardToast />
+      <ProGameLayout
+        monitorPanel={<MobileMonitorPanel />}
+        desktopLeftPanel={
+          <>
+            <WaveformMonitor height={280} />
+            <ProVitalsPanel />
+            <VentilatorPanel />
+            <ChestTubePanel />
+          </>
         }
-        actionBar={<SimplifiedActionBar />}
+        chatPanel={<ChatTimeline />}
+        messageInput={<MessageInput />}
+        actionBar={<ActionBar />}
       />
 
       {/* Guidance bubble overlay — floats above action bar */}
@@ -550,7 +597,7 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
       {/* Rescue countdown overlay — reads from store, self-manages visibility */}
       <RescueCountdown />
 
-      {/* Preset order modal (replaces OrderModal for Standard mode) */}
+      {/* Preset order modal (replaces Pro's OrderModal for Standard mode) */}
       {activeModal === "order" && presets.length > 0 && (
         <PresetOrderModal
           presets={presets}
@@ -560,15 +607,16 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
         />
       )}
 
-      {/* Re-use Pro modals for lab, consult, pause */}
+      {/* Pro modals (shared with Standard) */}
       <LabOrderModal />
       <ConsultModal />
       <PauseThinkModal />
-
-      {/* Standard-specific modals */}
-      <StandardPEModal />
-      <StandardImagingModal />
-      <StandardDefibrillatorModal />
+      <PEModal />
+      <ImagingModal />
+      <DefibrillatorModal />
+      <SeniorDialogModal />
+      <MilkCTResultModal />
+      <LabOverviewPanel />
     </>
   );
 }

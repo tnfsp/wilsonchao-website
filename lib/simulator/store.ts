@@ -1855,10 +1855,16 @@ export const useProGameStore = create<ProGameStore>((set, get) => ({
   // ----------------------------------------------------------
   actionAdvance: (minutes: number) => {
     if (minutes <= 0) return;
-    get().advanceTime(minutes);
-    const tick = get()._tickPatientFn;
-    if (typeof tick === "function") {
-      tick(minutes);
+    // Split into 1-minute sub-ticks to avoid skipping death thresholds
+    // (e.g., fast-forward 5 min should detect death at minute 3, not skip to minute 5)
+    for (let i = 0; i < minutes; i++) {
+      get().advanceTime(1);
+      const tick = get()._tickPatientFn;
+      if (typeof tick === "function") {
+        tick(1);
+      }
+      // Stop early if patient died or game ended during sub-tick
+      if (get().phase !== "playing") break;
     }
   },
 
