@@ -107,6 +107,8 @@ function DrugDetailPanel({
   onClose: () => void;
   onConfirm: (dose: string, frequency: string) => void;
 }) {
+  const difficulty = useProGameStore((s) => s.difficulty);
+  const isStandard = difficulty === "standard";
   const [dose, setDose] = useState(drug.defaultDose);
   const [frequency, setFrequency] = useState(drug.frequencies[0] ?? "Once");
   const [confirmingWarning, setConfirmingWarning] = useState(false);
@@ -170,62 +172,76 @@ function DrugDetailPanel({
         </div>
       )}
 
-      {/* Dose input */}
-      <div className="space-y-4">
-        <div>
-          <label className="block text-zinc-400 text-sm mb-1">劑量（{drug.unit}）</label>
-          <div className="flex items-center gap-2">
-            <input
-              type="number"
-              value={dose}
-              onChange={(e) => { setDose(e.target.value); setOverrideWarning(false); setConfirmingWarning(false); }}
-              step="any"
-              className="w-36 bg-zinc-700 text-white rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-cyan-500"
+      {/* Dose + Frequency */}
+      {isStandard ? (
+        /* Standard mode: show default dose + frequency as read-only badges */
+        <div className="flex items-center gap-3 py-2">
+          <div className="bg-cyan-900/30 border border-cyan-500/40 rounded-lg px-4 py-2">
+            <span className="text-cyan-300 font-mono font-bold text-lg">{drug.defaultDose}</span>
+            <span className="text-cyan-400/60 text-sm ml-1">{drug.unit}</span>
+          </div>
+          <div className="bg-zinc-800 border border-zinc-700 rounded-lg px-4 py-2">
+            <span className="text-zinc-300 text-sm">{drug.frequencies[0] ?? "Once"}</span>
+          </div>
+        </div>
+      ) : (
+        /* Pro mode: editable dose input + frequency selector */
+        <div className="space-y-4">
+          <div>
+            <label className="block text-zinc-400 text-sm mb-1">劑量（{drug.unit}）</label>
+            <div className="flex items-center gap-2">
+              <input
+                type="number"
+                value={dose}
+                onChange={(e) => { setDose(e.target.value); setOverrideWarning(false); setConfirmingWarning(false); }}
+                step="any"
+                className="w-36 bg-zinc-700 text-white rounded-lg px-3 py-2 text-base focus:outline-none focus:ring-2 focus:ring-cyan-500"
+              />
+              <span className="text-zinc-400 text-sm">{drug.unit}</span>
+            </div>
+
+            {/* Guard rail bar */}
+            <GuardRailBar
+              min={guardRail?.min}
+              max={guardRail?.max}
+              warnAbove={guardRail?.warnAbove}
+              rejectAbove={guardRail?.rejectAbove}
+              currentDose={numericDose}
+              unit={drug.unit}
             />
-            <span className="text-zinc-400 text-sm">{drug.unit}</span>
           </div>
 
-          {/* Guard rail bar */}
-          <GuardRailBar
-            min={guardRail?.min}
-            max={guardRail?.max}
-            warnAbove={guardRail?.warnAbove}
-            rejectAbove={guardRail?.rejectAbove}
-            currentDose={numericDose}
-            unit={drug.unit}
-          />
+          {/* Frequency */}
+          <div>
+            <label className="block text-zinc-400 text-sm mb-1">頻率</label>
+            <select
+              value={frequency}
+              onChange={(e) => setFrequency(e.target.value)}
+              className="bg-zinc-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
+            >
+              {drug.frequencies.map((f) => (
+                <option key={f} value={f}>{f}</option>
+              ))}
+            </select>
+          </div>
         </div>
+      )}
 
-        {/* Frequency */}
-        <div>
-          <label className="block text-zinc-400 text-sm mb-1">頻率</label>
-          <select
-            value={frequency}
-            onChange={(e) => setFrequency(e.target.value)}
-            className="bg-zinc-700 text-white rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-cyan-500"
-          >
-            {drug.frequencies.map((f) => (
-              <option key={f} value={f}>{f}</option>
-            ))}
-          </select>
-        </div>
-      </div>
-
-      {/* Guard rail feedback */}
-      {isRejected && (
+      {/* Guard rail feedback (Pro only — Standard uses default dose, no overrides needed) */}
+      {!isStandard && isRejected && (
         <div className="mt-4 bg-red-900/60 border border-red-500 rounded-lg px-4 py-3 text-red-200 text-sm">
           🚫 <strong>護理師：</strong>{guardRail?.rejectMessage ?? `學長，這個劑量太高了，藥局不會配`}
         </div>
       )}
 
-      {isWarning && !overrideWarning && (
+      {!isStandard && isWarning && !overrideWarning && (
         <div className="mt-4 bg-yellow-900/40 border border-yellow-600 rounded-lg px-4 py-3 text-yellow-200 text-sm">
           ⚠️ <strong>護理師：</strong>{guardRail?.warnMessage ?? `學長，這個劑量有點高欸，確定嗎？`}
         </div>
       )}
 
-      {/* Confirm warning override */}
-      {(confirmingWarning || (isWarning && !overrideWarning)) && !isRejected && (
+      {/* Confirm warning override (Pro only) */}
+      {!isStandard && (confirmingWarning || (isWarning && !overrideWarning)) && !isRejected && (
         <div className="mt-3 flex gap-2">
           <button
             onClick={() => { setOverrideWarning(true); setConfirmingWarning(false); }}
@@ -245,18 +261,20 @@ function DrugDetailPanel({
       {/* Submit */}
       {!confirmingWarning && (
         <button
-          onClick={handleSubmit}
-          disabled={!canSubmit}
+          onClick={isStandard ? () => onConfirm(drug.defaultDose, drug.frequencies[0] ?? "Once") : handleSubmit}
+          disabled={isStandard ? hasBlockInteraction : !canSubmit}
           className={`mt-4 w-full py-2.5 rounded-lg font-bold text-sm transition ${
-            canSubmit
+            (isStandard ? !hasBlockInteraction : canSubmit)
               ? "bg-cyan-600 hover:bg-cyan-500 text-white"
               : "bg-zinc-700 text-zinc-500 cursor-not-allowed"
           }`}
         >
-          {isRejected
-            ? "無法送出"
-            : hasBlockInteraction
+          {hasBlockInteraction
             ? "禁忌（藥物交互作用）"
+            : isStandard
+            ? "一鍵開立"
+            : isRejected
+            ? "無法送出"
             : "確認送出"}
         </button>
       )}

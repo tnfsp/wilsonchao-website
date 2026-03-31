@@ -11,16 +11,10 @@ import {
 } from "@/lib/simulator/engine/standard-score-engine";
 import type { PlayerAction } from "@/lib/simulator/engine/score-engine";
 import { standardOverlays } from "@/lib/simulator/scenarios/standard";
-import type { StandardPresetOrder } from "@/lib/simulator/scenarios/standard/types";
 import { evaluateUrgency } from "@/lib/simulator/engine/urgency-engine";
-import { getMedicationById } from "@/lib/simulator/data/medications";
-import { getLabById } from "@/lib/simulator/data/labs";
-import { getTransfusionById } from "@/lib/simulator/data/transfusions";
-import type { OrderDefinition } from "@/lib/simulator/types";
 import type { GuidanceMessage } from "@/lib/simulator/engine/guidance-engine";
 
-// Standard-specific components (kept: preset orders, guidance, rescue, debrief)
-import PresetOrderPanel from "@/components/simulator/standard/PresetOrderPanel";
+// Standard-specific components (kept: guidance, rescue, debrief)
 import RescueCountdown from "@/components/simulator/standard/RescueCountdown";
 import StandardDebriefPanel from "@/components/simulator/standard/StandardDebriefPanel";
 import GuidanceBubble from "@/components/simulator/standard/GuidanceBubble";
@@ -38,6 +32,7 @@ import ChatTimeline from "@/components/simulator/pro/ChatTimeline";
 import MessageInput from "@/components/simulator/pro/MessageInput";
 import SBARModal from "@/components/simulator/pro/SBARModal";
 import DeathScreen from "@/components/simulator/pro/DeathScreen";
+import OrderModal from "@/components/simulator/pro/OrderModal";
 import LabOrderModal from "@/components/simulator/pro/LabOrderModal";
 import { PEModal } from "@/components/simulator/pro/PEModal";
 import { ImagingModal } from "@/components/simulator/pro/ImagingModal";
@@ -56,40 +51,6 @@ const DIAGNOSTIC_TAGS = new Set([
   "hemorrhage", "tamponade", "beck-triad", "re-exploration",
   "re-sternotomy", "sepsis", "septic-shock", "wound-infection",
 ]);
-
-// ── Order Definition Resolver ────────────────────────────────────────────────
-
-function resolveOrderDefinition(
-  definitionId: string,
-  dose: string,
-): OrderDefinition | null {
-  // Exact match across all catalogs
-  const med = getMedicationById(definitionId);
-  if (med) return med;
-  const lab = getLabById(definitionId);
-  if (lab) return lab;
-  const trans = getTransfusionById(definitionId);
-  if (trans) return trans;
-
-  // Fuzzy matching for transfusions (e.g., "prbc" + dose "2" → "prbc_2u")
-  const doseInt = parseInt(dose, 10);
-  if (doseInt > 0) {
-    if (definitionId.startsWith("prbc")) {
-      return getTransfusionById(`prbc_${doseInt}u`) ?? null;
-    }
-    if (definitionId.startsWith("ffp")) {
-      return getTransfusionById(`ffp_${doseInt}u`) ?? null;
-    }
-    if (definitionId.startsWith("platelet")) {
-      return getTransfusionById(`platelet_${doseInt}dose`) ?? null;
-    }
-    if (definitionId.startsWith("cryo")) {
-      return getTransfusionById(`cryo_${doseInt}u`) ?? null;
-    }
-  }
-
-  return null;
-}
 
 // ── Intro Screen ─────────────────────────────────────────────────────────────
 
@@ -395,57 +356,10 @@ function useStandardGameTick(
   }, [phase, activeModal, advanceTime, tickPatient]);
 }
 
-// ── Preset Order Modal ──────────────────────────────────────────────────────
-
-function PresetOrderModal({
-  presets,
-  executedIds,
-  onExecute,
-  onClose,
-}: {
-  presets: StandardPresetOrder[];
-  executedIds: Set<string>;
-  onExecute: (preset: StandardPresetOrder) => void;
-  onClose: () => void;
-}) {
-  return (
-    <div className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-        onClick={onClose}
-      />
-      {/* Panel */}
-      <div className="relative w-full max-w-lg max-h-[80vh] overflow-y-auto rounded-t-2xl sm:rounded-2xl border border-white/10 bg-[#0a1929] shadow-2xl">
-        <div className="sticky top-0 z-10 flex items-center justify-between px-4 py-3 border-b border-white/10 bg-[#0a1929]">
-          <h2 className="text-white font-bold text-sm">
-            {"\u8655\u7F6E\u9078\u55AE"}
-          </h2>
-          <button
-            onClick={onClose}
-            className="text-gray-400 hover:text-white text-lg leading-none"
-          >
-            {"\u2715"}
-          </button>
-        </div>
-        <PresetOrderPanel
-          presets={presets}
-          onExecuteOrder={onExecute}
-          executedOrderIds={executedIds}
-        />
-      </div>
-    </div>
-  );
-}
-
 // ── Game Screen ─────────────────────────────────────────────────────────────
 
 function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
-  const [executedPresetIds, setExecutedPresetIds] = useState<Set<string>>(new Set());
-  const [triedWrongIds, setTriedWrongIds] = useState<Set<string>>(new Set());
   const [bubbleMessages, setBubbleMessages] = useState<BubbleMessage[]>([]);
-  const activeModal = useProGameStore((s) => s.activeModal);
-  const closeModal = useProGameStore((s) => s.closeModal);
   const phase = useProGameStore((s) => s.phase);
 
   // GuidanceBubble callback: convert engine messages to bubble format
@@ -472,98 +386,6 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
       return () => clearTimeout(timer);
     }
   }, [phase]);
-
-  const handlePresetOrder = useCallback((preset: StandardPresetOrder) => {
-    const state = useProGameStore.getState();
-    if (state.phase !== "playing") return;
-
-    if (!preset.isCorrect) {
-      // Wrong order: push feedback to ChatTimeline as nurse message
-      if (preset.feedbackIfWrong) {
-        useProGameStore.getState().addTimelineEntry({
-          type: "nurse_message",
-          sender: "nurse",
-          content: preset.feedbackIfWrong,
-          gameTime: state.clock.currentTime,
-        });
-      }
-      // Track wrong action for scoring
-      useProGameStore.setState({
-        playerActions: [
-          ...state.playerActions,
-          {
-            action: `preset:wrong:${preset.id}`,
-            gameTime: state.clock.currentTime,
-            category: "preset",
-          },
-        ],
-      });
-      // Apply penalty through patient-engine's ActiveEffect system
-      if (preset.penaltyEffect) {
-        const effect = {
-          ...preset.penaltyEffect,
-          startTime: state.clock.currentTime,
-        };
-        const patient = state.patient;
-        if (patient) {
-          useProGameStore.setState({
-            patient: {
-              ...patient,
-              activeEffects: [...patient.activeEffects, effect],
-            },
-          });
-        }
-      }
-      // Disable the wrong order button to prevent re-clicks
-      setTriedWrongIds((prev) => new Set([...prev, preset.id]));
-      return;
-    }
-
-    // Correct order: execute each sub-order (batch — skip per-order time advance)
-    for (const order of preset.orders) {
-      const def = resolveOrderDefinition(order.definitionId, order.dose);
-
-      if (def) {
-        // Regular order through the store (skipAdvance to avoid +N minutes for N orders)
-        useProGameStore.getState().placeOrder({
-          definition: def,
-          dose: order.dose,
-          frequency: order.frequency,
-          skipAdvance: true,
-        });
-      } else {
-        // Special action (call_senior, pocus_cardiac, etc.) — track directly
-        // Re-read state each iteration to avoid overwriting previous actions
-        const fresh = useProGameStore.getState();
-        useProGameStore.setState({
-          playerActions: [
-            ...fresh.playerActions,
-            {
-              action: order.definitionId,
-              gameTime: fresh.clock.currentTime,
-              category: "preset",
-            },
-          ],
-        });
-        fresh.addTimelineEntry({
-          gameTime: fresh.clock.currentTime,
-          type: "player_action",
-          content: preset.label,
-          sender: "player",
-        });
-      }
-    }
-
-    // Advance time once for the entire preset batch (not per sub-order)
-    useProGameStore.getState().actionAdvance(1);
-
-    setExecutedPresetIds((prev) => new Set([...prev, preset.id]));
-  }, []);
-
-  const presets = (overlay?.presetOrders ?? []) as StandardPresetOrder[];
-
-  // Merge executed + tried-wrong IDs so both are disabled in the panel
-  const allDisabledIds = new Set([...executedPresetIds, ...triedWrongIds]);
 
   return (
     <>
@@ -597,17 +419,8 @@ function GameScreen({ overlay }: { overlay: StandardOverlay | null }) {
       {/* Rescue countdown overlay — reads from store, self-manages visibility */}
       <RescueCountdown />
 
-      {/* Preset order modal (replaces Pro's OrderModal for Standard mode) */}
-      {activeModal === "order" && presets.length > 0 && (
-        <PresetOrderModal
-          presets={presets}
-          executedIds={allDisabledIds}
-          onExecute={handlePresetOrder}
-          onClose={closeModal}
-        />
-      )}
-
-      {/* Pro modals (shared with Standard) */}
+      {/* Pro modals (shared — OrderModal auto-adapts for Standard: locked dose + one-click) */}
+      <OrderModal />
       <LabOrderModal />
       <ConsultModal />
       <PauseThinkModal />
