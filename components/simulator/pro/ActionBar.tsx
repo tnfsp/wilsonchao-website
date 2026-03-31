@@ -278,21 +278,25 @@ export default function ActionBar() {
     openModal("consult");
   };
 
-  // Treatment popover items (includes CT milking, orders, transfusion, MTP, ventilator)
+  // Treatment popover items — Standard omits MTP (presets handle transfusion)
   const treatmentItems: PopoverItem[] = [
-    { icon: "\ud83d\udc8a", label: "\u958b\u85e5", onClick: () => openModal("order") },
-    { icon: "\ud83e\ude78", label: "\u8f38\u8840", onClick: () => openModal("order") },
+    { icon: "💊", label: "開藥", onClick: () => openModal("order") },
+    { icon: "🩸", label: "輸血", onClick: () => openModal("order") },
+    ...(!isStandard
+      ? [
+          {
+            icon: "🚨",
+            label: mtpState.activated ? "MTP中" : "大量輸血 MTP",
+            onClick: () => setShowMTPConfirm(true),
+            disabled: mtpState.activated,
+            disabledReason: "大量輸血 Protocol 已啟動中",
+            variant: "danger" as const,
+          },
+        ]
+      : []),
+    { icon: "🌬️", label: "呼吸器", onClick: () => { sessionStorage.setItem("sim-order-tab", "ventilator"); openModal("order"); } },
     {
-      icon: "\ud83d\udea8",
-      label: mtpState.activated ? "MTP\u4e2d" : "\u5927\u91cf\u8f38\u8840 MTP",
-      onClick: () => setShowMTPConfirm(true),
-      disabled: mtpState.activated,
-      disabledReason: "\u5927\u91cf\u8f38\u8840 Protocol \u5df2\u555f\u52d5\u4e2d",
-      variant: "danger",
-    },
-    { icon: "\ud83c\udf2c\ufe0f", label: "\u547c\u5438\u5668", onClick: () => { sessionStorage.setItem("sim-order-tab", "ventilator"); openModal("order"); } },
-    {
-      icon: "\ud83d\udd27",
+      icon: "🔧",
       label: "Milk CT",
       onClick: handleMilkCT,
       disabled: !patient?.chestTube,
@@ -337,31 +341,22 @@ export default function ActionBar() {
             shortcut="2"
           />
 
-          {/* Treatment: Standard → direct order modal; Pro → popover submenu */}
-          {isStandard ? (
+          {/* Treatment popover (shared: Standard omits MTP, Pro has full menu) */}
+          <div className="relative">
             <IconBtn
               icon="⚕️" label="處置"
-              onClick={() => openModal("order")}
+              onClick={() => setActivePopover(activePopover === "treatment" ? null : "treatment")}
               disabled={!isPlaying}
+              active={activePopover === "treatment"}
               shortcut="3"
             />
-          ) : (
-            <div className="relative">
-              <IconBtn
-                icon="⚕️" label="處置"
-                onClick={() => setActivePopover(activePopover === "treatment" ? null : "treatment")}
-                disabled={!isPlaying}
-                active={activePopover === "treatment"}
-                shortcut="3"
+            {activePopover === "treatment" && isPlaying && (
+              <ActionPopover
+                items={treatmentItems}
+                onClose={() => setActivePopover(null)}
               />
-              {activePopover === "treatment" && isPlaying && (
-                <ActionPopover
-                  items={treatmentItems}
-                  onClose={() => setActivePopover(null)}
-                />
-              )}
-            </div>
-          )}
+            )}
+          </div>
 
           <IconBtn
             icon="📞" label="通報交班"
