@@ -1,12 +1,1 @@
-import type { MetadataRoute } from "next";
-
-export default function robots(): MetadataRoute.Robots {
-  return {
-    rules: {
-      userAgent: "*",
-      allow: "/",
-      disallow: ["/api/"],
-    },
-    sitemap: "https://wilsonchao.com/sitemap.xml",
-  };
-}
+// Moved to app/robots.txt/route.ts to support custom LLMs-Txt directive

@@ -87,6 +87,45 @@ const medicalWebPageJsonLd = {
   lastReviewed: "2026-03-08",
 };
 
+const faqJsonLd = {
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: [
+    {
+      "@type": "Question",
+      name: "趙玴祥醫師的專長是什麼？",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "趙玴祥醫師專長冠狀動脈繞道手術（CABG）、心臟瓣膜修補及置換手術、以及主動脈手術（主動脈瘤、主動脈剝離等）。",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "趙玴祥醫師在哪裡看診？",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "趙玴祥醫師任職於高雄醫學大學附設中和紀念醫院心臟血管外科，地址為高雄市三民區自由一路100號，總機電話 (07) 312-1101。門診時間將於 2026 年八月主治醫師到任後公布。",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "心臟手術前需要準備什麼？",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "心臟手術前，醫療團隊會安排完整的術前檢查，包含心臟超音波、心導管、抽血等。病人及家屬可以在門診時提出任何疑問，醫師會用易懂的方式說明每一個檢查結果和治療選項，協助做出最適合的決定。",
+      },
+    },
+    {
+      "@type": "Question",
+      name: "趙玴祥醫師的學經歷？",
+      acceptedAnswer: {
+        "@type": "Answer",
+        text: "趙玴祥醫師畢業於高雄醫學大學醫學系，現為高雄醫學大學附設中和紀念醫院心臟血管外科總醫師，具外科專科醫師資格。",
+      },
+    },
+  ],
+};
+
 // 專長項目
 const specialties = [
   {
@@ -125,6 +164,10 @@ export default function ClinicPage() {
       <script
         type="application/ld+json"
         dangerouslySetInnerHTML={{ __html: JSON.stringify(medicalWebPageJsonLd) }}
+      />
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(faqJsonLd) }}
       />
 
       <main className="clinic-page">

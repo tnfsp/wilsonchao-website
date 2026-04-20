@@ -1,0 +1,34 @@
+# wilsonchao.com
+
+> 趙玴祥（Yi-Hsiang Chao, MD）的個人網站。心臟血管外科醫師，在高雄醫學大學附設中和紀念醫院受訓。這裡有手術室的故事、對醫學和人生的思考，以及一個醫師學當自由人的紀錄。
+
+## 關於作者
+
+趙玴祥是高雄醫學大學附設中和紀念醫院心臟血管外科醫師，專長冠狀動脈繞道手術（CABG）、心臟瓣膜手術、主動脈手術。同時是 Instagram @momobear_doctor 的內容創作者。
+
+## 主要頁面
+
+- [首頁](https://wilsonchao.com/): 最新文章與腦內碎片
+- [文章](https://wilsonchao.com/blog): 醫學、個人成長、AI 工作流等長文
+- [門診](https://wilsonchao.com/clinic): 趙玴祥醫師門診資訊、專長、學經歷
+- [關於](https://wilsonchao.com/about): 個人簡介與代表文章
+- [Now](https://wilsonchao.com/now): 最近在做什麼
+- [Stream](https://wilsonchao.com/stream): 每日腦內碎片與短想法
+- [教學](https://wilsonchao.com/teaching): 心臟外科教學模組與 ICU Simulator
+- [Blogroll](https://wilsonchao.com/blogroll): 推薦閱讀的部落格
+
+## 代表文章
+
+- [資訊流工作流 — 一個心臟外科醫師的焦慮解法](https://wilsonchao.com/blog/fomo-anxiety-2026-q1): 如何用資訊管理系統對抗 FOMO
+- [AI 工作流 — 心臟外科醫師用 AI 當日常夥伴](https://wilsonchao.com/blog/wilsons-workflow-2026-q1): 日常 AI 工具使用實錄
+- [我追 AI 工具的三個動機，第三個讓我很不舒服](https://wilsonchao.com/blog/three-reasons-i-chase-ai-tools): 對 AI 依賴的自我反思
+
+## 訂閱
+
+- [RSS Feed](https://wilsonchao.com/feed): 所有內容的 RSS 訂閱
+- [Sitemap](https://wilsonchao.com/sitemap.xml): 完整頁面索引
+
+## 聯絡
+
+- Instagram: [@momobear_doctor](https://www.instagram.com/momobear_doctor)
+- Telegram: [@doctormomo](https://t.me/doctormomo)

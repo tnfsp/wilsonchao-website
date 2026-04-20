@@ -14,5 +14,10 @@
     "BlogBlog同樂會",
     "生產力"
   ],
-  "image": "/content/blog/covers/blogblog-productivity-cover.png"
+  "image": "/content/blog/covers/blogblog-productivity-cover.png",
+  "related": [
+    "fomo-anxiety-2026-q1",
+    "wilsons-workflow-2026-q1",
+    "ideal-daily-life"
+  ]
 }
