@@ -495,9 +495,11 @@ export class BioGearsClient {
 
   /** Initialize the engine with a patient (takes ~20s) */
   async initPatient(patient: BioGearsPatientConfig = "StandardMale"): Promise<BioGearsState> {
+    this.onStatus?.("initializing");
     const result = await this.sendCommand({ cmd: "init", patient });
     if ("ok" in result && result.ok && "vitals" in result) {
       this._isInitialized = true;
+      this.onStatus?.("ready");
     }
     return result as BioGearsState;
   }
