@@ -1,0 +1,543 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+:root {
+  --background: #f8f4ea;
+  --surface: #fffbf4;
+  --surface-strong: #f1e4c2;
+  --foreground: #001219;
+  --muted: #005f73;
+  --accent: #0a9396;
+  --accent-strong: #ca6702;
+  --accent-contrast: #9b2226;
+  --border: rgba(0, 18, 25, 0.14);
+  --halo: rgba(153, 186, 203, 0.35);
+  --highlight: #e9d8a6;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+    "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
+    "Segoe UI Symbol", "Noto Color Emoji";
+  --font-mono: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family:
+    ui-sans-serif,
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    "Helvetica Neue",
+    Arial,
+    "Noto Sans",
+    sans-serif,
+    "Apple Color Emoji",
+    "Segoe UI Emoji",
+    "Segoe UI Symbol",
+    "Noto Color Emoji";
+  line-height: 1.75;
+  letter-spacing: 0.005em;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  text-underline-offset: 6px;
+}
+
+a:hover {
+  color: var(--accent-strong);
+}
+
+a:focus-visible {
+  outline: 1px dashed var(--accent-contrast);
+  outline-offset: 3px;
+}
+
+::selection {
+  background: rgba(153, 186, 203, 0.35);
+}
+
+.page-shell {
+  margin: 0 auto;
+  max-width: 800px;
+  padding: 2.75rem 1.25rem 3rem;
+}
+
+.section-block {
+  padding: 2.25rem 0;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-title {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--accent-strong);
+  background: rgba(10, 147, 150, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 18, 25, 0.04);
+}
+
+.section-title::before {
+  content: "";
+  height: 8px;
+  width: 8px;
+  border-radius: 999px;
+  background: var(--accent);
+  box-shadow: 0 0 0 6px rgba(233, 216, 166, 0.6);
+}
+
+.surface-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 22px 60px rgba(0, 18, 25, 0.08);
+}
+
+.surface-strong {
+  background: linear-gradient(135deg, rgba(233, 216, 166, 0.7), rgba(255, 251, 244, 0.9));
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  box-shadow: 0 26px 70px rgba(0, 18, 25, 0.12);
+}
+
+/* ============================================
+   Hero block — personality-first
+   ============================================ */
+
+.hero-block {
+  border: 1px solid var(--border);
+}
+
+.hero-dot {
+  background: radial-gradient(circle, var(--accent) 0%, transparent 70%);
+}
+
+.inline-link {
+  font-weight: 600;
+  color: var(--accent);
+  text-decoration: underline;
+  text-decoration-color: var(--accent);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 2px;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+.inline-link:hover {
+  color: var(--accent-strong);
+  text-decoration-color: var(--accent-strong);
+}
+
+.subtle-link {
+  font-weight: 600;
+  color: inherit;
+  text-decoration: underline;
+  text-decoration-color: var(--border);
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+.subtle-link:hover {
+  color: var(--foreground);
+  text-decoration-color: var(--foreground);
+}
+
+.hero-photo-wrap {
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.hero-photo-wrap:hover {
+  transform: rotate(-3deg) scale(1.03);
+}
+
+.hero-photo {
+  transition: box-shadow 0.3s ease;
+}
+
+.hero-photo-wrap:hover .hero-photo {
+  box-shadow: 0 20px 50px rgba(0, 18, 25, 0.18);
+}
+
+.hero-pill {
+  backdrop-filter: blur(4px);
+  background: rgba(255, 251, 244, 0.6);
+}
+
+.tagline-random {
+  border-left: 2px solid var(--accent);
+  padding-left: 0.75rem;
+}
+
+/* ============================================
+   Prose typography styles for article content
+   ============================================ */
+
+.prose > * + * {
+  margin-top: 1.25em;
+}
+
+/* Headings */
+.prose h2 {
+  margin-top: 2.5em;
+  margin-bottom: 1em;
+  font-size: 1.5em;
+  font-weight: 600;
+  line-height: 1.3;
+}
+
+.prose h2 + h3 {
+  margin-top: 1.2em;
+}
+
+.prose h3 {
+  margin-top: 2em;
+  margin-bottom: 0.75em;
+  font-size: 1.25em;
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+/* Paragraphs */
+.prose p {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  line-height: 1.8;
+}
+
+/* Divider */
+.prose hr {
+  margin-top: 2.5em;
+  margin-bottom: 2.5em;
+  border: none;
+  border-top: 1px solid var(--border);
+}
+
+/* Lists */
+.prose ul,
+.prose ol {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  padding-left: 1.5em;
+}
+
+.prose li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose li > ul,
+.prose li > ol {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+/* Blockquote - 引用區塊 */
+.prose blockquote {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  padding: 1em 1.25em;
+  border-left: 3px solid var(--accent);
+  background: rgba(10, 147, 150, 0.04);
+  border-radius: 0 8px 8px 0;
+  font-style: italic;
+  color: var(--muted);
+}
+
+.prose blockquote p:first-child {
+  margin-top: 0;
+}
+
+.prose blockquote p:last-child {
+  margin-bottom: 0;
+}
+
+/* Images & Figures */
+.prose figure {
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+.prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 8px;
+  box-shadow: 0 4px 16px rgba(0, 18, 25, 0.08);
+}
+
+.prose figcaption {
+  margin-top: 0.75em;
+  font-size: 0.875em;
+  color: var(--muted);
+  text-align: center;
+  font-style: italic;
+}
+
+/* Code - 行內程式碼 */
+.prose code {
+  font-size: 0.875em;
+  font-family: var(--font-mono);
+  background: rgba(233, 216, 166, 0.4);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
+
+/* Code Block - 程式碼區塊 */
+.prose pre {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  padding: 1.25em;
+  background: #1e1e1e;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.prose pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  color: #d4d4d4;
+  line-height: 1.6;
+}
+
+/* Links */
+.prose a {
+  color: var(--accent);
+  text-decoration: underline;
+  overflow-wrap: break-word;
+  word-break: break-all;
+  text-underline-offset: 3px;
+}
+
+.prose a:hover {
+  color: var(--accent-strong);
+}
+
+/* Toggle / Details - 摺疊區塊 */
+.prose details {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--surface);
+}
+
+.prose summary {
+  padding: 0.875em 1em;
+  background: rgba(233, 216, 166, 0.2);
+  cursor: pointer;
+  font-weight: 500;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.prose summary::-webkit-details-marker {
+  display: none;
+}
+
+.prose summary::before {
+  content: "▸";
+  font-size: 0.875em;
+  color: var(--accent);
+  transition: transform 0.2s ease;
+}
+
+.prose details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.prose summary:hover {
+  background: rgba(233, 216, 166, 0.35);
+}
+
+.prose details[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.prose details > *:not(summary) {
+  padding-left: 1em;
+  padding-right: 1em;
+}
+
+.prose details > *:last-child {
+  padding-bottom: 1em;
+}
+
+/* Table - 表格 */
+.prose table {
+  width: 100%;
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  border-collapse: collapse;
+  font-size: 0.9em;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.prose th,
+.prose td {
+  padding: 0.75em 1em;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.prose th {
+  background: rgba(233, 216, 166, 0.3);
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.prose tbody tr:hover {
+  background: rgba(233, 216, 166, 0.1);
+}
+
+/* Todo - 待辦事項 */
+.prose .notion-todo {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.prose .notion-todo label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6em;
+  cursor: default;
+}
+
+.prose .notion-todo input[type="checkbox"] {
+  margin-top: 0.4em;
+  width: 1em;
+  height: 1em;
+  accent-color: var(--accent);
+}
+
+.prose .notion-todo input[type="checkbox"]:checked + span {
+  color: var(--muted);
+  text-decoration: line-through;
+}
+
+/* Prism.js syntax highlighting theme (VS Code Dark+) */
+.token.comment,
+.token.prolog,
+.token.doctype,
+.token.cdata {
+  color: #6a9955;
+}
+
+.token.punctuation {
+  color: #d4d4d4;
+}
+
+.token.property,
+.token.tag,
+.token.boolean,
+.token.number,
+.token.constant,
+.token.symbol,
+.token.deleted {
+  color: #b5cea8;
+}
+
+.token.selector,
+.token.attr-name,
+.token.string,
+.token.char,
+.token.builtin,
+.token.inserted {
+  color: #ce9178;
+}
+
+.token.operator,
+.token.entity,
+.token.url,
+.language-css .token.string,
+.style .token.string {
+  color: #d4d4d4;
+}
+
+.token.atrule,
+.token.attr-value,
+.token.keyword {
+  color: #569cd6;
+}
+
+.token.function,
+.token.class-name {
+  color: #dcdcaa;
+}
+
+.token.regex,
+.token.important,
+.token.variable {
+  color: #d16969;
+}
+
+.token.important,
+.token.bold {
+  font-weight: bold;
+}
+
+.token.italic {
+  font-style: italic;
+}
+
+/* ============================================
+   Clinic page — 長輩友善、專業信任感
+   ============================================ */
+
+.clinic-page {
+  margin: 0 auto;
+  max-width: 720px;
+  padding: 2.75rem 1.25rem 3rem;
+  font-size: 1.0625rem;
+  line-height: 1.85;
+}
+
+/* ============================================
+   Simulator fullscreen — hide site header
+   ============================================ */
+
+body.simulator-fullscreen > .page-shell,
+body.simulator-fullscreen > header.page-shell {
+  display: none !important;
+}
+
+/* Fast-forward toast animation */
+@keyframes fadeInDown {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -12px);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, 0);
+  }
+}
+
+/* Respect user's motion preferences for accessibility */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
