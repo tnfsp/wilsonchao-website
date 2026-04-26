@@ -18,7 +18,6 @@ export const metadata: Metadata = {
   metadataBase: new URL("https://teaching.wilsonchao.com"),
   title: "高醫心臟外科 — 教學",
   description: "Wilson Chao 心臟外科 Clerk 見習教材與 ICU Simulator",
-  robots: { index: false, follow: false },
 };
 
 export default function RootLayout({

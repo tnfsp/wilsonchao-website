@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from "next/server";
 
+const PUBLIC_PATHS = new Set(["/", "/clerk", "/teaching/auth"]);
+
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
-  if (pathname === "/teaching/auth") return NextResponse.next();
+  if (PUBLIC_PATHS.has(pathname)) return NextResponse.next();
+  if (pathname.startsWith("/clerk/")) return NextResponse.next();
   if (pathname.startsWith("/api/")) return NextResponse.next();
 
   const authCookie = request.cookies.get("teaching-auth");
