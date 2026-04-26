@@ -1,0 +1,12 @@
+# Next.js
+/.next/
+/out/
+next-env.d.ts
+
+# build artifacts
+*.tsbuildinfo
+.search-index
+
+# env (kept locally only)
+.env*
+!.env.local.example
