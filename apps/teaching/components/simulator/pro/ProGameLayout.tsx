@@ -5,6 +5,7 @@ import IOBalanceBar from "./IOBalanceBar";
 import BioGearsStatusBadge from "./BioGearsStatusBadge";
 import ACLSModal from "./ACLSModal";
 import { useProGameStore } from "@/lib/simulator/store";
+import { useMediaQuery } from "@/lib/hooks/useMediaQuery";
 
 /** Floating OR countdown banner — shows time remaining until OR ready */
 function ORCountdownBanner() {
@@ -67,6 +68,7 @@ export default function ProGameLayout({
   actionBar,
 }: ProGameLayoutProps) {
   const severity = useProGameStore((s) => s.patient?.severity ?? 0);
+  const isDesktop = useMediaQuery("(min-width: 1024px)");
 
   const showDanger = severity > 60;
   const dangerOpacity = showDanger ? Math.min((severity - 60) / 40, 1) : 0;
@@ -106,18 +108,31 @@ export default function ProGameLayout({
       {/* OR countdown banner — shows when OR is being prepped */}
       <ORCountdownBanner />
 
-      {/* ═══ Desktop (lg+): side-by-side ═══ */}
-      <div className="hidden lg:flex flex-1 overflow-hidden">
-        {/* Left column: monitors (scrollable) */}
-        <div
-          className="w-[380px] flex-shrink-0 overflow-y-auto border-r border-white/8"
-          style={{ scrollbarWidth: "thin", scrollbarColor: "#ffffff1a transparent" }}
-        >
-          <div className="p-3 space-y-3">{desktopLeftPanel}</div>
-        </div>
+      {/* Single subtree: only one of desktop / mobile is mounted at a time so
+          ChatTimeline / MessageInput / ActionBar each have a single instance
+          (was rendered twice via `hidden lg:flex` + `lg:hidden`). */}
+      {isDesktop ? (
+        <div className="flex flex-1 overflow-hidden">
+          <div
+            className="w-[380px] flex-shrink-0 overflow-y-auto border-r border-white/8"
+            style={{ scrollbarWidth: "thin", scrollbarColor: "#ffffff1a transparent" }}
+          >
+            <div className="p-3 space-y-3">{desktopLeftPanel}</div>
+          </div>
 
-        {/* Right column: chat + input + action bar */}
-        <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+          <div className="flex-1 flex flex-col overflow-hidden min-w-0">
+            <div className="flex-1 overflow-hidden">{chatPanel}</div>
+            <div className="flex-shrink-0">{messageInput}</div>
+            {actionBar && (
+              <div className="flex-shrink-0 border-t border-white/8 bg-[#00202e]">
+                {actionBar}
+              </div>
+            )}
+          </div>
+        </div>
+      ) : (
+        <div className="flex flex-col flex-1 overflow-hidden">
+          <div className="flex-shrink-0">{monitorPanel}</div>
           <div className="flex-1 overflow-hidden">{chatPanel}</div>
           <div className="flex-shrink-0">{messageInput}</div>
           {actionBar && (
@@ -126,26 +141,7 @@ export default function ProGameLayout({
             </div>
           )}
         </div>
-      </div>
-
-      {/* ═══ Mobile (<lg): Fixed layers, zero scroll ═══ */}
-      <div className="lg:hidden flex flex-col flex-1 overflow-hidden">
-        {/* Fixed monitor area: vitals rows + waveform + CT */}
-        <div className="flex-shrink-0">{monitorPanel}</div>
-
-        {/* Scrollable chat — the ONLY scrollable area */}
-        <div className="flex-1 overflow-hidden">{chatPanel}</div>
-
-        {/* Fixed message input */}
-        <div className="flex-shrink-0">{messageInput}</div>
-
-        {/* Fixed action bar */}
-        {actionBar && (
-          <div className="flex-shrink-0 border-t border-white/8 bg-[#00202e]">
-            {actionBar}
-          </div>
-        )}
-      </div>
+      )}
     </div>
   );
 }
