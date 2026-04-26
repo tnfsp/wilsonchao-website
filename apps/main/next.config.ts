@@ -6,6 +6,13 @@ const nextConfig: NextConfig = {
   },
   async redirects() {
     return [
+      // Teaching subdomain — see apps/teaching (teaching.wilsonchao.com).
+      // 1:1 path preservation lets external links keep working.
+      { source: "/teaching", destination: "https://teaching.wilsonchao.com/teaching", permanent: true },
+      { source: "/teaching/:path*", destination: "https://teaching.wilsonchao.com/teaching/:path*", permanent: true },
+      { source: "/clerk", destination: "https://teaching.wilsonchao.com/clerk", permanent: true },
+      { source: "/clerk/:path*", destination: "https://teaching.wilsonchao.com/clerk/:path*", permanent: true },
+
       { source: "/blog/fomo-anxiety", destination: "/blog/fomo-anxiety-2026-q1", permanent: true },
 
       // /daily and /projects → /blog
