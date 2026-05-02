@@ -1,0 +1,108 @@
+From 4c70be1144ae74fb12889cae31d7e6f12f97d741 Mon Sep 17 00:00:00 2001
+From: =?UTF-8?q?=E8=B6=99=E7=8E=B4=E7=A5=A5?=
+ <zhaoyixiang@zhaoyixiangdeMac-mini.local>
+Date: Sun, 26 Apr 2026 17:19:15 +0800
+Subject: [PATCH] =?UTF-8?q?fix(bg-bridge):=20protocol=20JSON=20corruption?=
+ =?UTF-8?q?=20=E2=80=94=20fd=20isolation=20+=20NaN=20handling?=
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+Content-Transfer-Encoding: 8bit
+
+ws-server.py's readline() was getting malformed lines that started with `{`
+but failed json.loads(), so init responses never reached the frontend (which
+then 30s-timed-out and fell back to formula engine). Two independent causes:
+
+1. **stdout pollution**: BioGears engine internals write to std::cout in
+   places we can't intercept via the Logger override. Those writes
+   interleaved with jsonOut on the same fd, splitting protocol lines mid-
+   payload. Fix: in main(), dup() STDOUT_FILENO into a private fd reserved
+   for jsonOut, then dup2(STDERR_FILENO, STDOUT_FILENO) so any rogue cout/
+   printf in engine code lands in the log channel instead. jsonOut now
+   write()s directly to the saved fd, bypassing the std::cout streambuf.
+
+2. **NaN in vitals JSON**: jField uses snprintf("%.2f", val) which prints
+   bare `nan` for double NaN — JSON spec rejects this. Triggers on fields
+   like total_blood_volume_lost_mL before any hemorrhage starts. Fix:
+   isnan/isinf check, emit `null`.
+
+Verified end-to-end: bg-bridge cache load 4s → vitals JSON parses cleanly
+in ws-server.py → frontend [BioGears] Patient ready, syncing initial vitals
+→ store reflects HR=72/MAP=95 (BioGears) instead of formula HR=116/117.
+
+Co-Authored-By: Claude Opus 4.7 (1M context) <noreply@anthropic.com>
+---
+ bridge/bg-bridge.cpp | 36 ++++++++++++++++++++++++++++++++++--
+ 1 file changed, 34 insertions(+), 2 deletions(-)
+
+diff --git a/bridge/bg-bridge.cpp b/bridge/bg-bridge.cpp
+index 5bd9ab3..e6c2168 100644
+--- a/bridge/bg-bridge.cpp
++++ b/bridge/bg-bridge.cpp
+@@ -68,6 +68,8 @@
+ #include <string>
+ #include <memory>
+ #include <cstdio>
++#include <cmath>
++#include <unistd.h>
+ 
+ using namespace biogears;
+ 
+@@ -97,9 +99,25 @@ static double jsonGetNumber(const std::string& json, const std::string& key, dou
+   }
+ }
+ 
++// fd that points at the original stdout (the WS-server's pipe).
++// Set in main() before any BioGears init; default fd 1 gets redirected
++// to stderr so engine-internal std::cout writes can't pollute the protocol.
++static int g_proto_fd = -1;
++
+ static void jsonOut(const std::string& json) {
+-  std::cout << json << std::endl;
+-  std::cout.flush();
++  if (g_proto_fd < 0) {
++    // Pre-redirect fallback (only for very early startup messages)
++    std::cout << json << std::endl;
++    std::cout.flush();
++    return;
++  }
++  std::string line = json + "\n";
++  size_t total = 0;
++  while (total < line.size()) {
++    ssize_t n = ::write(g_proto_fd, line.c_str() + total, line.size() - total);
++    if (n <= 0) break;
++    total += static_cast<size_t>(n);
++  }
+ }
+ 
+ static void jsonError(const std::string& msg) {
+@@ -120,6 +138,11 @@ public:
+ // Dynamic string builder to avoid fixed-buffer overflow with 80+ values
+ 
+ static void jField(std::ostringstream& ss, const char* key, double val, const char* fmt = "%.2f") {
++  // JSON spec rejects NaN/Inf; emit null so json.loads doesn't fail mid-payload.
++  if (std::isnan(val) || std::isinf(val)) {
++    ss << "\"" << key << "\":null,";
++    return;
++  }
+   char buf[64];
+   snprintf(buf, sizeof(buf), fmt, val);
+   ss << "\"" << key << "\":" << buf << ",";
+@@ -665,6 +688,15 @@ static std::string buildVitalsJson(PhysiologyEngine* bg) {
+ 
+ // ── Main loop ───────────────────────────────────────────────────
+ int main(int argc, char* argv[]) {
++  // Reserve the WS-server's pipe (original stdout) for jsonOut, then redirect
++  // fd 1 to stderr so any std::cout / printf inside BioGears engine internals
++  // ends up in the log channel instead of corrupting protocol JSON lines.
++  g_proto_fd = ::dup(STDOUT_FILENO);
++  if (g_proto_fd >= 0) {
++    ::dup2(STDERR_FILENO, STDOUT_FILENO);
++    std::ios::sync_with_stdio(true);
++  }
++
+   std::unique_ptr<PhysiologyEngine> bg = nullptr;
+   QuietLogger quietLogger;
+   bool running = true;
+-- 
+2.53.0
+
