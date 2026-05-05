@@ -8,6 +8,7 @@ import {
 } from "./placeholders";
 
 const BLOG_DIR = path.join(process.cwd(), "content", "blog");
+const OWL_DIR = path.join(process.cwd(), "content", "owl");
 const SITE_CONFIG_PATH = path.join(process.cwd(), "content", "site", "config.json");
 
 export type SiteCopy = typeof defaultSiteCopy;
@@ -159,6 +160,79 @@ export async function loadBlogEntries(): Promise<BlogEntry[]> {
 export async function getBlogEntry(slug: string): Promise<BlogEntry | null> {
   const entries = await loadBlogEntries();
   return entries.find((entry) => entry.slug === slug) ?? null;
+}
+
+/**
+ * OwlEntry extends BlogEntry with an author field for the /owl section.
+ */
+export type OwlEntry = BlogEntry & {
+  author?: string;
+};
+
+/**
+ * Loads published Owl essays from /content/owl/.
+ * Skips files whose slug starts with "_" (internal drafts/placeholders).
+ * Skips entries without status "Published".
+ */
+export async function loadOwlEntries(): Promise<OwlEntry[]> {
+  try {
+    const files = await fs.readdir(OWL_DIR);
+    const entries: OwlEntry[] = [];
+
+    for (const file of files) {
+      if (!file.endsWith(".json")) continue;
+      const parsed = await safeReadJSON<OwlEntry>(path.join(OWL_DIR, file));
+      if (!parsed?.slug) continue;
+      // Skip internal draft/placeholder files (slug starts with "_")
+      if (parsed.slug.startsWith("_")) continue;
+      const status = parsed.status || "Draft";
+      if (status !== "Published") continue;
+
+      // Scheduled publishing: skip entries with publishedAt in the future
+      const today = new Date().toISOString().split("T")[0];
+      if (parsed.publishedAt && parsed.publishedAt > today) continue;
+
+      entries.push({
+        ...parsed,
+        author: parsed.author || "Owl",
+        excerpt: inferExcerpt(parsed.contentHtml, parsed.content, parsed.description || parsed.excerpt),
+        readingTime: inferReadingTime(parsed),
+        image: parsed.image || firstImageFromEntry(parsed),
+      });
+    }
+
+    return sortByDateDesc(entries);
+  } catch (error) {
+    console.warn("[content] Failed to load owl entries:", (error as Error).message);
+    return [];
+  }
+}
+
+/**
+ * Loads a single Owl essay by slug (only published, non-placeholder entries).
+ */
+export async function getOwlEntry(slug: string): Promise<OwlEntry | null> {
+  const entries = await loadOwlEntries();
+  return entries.find((entry) => entry.slug === slug) ?? null;
+}
+
+/**
+ * Loads the placeholder Owl essay for layout review.
+ * Only for use in development/preview — never in production listings.
+ */
+export async function getOwlPlaceholder(): Promise<OwlEntry | null> {
+  try {
+    const parsed = await safeReadJSON<OwlEntry>(path.join(OWL_DIR, "_placeholder.json"));
+    if (!parsed?.slug) return null;
+    return {
+      ...parsed,
+      author: parsed.author || "Owl",
+      excerpt: inferExcerpt(parsed.contentHtml, parsed.content, parsed.description || parsed.excerpt),
+      readingTime: inferReadingTime(parsed),
+    };
+  } catch {
+    return null;
+  }
 }
 
 

@@ -13,6 +13,8 @@
   --border: rgba(0, 18, 25, 0.14);
   --halo: rgba(153, 186, 203, 0.35);
   --highlight: #e9d8a6;
+  /* /owl section accent — distinct from blog but harmonious */
+  --owl-accent: #7c5cbf;
 }
 
 @theme inline {
@@ -100,6 +102,24 @@ a:focus-visible {
   border-radius: 999px;
   background: var(--accent);
   box-shadow: 0 0 0 6px rgba(233, 216, 166, 0.6);
+}
+
+/* /owl section badge — matches .section-title shape but uses owl-accent palette */
+.owl-section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+  padding: 0.3rem 0.9rem;
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--owl-accent);
+  background: rgba(124, 92, 191, 0.08);
+  border: 1px solid rgba(124, 92, 191, 0.2);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px rgba(0, 18, 25, 0.04);
 }
 
 .surface-card {
