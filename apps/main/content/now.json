@@ -1,17 +1,17 @@
 {
-  "lastUpdated": "2026-05-10T15:37:12.799790+00:00",
+  "lastUpdated": "2026-05-11T06:00:00.000000+00:00",
   "sections": [
     {
       "id": "clinical",
       "emoji": "🏥",
       "title": "臨床",
-      "body": "高醫心臟血管外科，總醫師最後幾個月。最近連續處理了幾個 complication，學到一件事：complication 不等於犯錯，但每一次都該回去想能不能更好。八月升主治之前還有專科考試，開刀的手感越來越穩，念書的進度就不好說了。"
+      "body": "高醫心臟血管外科，總醫師最後幾個月。上週進了幾台 multi-valve 跟 LIMA harvesting，被學長稱讚 LIMA 沒破——那種「鬆一口氣」的感覺比驕傲先到。代診時有個自己回來掛號的病人，是升 V 前第一個主動回來找我的，被認得是一種具體的肯定。八月升主治之前還有專科考試，刀的手感越來越穩，念書的進度就不好說。"
     },
     {
       "id": "research",
       "emoji": "📚",
       "title": "研究",
-      "body": "ECPR-PCI 的 systematic review 投了 JCM，在等 first decision。下半年重心是 AVF Monitor——穿戴式裝置量洗腎廔管壓差，八月去小港收數據，不過老實說設備都還沒搞定。"
+      "body": "ECPR-PCI 的 systematic review 投了 JCM，在等 first decision。下半年重心是 AVF Monitor——穿戴式裝置量洗腎廔管壓差，八月去小港收數據，設備都還沒搞定。"
     },
     {
       "id": "writing",
@@ -23,13 +23,13 @@
       "id": "building",
       "emoji": "🤖",
       "title": "在蓋的東西",
-      "body": "跟 AI 搭了一套系統，日記、筆記、研究、記帳、這個網站的更新都串在一起跑。最近把 wilsonchao.com 整個翻修了一輪——首頁、Blog 架構、Now 頁、Blogroll。這隻貓頭鷹偶爾會自己跑去做事情。"
+      "body": "跟 AI 搭了一套系統，日記、筆記、研究、記帳、這個網站的更新都串在一起跑。最近在重構這隻貓頭鷹——把它的 working memory 砍掉一半多一點，回答品質明顯變好。它偶爾還是會自己跑去做事情，不過比較不會亂猜了。"
     },
     {
       "id": "other",
       "emoji": "🎵",
       "title": "其他",
-      "body": "在學 DJ，最近從 Rekordbox 換到 Serato，Stems 可以即時拆人聲做 live remix，很好玩。剛跑完曼谷潑水節和白沙屯進香，現在在清邁放空充電，旅行模式。"
+      "body": "回到高雄的日常節奏。週末會去澄清湖騎腳踏車——身體先動，情緒會跟上，這個道理很久之前知道，最近又被身體提醒了一次。DJ 課還在進度上，繼續跟 Serato。"
     }
   ],
   "dynamic": {
