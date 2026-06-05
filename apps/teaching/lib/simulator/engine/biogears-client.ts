@@ -495,11 +495,20 @@ export class BioGearsClient {
 
   /** Initialize the engine with a patient (takes ~20s) */
   async initPatient(patient: BioGearsPatientConfig = "StandardMale"): Promise<BioGearsState> {
-    const result = await this.sendCommand({ cmd: "init", patient });
-    if ("ok" in result && result.ok && "vitals" in result) {
-      this._isInitialized = true;
+    this.onStatus?.("initializing");
+    try {
+      const result = await this.sendCommand({ cmd: "init", patient });
+      if ("ok" in result && result.ok && "vitals" in result) {
+        this._isInitialized = true;
+        this.onStatus?.("ready");
+      } else {
+        this.onStatus?.("error");
+      }
+      return result as BioGearsState;
+    } catch (err) {
+      this.onStatus?.("error");
+      throw err;
     }
-    return result as BioGearsState;
   }
 
   /** Advance simulation by N seconds */
