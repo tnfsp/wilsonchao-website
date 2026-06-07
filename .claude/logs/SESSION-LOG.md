@@ -151,3 +151,24 @@ RESEND_API_KEY
 
 ### 狀態
 **進階功能整合完成**
+## Session: 2026-06-07 20:12
+**Project**: wilsonchao.com (/now)
+
+### 完成
+- /now 頁從 Wilson 真實 journal 蒸餾重寫並上線（commit b072ad3 → main）：Sivers register、平實事實標題、黑字、開場+主題分段+動態 grid
+- now.json 新 schema（subtitle/opening/sections/footer）+ page.tsx C 版型 render + lib/now.ts
+- 修復 stream→grid 同步（發現 OWL stream-sync 自 5/10 死）：手動補跑 7 貼文（5/18-6/1）、補 #murmur tag、放寬窗口（看/讀 60d、碎片 30d）
+- 設 launchd com.wilsonchao.stream-sync（每日 04:30 + 安全閥）取代壞掉的 OWL cron，kickstart 實測通過
+- 記憶 now-journal-pipeline.md + MEMORY index
+
+### 決策
+- /now 從 journal 蒸餾、不由 AI 重寫（誠實=護城河；原料是真話→AI 味自動消失）
+- 聲音定 Sivers register：砍掉「替自己下結論」thesis（最大 AI tell）、標題用平實事實非詩意/科別、body 純報告
+- 維護分層：開場月改 / 此刻週改 / grid 自動 → 成本最低
+- grid 維持（不砍）；窗口放寬看/讀 60d、碎片 30d
+- 未覆蓋 wt context.json（保留 psych #25 的 active 狀態，本 session 是 OWL 交班側任務）
+
+### 待辦
+- [ ] /now 每週更新：Wilson 說「更新 /now」→ 從近 7 天 journal 蒸餾草稿 → 過目 → push
+- [ ] (低) wilsonchao git remote 是明文 PAT，可改用 credential helper 收緊
+- [ ] 發 murmur 記得帶 #murmur tag（否則漏進碎片區）
