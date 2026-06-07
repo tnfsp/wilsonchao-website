@@ -1,84 +1,46 @@
 {
-  "lastUpdated": "2026-06-07T06:30:00.000000+00:00",
+  "lastUpdated": "2026-06-07T10:13:35.681996+00:00",
+  "subtitle": "2026 年 6 月 · 高雄",
+  "opening": "我是趙玴祥，在高雄當心臟外科醫師。下了刀就放 DJ、跟 AI 蓋自己的系統、亂寫東西。",
   "sections": [
     {
-      "id": "clinical",
-      "emoji": "🏥",
-      "title": "臨床",
-      "body": "五月那台第一次主刀的瓣膜手術下台是半夜三點。走出刀房才回神「哇這是我第一台自己開的」。\n\n上週去台北上主動脈支架的課，下午模擬器跑完一台 AAA 之後，腦袋裡浮出來的是「快可以自己放了」。\n\n八月升主治。中間夾一個專科考試。"
-    },
-    {
-      "id": "research",
-      "emoji": "📚",
-      "title": "研究",
-      "body": "一篇心臟驟停被葉克膜救回後下游處置的系統性回顧，送國外期刊快兩個月，前幾天該回的時間過了。\n\n下半年要弄另一個案子：穿戴式裝置量洗腎病人手臂的血管通路會不會堵塞。八月去小港醫院收資料。設備都還沒搞定。"
-    },
-    {
-      "id": "writing",
-      "emoji": "✍️",
-      "title": "寫作",
-      "body": "加入了 [BlogBlog.Club](https://blogblog.club) 寫作社群，逼自己多寫一點短的。本來只想寫整理過的長文，但短的丟出去比較容易，就放著試試看。\n\n長文還是放這個網站的 Blog，碎片想法丟 Stream。"
-    },
-    {
-      "id": "owl",
-      "emoji": "🤖",
-      "title": "Owl 系統",
-      "body": "跟 AI 一起在蓋一個自己的助理系統，叫它 Owl。日記、筆記、研究、記帳、連這個網站的更新都串在它身上跑。\n\n最近把它的短期記憶砍掉一半，少記一點反而回答品質變好。"
+      "id": "surgery",
+      "title": "八月要升主治",
+      "body": "五月開了第一台自己主刀的瓣膜。下台之後才想到，原來我真的在開了。中間還要考一個專科。"
     },
     {
       "id": "dj",
-      "emoji": "🎚️",
-      "title": "DJ",
-      "body": "用了三四年的 DDJ-400 賣掉，升級 Rane One。把控制器交給買家的時候沒什麼感覺，走回車上才想到——我的 DJ 是從這台開始的。\n\n歌單最近整個搬回本地檔案，三百多首慢慢按曲風和語言分類。先把家裡放歌的場景做好，未來再升級。"
+      "title": "賣了陪我三四年的 DJ 機",
+      "body": "換了新的。交出去當下沒什麼感覺，走回車上才想到，我的 DJ 是從那台開始的。三百多首歌正在慢慢按曲風和語言分。最近有點怕弄丟那個一唱歌就開心的自己，所以更常放。"
     },
     {
-      "id": "trying",
-      "emoji": "🌱",
-      "title": "在嘗試的",
-      "body": "心理諮商這條路比想像中複雜。第一次去，我直接說想好好哭一場，結果整場對話幾乎都落在「那你打算怎麼解決」。後來才意識到——我真的太習慣用理性語言了，不管對象是誰，自動就會收束到「那解法是什麼呢？」的模式，情緒那塊過不去。現在準備換個諮商師，重新開始。\n\n週末還是會去台南的漫畫店躲半天。允許自己什麼都不做，練習中。"
+      "id": "counseling",
+      "title": "開始去諮商",
+      "body": "第一次就跟諮商師說，我想哭一場。我太習慣把每件事都收成「那解法是什麼」，連諮商都差點變成解題。在學的剛好相反：允許自己什麼都不做。"
+    },
+    {
+      "id": "owl",
+      "title": "在養一個叫 Owl 的系統",
+      "body": "跟 AI 一起蓋的。日記、研究、記帳、連這頁都在它上面跑。這頁就是從我的日記濾出來的，不是重寫。"
+    },
+    {
+      "id": "reading",
+      "title": "週末躲漫畫店",
+      "body": "在補《藍色時期》。最近也在讀《格調》。週末常去台南的漫畫店待一個下午。"
     }
   ],
+  "footer": "這頁每週從我的日記蒸餾、過目後更新。",
   "dynamic": {
     "music": [
       {
-        "streamId": "252",
-        "title": "old songs but it's lofi remix",
-        "date": "2026-04-24T15:54:09+00:00",
+        "streamId": "264",
+        "title": "袁語笙YUAN - 懶手指（Official Music Video)",
+        "date": "2026-05-25T17:59:30+00:00",
         "tag": "music",
-        "url": "https://www.youtube.com/watch?v=prrEnm_sBVM",
-        "youtubeId": "prrEnm_sBVM",
-        "image": "https://img.youtube.com/vi/prrEnm_sBVM/hqdefault.jpg",
-        "sourceLink": "https://t.me/doctormomo/252"
-      },
-      {
-        "streamId": "251",
-        "title": "[MV] 이영지 - Small girl feat. 도경수 (D.O.)",
-        "date": "2026-04-24T15:54:08+00:00",
-        "tag": "music",
-        "url": "https://www.youtube.com/watch?v=11iZcYbq_is",
-        "youtubeId": "11iZcYbq_is",
-        "image": "https://img.youtube.com/vi/11iZcYbq_is/hqdefault.jpg",
-        "sourceLink": "https://t.me/doctormomo/251"
-      },
-      {
-        "streamId": "250",
-        "title": "Harry Styles - Sign of the Times (Official Video)",
-        "date": "2026-04-24T15:54:04+00:00",
-        "tag": "music",
-        "url": "https://www.youtube.com/watch?v=qN4ooNx77u0",
-        "youtubeId": "qN4ooNx77u0",
-        "image": "https://img.youtube.com/vi/qN4ooNx77u0/hqdefault.jpg",
-        "sourceLink": "https://t.me/doctormomo/250"
-      },
-      {
-        "streamId": "249",
-        "title": "liminal.mp3",
-        "date": "2026-04-24T15:54:03+00:00",
-        "tag": "music",
-        "url": "https://www.youtube.com/watch?v=dtW-AFYpH_A",
-        "youtubeId": "dtW-AFYpH_A",
-        "image": "https://img.youtube.com/vi/dtW-AFYpH_A/hqdefault.jpg",
-        "sourceLink": "https://t.me/doctormomo/249"
+        "url": "https://www.youtube.com/watch?v=R07sQzWhc-E",
+        "youtubeId": "R07sQzWhc-E",
+        "image": "https://img.youtube.com/vi/R07sQzWhc-E/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/264"
       }
     ],
     "video": [
@@ -136,10 +98,71 @@
         "description": "有窗户也有锁的房子。窗户代表善良，它让阳光照进来，让你能看到外面的世界并传递温暖。而锁"
       }
     ],
-    "fragments": []
+    "fragments": [
+      {
+        "streamId": "270",
+        "title": "可是今天我發現，竟然被換掉了！真是有點小傷心",
+        "date": "2026-06-01T15:32:53+00:00",
+        "tag": "murmur",
+        "url": null,
+        "youtubeId": null,
+        "image": null,
+        "sourceLink": "https://t.me/doctormomo/270"
+      },
+      {
+        "streamId": "268",
+        "title": "這部電梯是我最喜歡的電梯不知道為什麼，人遇到死亡好像會特別害怕，所以儘管等電梯的人很多，這部電梯總是沒人在排隊對於很忙的我們，搭這台電梯是ㄧ種小確幸，可以享受短暫的貴賓尊榮待遇",
+        "date": "2026-06-01T15:29:57+00:00",
+        "tag": "murmur",
+        "url": null,
+        "youtubeId": null,
+        "image": null,
+        "sourceLink": "https://t.me/doctormomo/268"
+      }
+    ]
   },
   "_archive": {
     "music": [
+      {
+        "streamId": "252",
+        "title": "old songs but it's lofi remix",
+        "date": "2026-04-24T15:54:09+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=prrEnm_sBVM",
+        "youtubeId": "prrEnm_sBVM",
+        "image": "https://img.youtube.com/vi/prrEnm_sBVM/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/252"
+      },
+      {
+        "streamId": "251",
+        "title": "[MV] 이영지 - Small girl feat. 도경수 (D.O.)",
+        "date": "2026-04-24T15:54:08+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=11iZcYbq_is",
+        "youtubeId": "11iZcYbq_is",
+        "image": "https://img.youtube.com/vi/11iZcYbq_is/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/251"
+      },
+      {
+        "streamId": "250",
+        "title": "Harry Styles - Sign of the Times (Official Video)",
+        "date": "2026-04-24T15:54:04+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=qN4ooNx77u0",
+        "youtubeId": "qN4ooNx77u0",
+        "image": "https://img.youtube.com/vi/qN4ooNx77u0/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/250"
+      },
+      {
+        "streamId": "249",
+        "title": "liminal.mp3",
+        "date": "2026-04-24T15:54:03+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=dtW-AFYpH_A",
+        "youtubeId": "dtW-AFYpH_A",
+        "image": "https://img.youtube.com/vi/dtW-AFYpH_A/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/249"
+      },
       {
         "streamId": "212",
         "title": "MORE BE US 〈秘密基地〉",
@@ -223,6 +246,46 @@
     ],
     "video": [
       {
+        "streamId": "257",
+        "title": "【全長完整版】栗子的XXX呼吸法是變強的秘密？從小混混變成嘻哈街頭詩人！Ft. Lizi 栗子@liziiwu 【這又沒有很ㄉEP124】",
+        "date": "2026-05-05T13:15:45+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=NcHNPqbDxJo",
+        "youtubeId": "NcHNPqbDxJo",
+        "image": "https://img.youtube.com/vi/NcHNPqbDxJo/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/257"
+      },
+      {
+        "streamId": "255",
+        "title": "回顧2020年｜五個月的我被舅舅養大，現在我要再跟親生姊姊哥哥見一面 (No Eng Sub)｜誰來晚餐",
+        "date": "2026-05-01T04:45:43+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=DX_QmAsbhoY",
+        "youtubeId": "DX_QmAsbhoY",
+        "image": "https://img.youtube.com/vi/DX_QmAsbhoY/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/255"
+      },
+      {
+        "streamId": "247",
+        "title": "让 AI 代替我思考7天，这是我大脑发生的变化",
+        "date": "2026-04-24T15:54:01+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=_EmMwEIqAwo",
+        "youtubeId": "_EmMwEIqAwo",
+        "image": "https://img.youtube.com/vi/_EmMwEIqAwo/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/247"
+      },
+      {
+        "streamId": "248",
+        "title": "重置大腦30天，徹底告別“多巴胺”，會發生什麼！",
+        "date": "2026-04-24T15:54:01+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=1izKJcM6BL0",
+        "youtubeId": "1izKJcM6BL0",
+        "image": "https://img.youtube.com/vi/1izKJcM6BL0/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/248"
+      },
+      {
         "streamId": "191",
         "title": "오타니 쇼헤이 (大谷翔平) 'Ditto'",
         "date": "2026-03-12T15:23:10+00:00",
@@ -294,6 +357,17 @@
       }
     ],
     "reading": [
+      {
+        "streamId": "243",
+        "title": "善良与边界感",
+        "date": "2026-04-24T15:53:54+00:00",
+        "tag": "readwise",
+        "url": "https://blog.solazy.me/20260413/",
+        "youtubeId": null,
+        "image": null,
+        "sourceLink": "https://t.me/doctormomo/243",
+        "description": "有窗户也有锁的房子。窗户代表善良，它让阳光照进来，让你能看到外面的世界并传递温暖。而锁"
+      },
       {
         "streamId": "198",
         "title": "究竟存不存在理想中的日常",
@@ -520,6 +594,5 @@
         "sourceLink": "https://t.me/doctormomo/166"
       }
     ]
-  },
-  "intro": "如果我們一年沒見面，你問我最近在幹嘛，這頁大概就是我會跟你講的東西。靈感來自 Derek Sivers 的 [/now 運動](https://nownownow.com)。每週自動更新。"
+  }
 }

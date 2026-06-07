@@ -27,7 +27,7 @@ TAG_MAP = {
 }
 
 LIMITS = {"music": 5, "video": 4, "reading": 5, "fragments": 5}
-EXPIRY_DAYS = {"music": 30, "video": 30, "reading": 30, "fragments": 14}
+EXPIRY_DAYS = {"music": 30, "video": 60, "reading": 60, "fragments": 30}
 ARCHIVE_CAP = 50
 
 

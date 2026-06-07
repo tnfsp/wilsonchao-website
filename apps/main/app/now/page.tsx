@@ -55,7 +55,11 @@ function formatLastUpdated(iso: string): string {
 
 export default async function NowPage() {
   const data = await loadNowData();
-  const sections = data?.sections?.length ? data.sections : FALLBACK_SECTIONS;
+  const opening = data?.opening?.trim() ? data.opening.split(/\n\n+/) : [];
+  const list = data?.list?.length ? data.list : [];
+  const blocks = data?.sections?.length ? data.sections : [];
+  const usesNewShape = opening.length > 0 || list.length > 0 || blocks.length > 0;
+  const sections = usesNewShape ? [] : FALLBACK_SECTIONS;
   const lastUpdated = data?.lastUpdated || "";
   const stale = lastUpdated ? isStale(lastUpdated) : false;
   const hasDynamic = data?.dynamic && Object.values(data.dynamic).some((a) => a.length > 0);
@@ -84,6 +88,9 @@ export default async function NowPage() {
           <h1 className="text-3xl font-semibold text-[var(--foreground)]">
             What I&apos;m focusing on
           </h1>
+          {data?.subtitle && (
+            <p className="text-sm text-[var(--muted)]">{data.subtitle}</p>
+          )}
           {lastUpdated && (
             <p className="text-sm text-[var(--muted)]">
               最後更新：<time dateTime={lastUpdated}>{formatLastUpdated(lastUpdated)}</time>
@@ -94,22 +101,70 @@ export default async function NowPage() {
           )}
         </header>
 
-        {/* Intro */}
-        {data?.intro && (
-          <p className="leading-relaxed text-[var(--muted)]">{renderLinkedText(data.intro)}</p>
-        )}
+        {usesNewShape ? (
+          <>
+            {/* Opening confession — the voice of the page */}
+            {opening.length > 0 && (
+              <div className="space-y-4">
+                {opening.map((para, i) => (
+                  <p key={i} className="leading-relaxed text-[var(--foreground)]">
+                    {renderLinkedText(para)}
+                  </p>
+                ))}
+              </div>
+            )}
 
-        {/* Static sections */}
-        <div className="space-y-5">
-          {sections.map((s) => (
-            <section key={s.id} className="space-y-1.5">
-              <h2 className="text-lg font-semibold text-[var(--foreground)]">
-                {s.emoji} {s.title}
-              </h2>
-              <p className="leading-relaxed text-[var(--muted)]">{renderLinkedText(s.body)}</p>
-            </section>
-          ))}
-        </div>
+            {/* Themed blocks — header + textured prose (nownownow / Sivers style) */}
+            {blocks.length > 0 && (
+              <div className="space-y-5">
+                {blocks.map((s) => (
+                  <section key={s.id} className="space-y-1.5">
+                    <h2 className="text-lg font-semibold text-[var(--foreground)]">
+                      {s.emoji ? `${s.emoji} ` : ""}
+                      {s.title}
+                    </h2>
+                    <p className="leading-relaxed text-[var(--foreground)]">{renderLinkedText(s.body)}</p>
+                  </section>
+                ))}
+              </div>
+            )}
+
+            {/* Optional loose list (kept for flexibility) */}
+            {list.length > 0 && (
+              <ul className="space-y-2.5">
+                {list.map((item, i) => (
+                  <li
+                    key={i}
+                    className="relative pl-5 leading-relaxed text-[var(--foreground)]"
+                  >
+                    <span
+                      aria-hidden
+                      className="absolute left-0 top-[0.7em] h-1.5 w-1.5 rounded-full bg-[var(--accent-strong)]"
+                    />
+                    {renderLinkedText(item)}
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        ) : (
+          <>
+            {/* Legacy: intro + titled sections */}
+            {data?.intro && (
+              <p className="leading-relaxed text-[var(--muted)]">{renderLinkedText(data.intro)}</p>
+            )}
+            <div className="space-y-5">
+              {sections.map((s) => (
+                <section key={s.id} className="space-y-1.5">
+                  <h2 className="text-lg font-semibold text-[var(--foreground)]">
+                    {s.emoji} {s.title}
+                  </h2>
+                  <p className="leading-relaxed text-[var(--foreground)]">{renderLinkedText(s.body)}</p>
+                </section>
+              ))}
+            </div>
+          </>
+        )}
 
         {/* Dynamic sections */}
         {hasDynamic && data?.dynamic && (
@@ -150,7 +205,7 @@ export default async function NowPage() {
             </a>
           </p>
           <p className="text-xs text-[var(--muted)]/60">
-            Inspired by{" "}
+            {data?.footer ? `${data.footer} ` : ""}Inspired by{" "}
             <a
               href="https://nownownow.com"
               target="_blank"

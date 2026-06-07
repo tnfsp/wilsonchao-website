@@ -22,8 +22,18 @@ export interface NowSection {
 
 export interface NowData {
   lastUpdated: string;
+  /** Short context line under the title, e.g. "2026 年 6 月 · 高雄" */
+  subtitle?: string;
+  /** Opening confession — paragraphs separated by "\n\n". The voice of the page. */
+  opening?: string;
+  /** Loose bullet list. Each item supports [text](url) markdown links. */
+  list?: string[];
+  /** Footer note above the contact line, supports links. */
+  footer?: string;
+  /** @deprecated legacy intro line, superseded by `opening` */
   intro?: string;
-  sections: NowSection[];
+  /** @deprecated legacy titled sections, superseded by `opening` + `list` */
+  sections?: NowSection[];
   dynamic: {
     music: NowDynamicItem[];
     video: NowDynamicItem[];
@@ -55,15 +65,22 @@ export async function loadNowData(): Promise<NowData | null> {
         return age < days * 24 * 60 * 60 * 1000;
       });
 
+    const hasNewShape = Boolean(data.opening || data.list?.length);
+
     return {
       lastUpdated: data.lastUpdated,
+      subtitle: data.subtitle,
+      opening: data.opening,
+      list: data.list,
+      footer: data.footer,
       intro: data.intro,
-      sections: data.sections?.length ? data.sections : FALLBACK_SECTIONS,
+      // Only fall back to titled sections when neither new shape nor authored sections exist
+      sections: data.sections?.length ? data.sections : hasNewShape ? [] : FALLBACK_SECTIONS,
       dynamic: {
         music: filterByDays(data.dynamic?.music || [], 30),
-        video: filterByDays(data.dynamic?.video || [], 30),
-        reading: filterByDays(data.dynamic?.reading || [], 30),
-        fragments: filterByDays(data.dynamic?.fragments || [], 14),
+        video: filterByDays(data.dynamic?.video || [], 60),
+        reading: filterByDays(data.dynamic?.reading || [], 60),
+        fragments: filterByDays(data.dynamic?.fragments || [], 30),
       },
     };
   } catch (error) {
