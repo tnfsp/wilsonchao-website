@@ -15,7 +15,7 @@ export interface NowDynamicItem {
 
 export interface NowSection {
   id: string;
-  emoji: string;
+  emoji?: string | null;
   title: string;
   body: string;
 }
@@ -57,7 +57,8 @@ export async function loadNowData(): Promise<NowData | null> {
     const raw = await fs.readFile(NOW_PATH, "utf-8");
     const data = JSON.parse(raw) as NowData & { _archive?: unknown };
 
-    // Runtime filter: 30 days for most, 14 for fragments
+    // Runtime filter — keep in sync with EXPIRY_DAYS in scripts/sync-now-dynamic.py
+    // (music 30, video 60, reading 60, fragments 30)
     const now = Date.now();
     const filterByDays = (items: NowDynamicItem[], days: number) =>
       items.filter((item) => {
