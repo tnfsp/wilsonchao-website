@@ -80,6 +80,7 @@ export default function VitalTrendGraph() {
   const [expanded, setExpanded] = useState(false);
 
   // Build data — seed with current vitals at time 0
+  // eslint-disable-next-line react-hooks/preserve-manual-memoization -- React Compiler 無法保留含 optional-chain deps 的手動 useMemo，維持原樣
   const points = useMemo<DataPoint[]>(() => {
     const extracted = extractDataPoints(timeline);
 

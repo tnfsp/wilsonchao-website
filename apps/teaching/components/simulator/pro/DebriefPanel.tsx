@@ -7,7 +7,6 @@ import type {
   CriticalAction,
   WhatIfBranch,
   ExpectedAction,
-  TrackedAction,
   GuidelineBundleScore,
   GuidelineBundle,
   GameScore,
@@ -993,6 +992,7 @@ function AISkeleton({ lines = 4 }: { lines?: number }) {
           <div className="w-2 h-2 rounded-full bg-white/10 mt-1.5 shrink-0" />
           <div
             className="h-3 bg-white/10 rounded"
+            // eslint-disable-next-line react-hooks/purity -- skeleton 寬度隨機僅為裝飾效果
             style={{ width: `${60 + Math.random() * 30}%` }}
           />
         </div>

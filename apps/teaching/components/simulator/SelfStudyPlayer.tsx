@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useRef, useEffect } from "react";
 import { Scenario, VitalSigns } from "@/lib/simulator/types-legacy";
 import VitalsPanel from "./VitalsPanel";
@@ -140,12 +141,12 @@ export default function SelfStudyPlayer({
             開始接班 →
           </button>
 
-          <a
+          <Link
             href="/teaching/simulator"
             className="block mt-4 text-gray-500 hover:text-white text-sm transition"
           >
             ← 返回情境列表
-          </a>
+          </Link>
         </div>
       </div>
     );
@@ -157,12 +158,12 @@ export default function SelfStudyPlayer({
       <div className="sticky top-0 z-10 bg-[#001219]/95 backdrop-blur border-b border-white/5">
         <div className="max-w-3xl mx-auto px-4 py-2 flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <a
+            <Link
               href="/teaching/simulator"
               className="text-gray-500 hover:text-white transition text-sm"
             >
               ← 返回
-            </a>
+            </Link>
             <span className="text-gray-600">|</span>
             <span className="text-sm text-gray-400">{scenario.title}</span>
             <span className="text-xs bg-green-500/10 text-green-400 px-2 py-0.5 rounded-full">

@@ -12,7 +12,6 @@ import type {
 } from "../types";
 import {
   allMedications,
-  getMedicationById,
 } from "../data/medications";
 import {
   allTransfusions,
@@ -20,7 +19,7 @@ import {
   mtpRoundEffect,
   MTP_ROUND_CONTENT,
 } from "../data/transfusions";
-import { allLabs, getLabById } from "../data/labs";
+import { allLabs } from "../data/labs";
 
 // ============================================================
 // Validation Result Types
@@ -170,7 +169,7 @@ export function validateOrder(
  */
 export function getOrderEffect(
   order: PlacedOrder,
-  weight: number = 70,
+  _weight: number = 70,
   pathology?: Pathology
 ): ActiveEffect | null {
   const { definition, placedAt } = order;

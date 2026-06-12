@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useCallback, useState } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { SimScenario, StandardOverlay } from "@/lib/simulator/types";
@@ -29,6 +30,7 @@ import type { GuidanceMessage as BubbleMessage } from "@/components/simulator/st
 
 // Pro components (shared UI — Standard now uses the same layout as Pro)
 import ProGameLayout from "@/components/simulator/pro/ProGameLayout";
+import OutcomeScreen from "@/components/simulator/pro/OutcomeScreen";
 import ProVitalsPanel from "@/components/simulator/pro/ProVitalsPanel";
 import ActionBar from "@/components/simulator/pro/ActionBar";
 import WaveformMonitor from "@/components/simulator/pro/WaveformMonitor";
@@ -206,6 +208,7 @@ function useBioGearsMode(): boolean {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- mount 時讀 URL query 決定 engine 模式（僅執行一次）
       if (params.get("engine") === "formula") setEnabled(false);
     }
   }, []);
@@ -541,12 +544,12 @@ function ErrorScreen({ error }: { error: string }) {
       <div className="text-4xl">{"\u26A0\uFE0F"}</div>
       <p className="text-white font-medium">{"\u8F09\u5165\u5931\u6557"}</p>
       <p className="text-gray-500 text-sm text-center max-w-sm">{error}</p>
-      <a
+      <Link
         href="/teaching/simulator"
         className="mt-2 text-amber-400 text-sm hover:underline"
       >
         {"\u2190 \u8FD4\u56DE\u60C5\u5883\u5217\u8868"}
-      </a>
+      </Link>
     </div>
   );
 }
@@ -678,7 +681,6 @@ export default function StandardPageClient({ id }: { id: string }) {
   if (phase === "death") return <DeathScreen />;
   if (phase === "outcome") {
     // Standard mode also uses OutcomeScreen before debrief
-    const OutcomeScreen = require("@/components/simulator/pro/OutcomeScreen").default;
     return <OutcomeScreen />;
   }
   if (phase === "debrief") {

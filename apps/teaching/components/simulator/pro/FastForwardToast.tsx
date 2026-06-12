@@ -62,6 +62,7 @@ export default function FastForwardToast() {
     if (delta > 1) {
       const timeStr = formatGameTime(currentTime, startHour);
       // Reset exit animation
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- toast 由 game-time 跳變驅動，effect 內 setState 為既有設計
       setExiting(false);
       setToast({ text: `已快轉至 ${timeStr}`, delta });
 

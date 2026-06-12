@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useState, useCallback } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { SimScenario } from "@/lib/simulator/types";
@@ -207,6 +208,7 @@ function useBioGearsMode(): boolean {
   useEffect(() => {
     if (typeof window !== "undefined") {
       const params = new URLSearchParams(window.location.search);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- mount 時讀 URL query 決定 engine 模式（僅執行一次）
       if (params.get("engine") === "formula") setEnabled(false);  // opt-OUT
     }
   }, []);
@@ -229,6 +231,7 @@ function useEngineStatus(): EngineStatus {
     const fn = () => setStatus(_engineStatus);
     _engineListeners.add(fn);
     // Sync in case status changed between render and effect registration
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- 訂閱後同步 module-level engine status（external store 同步模式）
     setStatus(_engineStatus);
     return () => { _engineListeners.delete(fn); };
   }, []);
@@ -479,12 +482,12 @@ function ErrorScreen({ error }: { error: string }) {
       <div className="text-4xl">⚠️</div>
       <p className="text-white font-medium">載入失敗</p>
       <p className="text-gray-500 text-sm text-center max-w-sm">{error}</p>
-      <a
+      <Link
         href="/teaching/simulator"
         className="mt-2 text-teal-400 text-sm hover:underline"
       >
         ← 返回情境列表
-      </a>
+      </Link>
     </div>
   );
 }

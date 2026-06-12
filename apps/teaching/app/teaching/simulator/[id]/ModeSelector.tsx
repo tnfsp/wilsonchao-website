@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useState } from "react";
 import { Scenario } from "@/lib/simulator/types-legacy";
 import CasePlayer from "@/components/simulator/CasePlayer";
@@ -70,23 +71,23 @@ export default function ModeSelector({
           </p>
           <p className="text-gray-400 text-sm mt-2">
             如果想要自由開 order 的模擬體驗，請試試{" "}
-            <a
+            <Link
               href="/teaching/simulator"
               className="text-cyan-400 hover:text-cyan-300 underline transition"
             >
               Pro 模式
-            </a>
+            </Link>
             。
           </p>
         </div>
 
         <div className="text-center mt-6">
-          <a
+          <Link
             href="/teaching/simulator"
             className="text-gray-500 hover:text-white transition text-sm"
           >
             ← 返回情境列表
-          </a>
+          </Link>
         </div>
       </div>
     </div>

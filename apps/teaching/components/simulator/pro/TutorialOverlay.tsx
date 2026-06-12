@@ -51,6 +51,7 @@ function useTargetRect(targetId: TargetId): DOMRect | null {
   const [rect, setRect] = useState<DOMRect | null>(null);
 
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- render 後量測 DOM target 位置（measure-after-render 模式）
     if (targetId === "none") { setRect(null); return; }
     const el = document.getElementById(targetId);
     if (!el) { setRect(null); return; }

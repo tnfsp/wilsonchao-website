@@ -738,6 +738,7 @@ export default function OrderModal() {
     if (isOpen) {
       const hint = sessionStorage.getItem("sim-order-tab");
       if (hint === "ventilator") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- 開啟時讀 sessionStorage 的一次性 tab hint
         setActiveTab("ventilator");
         sessionStorage.removeItem("sim-order-tab");
       }

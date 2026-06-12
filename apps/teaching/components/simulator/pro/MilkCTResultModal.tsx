@@ -41,6 +41,7 @@ export function MilkCTResultModal() {
   // ── Auto-close countdown ──────────────────────────────────────
   useEffect(() => {
     if (!isOpen) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- modal 關閉時重置倒數計時
       setCountdown(AUTO_CLOSE_MS);
       return;
     }
@@ -148,7 +149,6 @@ export function MilkCTResultModal() {
       style={{ backgroundColor: "rgba(0,0,0,0.78)" }}
       onClick={closeModal}
     >
-      {/* eslint-disable-next-line jsx-a11y/click-events-have-key-events, jsx-a11y/no-static-element-interactions */}
       <div
         className={`w-full max-w-sm rounded-xl border ${borderColorMap[resultColor]} shadow-2xl overflow-hidden`}
         style={{ backgroundColor: "#001219" }}

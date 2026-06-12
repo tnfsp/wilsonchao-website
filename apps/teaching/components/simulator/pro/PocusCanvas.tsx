@@ -557,6 +557,7 @@ export function PocusCanvas() {
       const label = TABS.find((t) => t.key === activeView)!;
       ctx.fillText(label.label, w - ctx.measureText(label.label).width - 10, 16);
 
+      // eslint-disable-next-line react-hooks/immutability -- rAF 動畫迴圈在 useCallback 內自我引用（既有動畫模式）
       animRef.current = requestAnimationFrame(draw);
     },
     [activeView, hr, ef, cvp, bv, rr]

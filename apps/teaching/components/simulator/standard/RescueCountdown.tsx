@@ -27,6 +27,7 @@ export default function RescueCountdown() {
     if (prev?.active && !rescueState) {
       const phase = useProGameStore.getState().phase;
       if (phase === "playing") {
+        // eslint-disable-next-line react-hooks/set-state-in-effect -- 偵測 rescueState 轉變後顯示成功橫幅
         setRescued(true);
         const timer = setTimeout(() => setRescued(false), 2500);
         return () => clearTimeout(timer);

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, memo } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
-import type { TimelineEntry, TimelineEntryType } from "@/lib/simulator/types";
+import type { TimelineEntry } from "@/lib/simulator/types";
 
 // ─────────────────────────────────────────────
 // Game-time formatter: minutes-since-start → "02:05 AM"

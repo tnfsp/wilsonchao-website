@@ -35,6 +35,7 @@ export default function SimulatorPage() {
   useEffect(() => {
     try {
       const raw = localStorage.getItem(PROGRESS_KEY);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- mount 時從 localStorage 還原進度（client-only 資料，僅執行一次）
       if (raw) setProgress(JSON.parse(raw));
     } catch { /* ignore */ }
   }, []);

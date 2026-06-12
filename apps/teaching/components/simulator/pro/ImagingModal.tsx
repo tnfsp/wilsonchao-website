@@ -220,6 +220,7 @@ export function ImagingModal() {
 
       // Schedule result event
       const resultEvent: PendingEvent = {
+        // eslint-disable-next-line react-hooks/purity -- Date.now() 只在 onClick handler（handleOrder）內執行，非 render 期間
         id: `ev_${tab}_result_${Date.now()}`,
         triggerAt: clock.currentTime + turnaroundMinutes,
         type: "lab_result",

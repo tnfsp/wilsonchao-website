@@ -13,10 +13,6 @@
 import type {
   SimScenario,
   VitalSigns,
-  PatientState,
-  PlacedOrder,
-  MTPState,
-  TrackedAction,
 } from "../types";
 
 // ============================================================

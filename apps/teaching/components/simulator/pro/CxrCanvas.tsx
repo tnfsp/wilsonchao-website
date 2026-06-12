@@ -986,6 +986,7 @@ export function CxrCanvas({
 }: CxrCanvasProps) {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const rafRef = useRef<number>(0);
+  // eslint-disable-next-line react-hooks/purity -- Date.now() 僅作為動畫起始時間戳的 ref 初始值，不影響 render 結果
   const startTimeRef = useRef<number>(Date.now());
 
   const draw = useCallback(() => {

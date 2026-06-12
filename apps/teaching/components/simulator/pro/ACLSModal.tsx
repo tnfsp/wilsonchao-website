@@ -2,7 +2,7 @@
 
 import { useState, useEffect, useRef, useCallback } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
-import type { RhythmType, TimelineEntry } from "@/lib/simulator/types";
+import type { RhythmType } from "@/lib/simulator/types";
 import {
   dispatchCardiacArrest,
   dispatchStartCpr,

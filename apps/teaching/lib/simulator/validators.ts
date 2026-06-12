@@ -121,7 +121,7 @@ const medicationRanges: Record<string, DoseRange> = {
 export function validateMedication(
   medicationId: string,
   dose: number,
-  unit: string
+  _unit: string
 ): ValidationResult {
   const range = medicationRanges[medicationId];
 

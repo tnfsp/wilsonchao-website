@@ -377,7 +377,8 @@ export interface PlacedOrder {
   placedAt: number;             // game minutes
   status: OrderStatus;
   resultAvailableAt?: number;   // game minutes
-  result?: any;
+  /** Lab/imaging 結果 payload — 形狀依 panel 而異，使用端以 cast/narrowing 取值 */
+  result?: unknown;
   warning?: string;
 }
 
@@ -609,7 +610,7 @@ export interface SimScenario {
   initialVitals: VitalSigns;
   initialChestTube: ChestTubeState;
   initialVentilator?: VentilatorState;
-  initialLabs: Record<string, any>;
+  initialLabs: Record<string, unknown>;
   pathology: Pathology;
   startHour: number;            // e.g. 2 for 02:00 AM
 
@@ -675,7 +676,7 @@ export interface ScriptedEvent {
   chestTubeChanges?: Partial<ChestTubeState>;
   temperatureChange?: number;
   severityChange?: number;
-  newLabResults?: Record<string, any>;
+  newLabResults?: Record<string, unknown>;
   /** 觸發 pathology 轉換（multi-phase scenario 用） */
   pathologyChange?: Pathology;
   /** 絕對值設定 severity（不是 delta），用於 pathology 轉換時 reset */

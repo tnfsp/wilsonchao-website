@@ -21,7 +21,7 @@
 import { BioGearsClient, biogearsToVitals } from "./biogears-client";
 import type { BioGearsState } from "./biogears-client";
 import { useProGameStore } from "../store";
-import type { VitalSigns, LethalTriadState } from "../types";
+import type { LethalTriadState } from "../types";
 import { deriveCtOutput } from "./ct-output-engine";
 
 // ============================================================
@@ -234,7 +234,7 @@ function _syncBioGearsToStoreImpl(bgState: BioGearsState): void {
 // Action dispatch: Store actions → BioGears commands
 // ============================================================
 
-import { BIOGEARS_COMPOUNDS, BIOGEARS_DRUGS } from "./biogears-client";
+import { BIOGEARS_DRUGS } from "./biogears-client";
 
 // ============================================================
 // Drug concentration map (B15 fix)

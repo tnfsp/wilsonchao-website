@@ -111,6 +111,7 @@ export default function GuidanceBubble({
     if (hasPendingCritical) {
       // Fast-dismiss current non-critical to show critical ASAP
       if (dismissTimer.current) clearTimeout(dismissTimer.current);
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- 有 critical 訊息待顯示時快速關閉目前非 critical 訊息
       dismiss();
     }
   }, [messages, current, dismiss]);

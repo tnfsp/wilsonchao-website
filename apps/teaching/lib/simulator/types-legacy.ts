@@ -12,7 +12,8 @@ export interface LegacyVitalSigns {
   uo?: number;
   pap?: number;
   extraLines?: Array<{ label: string; value: string | number; unit?: string; color?: string }>;
-  [key: string]: any;
+  // 任意 JSON scenario 資料可帶額外 vital 欄位 — 用 unknown，使用端自行 narrowing
+  [key: string]: unknown;
 }
 
 export interface DebriefItem {

@@ -7,12 +7,13 @@ import { useProGameStore } from "@/lib/simulator/store";
 export function PauseThinkModal() {
   const activeModal = useProGameStore((s) => s.activeModal);
   const closeModal = useProGameStore((s) => s.closeModal);
-  const usePauseThink = useProGameStore((s) => s.usePauseThink);
+  // 改名 local binding 避免被 rules-of-hooks 誤判為 hook（store action 本名 usePauseThink）
+  const markPauseThink = useProGameStore((s) => s.usePauseThink);
 
   if (activeModal !== "pause_think") return null;
 
   function handleResume() {
-    usePauseThink();
+    markPauseThink();
     closeModal();
   }
 

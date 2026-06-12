@@ -1,6 +1,8 @@
 "use client";
 
+import Link from "next/link";
 import { useEffect, useRef, useCallback } from "react";
+import type { RevealApi } from "reveal.js";
 
 interface RevealSlidesProps {
   slidesHtml: string;
@@ -8,7 +10,7 @@ interface RevealSlidesProps {
 
 export default function RevealSlides({ slidesHtml }: RevealSlidesProps) {
   const deckRef = useRef<HTMLDivElement>(null);
-  const revealRef = useRef<any>(null);
+  const revealRef = useRef<RevealApi | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
 
   const toggleFullscreen = useCallback(() => {
@@ -105,7 +107,7 @@ export default function RevealSlides({ slidesHtml }: RevealSlidesProps) {
         :fullscreen .fullscreen-btn { display: none; }
         :fullscreen .back-link { display: none; }
       `}</style>
-      <a href="/teaching" className="back-link">← 目錄</a>
+      <Link href="/teaching" className="back-link">← 目錄</Link>
       <button className="fullscreen-btn" onClick={toggleFullscreen}>⛶ 全螢幕</button>
       <div className="reveal" ref={deckRef}>
         <div

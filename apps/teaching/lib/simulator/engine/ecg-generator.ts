@@ -108,9 +108,9 @@ export function generateECGMorphology(
   let hr = bgState?.vitals?.hr ?? 75;
   let rhythm: ECGRhythm = "normal_sinus";
   let pWave = true;
-  let prInterval = 160;    // ms
+  const prInterval = 160;  // ms
   let qrsDuration = 80;    // ms
-  let stSegment: ECGMorphology["stSegment"] = "normal";
+  const stSegment: ECGMorphology["stSegment"] = "normal";
   let tWave: ECGMorphology["tWave"] = "normal";
   let qtc = 420;
   let lowVoltage = false;
@@ -231,7 +231,6 @@ function generateOneBeat(
   }
 
   // Lead-specific amplitude scaling
-  const isLimb = ["I", "II", "III", "aVR", "aVL", "aVF"].includes(lead);
   const isPrecordial = ["V1", "V2", "V3", "V4", "V5", "V6"].includes(lead);
 
   const axisAngleDeg = LEAD_ANGLES[lead] ?? 60;

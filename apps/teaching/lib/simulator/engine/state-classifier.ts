@@ -56,7 +56,6 @@ export function classifyPatientState(
   // ── Extract key values ──
   const hr = vitals.hr;
   const map = vitals.map;
-  const sbp = vitals.sbp;
   const cvp = vitals.cvp;
   const co = vitals.cardiac_output;     // L/min
   const ef = vitals.ejection_fraction;  // 0-1

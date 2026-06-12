@@ -4,7 +4,6 @@
 
 import type {
   SimScenario,
-  PlacedOrder,
   TimelineEntry,
   GameScore,
   CriticalAction,
@@ -508,7 +507,7 @@ function calculateTimeToFirstAction(playerActions: PlayerAction[]): number {
 function evaluateGuidelineBundles(
   bundles: GuidelineBundle[] | undefined,
   criticalActions: CriticalAction[],
-  playerActions: PlayerAction[],
+  _playerActions: PlayerAction[],
 ): GuidelineBundleScore[] {
   if (!bundles || bundles.length === 0) return [];
 

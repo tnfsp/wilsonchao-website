@@ -104,7 +104,6 @@ export function ConsultModal() {
 
   if (activeModal !== "consult" || !scenario) return null;
 
-  // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
   const safeScenario = scenario!;
   const nurseName = safeScenario.nurseProfile.name ?? "\u8b77\u7406\u5e2b";
 

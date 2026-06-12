@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState, useMemo, useCallback } from "react";
+import { useEffect, useRef, useState, useMemo } from "react";
 import { useProGameStore } from "@/lib/simulator/store";
 import type { VitalSigns, ALineWaveform } from "@/lib/simulator/types";
 import { applyVitalsFog, FOG_PRESETS } from "@/lib/simulator/engine/fog-of-war";
@@ -142,6 +142,7 @@ function useFlash(
 
     // Clear existing timer
     if (timerRef.current) clearTimeout(timerRef.current);
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- flash 動畫需先清空 class 再以 rAF 重新觸發
     setFlashClass(""); // reset first to re-trigger animation
 
     // Use rAF trick to force re-render before setting class
@@ -249,6 +250,7 @@ function useBioGearsHemodynamics(): BioGearsHemodynamics | null {
 
   useEffect(() => {
     if (!biogearsLive) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect -- BioGears 離線時清空 hemodynamics 快照
       setHemo(null);
       return;
     }

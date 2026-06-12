@@ -1,7 +1,7 @@
 // ICU 模擬器 — 藥物定義
 // 包含完整 Guard Rails + Drug Interactions
 
-import type { OrderDefinition, Pathology } from "../types";
+import type { OrderDefinition } from "../types";
 
 // ============================================================
 // VASOPRESSORS

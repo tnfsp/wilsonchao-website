@@ -287,8 +287,17 @@ export interface BioGearsStatusMessage {
 type MessageHandler = (data: BioGearsState | BioGearsStatusMessage) => void;
 type StatusHandler = (status: "connecting" | "connected" | "disconnected" | "initializing" | "ready" | "error") => void;
 
+/**
+ * Raw message from the bridge — a status envelope（可能帶 requestId 回 echo）
+ * 或完整 state snapshot（帶 vitals）。
+ */
+interface BioGearsBridgeMessage extends BioGearsStatusMessage {
+  requestId?: string;
+  vitals?: BioGearsVitals;
+}
+
 interface PendingRequest {
-  resolve: (data: any) => void;
+  resolve: (data: BioGearsResponse) => void;
   reject: (err: Error) => void;
   timeout: ReturnType<typeof setTimeout>;
 }
@@ -354,9 +363,9 @@ export class BioGearsClient {
       };
 
       this.ws.onmessage = (event) => {
-        let data: any;
+        let data: BioGearsBridgeMessage;
         try {
-          data = JSON.parse(event.data);
+          data = JSON.parse(event.data) as BioGearsBridgeMessage;
         } catch {
           console.warn("[BioGears] Invalid JSON:", event.data);
           return;
@@ -442,7 +451,7 @@ export class BioGearsClient {
    * Falls back to FIFO order when the bridge does not echo requestId.
    * Returns true if a pending request was resolved, false otherwise.
    */
-  private resolvePending(data: any): boolean {
+  private resolvePending(data: BioGearsBridgeMessage): boolean {
     if (this.pendingRequests.size === 0) return false;
 
     let id: string | undefined;
@@ -700,7 +709,7 @@ export class BioGearsClient {
 // BioGears → Simulator Type Adapter
 // ============================================================
 
-import type { VitalSigns, PatientState, RhythmType } from "../types";
+import type { VitalSigns, RhythmType } from "../types";
 
 /** Map BioGears heart rhythm strings to simulator display strings */
 function mapBioGearsRhythm(bgRhythm?: string): RhythmType {
