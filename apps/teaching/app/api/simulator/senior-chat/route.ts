@@ -1,28 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { getAnthropicClient } from "@/lib/anthropic";
+import { rateLimit } from "@/lib/rate-limit";
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-// ── Rate limiter (15 requests per 10 minutes per IP) ──────────────────────
+// ── Rate limit: per IP, 15 requests per 10 minutes ────────────────────────
 
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 const RATE_LIMIT_MAX = 15;
-
-const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
-    rateLimitMap.set(ip, { count: 1, windowStart: now });
-    return true;
-  }
-  if (entry.count >= RATE_LIMIT_MAX) return false;
-  entry.count++;
-  return true;
-}
 
 // ── System prompts by mode ────────────────────────────────────────────────
 
@@ -126,7 +109,11 @@ ${stateBlock}
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (!checkRateLimit(ip)) {
+  const { allowed } = await rateLimit(`simulator-senior-chat:${ip}`, {
+    limit: RATE_LIMIT_MAX,
+    windowMs: RATE_LIMIT_WINDOW_MS,
+  });
+  if (!allowed) {
     return NextResponse.json(
       { reply: "（學長正在處理其他事，稍後再打。）" },
       { status: 429 }
@@ -187,8 +174,8 @@ export async function POST(request: NextRequest) {
     }
     messages.push({ role: "user", content: message });
 
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+    const response = await getAnthropicClient().messages.create({
+      model: "claude-opus-4-8",
       max_tokens: mode === "arrival_greeting" ? 100 : 200,
       system: systemPrompt,
       messages,

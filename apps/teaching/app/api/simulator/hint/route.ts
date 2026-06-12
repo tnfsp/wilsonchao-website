@@ -1,28 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { getAnthropicClient } from "@/lib/anthropic";
+import { rateLimit } from "@/lib/rate-limit";
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-// ── Rate limiter (10 requests per 10 minutes per IP) ──────────────────────
+// ── Rate limit: per IP, 10 requests per 10 minutes ────────────────────────
 
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000;
 const RATE_LIMIT_MAX = 10;
-
-const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
-    rateLimitMap.set(ip, { count: 1, windowStart: now });
-    return true;
-  }
-  if (entry.count >= RATE_LIMIT_MAX) return false;
-  entry.count++;
-  return true;
-}
 
 // ── Types ─────────────────────────────────────────────────────────────────
 
@@ -59,7 +42,11 @@ interface HintRequestBody {
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (!checkRateLimit(ip)) {
+  const { allowed } = await rateLimit(`simulator-hint:${ip}`, {
+    limit: RATE_LIMIT_MAX,
+    windowMs: RATE_LIMIT_WINDOW_MS,
+  });
+  if (!allowed) {
     return NextResponse.json(
       { hint: null, error: "Rate limited" },
       { status: 429 }
@@ -68,7 +55,7 @@ export async function POST(request: NextRequest) {
 
   try {
     const body = (await request.json()) as HintRequestBody;
-    const { unmetAction, gameState, playerActions, recentTimeline, labSummary, scenarioInfo, allExpectedActions } = body;
+    const { unmetAction, gameState, recentTimeline, labSummary, scenarioInfo, allExpectedActions } = body;
 
     // Build context for AI
     const completedActions = allExpectedActions.filter((a) => a.met).map((a) => `- [DONE] ${a.description}`);
@@ -117,8 +104,8 @@ Static hint: ${unmetAction.hint}
 
 Generate a contextual teaching hint based on the current game state.`;
 
-    const response = await client.messages.create({
-      model: "claude-sonnet-4-20250514",
+    const response = await getAnthropicClient().messages.create({
+      model: "claude-opus-4-8",
       max_tokens: 300,
       system: systemPrompt,
       messages: [{ role: "user", content: userMessage }],

@@ -1,28 +1,11 @@
 import { NextRequest, NextResponse } from "next/server";
-import Anthropic from "@anthropic-ai/sdk";
+import { getAnthropicClient } from "@/lib/anthropic";
+import { rateLimit } from "@/lib/rate-limit";
 import type { AIDebriefResponse } from "@/lib/simulator/types";
 
-const client = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY,
-});
-
-// ── Rate limiter (shared pattern with chat endpoint) ────────────────────────
+// ── Rate limit: per IP, 10 requests per 10 minutes ──────────────────────────
 const RATE_LIMIT_WINDOW_MS = 10 * 60 * 1000; // 10 minutes
 const RATE_LIMIT_MAX = 10; // stricter than chat — debrief is heavier
-
-const rateLimitMap = new Map<string, { count: number; windowStart: number }>();
-
-function checkRateLimit(ip: string): boolean {
-  const now = Date.now();
-  const entry = rateLimitMap.get(ip);
-  if (!entry || now - entry.windowStart > RATE_LIMIT_WINDOW_MS) {
-    rateLimitMap.set(ip, { count: 1, windowStart: now });
-    return true;
-  }
-  if (entry.count >= RATE_LIMIT_MAX) return false;
-  entry.count++;
-  return true;
-}
 
 // ── Types for request body ──────────────────────────────────────────────────
 
@@ -156,7 +139,7 @@ ${phaseSection}
 ${scenarioMeta.keyPoints.map((p, i) => `${i + 1}. ${p}`).join("\n")}
 
 ## 常見陷阱
-${scenarioMeta.pitfalls.map((p, i) => `- ${p}`).join("\n")}
+${scenarioMeta.pitfalls.map((p) => `- ${p}`).join("\n")}
 
 ## 規則
 1. 所有回饋必須基於實際 timeline 事件，不要虛構任何行為
@@ -280,7 +263,11 @@ Please generate the debrief analysis as JSON.`;
 
 export async function POST(request: NextRequest) {
   const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ?? "unknown";
-  if (!checkRateLimit(ip)) {
+  const { allowed } = await rateLimit(`simulator-debrief:${ip}`, {
+    limit: RATE_LIMIT_MAX,
+    windowMs: RATE_LIMIT_WINDOW_MS,
+  });
+  if (!allowed) {
     return NextResponse.json(
       { error: "Too many requests. Please wait before requesting another debrief." },
       { status: 429 },
@@ -301,9 +288,9 @@ export async function POST(request: NextRequest) {
     const systemPrompt = buildSystemPrompt(body);
     const userMessage = buildUserMessage(body);
 
-    const response = await client.messages.create(
+    const response = await getAnthropicClient().messages.create(
       {
-        model: "claude-sonnet-4-20250514",
+        model: "claude-opus-4-8",
         max_tokens: 2000,
         system: systemPrompt,
         messages: [{ role: "user", content: userMessage }],
