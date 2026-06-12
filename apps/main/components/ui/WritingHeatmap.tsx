@@ -10,7 +10,7 @@ const SIZE = CELL + GAP;
 
 const COLORS = {
   empty: "var(--border)",
-  filled: "#0a9396",
+  filled: "var(--accent)",
 };
 
 const MONTHS_ZH = ["1月","2月","3月","4月","5月","6月","7月","8月","9月","10月","11月","12月"];
@@ -213,7 +213,7 @@ export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
               return `${y}年${parseInt(m)}月${parseInt(d)}日`;
             })()}
           </div>
-          <div className="font-medium" style={{ color: "#0a9396" }}>
+          <div className="font-medium" style={{ color: "var(--accent-inverse)" }}>
             {tooltip.entry.title}
           </div>
         </div>

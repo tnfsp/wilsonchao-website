@@ -130,7 +130,7 @@ export function CommentSection({ slug }: CommentSectionProps) {
           <button
             type="submit"
             disabled={submitting || !name.trim() || !content.trim()}
-            className="rounded-lg bg-[var(--accent-strong)] px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-[var(--accent-contrast)] disabled:opacity-50"
+            className="rounded-lg bg-[var(--accent-strong)] px-4 py-2 text-sm font-medium text-[var(--on-accent)] transition-colors hover:bg-[var(--accent-contrast)] disabled:opacity-50"
           >
             {submitting ? "送出中..." : "送出留言"}
           </button>

@@ -2,27 +2,53 @@
 @plugin "@tailwindcss/typography";
 
 :root {
+  /* Let form controls / scrollbars follow the active color scheme */
+  color-scheme: light dark;
   --background: #f8f4ea;
   --surface: #fffbf4;
   --surface-strong: #f1e4c2;
   --foreground: #001219;
-  --muted: #005f73;
+  --muted: #00505f;
   --accent: #0a9396;
   --accent-strong: #ca6702;
   --accent-contrast: #9b2226;
   --border: rgba(0, 18, 25, 0.14);
   --halo: rgba(153, 186, 203, 0.35);
   --highlight: #e9d8a6;
+  /* Text color used on top of accent-strong filled buttons */
+  --on-accent: #ffffff;
+  /* Accent for inverted surfaces（bg 用 --foreground 的元素，如 heatmap tooltip） */
+  --accent-inverse: #2dd4bf;
   /* /owl section accent — distinct from blog but harmonious */
   --owl-accent: #7c5cbf;
+}
+
+/* 溫暖深色模式 — 深咖啡/暖炭底，避免冷灰 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #1c1814;
+    --surface: #262019;
+    --surface-strong: #33291d;
+    --foreground: #ece7dd;
+    --muted: #93c5c9;
+    --accent: #2dd4bf;
+    --accent-strong: #e8985a;
+    --accent-contrast: #e5707a;
+    --border: rgba(236, 231, 221, 0.16);
+    --halo: rgba(45, 212, 191, 0.22);
+    --highlight: #4a3b21;
+    --on-accent: #1c1814;
+    --accent-inverse: #0a7c80;
+    --owl-accent: #a78bfa;
+  }
 }
 
 @theme inline {
   --color-background: var(--background);
   --color-foreground: var(--foreground);
-  --font-sans: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-    "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji",
-    "Segoe UI Symbol", "Noto Color Emoji";
+  --font-sans: var(--font-geist-sans), var(--font-noto-sans-tc), ui-sans-serif, system-ui,
+    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "Noto Sans",
+    sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
   --font-mono: Consolas, Monaco, "Andale Mono", "Ubuntu Mono", monospace;
 }
 
@@ -30,6 +56,8 @@ body {
   background: var(--background);
   color: var(--foreground);
   font-family:
+    var(--font-geist-sans),
+    var(--font-noto-sans-tc),
     ui-sans-serif,
     system-ui,
     -apple-system,
@@ -64,12 +92,12 @@ a:focus-visible {
 }
 
 ::selection {
-  background: rgba(153, 186, 203, 0.35);
+  background: var(--halo);
 }
 
 .page-shell {
   margin: 0 auto;
-  max-width: 800px;
+  max-width: 720px;
   padding: 2.75rem 1.25rem 3rem;
 }
 
@@ -101,7 +129,7 @@ a:focus-visible {
   width: 8px;
   border-radius: 999px;
   background: var(--accent);
-  box-shadow: 0 0 0 6px rgba(233, 216, 166, 0.6);
+  box-shadow: 0 0 0 6px color-mix(in srgb, var(--highlight) 60%, transparent);
 }
 
 /* /owl section badge — matches .section-title shape but uses owl-accent palette */
@@ -130,7 +158,11 @@ a:focus-visible {
 }
 
 .surface-strong {
-  background: linear-gradient(135deg, rgba(233, 216, 166, 0.7), rgba(255, 251, 244, 0.9));
+  background: linear-gradient(
+    135deg,
+    color-mix(in srgb, var(--highlight) 70%, transparent),
+    color-mix(in srgb, var(--surface) 90%, transparent)
+  );
   border: 1px solid var(--border);
   border-radius: 18px;
   box-shadow: 0 26px 70px rgba(0, 18, 25, 0.12);
@@ -194,7 +226,7 @@ a:focus-visible {
 
 .hero-pill {
   backdrop-filter: blur(4px);
-  background: rgba(255, 251, 244, 0.6);
+  background: color-mix(in srgb, var(--surface) 60%, transparent);
 }
 
 .tagline-random {
@@ -205,6 +237,23 @@ a:focus-visible {
 /* ============================================
    Prose typography styles for article content
    ============================================ */
+
+/* typography plugin 的 --tw-prose-* 預設是固定灰階，不會跟著 dark mode 翻轉；
+   全部改吃設計 token，亮暗模式自動成立 */
+.prose {
+  color: var(--foreground);
+  --tw-prose-body: var(--foreground);
+  --tw-prose-headings: var(--foreground);
+  --tw-prose-lead: var(--foreground);
+  --tw-prose-bold: var(--foreground);
+  --tw-prose-quotes: var(--foreground);
+  --tw-prose-counters: var(--muted);
+  --tw-prose-bullets: var(--muted);
+  --tw-prose-captions: var(--muted);
+  --tw-prose-hr: var(--border);
+  --tw-prose-th-borders: var(--border);
+  --tw-prose-td-borders: var(--border);
+}
 
 .prose > * + * {
   margin-top: 1.25em;
@@ -231,11 +280,11 @@ a:focus-visible {
   line-height: 1.4;
 }
 
-/* Paragraphs */
+/* Paragraphs — 中文閱讀節奏：行高鬆一點、段距大一點 */
 .prose p {
-  margin-top: 1.25em;
-  margin-bottom: 1.25em;
-  line-height: 1.8;
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  line-height: 1.9;
 }
 
 /* Divider */
@@ -255,8 +304,9 @@ a:focus-visible {
 }
 
 .prose li {
-  margin-top: 0.5em;
-  margin-bottom: 0.5em;
+  margin-top: 0.6em;
+  margin-bottom: 0.6em;
+  line-height: 1.8;
 }
 
 .prose li > ul,
@@ -310,7 +360,7 @@ a:focus-visible {
 .prose code {
   font-size: 0.875em;
   font-family: var(--font-mono);
-  background: rgba(233, 216, 166, 0.4);
+  background: color-mix(in srgb, var(--highlight) 40%, transparent);
   padding: 0.15em 0.4em;
   border-radius: 4px;
 }
@@ -358,7 +408,7 @@ a:focus-visible {
 
 .prose summary {
   padding: 0.875em 1em;
-  background: rgba(233, 216, 166, 0.2);
+  background: color-mix(in srgb, var(--highlight) 20%, transparent);
   cursor: pointer;
   font-weight: 500;
   list-style: none;
@@ -383,7 +433,7 @@ a:focus-visible {
 }
 
 .prose summary:hover {
-  background: rgba(233, 216, 166, 0.35);
+  background: color-mix(in srgb, var(--highlight) 35%, transparent);
 }
 
 .prose details[open] summary {
@@ -419,13 +469,13 @@ a:focus-visible {
 }
 
 .prose th {
-  background: rgba(233, 216, 166, 0.3);
+  background: color-mix(in srgb, var(--highlight) 30%, transparent);
   font-weight: 600;
   color: var(--foreground);
 }
 
 .prose tbody tr:hover {
-  background: rgba(233, 216, 166, 0.1);
+  background: color-mix(in srgb, var(--highlight) 10%, transparent);
 }
 
 /* Todo - 待辦事項 */

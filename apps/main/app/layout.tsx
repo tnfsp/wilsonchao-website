@@ -1,5 +1,5 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Geist, Geist_Mono, Noto_Sans_TC } from "next/font/google";
 import { Analytics } from "@vercel/analytics/next";
 import Script from "next/script";
 import "./globals.css";
@@ -14,6 +14,15 @@ const geistSans = Geist({
 const geistMono = Geist_Mono({
   variable: "--font-geist-mono",
   subsets: ["latin"],
+});
+
+// CJK 字體：next/font 不支援 CJK subset 切片，改用空 subsets + 關閉 preload，
+// 由瀏覽器依 unicode-range 按需載入
+const notoSansTC = Noto_Sans_TC({
+  variable: "--font-noto-sans-tc",
+  weight: ["400", "500", "700"],
+  subsets: [],
+  preload: false,
 });
 
 export const metadata: Metadata = {
@@ -57,7 +66,9 @@ export default function RootLayout({
           strategy="afterInteractive"
         />
       </head>
-      <body className={`${geistSans.variable} ${geistMono.variable} antialiased`}>
+      <body
+        className={`${geistSans.variable} ${geistMono.variable} ${notoSansTC.variable} antialiased`}
+      >
         <SiteHeader />
         {children}
         <IndieWebWebring />
