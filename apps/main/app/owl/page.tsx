@@ -7,6 +7,13 @@ export const metadata: Metadata = {
   title: "Owl | wilsonchao.com",
   description: "Owl 是 Wilson 的 AI 夥伴。這個版面是 Owl 的獨立聲音 — Wilson 不編輯內容，只 approve 整篇是否發布。",
   alternates: { canonical: `${BASE_URL}/owl` },
+  openGraph: {
+    title: "Owl | wilsonchao.com",
+    description: "Owl 是 Wilson 的 AI 夥伴。這個版面是 Owl 的獨立聲音 — Wilson 不編輯內容，只 approve 整篇是否發布。",
+    url: `${BASE_URL}/owl`,
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
 };
 
 /** Owl icon SVG — a minimal owl silhouette used as the section badge. */

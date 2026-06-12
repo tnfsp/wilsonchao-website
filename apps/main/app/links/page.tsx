@@ -1,8 +1,18 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { linkItems, loadSiteCopy } from "@/lib/content";
 
-export const metadata = {
+export const metadata: Metadata = {
+  title: "Links — Wilson Chao",
+  description: "趙玴祥的所有連結 — Instagram、Telegram、RSS，以及網站各區入口。",
   alternates: { canonical: "https://wilsonchao.com/links" },
+  openGraph: {
+    title: "Links — Wilson Chao",
+    description: "趙玴祥的所有連結 — Instagram、Telegram、RSS，以及網站各區入口。",
+    url: "https://wilsonchao.com/links",
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
 };
 
 export default async function LinksPage() {

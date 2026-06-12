@@ -8,7 +8,16 @@ import { ViewStats } from "@/components/ui/ViewCounter";
 const BASE_URL = "https://wilsonchao.com";
 
 export const metadata = {
+  title: "About — Wilson Chao",
+  description: "趙玴祥，高醫心臟血管外科醫師。關於我是誰、在做什麼、為什麼寫這個網站。",
   alternates: { canonical: `${BASE_URL}/about` },
+  openGraph: {
+    title: "About — Wilson Chao",
+    description: "趙玴祥，高醫心臟血管外科醫師。關於我是誰、在做什麼、為什麼寫這個網站。",
+    url: `${BASE_URL}/about`,
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
 };
 
 /* ── Core social links (hero icons) ── */

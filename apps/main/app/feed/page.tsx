@@ -8,6 +8,13 @@ export const metadata: Metadata = {
   title: "RSS Feeds — Wilson Chao",
   description: "訂閱 wilsonchao.com 的 RSS feeds — Blog、Stream。",
   alternates: { canonical: `${BASE_URL}/feed` },
+  openGraph: {
+    title: "RSS Feeds — Wilson Chao",
+    description: "訂閱 wilsonchao.com 的 RSS feeds — Blog、Stream。",
+    url: `${BASE_URL}/feed`,
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
 };
 
 const feeds = [

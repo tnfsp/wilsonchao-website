@@ -14,6 +14,7 @@ export const metadata: Metadata = {
     description: "精選 30+ 個獨立部落格 — 科技、醫學、寫作、生活。手工挑選，沒有演算法。",
     url: `${BASE_URL}/blogroll`,
     type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
   },
 };
 

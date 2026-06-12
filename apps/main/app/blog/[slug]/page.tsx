@@ -29,7 +29,8 @@ export async function generateMetadata({
   const title = `${entry.title} | wilsonchao.com`;
   const description = entry.excerpt || entry.description || "";
   const url = `${BASE_URL}/blog/${slug}`;
-  const image = entry.image || `${BASE_URL}/avatar.png`;
+  // Fall back to the default OG image (1200x630) instead of the square avatar
+  const image = entry.image || `${BASE_URL}/opengraph-image`;
 
   return {
     title,

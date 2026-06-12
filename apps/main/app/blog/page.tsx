@@ -4,7 +4,16 @@ import Link from "next/link";
 import { loadBlogEntries, loadSiteCopy } from "@/lib/content";
 
 export const metadata: Metadata = {
+  title: "Blog — Wilson Chao",
+  description: "長文：醫學、故事、思考。Essay、Weekly 週報、Diary 都在這裡。",
   alternates: { canonical: "https://wilsonchao.com/blog" },
+  openGraph: {
+    title: "Blog — Wilson Chao",
+    description: "長文：醫學、故事、思考。Essay、Weekly 週報、Diary 都在這裡。",
+    url: "https://wilsonchao.com/blog",
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
 };
 
 type SearchParams = {

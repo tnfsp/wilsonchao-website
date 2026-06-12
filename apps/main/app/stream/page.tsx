@@ -7,6 +7,13 @@ export const metadata = {
   title: "Stream — Wilson Chao",
   description: "日常的腦內碎片——想法、電影、音樂，都在這裡流過。",
   alternates: { canonical: "https://wilsonchao.com/stream" },
+  openGraph: {
+    title: "Stream — Wilson Chao",
+    description: "日常的腦內碎片——想法、電影、音樂，都在這裡流過。",
+    url: "https://wilsonchao.com/stream",
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
 };
 
 export default async function StreamPage() {

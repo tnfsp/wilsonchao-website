@@ -11,6 +11,13 @@ export const metadata: Metadata = {
   title: "Now — Wilson Chao",
   description: "趙玴祥現在在忙什麼——臨床、研究、寫作、造東西。",
   alternates: { canonical: `${BASE_URL}/now` },
+  openGraph: {
+    title: "Now — Wilson Chao",
+    description: "趙玴祥現在在忙什麼——臨床、研究、寫作、造東西。",
+    url: `${BASE_URL}/now`,
+    type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
+  },
 };
 
 /* Fallback when now.json fails */

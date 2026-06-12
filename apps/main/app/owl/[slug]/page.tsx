@@ -48,6 +48,7 @@ export async function generateMetadata({
   const title = `${entry.title} | Owl × wilsonchao.com`;
   const description = entry.excerpt || entry.description || "";
   const url = `${BASE_URL}/owl/${slug}`;
+  const image = entry.image || `${BASE_URL}/opengraph-image`;
 
   return {
     title,
@@ -61,11 +62,13 @@ export async function generateMetadata({
       type: "article",
       publishedTime: entry.publishedAt,
       authors: ["Owl"],
+      images: [{ url: image, width: 1200, height: 630, alt: entry.title }],
     },
     twitter: {
-      card: "summary",
+      card: "summary_large_image",
       title: entry.title,
       description,
+      images: [image],
     },
   };
 }

@@ -14,6 +14,7 @@ export const metadata: Metadata = {
       "高雄醫學大學附設中和紀念醫院心臟血管外科醫師。專長冠狀動脈繞道手術、心臟瓣膜手術、主動脈手術。",
     url: `${BASE_URL}/clinic`,
     type: "website",
+    images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
   },
 };
 

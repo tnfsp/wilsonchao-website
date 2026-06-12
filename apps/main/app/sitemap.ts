@@ -1,9 +1,12 @@
 import type { MetadataRoute } from "next";
-import { loadBlogEntries } from "@/lib/content";
+import { loadBlogEntries, loadOwlEntries } from "@/lib/content";
 import { BASE_URL } from "@/lib/constants";
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const blogEntries = await loadBlogEntries();
+  const [blogEntries, owlEntries] = await Promise.all([
+    loadBlogEntries(),
+    loadOwlEntries(),
+  ]);
 
   const staticPages: MetadataRoute.Sitemap = [
     {
@@ -42,6 +45,30 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: "weekly",
       priority: 0.6,
     },
+    {
+      url: `${BASE_URL}/owl`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.6,
+    },
+    {
+      url: `${BASE_URL}/blogroll`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: `${BASE_URL}/links`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.5,
+    },
+    {
+      url: `${BASE_URL}/feed`,
+      lastModified: new Date(),
+      changeFrequency: "monthly",
+      priority: 0.4,
+    },
   ];
 
   const blogPages: MetadataRoute.Sitemap = blogEntries.map((entry) => ({
@@ -51,5 +78,12 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     priority: 0.7,
   }));
 
-  return [...staticPages, ...blogPages];
+  const owlPages: MetadataRoute.Sitemap = owlEntries.map((entry) => ({
+    url: `${BASE_URL}/owl/${entry.slug}`,
+    lastModified: entry.publishedAt ? new Date(entry.publishedAt) : new Date(),
+    changeFrequency: "monthly" as const,
+    priority: 0.6,
+  }));
+
+  return [...staticPages, ...blogPages, ...owlPages];
 }
