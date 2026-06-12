@@ -4,16 +4,36 @@
  * matching the exact format of sync-notion.ts output.
  */
 
+import { config as loadEnv } from "dotenv";
 import matter from "gray-matter";
 import { Marked } from "marked";
+import { existsSync } from "fs";
 import { readFile, readdir, writeFile, mkdir, stat, copyFile } from "fs/promises";
 import path from "path";
+import { withSyncLock } from "./lib/sync-lock.js";
+
+loadEnv({ path: ".env.local" });
 
 // ─── paths ───────────────────────────────────────────────────────────
-const VAULT_ROOT = path.join(
+// Vault location: OBSIDIAN_VAULT_PATH env var wins; otherwise fall back to
+// the default iCloud Obsidian vault path (backward compatible).
+const DEFAULT_VAULT_ROOT = path.join(
   process.env.HOME || "/Users/zhaoyixiang",
   "Library/Mobile Documents/iCloud~md~obsidian/Documents/Wilson"
 );
+const VAULT_ROOT = process.env.OBSIDIAN_VAULT_PATH?.trim() || DEFAULT_VAULT_ROOT;
+
+if (!existsSync(VAULT_ROOT)) {
+  console.error(
+    [
+      `[sync-vault] Obsidian vault not found: ${VAULT_ROOT}`,
+      process.env.OBSIDIAN_VAULT_PATH?.trim()
+        ? "[sync-vault] OBSIDIAN_VAULT_PATH points to a path that does not exist. Please fix it in .env.local."
+        : "[sync-vault] Default iCloud vault path does not exist on this machine. Please set OBSIDIAN_VAULT_PATH (in .env.local or the environment) to your Obsidian vault root.",
+    ].join("\n")
+  );
+  process.exit(1);
+}
 const VAULT_BASE = path.join(VAULT_ROOT, "Brand");
 const VAULT_BLOG = path.join(VAULT_BASE, "Blog");
 const VAULT_DAILY = path.join(VAULT_BASE, "Daily");
@@ -49,15 +69,6 @@ type BlogEntry = {
 type SiteConfig = Record<string, string>;
 
 // ─── helpers ─────────────────────────────────────────────────────────
-function escapeHtml(s: string) {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#039;");
-}
-
 function estimateReadingTime(text: string): string {
   const plain = text.replace(/\s+/g, " ").trim();
   const asciiWords = plain.split(/\s+/).filter(Boolean).length;
@@ -247,7 +258,7 @@ function mdToHtml(md: string): string {
   const raw = marked.parse(md, { async: false }) as string;
   // Post-process to match Notion-style output:
   // - Wrap standalone images in <figure>
-  let html = raw.replace(
+  const html = raw.replace(
     /<p>\s*<img\s+src="([^"]+)"\s+alt="([^"]*)"\s*\/?>\s*<\/p>/g,
     '<figure><img src="$1" alt="$2" /></figure>'
   );
@@ -586,7 +597,7 @@ async function main() {
   );
 }
 
-main().catch((error) => {
+withSyncLock("sync-vault", main).catch((error) => {
   console.error("[sync-vault] Failed:", error);
   process.exit(1);
 });

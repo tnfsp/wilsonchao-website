@@ -7,6 +7,9 @@ next-env.d.ts
 *.tsbuildinfo
 .search-index
 
+# sync scripts lock file (see scripts/lib/sync-lock.ts)
+.sync-lock
+
 # env (kept locally only)
 .env*
 !.env.local.example

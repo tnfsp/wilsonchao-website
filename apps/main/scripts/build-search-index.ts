@@ -36,10 +36,6 @@ type DailyEntry = {
   excerpt?: string;
 };
 
-function stripHtml(html: string): string {
-  return html.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
-}
-
 function generateHtml(entry: { title: string; url: string; content: string; type?: string; date?: string }): string {
   return `<!DOCTYPE html>
 <html lang="zh-TW">

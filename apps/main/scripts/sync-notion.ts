@@ -2,6 +2,7 @@ import { config as loadEnv } from "dotenv";
 import { mkdir, stat, writeFile, readdir, rm, unlink } from "fs/promises";
 import path from "path";
 import { Client } from "@notionhq/client";
+import { withSyncLock } from "./lib/sync-lock.js";
 import type {
   BlockObjectResponse,
   ListBlockChildrenResponse,
@@ -785,7 +786,7 @@ async function main() {
   );
 }
 
-main().catch((error) => {
+withSyncLock("sync-notion", main).catch((error) => {
   console.error("[sync-notion] Failed:", error);
   process.exit(1);
 });
