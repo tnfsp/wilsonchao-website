@@ -84,20 +84,27 @@ async function addToResend(email: string) {
   const segmentId = process.env.RESEND_SEGMENT_ID;
 
   // Resend 為寄送名單的 source of truth；KV 僅作歷史紀錄
-  await resend.contacts.create({
+  // 注意：Resend SDK 不 throw，錯誤在回傳值裡，必須逐一檢查
+  const contact = await resend.contacts.create({
     email,
     unsubscribed: false,
     ...(segmentId ? { segments: [{ id: segmentId }] } : {}),
   });
+  if (contact.error) {
+    console.error("Resend contacts.create failed:", contact.error);
+  }
 
   const featured = await loadFeatured();
-  await resend.emails.send({
+  const sent = await resend.emails.send({
     from: process.env.RESEND_FROM || "Wilson Chao <hi@wilsonchao.com>",
     ...(process.env.RESEND_REPLY_TO ? { replyTo: process.env.RESEND_REPLY_TO } : {}),
     to: email,
     subject: "訂閱成功——之後每週最多一封",
     html: welcomeEmailHtml(featured),
   });
+  if (sent.error) {
+    console.error("Resend welcome email failed:", sent.error);
+  }
 }
 
 export async function POST(request: NextRequest) {
@@ -140,10 +147,15 @@ export async function POST(request: NextRequest) {
       source: source || "unknown",
     });
 
-    // Resend contact + welcome email (async, don't block response)
-    addToResend(normalizedEmail).catch((err) => {
+    // Resend contact + welcome email。
+    // 必須 await：serverless 在回應後會凍結 function，
+    // fire-and-forget 的寄信會被砍在半路（實測過）。
+    try {
+      await addToResend(normalizedEmail);
+    } catch (err) {
+      // 寄信失敗不影響訂閱本身——email 已進名單，之後可補寄
       console.error("Resend subscribe flow failed for", normalizedEmail, err);
-    });
+    }
 
     return NextResponse.json(
       { message: "Successfully subscribed", success: true },
