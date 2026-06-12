@@ -92,7 +92,7 @@ export function WritingHeatmap({ weeks = 52 }: { weeks?: number }) {
 
   function handleClick(cellEntries: BlogEntry[]) {
     if (cellEntries.length >= 1) {
-      window.location.href = `/blog/${cellEntries[0].slug}`;
+      window.location.assign(`/blog/${cellEntries[0].slug}`);
     }
   }
 

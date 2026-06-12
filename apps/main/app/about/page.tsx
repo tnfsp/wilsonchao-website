@@ -3,7 +3,6 @@ import Link from "next/link";
 import { marked } from "marked";
 import { loadSiteCopy, linkItems } from "@/lib/content";
 import { sanitizeHtml } from "@/lib/sanitize";
-import { ViewStats } from "@/components/ui/ViewCounter";
 
 const BASE_URL = "https://wilsonchao.com";
 

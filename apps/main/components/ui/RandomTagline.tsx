@@ -17,6 +17,8 @@ export function RandomTagline() {
   const [line, setLine] = useState("");
 
   useEffect(() => {
+    // 刻意在 mount 後才隨機選句：server 端固定 render 空字串，client 端 effect 再選，避免 SSR hydration mismatch
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLine(taglines[Math.floor(Math.random() * taglines.length)]);
   }, []);
 
