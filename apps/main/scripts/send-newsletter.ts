@@ -6,6 +6,10 @@
  *   npm run newsletter -- <slug> --send     # 建立並直接寄出
  *   npm run newsletter -- <slug> --preview  # 只輸出信件 HTML 到暫存檔（不需要 env）
  *   npm run newsletter -- <slug> --force    # 允許非週報類型（預設只接受週報）
+ *   npm run newsletter -- <slug> --intro "這期想說的話"
+ *       # email 限定開場白：放在信件最上方、週報內容之前，像信的開頭。
+ *       # 永遠 optional——沒給就直接從週報內容開始，承諾不因此打折。
+ *       # 多段落用 \n 分隔。
  *
  * 預設行為是「只建草稿」：到 Resend dashboard 預覽確認後再按送出，
  * 或確認無誤後加 --send 重跑。誤寄無法收回，所以不做全自動。
@@ -44,7 +48,25 @@ function absolutifyUrls(html: string): string {
     .replace(/(src|href)="\/(?!\/)/g, `$1="${SITE_URL}/`);
 }
 
-function newsletterHtml(entry: BlogEntry): string {
+function escapeHtml(s: string): string {
+  return s
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;");
+}
+
+function newsletterHtml(entry: BlogEntry, intro?: string): string {
+  // email 限定開場白：只有訂閱者看得到的幾句話，放在週報內容之前
+  const introBlock = intro
+    ? `<div style="line-height:1.9;margin-bottom:24px;">
+        ${intro
+          .split(/\n+/)
+          .map((p) => `<p style="margin:0 0 1em;">${escapeHtml(p.trim())}</p>`)
+          .join("\n")}
+      </div>
+      <hr style="border:none;border-top:1px solid rgba(0,18,25,0.14);margin:0 0 24px;" />`
+    : "";
+
   const cover = entry.image
     ? `<img src="${entry.image.startsWith("http") ? entry.image : SITE_URL + entry.image}" alt="${entry.title}" style="width:100%;border-radius:12px;margin-bottom:24px;" />`
     : "";
@@ -53,6 +75,7 @@ function newsletterHtml(entry: BlogEntry): string {
 
   return `
     <div style="font-family:'Noto Sans TC',-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:24px 16px;background-color:#f8f4ea;color:#001219;">
+      ${introBlock}
       ${cover}
       <h1 style="font-size:1.5em;line-height:1.4;margin:0 0 24px;">${entry.title}</h1>
       <div style="line-height:1.9;">
@@ -74,9 +97,17 @@ async function main() {
   const doSend = args.includes("--send");
   const force = args.includes("--force");
   const previewOnly = args.includes("--preview");
+  const introIdx = args.indexOf("--intro");
+  const intro = introIdx !== -1 ? args[introIdx + 1] : undefined;
+  if (introIdx !== -1 && (!intro || intro.startsWith("--"))) {
+    console.error("--intro 後面要接開場白文字（用引號包起來）");
+    process.exit(1);
+  }
 
   if (!slug) {
-    console.error("用法：npm run newsletter -- <slug> [--send|--preview] [--force]");
+    console.error(
+      '用法：npm run newsletter -- <slug> [--send|--preview] [--force] [--intro "開場白"]'
+    );
     process.exit(1);
   }
 
@@ -117,7 +148,7 @@ async function main() {
   if (previewOnly) {
     const os = await import("os");
     const outPath = path.join(os.tmpdir(), `newsletter-${slug}.html`);
-    await fs.writeFile(outPath, newsletterHtml(entry), "utf8");
+    await fs.writeFile(outPath, newsletterHtml(entry, intro), "utf8");
     console.log(`👀 預覽已輸出：${outPath}`);
     console.log(`   subject: ${entry.title}`);
     console.log(`   preview: ${entry.excerpt || entry.description || "(無)"}`);
@@ -135,7 +166,7 @@ async function main() {
     subject: entry.title,
     previewText: entry.excerpt || entry.description || "",
     name: `週報：${entry.title}（${slug}）`,
-    html: newsletterHtml(entry),
+    html: newsletterHtml(entry, intro),
   });
 
   if (created.error || !created.data) {

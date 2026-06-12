@@ -72,10 +72,18 @@
 新一期週報發布（sync 進 content/blog/）後：
 1. `cd ~/Project/_brand/new_website/apps/main && npm run newsletter -- <slug>`
    → 建 Resend Broadcast 草稿（**永遠先草稿，不直接 --send**）
-2. Telegram 通知 Wilson：附 dashboard 預覽連結，等他回覆確認
+2. Telegram 通知 Wilson：附 dashboard 預覽連結 + 問「這期開場白 2-3 句？」
+   （optional——沒回就照常走；有回 → 重跑 `--intro "..."` 蓋新草稿）
 3. Wilson 確認後：dashboard 按 Send，或 `npm run newsletter -- <slug> --send`
    （--send 會再建一份新草稿並寄出；若 Wilson 已在 dashboard 按過 Send 則跳過）
 4. 可先用 `--preview` 離線檢查信件 HTML（不需 env）
+
+回信接收端（OWL 提出的洞，已驗證）：
+- 所有信件帶 Reply-To: aa2670095@gmail.com → 讀者按回覆會進 Wilson gmail ✅
+- ⚠️ 直接寫信到 hi@wilsonchao.com 會退信（根網域無 MX）。可選補強：
+  Cloudflare dashboard → Email Routing 開啟 + hi@ 轉發 gmail（2 分鐘，
+  CC 的 DNS token 權限不足無法代辦）
+- gmail 回信 surface 到 Telegram：OWL 接（已認領）
 
 環境細節：
 - RESEND_API_KEY / CLOUDFLARE_DNS_TOKEN 在 `~/Project/.env.master`
