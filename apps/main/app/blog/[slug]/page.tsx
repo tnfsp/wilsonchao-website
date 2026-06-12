@@ -177,7 +177,7 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
         </div>
         <div className="mt-6 border-t border-[var(--border)] pt-6">
           <p className="mb-3 text-sm text-[var(--muted)]">
-            訂閱週報——每週最多一封，寫不出來的那週就不寄：
+            訂閱週報——每週一封，偶爾是寫給老朋友的信：
           </p>
           <SubscribeForm source={`blog:${entry.slug}`} />
         </div>
