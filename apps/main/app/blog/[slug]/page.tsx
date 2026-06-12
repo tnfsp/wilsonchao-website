@@ -176,7 +176,9 @@ export default async function BlogPostPage({ params }: { params: Promise<{ slug:
           <AuthorSignature />
         </div>
         <div className="mt-6 border-t border-[var(--border)] pt-6">
-          <p className="mb-3 text-sm text-[var(--muted)]">訂閱以獲得新文章通知：</p>
+          <p className="mb-3 text-sm text-[var(--muted)]">
+            訂閱週報——每週最多一封，寫不出來的那週就不寄：
+          </p>
           <SubscribeForm source={`blog:${entry.slug}`} />
         </div>
         <details className="mt-6 border-t border-[var(--border)] pt-6 group">

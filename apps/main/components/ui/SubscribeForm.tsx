@@ -27,18 +27,18 @@ export function SubscribeForm({ source = "unknown" }: SubscribeFormProps) {
 
       if (data.alreadySubscribed) {
         setStatus("already");
-        setMessage("You're already subscribed!");
+        setMessage("你已經訂閱過了");
       } else if (data.success) {
         setStatus("success");
-        setMessage("Thanks for subscribing!");
+        setMessage("訂閱成功");
         setEmail("");
       } else {
         setStatus("error");
-        setMessage(data.error || "Something went wrong");
+        setMessage(data.error || "出了點問題，再試一次？");
       }
     } catch {
       setStatus("error");
-      setMessage("Failed to subscribe. Please try again.");
+      setMessage("訂閱失敗了，再試一次？");
     }
   };
 
