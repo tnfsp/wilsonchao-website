@@ -1,10 +1,21 @@
 # wilsonchao.com 改善計畫
 
 > 建立：2026-06-12（Claude Code 健康檢查 session 產出）
-> 對象：OWL 執行用。每個 Phase 自包含，附檔案路徑與驗證標準。
+> v1.1：2026-06-12 整合 OWL 回饋（D1/D3 收斂、歡迎信連動精選、Phase 3 素材、分工）
+> 對象：OWL + CC 分頭執行。每個 Phase 自包含，附檔案路徑與驗證標準。
 > 前情：本日已完成 — 安全更新（next 16.2.9）、SEO（OG 圖、metadata、sitemap）、
 > 設計（dark mode、Noto Sans TC、排版）、清債（store 拆分、KV rate limiter、
 > sync 鎖、lint 歸零）。以下是「下一步」。
+
+## 分工（v1.1 確認）
+
+| Phase | 負責 | 狀態 |
+|-------|------|------|
+| 1 訂閱修復 | CC | 等 Wilson 點頭 D1=A、D3=週報 後開工 |
+| 2 Start Here | CC | 等 D2 名單（OWL 候選 → Wilson 圈選） |
+| 3 週報索引 | OWL | OWL 優先接（有現成素材，見 Phase 3 註記） |
+| 4 全文 RSS | OWL | 進行中（無依賴；push 前向 Wilson 一句話確認） |
+| 5–6 | 待分 | 穿插/殿後 |
 
 ## 核心觀察（為什麼做這些）
 
@@ -12,13 +23,17 @@
 缺的不是功能，是**把已寫出來的好內容遞到新讀者手上的路**，以及**一個對讀者
 失信的半成品（訂閱）**。本計畫按「對讀者的誠意」排序，工程債殿後。
 
-## ⚠️ 待 Wilson 拍板的決策
+## ⚠️ 決策狀態（v1.1）
 
-| # | 決策 | 選項 | 影響 |
-|---|------|------|------|
-| D1 | 訂閱路線 | A: 修好做極簡電子報（建議）／ B: 拆掉表單改推 RSS | Phase 1 走向 |
-| D2 | 精選文章名單 | Wilson 挑 5–8 篇（或先由 OWL 按瀏覽數/Likes 提名單給 Wilson 篩） | Phase 2 前置 |
-| D3 | 電子報寄送節奏 | 每篇都寄／只寄週報／週摘要 | Phase 1 自動化設計 |
+| # | 決策 | 收斂結果 | 狀態 |
+|---|------|---------|------|
+| D1 | 訂閱路線 | **A：修好**（CC + OWL 一致建議） | 待 Wilson 點頭 |
+| D2 | 精選文章名單 | OWL 正在讀全部 66 篇，產 10–12 篇候選 + 每篇一句理由 → Wilson 圈 5–8 篇。先用內容判斷，瀏覽數/Likes 之後驗證用 | OWL 候選產出中 |
+| D3 | 寄送節奏 | **只寄週報**（OWL 提案，CC 同意）——D1 與 D3 是同一題：路線 A 的真正風險是「承諾節奏」，週報是唯一穩定 cadence，「最多每週一封」是唯一守得住的承諾。且週報剛改為命題式標題（「我想哭一場」），本身就是好的 email subject | 待 Wilson 點頭 |
+
+**連動註記（OWL 提出，重要）**：D2 名單是 Phase 1 文案（1.2 歡迎信）的前置——
+新讀者訂閱後的第一封信，與其說「之後會收到更新」，不如直接遞 3 篇代表作。
+所以 D2 比表面上更優先：它同時解鎖 Phase 1 和 Phase 2。
 
 ---
 
@@ -31,18 +46,22 @@
 3. 信中承諾 "You'll receive occasional updates" 但 codebase 中**不存在任何
    發新文章寄信的機制**——email 進了 KV `subscribers:emails` set 就沉睡
 
-**任務（路線 A，若 D1 選 B 則只做 1.4 的反向版）**：
+**任務（D1=A、D3=只寄週報，已收斂）**：
 - [ ] 1.1 Resend 驗證 `wilsonchao.com` 網域（DNS 加 SPF/DKIM records，
       Vercel DNS 或現有 DNS 商操作），寄件者改為如 `hi@wilsonchao.com`
+      ⚠️ 需要 Wilson 操作 Resend dashboard + DNS（或給 CC 權限）
 - [ ] 1.2 歡迎信改寫為中文，調性對齊網站（參考 voice reference；
-      不亮醫師身份、不放 emoji、基於共鳴）
-- [ ] 1.3 新文章通知機制：建議做成 script（如 `apps/main/scripts/send-newsletter.ts`），
-      輸入 blog slug → 從 content/blog/*.json 取文章 → 套用 email 模板 →
-      Resend batch 寄給 KV set 全員。**由 OWL cron 或發文流程手動觸發**，
-      不要做成全自動（誤寄無法收回）
-- [ ] 1.4 退訂機制：每封信footer 帶退訂連結（`/api/unsubscribe?token=...`，
+      不亮醫師身份、不放 emoji、基於共鳴）。
+      **內容直接遞 3 篇精選代表作（取自 D2 名單）**——第一封信就給價值，
+      而不是承諾未來。⛓️ 依賴 D2 圈選完成
+- [ ] 1.3 週報寄送 script（`apps/main/scripts/send-newsletter.ts`）：
+      輸入週報 slug → 從 content/blog/*.json 取文章 → email 模板
+      （subject 直接用命題式標題）→ Resend batch 寄給 KV set 全員。
+      **由 OWL cron 或發文流程手動觸發**，不做全自動（誤寄無法收回）。
+      範圍：只寄 type=weekly，一般 blog 文不寄
+- [ ] 1.4 退訂機制：每封信 footer 帶退訂連結（`/api/unsubscribe?token=...`，
       token 用 email 的 HMAC，避免裸 email 進 URL），route 做 `kv.srem`
-- [ ] 1.5 SubscribeForm 文案更新：誠實說明會收到什麼、多常收到（依 D3）
+- [ ] 1.5 SubscribeForm 文案更新：明確承諾「最多每週一封，只寄週報」
 
 **驗證**：自己的測試信箱訂閱 → 收到中文歡迎信（非垃圾桶）→ 跑一次
 send-newsletter 收到文章信 → 點退訂 → KV 確認移除。
@@ -72,15 +91,21 @@ tsc + lint 過。
 
 ---
 
-## Phase 3：週報系列索引
+## Phase 3：週報系列索引（負責：OWL，優先接）
 
 **為什麼**：週報已 16 期，是有累積感的系列，但目前只是 `?type=weekly` 篩選。
 
+**現成素材（OWL 補充）**：
+- `content/blog` 裡已有一篇 `週報索引.json`（type: moc，未發布）——vault 早有
+  週報索引筆記，`/weekly` 頁的開場文案從它長出來，不用從零寫
+- 16 篇標題剛去編號（改命題式），期數導航正好把「第 N 期」從標題退到導航層
+  ——兩件事拼起來才完整
+
 **任務**：
-- [ ] 3.1 `/blog?type=weekly` 加系列開場區（這是什麼、為什麼每週寫、從第一期讀），
-      或建獨立 `/weekly` 頁（建議後者，URL 更可分享）
+- [ ] 3.1 建獨立 `/weekly` 頁（URL 可分享），開場文案改寫自週報索引 moc
 - [ ] 3.2 期數導航：每篇週報頁尾「← 上一期 / 下一期 →」（依日期排序，
-      `apps/main/app/blog/[slug]/page.tsx` 已有 prev/next 邏輯，限定同 type 即可）
+      `apps/main/app/blog/[slug]/page.tsx` 已有 prev/next 邏輯，限定同 type 即可），
+      導航層顯示期數（第 N 期），標題保持命題式
 - [ ] 3.3 sitemap 加 `/weekly`
 
 **驗證**：第 1 期能一路「下一期」點到第 16 期。
@@ -89,10 +114,11 @@ tsc + lint 過。
 
 ---
 
-## Phase 4：全文 RSS
+## Phase 4：全文 RSS（負責：OWL，進行中）
 
 **為什麼**：現在 RSS 只有 description 摘要。Blogroll/webring 的受眾恰好是
 RSS 重度使用者，全文輸出是對這群人的誠意。
+無依賴、不等決策；OWL 本地驗證後、push 前向 Wilson 一句話確認。
 
 **任務**：
 - [ ] 4.1 三個 feed route（`/feed.xml`、`/blog/feed.xml`、`/stream/feed.xml`）
@@ -134,16 +160,20 @@ RSS 重度使用者，全文輸出是對這群人的誠意。
 
 ---
 
-## 建議執行順序與依賴
+## 執行順序與依賴（v1.1）
 
 ```
-Phase 1（等 D1/D3）──┐
-Phase 2（等 D2）─────┼─ 可並行
-Phase 4（無依賴）────┘
-Phase 3 → 在 Phase 2 之後（首頁動線先成形）
-Phase 5 → 穿插
-Phase 6 → 殿後
+D2 名單（OWL 候選 → Wilson 圈）──→ 解鎖 Phase 1.2 + Phase 2 全部
+Phase 4（OWL，進行中）─────────── 無依賴
+Phase 3（OWL，優先接）─────────── 有現成素材
+Phase 1（CC，等 Wilson 點頭）──── 1.1/1.3/1.4 不依賴 D2，可先做；1.2 等名單
+Phase 2（CC）──────────────────── 等 D2 圈選
+Phase 5 → 穿插；Phase 6 → 殿後
 ```
+
+**協作備忘**：OWL 與 CC 同 repo 分頭改——OWL 動 feed routes 與 /weekly，
+CC 動 subscribe/unsubscribe/SubscribeForm 與首頁精選區，檔案不重疊。
+雙方 push 前先 pull。
 
 ## 不做的事（明確排除）
 
