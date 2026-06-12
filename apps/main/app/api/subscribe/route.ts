@@ -36,33 +36,38 @@ async function loadFeatured(): Promise<FeaturedEntry[]> {
   }
 }
 
+// 文案是 Wilson 親筆（2026-06-12 定稿），改動前先給他過目
 function welcomeEmailHtml(featured: FeaturedEntry[]): string {
   const featuredBlock =
     featured.length > 0
       ? `
-        <p style="color:#001219;line-height:1.9;margin:1.5em 0 0.5em;">
-          如果等不及，這幾篇是我自己會想拿給朋友看的：
-        </p>
-        <ul style="color:#001219;line-height:1.9;padding-left:1.2em;margin:0;">
-          ${featured
-            .map(
-              (e) =>
-                `<li style="margin-bottom:0.5em;"><a href="${SITE_URL}/blog/${e.slug}" style="color:#ca6702;">${e.title}</a>${e.note ? ` — ${e.note}` : ""}</li>`
-            )
-            .join("\n")}
-        </ul>`
+      <p style="color:#001219;line-height:1.9;">
+        如果想先逛逛，這${featured.length === 3 ? "三" : "幾"}篇是我自己會想拿給朋友看的：<br/>
+        ${featured
+          .map(
+            (e) =>
+              `・<a href="${SITE_URL}/blog/${e.slug}" style="color:#ca6702;">${e.title}</a>`
+          )
+          .join("<br/>\n        ")}
+      </p>`
       : "";
 
   return `
     <div style="font-family:'Noto Sans TC',-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:24px 16px;background-color:#f8f4ea;">
       <p style="color:#001219;line-height:1.9;">嗨，我是玴祥。</p>
-      <p style="color:#001219;line-height:1.9;">謝謝你留下 email。</p>
       <p style="color:#001219;line-height:1.9;">
-        之後每個禮拜，我會把當週的週報寄給你——就一封，不會更多。寫不出來的那週，就不寄。
+        謝謝你留下 email！<br/>
+        知道有人在讀我寫的文字，真是一種奇妙的感覺！
       </p>
+      <p style="color:#001219;line-height:1.9;">
+        之後每個禮拜，我會把當週的週報寄到這裡，或者不定時發一些給老朋友的信。<br/>
+        但有時過多的承諾，反而會讓我壓力很大，進而導致拖延 XD
+      </p>
+      <p style="color:#001219;line-height:1.9;">總之我會試著寫寫看的～</p>
       ${featuredBlock}
-      <p style="color:#001219;line-height:1.9;margin-top:1.5em;">
-        有想說的話，直接回這封信就好，我看得到。
+      <p style="color:#001219;line-height:1.9;">
+        其實我一直很好奇：你是讀到哪一篇，才決定留下 email 的？<br/>
+        如果有空，可以回信跟我聊聊～
       </p>
       <p style="color:#001219;line-height:1.9;">玴祥</p>
       <hr style="border:none;border-top:1px solid rgba(0,18,25,0.14);margin:32px 0 16px;" />
@@ -99,7 +104,7 @@ async function addToResend(email: string) {
     from: process.env.RESEND_FROM || "Wilson Chao <hi@wilsonchao.com>",
     ...(process.env.RESEND_REPLY_TO ? { replyTo: process.env.RESEND_REPLY_TO } : {}),
     to: email,
-    subject: "訂閱成功——之後每週最多一封",
+    subject: "訂閱成功",
     html: welcomeEmailHtml(featured),
   });
   if (sent.error) {
