@@ -11,7 +11,7 @@
 
 | Phase | 負責 | 狀態 |
 |-------|------|------|
-| 1 訂閱修復 | CC | 等 Wilson 點頭 D1=A、D3=週報 後開工 |
+| 1 訂閱修復 | CC | ✅ 完成（2026-06-12，E2E 通過）；每週寄送營運交接 OWL（見 Phase 1 Runbook） |
 | 2 Start Here | CC | 等 D2 名單（OWL 候選 → Wilson 圈選） |
 | 3 週報索引 | OWL | OWL 優先接（有現成素材，見 Phase 3 註記） |
 | 4 全文 RSS | OWL | 進行中（無依賴；push 前向 Wilson 一句話確認） |
@@ -47,7 +47,7 @@
    發新文章寄信的機制**——email 進了 KV `subscribers:emails` set 就沉睡
 
 **任務（D1=A、D3=只寄週報，已收斂）**：
-- [ ] 1.1（⏳ 唯一剩餘，需 Wilson：Resend 帳號/網域/segment + Cloudflare DNS + Vercel env）Resend 驗證 `wilsonchao.com` 網域（DNS 加 SPF/DKIM records，
+- [x] 1.1（CC 完成——Wilson 提供 token 後全自動：網域/DNS/驗證/segment/env/redeploy）Resend 驗證 `wilsonchao.com` 網域（DNS 加 SPF/DKIM records，
       Vercel DNS 或現有 DNS 商操作），寄件者改為如 `hi@wilsonchao.com`
       ⚠️ 需要 Wilson 操作 Resend dashboard + DNS（或給 CC 權限）
 - [x] 1.2（CC 完成）歡迎信改寫為中文，調性對齊網站（參考 voice reference；
@@ -63,10 +63,28 @@
       token 用 email 的 HMAC，避免裸 email 進 URL），route 做 `kv.srem`
 - [x] 1.5（CC 完成）SubscribeForm 文案更新：明確承諾「最多每週一封，只寄週報」
 
-**驗證**：自己的測試信箱訂閱 → 收到中文歡迎信（非垃圾桶）→ 跑一次
-send-newsletter 收到文章信 → 點退訂 → KV 確認移除。
+**✅ Phase 1 全部完成（2026-06-12）**，E2E 驗證通過：production 訂閱 →
+歡迎信 delivered（hi@wilsonchao.com，SPF/DKIM verified）。
+3 位歷史訂閱者已遷入 Resend segment，測試資料已清。
 
-**工時估計**：半天～一天（DNS 等待時間另計）
+### 📬 每週寄送 Runbook（交接給 OWL 營運）
+
+新一期週報發布（sync 進 content/blog/）後：
+1. `cd ~/Project/_brand/new_website/apps/main && npm run newsletter -- <slug>`
+   → 建 Resend Broadcast 草稿（**永遠先草稿，不直接 --send**）
+2. Telegram 通知 Wilson：附 dashboard 預覽連結，等他回覆確認
+3. Wilson 確認後：dashboard 按 Send，或 `npm run newsletter -- <slug> --send`
+   （--send 會再建一份新草稿並寄出；若 Wilson 已在 dashboard 按過 Send 則跳過）
+4. 可先用 `--preview` 離線檢查信件 HTML（不需 env）
+
+環境細節：
+- RESEND_API_KEY / CLOUDFLARE_DNS_TOKEN 在 `~/Project/.env.master`
+- Vercel production env 已設四個 RESEND_*；segment「weekly」=
+  707f4d2d-0ace-48f3-9b33-f63d54ea5b5f
+- 名單 source of truth 在 Resend contacts；KV `subscribers:emails` 僅歷史紀錄
+- ⚠️ 技術坑（已修，改 code 時注意）：serverless 回應後會凍結 function，
+  寄信必須 await；Resend SDK 不 throw，錯誤在回傳值的 `.error`
+- 週報 #16 草稿已建好待 Wilson 決定是否作為創刊號寄出
 
 ---
 
