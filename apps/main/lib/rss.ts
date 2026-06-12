@@ -6,6 +6,8 @@ type RssItem = {
   guid?: string;
   pubDate?: string;
   description?: string;
+  /** Full HTML content for content:encoded. Wrap in CDATA — caller must ensure no ]]> in value. */
+  contentEncoded?: string;
   isPermaLink?: boolean;
 };
 
@@ -17,6 +19,13 @@ const escapeXml = (value: string) =>
     .replace(/"/g, "&quot;")
     .replace(/'/g, "&apos;");
 
+/**
+ * Escape a string for use inside a CDATA section.
+ * The only sequence that must be escaped is `]]>` — split it across two CDATA sections.
+ */
+const escapeCdata = (value: string) =>
+  value.replace(/]]>/g, "]]]]><![CDATA[>");
+
 const renderItem = (item: RssItem) => {
   const permaLink = item.isPermaLink === false ? ' isPermaLink="false"' : "";
   return `
@@ -26,6 +35,7 @@ const renderItem = (item: RssItem) => {
   <guid${permaLink}>${escapeXml(item.guid || item.link)}</guid>
   ${item.pubDate ? `<pubDate>${item.pubDate}</pubDate>` : ""}
   ${item.description ? `<description>${escapeXml(item.description)}</description>` : ""}
+  ${item.contentEncoded ? `<content:encoded><![CDATA[${escapeCdata(item.contentEncoded)}]]></content:encoded>` : ""}
 </item>`;
 };
 
@@ -51,7 +61,7 @@ export function buildRssResponse({
     items.find((i) => i.pubDate)?.pubDate || new Date().toUTCString();
   const renderedItems = items.map(renderItem).join("");
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom" xmlns:content="http://purl.org/rss/1.0/modules/content/">
   <channel>
     <title>${escapeXml(title)}</title>
     <link>${escapeXml(siteUrl)}</link>
