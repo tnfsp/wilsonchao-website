@@ -47,21 +47,21 @@
    發新文章寄信的機制**——email 進了 KV `subscribers:emails` set 就沉睡
 
 **任務（D1=A、D3=只寄週報，已收斂）**：
-- [ ] 1.1 Resend 驗證 `wilsonchao.com` 網域（DNS 加 SPF/DKIM records，
+- [ ] 1.1（⏳ 唯一剩餘，需 Wilson：Resend 帳號/網域/segment + Cloudflare DNS + Vercel env）Resend 驗證 `wilsonchao.com` 網域（DNS 加 SPF/DKIM records，
       Vercel DNS 或現有 DNS 商操作），寄件者改為如 `hi@wilsonchao.com`
       ⚠️ 需要 Wilson 操作 Resend dashboard + DNS（或給 CC 權限）
-- [ ] 1.2 歡迎信改寫為中文，調性對齊網站（參考 voice reference；
+- [x] 1.2（CC 完成）歡迎信改寫為中文，調性對齊網站（參考 voice reference；
       不亮醫師身份、不放 emoji、基於共鳴）。
       **內容直接遞 3 篇精選代表作（取自 D2 名單）**——第一封信就給價值，
       而不是承諾未來。⛓️ 依賴 D2 圈選完成
-- [ ] 1.3 週報寄送 script（`apps/main/scripts/send-newsletter.ts`）：
+- [x] 1.3（CC 完成，含 --preview 模式）週報寄送 script（`apps/main/scripts/send-newsletter.ts`）：
       輸入週報 slug → 從 content/blog/*.json 取文章 → email 模板
       （subject 直接用命題式標題）→ Resend batch 寄給 KV set 全員。
       **由 OWL cron 或發文流程手動觸發**，不做全自動（誤寄無法收回）。
       範圍：只寄 type=weekly，一般 blog 文不寄
-- [ ] 1.4 退訂機制：每封信 footer 帶退訂連結（`/api/unsubscribe?token=...`，
+- [x] 1.4（CC 完成——改用 Resend Segments+Broadcasts 內建退訂 merge tag，不需自建 route）退訂機制：每封信 footer 帶退訂連結（`/api/unsubscribe?token=...`，
       token 用 email 的 HMAC，避免裸 email 進 URL），route 做 `kv.srem`
-- [ ] 1.5 SubscribeForm 文案更新：明確承諾「最多每週一封，只寄週報」
+- [x] 1.5（CC 完成）SubscribeForm 文案更新：明確承諾「最多每週一封，只寄週報」
 
 **驗證**：自己的測試信箱訂閱 → 收到中文歡迎信（非垃圾桶）→ 跑一次
 send-newsletter 收到文章信 → 點退訂 → KV 確認移除。
