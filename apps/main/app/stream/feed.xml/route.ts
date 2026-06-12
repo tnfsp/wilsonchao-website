@@ -21,6 +21,8 @@ export async function GET() {
       isPermaLink: !!entry.link,
       pubDate: entry.pubDate ? new Date(entry.pubDate).toUTCString() : undefined,
       description: plainText.slice(0, 280),
+      // Stream contentHtml uses only external/absolute URLs — no image absolutization needed
+      contentEncoded: entry.contentHtml || undefined,
     };
   });
 
