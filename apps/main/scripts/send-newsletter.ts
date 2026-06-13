@@ -5,7 +5,7 @@
  *   npm run newsletter -- <slug>            # 建立 Resend Broadcast 草稿（不寄出）
  *   npm run newsletter -- <slug> --send     # 建立並直接寄出
  *   npm run newsletter -- <slug> --preview  # 只輸出信件 HTML 到暫存檔（不需要 env）
- *   npm run newsletter -- <slug> --force    # 允許非週報類型（預設只接受週報）
+ *   npm run newsletter -- <slug> --force    # 允許非週報類型或非 Published 狀態（預設兩者都擋）
  *   npm run newsletter -- <slug> --intro "這期想說的話"
  *       # email 限定開場白：放在信件最上方、週報內容之前，像信的開頭。
  *       # 永遠 optional——沒給就直接從週報內容開始，承諾不因此打折。
@@ -24,6 +24,7 @@ import { config as loadEnv } from "dotenv";
 import { Resend } from "resend";
 import fs from "fs/promises";
 import path from "path";
+import { escapeHtml } from "../lib/escape-html.js";
 
 loadEnv({ path: ".env.local" });
 
@@ -48,42 +49,39 @@ function absolutifyUrls(html: string): string {
     .replace(/(src|href)="\/(?!\/)/g, `$1="${SITE_URL}/`);
 }
 
-function escapeHtml(s: string): string {
-  return s
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;");
-}
-
 function newsletterHtml(entry: BlogEntry, intro?: string): string {
   // email 限定開場白：只有訂閱者看得到的幾句話，放在週報內容之前
+  // shell 傳進來的 \n 是字面「反斜線+n」兩個字元，和真的換行都接受
   const introBlock = intro
     ? `<div style="line-height:1.9;margin-bottom:24px;">
         ${intro
-          .split(/\n+/)
-          .map((p) => `<p style="margin:0 0 1em;">${escapeHtml(p.trim())}</p>`)
+          .split(/\\n|\n/)
+          .map((p) => p.trim())
+          .filter(Boolean)
+          .map((p) => `<p style="margin:0 0 1em;">${escapeHtml(p)}</p>`)
           .join("\n")}
       </div>
       <hr style="border:none;border-top:1px solid rgba(0,18,25,0.14);margin:0 0 24px;" />`
     : "";
 
   const cover = entry.image
-    ? `<img src="${entry.image.startsWith("http") ? entry.image : SITE_URL + entry.image}" alt="${entry.title}" style="width:100%;border-radius:12px;margin-bottom:24px;" />`
+    ? `<img src="${escapeHtml(entry.image.startsWith("http") ? entry.image : SITE_URL + entry.image)}" alt="${escapeHtml(entry.title)}" style="width:100%;border-radius:12px;margin-bottom:24px;" />`
     : "";
 
   const body = absolutifyUrls(entry.contentHtml ?? "");
+  const postUrl = `${SITE_URL}/blog/${encodeURIComponent(entry.slug)}`;
 
   return `
     <div style="font-family:'Noto Sans TC',-apple-system,sans-serif;max-width:560px;margin:0 auto;padding:24px 16px;background-color:#f8f4ea;color:#001219;">
       ${introBlock}
       ${cover}
-      <h1 style="font-size:1.5em;line-height:1.4;margin:0 0 24px;">${entry.title}</h1>
+      <h1 style="font-size:1.5em;line-height:1.4;margin:0 0 24px;">${escapeHtml(entry.title)}</h1>
       <div style="line-height:1.9;">
         ${body}
       </div>
       <hr style="border:none;border-top:1px solid rgba(0,18,25,0.14);margin:32px 0 16px;" />
       <p style="color:#00505f;font-size:13px;line-height:1.8;">
-        在網頁上讀這篇：<a href="${SITE_URL}/blog/${entry.slug}" style="color:#ca6702;">${SITE_URL}/blog/${entry.slug}</a><br/>
+        在網頁上讀這篇：<a href="${postUrl}" style="color:#ca6702;">${postUrl}</a><br/>
         有想說的話，直接回信就好。<br/>
         不想再收到週報：<a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:#00505f;">取消訂閱</a>
       </p>
@@ -93,12 +91,15 @@ function newsletterHtml(entry: BlogEntry, intro?: string): string {
 
 async function main() {
   const args = process.argv.slice(2);
-  const slug = args.find((a) => !a.startsWith("--"));
   const doSend = args.includes("--send");
   const force = args.includes("--force");
   const previewOnly = args.includes("--preview");
   const introIdx = args.indexOf("--intro");
   const intro = introIdx !== -1 ? args[introIdx + 1] : undefined;
+  // 找 slug 時要跳過 --intro 的值，不然開場白會被誤認成 slug
+  const slug = args.find(
+    (a, i) => !a.startsWith("--") && (introIdx === -1 || i !== introIdx + 1)
+  );
   if (introIdx !== -1 && (!intro || intro.startsWith("--"))) {
     console.error("--intro 後面要接開場白文字（用引號包起來）");
     process.exit(1);
@@ -136,6 +137,14 @@ async function main() {
     console.error(
       `「${entry.title}」的 type 是 ${entry.type ?? "(未設定)"}，不是週報。` +
         `確定要寄的話加 --force。`
+    );
+    process.exit(1);
+  }
+
+  if (entry.status !== "Published" && !force) {
+    console.error(
+      `「${entry.title}」的 status 是 ${entry.status ?? "(未設定)"}，還沒發布。` +
+        `確定要寄草稿的話加 --force。`
     );
     process.exit(1);
   }

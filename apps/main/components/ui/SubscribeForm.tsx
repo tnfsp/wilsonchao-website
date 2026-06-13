@@ -25,7 +25,10 @@ export function SubscribeForm({ source = "unknown" }: SubscribeFormProps) {
 
       const data = await res.json();
 
-      if (data.alreadySubscribed) {
+      if (!res.ok) {
+        setStatus("error");
+        setMessage(data.error || "出了點問題，再試一次？");
+      } else if (data.alreadySubscribed) {
         setStatus("already");
         setMessage("你已經訂閱過了");
       } else if (data.success) {

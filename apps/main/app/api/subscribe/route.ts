@@ -3,6 +3,8 @@ import { Resend } from "resend";
 import { NextRequest, NextResponse } from "next/server";
 import fs from "fs/promises";
 import path from "path";
+import { escapeHtml } from "@/lib/escape-html";
+import { rateLimit } from "@/lib/rate-limit";
 
 const SUBSCRIBERS_KEY = "subscribers:emails";
 const SITE_URL = "https://wilsonchao.com";
@@ -46,7 +48,7 @@ function welcomeEmailHtml(featured: FeaturedEntry[]): string {
         ${featured
           .map(
             (e) =>
-              `・<a href="${SITE_URL}/blog/${e.slug}" style="color:#ca6702;">${e.title}</a>`
+              `・<a href="${SITE_URL}/blog/${encodeURIComponent(e.slug)}" style="color:#ca6702;">${escapeHtml(e.title)}</a>`
           )
           .join("<br/>\n        ")}
       </p>`
@@ -96,30 +98,54 @@ async function addToResend(email: string) {
     ...(segmentId ? { segments: [{ id: segmentId }] } : {}),
   });
   if (contact.error) {
-    console.error("Resend contacts.create failed:", contact.error);
+    // contact 沒進寄送名單就是訂閱失敗，必須 throw 讓 caller rollback KV，
+    // 否則 email 卡在 KV 擋住重訂、卻永遠收不到週報（訂閱黑洞）
+    throw new Error(`Resend contacts.create failed: ${contact.error.message}`);
   }
 
-  const featured = await loadFeatured();
-  const sent = await resend.emails.send({
-    from: process.env.RESEND_FROM || "Wilson Chao <hi@wilsonchao.com>",
-    ...(process.env.RESEND_REPLY_TO ? { replyTo: process.env.RESEND_REPLY_TO } : {}),
-    to: email,
-    subject: "訂閱成功",
-    html: welcomeEmailHtml(featured),
-  });
-  if (sent.error) {
-    console.error("Resend welcome email failed:", sent.error);
+  // 歡迎信失敗不算訂閱失敗——contact 已在名單裡，之後可補寄
+  try {
+    const featured = await loadFeatured();
+    const sent = await resend.emails.send({
+      from: process.env.RESEND_FROM || "Wilson Chao <hi@wilsonchao.com>",
+      ...(process.env.RESEND_REPLY_TO ? { replyTo: process.env.RESEND_REPLY_TO } : {}),
+      to: email,
+      subject: "訂閱成功",
+      html: welcomeEmailHtml(featured),
+    });
+    if (sent.error) {
+      console.error("Resend welcome email failed:", sent.error);
+    }
+  } catch (err) {
+    console.error("Resend welcome email failed:", err);
   }
 }
 
 export async function POST(request: NextRequest) {
   try {
+    // single opt-in：任何人都能拿任意 email 觸發歡迎信（寄件人是 hi@wilsonchao.com），
+    // 不 rate limit 會被拿來騷擾別人、賠上寄件信譽
+    const ip =
+      request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() ||
+      request.headers.get("x-real-ip") ||
+      "unknown";
+    const { allowed } = await rateLimit(`subscribe:${ip}`, {
+      limit: 5,
+      windowSeconds: 600,
+    });
+    if (!allowed) {
+      return NextResponse.json(
+        { error: "請求太頻繁，請稍後再試" },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
     const { email, source } = body;
 
     if (!email || typeof email !== "string") {
       return NextResponse.json(
-        { error: "Email is required" },
+        { error: "請輸入 email" },
         { status: 400 }
       );
     }
@@ -128,7 +154,7 @@ export async function POST(request: NextRequest) {
 
     if (!isValidEmail(normalizedEmail)) {
       return NextResponse.json(
-        { error: "Invalid email format" },
+        { error: "Email 格式好像不太對" },
         { status: 400 }
       );
     }
@@ -158,8 +184,15 @@ export async function POST(request: NextRequest) {
     try {
       await addToResend(normalizedEmail);
     } catch (err) {
-      // 寄信失敗不影響訂閱本身——email 已進名單，之後可補寄
       console.error("Resend subscribe flow failed for", normalizedEmail, err);
+      // contact 沒建成功 → rollback KV，讓用戶之後重訂時能再走一次完整流程，
+      // 不然 email 留在 KV 會被「Already subscribed」擋住，永遠進不了寄送名單
+      await kv.srem(SUBSCRIBERS_KEY, normalizedEmail);
+      await kv.del(metaKey);
+      return NextResponse.json(
+        { error: "訂閱失敗了，請再試一次" },
+        { status: 500 }
+      );
     }
 
     return NextResponse.json(
@@ -169,7 +202,7 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Subscribe error:", error);
     return NextResponse.json(
-      { error: "Failed to subscribe" },
+      { error: "訂閱失敗了，請再試一次" },
       { status: 500 }
     );
   }
