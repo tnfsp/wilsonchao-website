@@ -172,3 +172,19 @@ RESEND_API_KEY
 - [ ] /now 每週更新：Wilson 說「更新 /now」→ 從近 7 天 journal 蒸餾草稿 → 過目 → push
 - [ ] (低) wilsonchao git remote 是明文 PAT，可改用 credential helper 收緊
 - [ ] 發 murmur 記得帶 #murmur tag（否則漏進碎片區）
+
+## Session: 2026-06-13 10:14
+**Project**: wilsonchao.com (apps/main 電子報 code review 修復)
+
+### 完成
+- 電子報管線 code review 5 項 warning 全修並 merge+push main（commit b9f1480 → merge ba5cec0 → push f9ed823..ba5cec0）
+- 訂閱黑洞 rollback、IP rate limit（lib/rate-limit.ts）、共用 escapeHtml（含引號，lib/escape-html.ts）、send-newsletter 寄送防呆（slug/intro split/status 檢查）、SubscribeForm res.ok 檢查 + 中文錯誤
+- 驗證 tsc/eslint 全綠、--preview 實測通過、未實際寄信
+
+### 決策
+- rate-limit 用標準 @vercel/kv fixed-window（task 指的 apps/teaching/lib/rate-limit.ts 本機不存在）
+- 歡迎信失敗不 rollback（contact 已在名單可補寄）；只有 contact 建立失敗才 rollback KV
+- rate-limit fail open（KV 故障不擋真訂閱者）
+
+### 待辦
+- [ ] 週報 #16 創刊號週末寄出（OWL deadline 6/15，非本 session 範圍）
