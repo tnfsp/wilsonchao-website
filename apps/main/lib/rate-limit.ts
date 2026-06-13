@@ -25,9 +25,11 @@ export async function rateLimit(
   const kvKey = `rate-limit:${key}`;
   try {
     const count = await kv.incr(kvKey);
-    if (count === 1) {
-      await kv.expire(kvKey, windowSeconds);
-    }
+    // 每次都嘗試設 TTL，但用 "NX"（只在 key 還沒有 TTL 時才設）：
+    // - 保留 fixed-window 語義（不會每次刷新延長視窗）
+    // - 即使某次 incr 後的 expire 漏掉/失敗，後續請求會補上 TTL，
+    //   避免 key 永久存在、count 一路累加把該 IP 永久封鎖
+    await kv.expire(kvKey, windowSeconds, "NX");
     return { allowed: count <= limit, remaining: Math.max(0, limit - count) };
   } catch (err) {
     console.error("Rate limit check failed (fail open):", err);
