@@ -71,13 +71,14 @@ export default async function Home() {
     .filter((e): e is NonNullable<typeof e> => e != null);
 
   // Build recentItems from all blog entries
-  type RecentItem = { title: string; href: string; date: string; tag?: string };
+  type RecentItem = { title: string; href: string; date: string; tag?: string; desc?: string };
   const recentItems: RecentItem[] = blogEntries
     .map((post) => ({
       title: post.title,
       href: `/blog/${post.slug}`,
       date: post.publishedAt || "",
       tag: tagLabelMap[post.type || ""] || post.type || "",
+      desc: post.description || post.excerpt || "",
     }))
     .filter((item) => item.date)
     .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
@@ -190,7 +191,10 @@ export default async function Home() {
                   href={`/blog/${post.slug}`}
                   className="surface-card block px-5 py-4 transition-transform hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,18,25,0.12)]"
                 >
-                  <p className="font-semibold text-base text-[var(--foreground)] mb-1.5">
+                  <p className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)] mb-1">
+                    {tagLabelMap[post.type || ""] || post.type || "文章"}
+                  </p>
+                  <p className="font-semibold text-base text-[var(--foreground)] mb-1">
                     {post.title}
                   </p>
                   <p className="text-sm text-[var(--muted)] leading-relaxed line-clamp-3">
@@ -219,21 +223,28 @@ export default async function Home() {
                 <li key={item.href} className="group">
                   <Link
                     href={item.href}
-                    className="-mx-3 flex items-center justify-between gap-4 rounded-md px-3 py-3 transition-colors hover:bg-[var(--highlight)]/30"
+                    className="-mx-3 block rounded-md px-3 py-3.5 transition-colors hover:bg-[var(--highlight)]/30"
                   >
-                    <div className="flex min-w-0 items-center gap-3">
-                      {item.tag ? (
-                        <span className="flex-shrink-0 rounded-full border border-[var(--border)] px-2 py-0.5 text-xs font-medium text-[var(--accent-strong)]">
-                          {item.tag}
+                    <div className="flex items-baseline justify-between gap-4">
+                      <div className="flex min-w-0 items-baseline gap-2.5">
+                        {item.tag ? (
+                          <span className="flex-shrink-0 rounded-full border border-[var(--border)] px-2 py-0.5 text-xs font-medium text-[var(--accent-strong)]">
+                            {item.tag}
+                          </span>
+                        ) : null}
+                        <span className="min-w-0 truncate text-base font-medium text-[var(--foreground)] transition-colors group-hover:text-[var(--accent)]">
+                          {item.title}
                         </span>
-                      ) : null}
-                      <span className="min-w-0 truncate text-base text-[var(--foreground)] transition-colors group-hover:text-[var(--accent)]">
-                        {item.title}
+                      </div>
+                      <span className="flex-shrink-0 text-xs tabular-nums text-[var(--muted)] opacity-60">
+                        {item.date}
                       </span>
                     </div>
-                    <span className="flex-shrink-0 text-sm tabular-nums text-[var(--muted)] opacity-60">
-                      {item.date}
-                    </span>
+                    {item.desc ? (
+                      <p className="mt-1 truncate text-sm leading-relaxed text-[var(--muted)]">
+                        {item.desc}
+                      </p>
+                    ) : null}
                   </Link>
                 </li>
               ))}
