@@ -3,6 +3,7 @@ import Image from "next/image";
 import Link from "next/link";
 import { loadBlogEntries } from "@/lib/content";
 import { SubscribeForm } from "@/components/ui/SubscribeForm";
+import { WritingHeatmap } from "@/components/ui/WritingHeatmap";
 import { BASE_URL } from "@/lib/constants";
 
 export const metadata: Metadata = {
@@ -218,6 +219,7 @@ export default async function Home() {
                 全部文章 →
               </Link>
             </div>
+            <WritingHeatmap weeks={20} />
             <ul className="divide-y divide-[var(--border)]">
               {recentItems.map((item) => (
                 <li key={item.href} className="group">
