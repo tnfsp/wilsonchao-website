@@ -61,6 +61,7 @@ export default async function Home() {
   const tagLabelMap: Record<string, string> = {
     essay: "Essay",
     weekly: "Weekly",
+    "週報": "Weekly",
     diary: "Diary",
   };
 
@@ -109,8 +110,9 @@ export default async function Home() {
               <p className="text-sm text-[var(--muted)]">心臟外科醫師 · 對世界好奇的人</p>
             </div>
           </div>
-          <h1 className="text-4xl font-bold leading-tight tracking-tight text-[var(--foreground)] sm:text-5xl">
-            白天把心臟打開，晚上把心裡的事寫下來。
+          <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
+            <span className="block text-[var(--foreground)]">白天把心臟打開，</span>
+            <span className="block text-[var(--accent)]">晚上把心裡的事寫下來。</span>
           </h1>
         </header>
 
@@ -212,21 +214,26 @@ export default async function Home() {
                 全部文章 →
               </Link>
             </div>
-            <ul className="space-y-1">
+            <ul className="divide-y divide-[var(--border)]">
               {recentItems.map((item) => (
-                <li
-                  key={item.href}
-                  className="group -mx-3 rounded-md px-3 py-2.5 transition-colors hover:bg-[var(--highlight)]/30"
-                >
-                  <Link href={item.href} className="block">
-                    <div className="flex items-baseline justify-between gap-6">
+                <li key={item.href} className="group">
+                  <Link
+                    href={item.href}
+                    className="-mx-3 flex items-center justify-between gap-4 rounded-md px-3 py-3 transition-colors hover:bg-[var(--highlight)]/30"
+                  >
+                    <div className="flex min-w-0 items-center gap-3">
+                      {item.tag ? (
+                        <span className="flex-shrink-0 rounded-full border border-[var(--border)] px-2 py-0.5 text-xs font-medium text-[var(--accent-strong)]">
+                          {item.tag}
+                        </span>
+                      ) : null}
                       <span className="min-w-0 truncate text-base text-[var(--foreground)] transition-colors group-hover:text-[var(--accent)]">
                         {item.title}
                       </span>
-                      <span className="flex-shrink-0 text-sm tabular-nums text-[var(--muted)] opacity-60">
-                        {item.date}
-                      </span>
                     </div>
+                    <span className="flex-shrink-0 text-sm tabular-nums text-[var(--muted)] opacity-60">
+                      {item.date}
+                    </span>
                   </Link>
                 </li>
               ))}
