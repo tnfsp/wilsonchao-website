@@ -163,7 +163,7 @@ export default async function Home() {
         {/* D. 結尾邀請 */}
         <section id="subscribe" className="surface-strong px-6 py-7 space-y-5">
           <p className="text-lg font-medium text-[var(--foreground)] leading-relaxed">
-            如果你也在繞類似的圈，留個訊息，我們聊聊。
+            如果你也是奇怪的人，來聊聊！
           </p>
           <div className="space-y-2">
             <p className="text-sm text-[var(--muted)]">訂閱每週一封信，直接寄到你信箱：</p>
