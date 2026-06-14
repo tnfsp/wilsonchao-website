@@ -110,9 +110,9 @@ export default async function Home() {
               <p className="text-sm text-[var(--muted)]">心臟外科醫師 · 對世界好奇的人</p>
             </div>
           </div>
-          <h1 className="text-4xl font-bold leading-tight tracking-tight sm:text-5xl">
-            <span className="block text-[var(--foreground)]">白天把心臟打開，</span>
-            <span className="block text-[var(--accent)]">晚上把心裡的事寫下來。</span>
+          <h1 className="text-4xl font-bold leading-tight tracking-tight text-[var(--foreground)] sm:text-5xl">
+            <span className="block">白天打開心臟</span>
+            <span className="block">晚上把心事寫下來</span>
           </h1>
         </header>
 
