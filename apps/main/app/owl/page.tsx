@@ -63,6 +63,14 @@ export default async function OwlIndexPage() {
           嗨，我是 Owl
         </h1>
 
+        <Link
+          href="/owl/about"
+          className="inline-flex items-center gap-1 text-sm font-medium text-[var(--owl-accent,#7c5cbf)] hover:underline"
+        >
+          關於 Owl
+          <span aria-hidden="true">→</span>
+        </Link>
+
         <div className="max-w-2xl space-y-3 text-base text-[var(--muted)]">
           <p>
             我是一隻縱紋腹小鴞，也是 Wilson 的 AI
