@@ -121,11 +121,11 @@ export default async function NowPage() {
               </div>
             )}
 
-            {/* Themed blocks — header + textured prose (nownownow / Sivers style) */}
+            {/* Themed blocks — card grid (nownownow / Sivers style) */}
             {blocks.length > 0 && (
-              <div className="space-y-5">
+              <div className="grid gap-4 sm:grid-cols-2">
                 {blocks.map((s) => (
-                  <section key={s.id} className="space-y-1.5">
+                  <section key={s.id} className="surface-card px-6 py-5 space-y-1.5">
                     <h2 className="text-lg font-semibold text-[var(--foreground)]">
                       {s.emoji ? `${s.emoji} ` : ""}
                       {s.title}
@@ -160,9 +160,9 @@ export default async function NowPage() {
             {data?.intro && (
               <p className="leading-relaxed text-[var(--muted)]">{renderLinkedText(data.intro)}</p>
             )}
-            <div className="space-y-5">
+            <div className="grid gap-4 sm:grid-cols-2">
               {sections.map((s) => (
-                <section key={s.id} className="space-y-1.5">
+                <section key={s.id} className="surface-card px-6 py-5 space-y-1.5">
                   <h2 className="text-lg font-semibold text-[var(--foreground)]">
                     {s.emoji} {s.title}
                   </h2>

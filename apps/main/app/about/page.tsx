@@ -122,7 +122,7 @@ export default function AboutPage() {
               <Link href="/blog/no-name-doctor" className="inline-link">
                 「沒有姓名的值班機器」
               </Link>{" "}
-              這個文化，有空可以看看。
+              這篇文章，有空可以看看。
             </p>
           </div>
         </section>
@@ -146,12 +146,10 @@ export default function AboutPage() {
           </Link>
         </section>
 
-        {/* 2. 我怎麼走到這 — prose 大卡，留白多 */}
-        <section className="surface-strong px-6 py-7 space-y-6">
-          <h2 className="text-xl font-semibold text-[var(--foreground)]">我怎麼走到這</h2>
-
-          <div className="prose max-w-none">
-            <h3>為什麼是心臟外科</h3>
+        {/* 2a. 為什麼是心臟外科 — 小卡 */}
+        <section className="surface-card px-6 py-5 space-y-3">
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">為什麼是心臟外科</h2>
+          <div className="prose max-w-none space-y-0">
             <p>
               學生時期遇到好幾個模範老師。有一次跟老師查房，他竟然查到睡著，大家悄悄退出去，把門關上。
             </p>
@@ -165,9 +163,12 @@ export default function AboutPage() {
               儘管真的走進來、親身體會後才知道，這根本不是人幹的。但這也正是這份工作迷人的地方。
             </p>
           </div>
+        </section>
 
-          <div className="prose max-w-none">
-            <h3>為什麼開始寫</h3>
+        {/* 2b. 為什麼開始寫 — 小卡 */}
+        <section className="surface-card px-6 py-5 space-y-3">
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">為什麼開始寫</h2>
+          <div className="prose max-w-none space-y-0">
             <p>
               寫作，對我來說是一種整理。把白天來不及消化的東西，晚上一個字一個字放回該在的位置，雖然這樣講有點假掰哈哈
             </p>
@@ -198,9 +199,9 @@ export default function AboutPage() {
           </p>
         </section>
 
-        {/* 4. 我的弱點 — surface-strong 大卡，敢露，立體感關鍵 */}
-        <section className="surface-strong px-6 py-7 space-y-4">
-          <h2 className="text-xl font-semibold text-[var(--foreground)]">我的弱點</h2>
+        {/* 4. 我的弱點 */}
+        <section className="surface-card px-6 py-5 space-y-3">
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">我的弱點</h2>
           <div className="prose max-w-none">
             <p>
               我用忙碌來麻痺自己，以為只要夠忙，就可以不用面對某些問題。我也會害怕寫不好——完美主義一作祟，這件事就不好玩了，然後我就拖著不寫。
@@ -227,61 +228,59 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* 6. 我的品味 — 小卡，血肉 */}
-        <section className="surface-card px-6 py-5 space-y-4">
-          <h2 className="text-lg font-semibold text-[var(--foreground)]">我的品味</h2>
-
-          <div className="space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">音樂 / 吉他 / DJ</p>
-            <div className="prose max-w-none space-y-0">
-              <p>
-                那個會快樂的自己住在這裡。喜歡聽Lofi / Hiphop / R&amp;B，偶爾串串華語經典老歌。
-              </p>
-              <p>
-                最喜歡的DJ是DJ Shota，一個日本人，他的Turntable真的超強，他也放我最愛的Nujabes。
-              </p>
-              <p>
-                最喜歡的饒舌歌手是蛋堡，最喜歡的搖滾歌手是伍佰，最喜歡的歌是縱貫線的給自己的歌，但是每一段時間都會有一直反覆聽的歌，某一個歌好像都代表一個時期。
-              </p>
-              <p>前陣子愛聽Soby的愛你是。</p>
-            </div>
+        {/* 6a. 我的品味 — 音樂 / 吉他 / DJ */}
+        <section className="surface-card px-6 py-5 space-y-3">
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">音樂 / 吉他 / DJ</h2>
+          <div className="prose max-w-none space-y-0">
+            <p>
+              那個會快樂的自己住在這裡。喜歡聽Lofi / Hiphop / R&amp;B，偶爾串串華語經典老歌。
+            </p>
+            <p>
+              最喜歡的DJ是DJ Shota，一個日本人，他的Turntable真的超強，他也放我最愛的Nujabes。
+            </p>
+            <p>
+              最喜歡的饒舌歌手是蛋堡，最喜歡的搖滾歌手是伍佰，最喜歡的歌是縱貫線的給自己的歌，但是每一段時間都會有一直反覆聽的歌，某一個歌好像都代表一個時期。
+            </p>
+            <p>前陣子愛聽Soby的愛你是。</p>
           </div>
+        </section>
 
-          <div className="border-t border-[var(--border)] pt-4 space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">閱讀</p>
-            <div className="prose max-w-none space-y-0">
-              <p>
-                我們家的傳家寶書是「紙牌的秘密」，一本經典的哲學書，是我媽媽推薦我的，後來一路看蘇菲的世界，接觸了哲學的概念，才開始看越來越多。
-              </p>
-              <p>
-                喜好卡繆，一開始看到「唯一的哲學問題，就是人是否要自殺」就覺得這個人好瘋，再看到薛西弗斯的神話，又覺得這個人不只瘋還很聰明，後來發現有人用「荒謬」這兩個字更貼切。
-              </p>
-              <p>
-                早期鍾情於各種生產力的書，從GTD、到各種時間管理，只要能讓自己變強的書來者不拒，但隨著現在AI越來越強（？）還有對自己的越來越認識，嘗試減少這樣子的FOMO焦慮
-              </p>
-              <p>
-                這陣子在研究品味與階級之間的關係，從品味入手，一開始是想發展自己對生活的品味，後來看到了皮耶·布赫迪厄的區判，發現這些品味可能跟自己的階級有關係，延伸看了：格調、品味與階級。
-              </p>
-              <p>
-                從我這個從中級貧民，跳到中產階級的人看待這個資本主義的遊戲，開始思考，我真的是喜歡這個東西嗎？比方說喜歡威士忌，是真的喜歡還是假裝喜歡可以讓你得到上一個階級的快感呢？
-              </p>
-              <p>也許想清楚這件事情，才能真的說你有品味。</p>
-            </div>
+        {/* 6b. 我的品味 — 閱讀 */}
+        <section className="surface-card px-6 py-5 space-y-3">
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">閱讀</h2>
+          <div className="prose max-w-none space-y-0">
+            <p>
+              我們家的傳家寶書是「紙牌的秘密」，一本經典的哲學書，是我媽媽推薦我的，後來一路看蘇菲的世界，接觸了哲學的概念，才開始看越來越多。
+            </p>
+            <p>
+              喜好卡繆，一開始看到「唯一的哲學問題，就是人是否要自殺」就覺得這個人好瘋，再看到薛西弗斯的神話，又覺得這個人不只瘋還很聰明，後來發現有人用「荒謬」這兩個字更貼切。
+            </p>
+            <p>
+              早期鍾情於各種生產力的書，從GTD、到各種時間管理，只要能讓自己變強的書來者不拒，但隨著現在AI越來越強（？）還有對自己的越來越認識，嘗試減少這樣子的FOMO焦慮
+            </p>
+            <p>
+              這陣子在研究品味與階級之間的關係，從品味入手，一開始是想發展自己對生活的品味，後來看到了皮耶·布赫迪厄的區判，發現這些品味可能跟自己的階級有關係，延伸看了：格調、品味與階級。
+            </p>
+            <p>
+              從我這個從中級貧民，跳到中產階級的人看待這個資本主義的遊戲，開始思考，我真的是喜歡這個東西嗎？比方說喜歡威士忌，是真的喜歡還是假裝喜歡可以讓你得到上一個階級的快感呢？
+            </p>
+            <p>也許想清楚這件事情，才能真的說你有品味。</p>
           </div>
+        </section>
 
-          <div className="border-t border-[var(--border)] pt-4 space-y-1">
-            <p className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)]">電影</p>
-            <div className="prose max-w-none space-y-0">
-              <p>
-                人生比電影還扯，是我一直以來的信念，畢竟我的人生比Drama還要Drama！但說真的，看電影有時候還真的幫我解決不少人生的難題。
-              </p>
-              <p>
-                我最愛的電影：如果這世界貓消失了，關於存在與愛，看書跟電影，總共哭了三次，有把作為人的孤單感詮釋的至少九分。另一部類似的電影是橫道是之介，我也很愛
-              </p>
-              <p>
-                關於人際關係的困擾，推薦看海潮之聲。關於選擇困難與命運感，我推薦看倒帶人生。關於工作/人生的意義，我推薦看我的完美日常。
-              </p>
-            </div>
+        {/* 6c. 我的品味 — 電影 */}
+        <section className="surface-card px-6 py-5 space-y-3">
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">電影</h2>
+          <div className="prose max-w-none space-y-0">
+            <p>
+              人生比電影還扯，是我一直以來的信念，畢竟我的人生比Drama還要Drama！但說真的，看電影有時候還真的幫我解決不少人生的難題。
+            </p>
+            <p>
+              我最愛的電影：如果這世界貓消失了，關於存在與愛，看書跟電影，總共哭了三次，有把作為人的孤單感詮釋的至少九分。另一部類似的電影是橫道是之介，我也很愛
+            </p>
+            <p>
+              關於人際關係的困擾，推薦看海潮之聲。關於選擇困難與命運感，我推薦看倒帶人生。關於工作/人生的意義，我推薦看我的完美日常。
+            </p>
           </div>
         </section>
 
@@ -308,9 +307,9 @@ export default function AboutPage() {
           </ul>
         </section>
 
-        {/* 8. 我還沒想通的事 — prose 大卡 */}
-        <section className="surface-strong px-6 py-7 space-y-4">
-          <h2 className="text-xl font-semibold text-[var(--foreground)]">我還沒想通的事</h2>
+        {/* 8. 我還沒想通的事 */}
+        <section className="surface-card px-6 py-5 space-y-3">
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">我還沒想通的事</h2>
           <div className="prose max-w-none">
             <p>
               如果有一天，我不能再用「醫師」「很忙」「被需要」來介紹自己，那我是誰？

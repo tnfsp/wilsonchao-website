@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import { loadBlogEntries } from "@/lib/content";
 import { SubscribeForm } from "@/components/ui/SubscribeForm";
@@ -28,6 +29,9 @@ const websiteJsonLd = {
   },
 };
 
+/** Slugs for the "精選" section — edit here to change featured articles */
+const FEATURED_SLUGS = ["no-name-doctor", "ideal-daily-life", "not-privilege"] as const;
+
 /** Navigation cards for the "如何逛這個地方" section */
 const NAV_CARDS = [
   {
@@ -48,19 +52,6 @@ const NAV_CARDS = [
     cta: "想知道我「現在」在忙什麼",
     desc: "當下最佔據我的事。",
   },
-  {
-    label: "每週一封信",
-    href: "#subscribe",
-    cta: "想固定收到、不被演算法決定",
-    desc: "直接寄到你信箱。",
-    isSubscribe: true,
-  },
-  {
-    label: "Owl",
-    href: "/owl",
-    cta: "想看 Owl",
-    desc: "我的數位夥伴，他有自己的版面。",
-  },
 ];
 
 export default async function Home() {
@@ -72,6 +63,11 @@ export default async function Home() {
     weekly: "Weekly",
     diary: "Diary",
   };
+
+  // Build featuredItems from FEATURED_SLUGS (preserve order, skip missing)
+  const featuredItems = FEATURED_SLUGS
+    .map((slug) => blogEntries.find((e) => e.slug === slug))
+    .filter((e): e is NonNullable<typeof e> => e != null);
 
   // Build recentItems from all blog entries
   type RecentItem = { title: string; href: string; date: string; tag?: string };
@@ -94,8 +90,25 @@ export default async function Home() {
       />
       <main className="page-shell space-y-16">
 
-        {/* A. Hero 大字 */}
-        <header>
+        {/* A. Hero — 大頭貼 + 問候（沿用舊版排版）+ 大字 */}
+        <header className="space-y-6">
+          <div className="flex items-center gap-4">
+            <div className="relative h-16 w-16 flex-shrink-0 overflow-hidden rounded-full sm:h-20 sm:w-20">
+              <Image
+                src="/hero.jpg"
+                alt="趙玴祥 Wilson Chao"
+                fill
+                className="object-cover"
+                priority
+              />
+            </div>
+            <div>
+              <p className="text-2xl font-bold text-[var(--foreground)] sm:text-3xl">
+                嗨，我是玴祥
+              </p>
+              <p className="text-sm text-[var(--muted)]">心臟外科醫師 · 對世界好奇的人</p>
+            </div>
+          </div>
           <h1 className="text-4xl font-bold leading-tight tracking-tight text-[var(--foreground)] sm:text-5xl">
             白天把心臟打開，晚上把心裡的事寫下來。
           </h1>
@@ -132,7 +145,6 @@ export default async function Home() {
                 key={card.label}
                 href={card.href}
                 className="surface-card block px-5 py-4 transition-transform hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,18,25,0.12)]"
-                scroll={card.isSubscribe ? false : undefined}
               >
                 <p className="text-xs font-semibold uppercase tracking-widest text-[var(--muted)] mb-1">
                   {card.cta}
@@ -164,6 +176,29 @@ export default async function Home() {
             </a>
           </p>
         </section>
+
+        {/* 精選 — hand-picked articles grid */}
+        {featuredItems.length > 0 && (
+          <section className="space-y-4">
+            <span className="section-title">精選</span>
+            <div className="grid gap-4 sm:grid-cols-3">
+              {featuredItems.map((post) => (
+                <Link
+                  key={post.slug}
+                  href={`/blog/${post.slug}`}
+                  className="surface-card block px-5 py-4 transition-transform hover:-translate-y-0.5 hover:shadow-[0_28px_70px_rgba(0,18,25,0.12)]"
+                >
+                  <p className="font-semibold text-base text-[var(--foreground)] mb-1.5">
+                    {post.title}
+                  </p>
+                  <p className="text-sm text-[var(--muted)] leading-relaxed line-clamp-3">
+                    {post.description || post.excerpt}
+                  </p>
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
 
         {/* 最近寫的 — low-key strip at the bottom */}
         {recentItems.length > 0 && (
