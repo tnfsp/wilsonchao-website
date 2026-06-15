@@ -201,3 +201,23 @@ RESEND_API_KEY
 
 ### 待辦
 - [ ] （無新增）
+
+## Session: 2026-06-15 18:25
+**Project**: wilsonchao.com (new_website)
+**Branch**: claude/priceless-rosalind-23c137
+
+### 完成
+- 新訂閱進來時 email 通知站長：subscribe/route.ts 加 notifyNewSubscriber()
+- 訂閱成功後（Resend contact + 歡迎信 OK）以 try/catch 寄通知信，含訂閱者 email/來源/時間/訂閱總數
+- 收件人 NOTIFY_EMAIL，未設則 fallback RESEND_REPLY_TO（reply-to 鏈已導 gmail → 零新 env 即生效）
+- tsc --noEmit 對該檔無錯；commit 2ab3235
+
+### 決策
+- 選 email 而非 Telegram（Wilson 指定）
+- 守 memory 兩條硬規則：serverless 必 await、通知失敗只 log 不害訂閱（與歡迎信一致）
+- 不跑 live 測試：該 route 會建真 Resend contact + 寄真信，有不可逆副作用
+
+### 待辦
+- [ ] push → PR → 部署後通知才生效（目前在 worktree branch，未 push/merge）
+- [ ] 未來訂閱量大時，考慮改「每日彙整一封」避免灌爆收件匣
+
