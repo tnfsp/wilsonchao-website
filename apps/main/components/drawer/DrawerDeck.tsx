@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import type { DrawerCard } from "@/lib/content";
+import { DrawerQuestion } from "./DrawerQuestion";
 
 /**
  * 抽屜：一張會「長開」的卡（不是抽屜面＋底下再一張）。
@@ -236,21 +237,24 @@ export function DrawerDeck({ cards }: { cards: DrawerCard[] }) {
                 </div>
               </div>
 
-              {/* 把手：再抽一張 + 計數 */}
-              <div className="mt-5 flex items-center justify-between border-t border-[var(--border)] pt-4">
-                <span className="text-sm text-[var(--muted)]">
-                  抽屜裡有 {cards.length} 張紙條
-                </span>
-                {cards.length > 1 ? (
-                  <button
-                    type="button"
-                    onClick={drawRandom}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-2 text-sm font-medium text-[var(--foreground)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent-strong)]"
-                  >
-                    再抽一張
-                    <span aria-hidden="true">↻</span>
-                  </button>
-                ) : null}
+              {/* 把手：再抽一張 + 計數 + 丟一張紙條 */}
+              <div className="mt-5 space-y-3 border-t border-[var(--border)] pt-4">
+                <div className="flex items-center justify-between">
+                  <span className="text-sm text-[var(--muted)]">
+                    抽屜裡有 {cards.length} 張紙條
+                  </span>
+                  {cards.length > 1 ? (
+                    <button
+                      type="button"
+                      onClick={drawRandom}
+                      className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-2 text-sm font-medium text-[var(--foreground)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent-strong)]"
+                    >
+                      再抽一張
+                      <span aria-hidden="true">↻</span>
+                    </button>
+                  ) : null}
+                </div>
+                <DrawerQuestion />
               </div>
             </div>
           ) : null}
