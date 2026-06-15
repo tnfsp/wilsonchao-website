@@ -43,10 +43,6 @@ export default async function TastePage() {
       ) : (
         <p className="text-sm text-[var(--muted)]">櫃子還是空的。</p>
       )}
-
-      <footer className="border-t border-[var(--border)] pt-6 text-xs text-[var(--muted)]">
-        預覽用 seed 資料——正式版由 vault entity 投影而來。
-      </footer>
     </main>
   );
 }
