@@ -237,6 +237,52 @@ export async function getOwlPlaceholder(): Promise<OwlEntry | null> {
 
 
 
+/**
+ * DrawerCard — one Wilson preference fragment for the "抽屜" feature.
+ * Sourced from OWL's de-sensitized public file via scripts/sync-drawer.ts.
+ * `reason` is optional: OWL may blank it for privacy, in which case we never
+ * fabricate one (see HANDOFF-drawer-from-owl.md §3 紅線).
+ */
+export type DrawerCard = {
+  date: string;
+  questionId: string;
+  question: string;
+  optionA: string;
+  optionB: string;
+  choice: string; // A | 偏A | 混合 | 偏B | B
+  reason?: string;
+  /**
+   * 站方成稿：把 choice + reason 改寫成 About 口吻的一小段話（揭曉面顯示這個）。
+   * 來自 content/drawer-passages.json，由 questionId 對應；sync-drawer 不會覆蓋它。
+   * 沒有 passage 的卡，UI 回退成「我選的是…＋ reason」。
+   */
+  passage?: string;
+  tags?: string[];
+  category?: string;
+  dimension?: string;
+};
+
+const DRAWER_PATH = path.join(process.cwd(), "content", "drawer.json");
+const DRAWER_PASSAGES_PATH = path.join(process.cwd(), "content", "drawer-passages.json");
+
+/**
+ * Loads all drawer cards (chronological order as written by sync-drawer),
+ * merging in hand-written passages from content/drawer-passages.json (by questionId).
+ * Returns [] if the file is missing — the UI shows an empty state.
+ */
+export async function loadDrawerCards(): Promise<DrawerCard[]> {
+  const cards = await safeReadJSON<DrawerCard[]>(DRAWER_PATH);
+  if (!Array.isArray(cards)) return [];
+  const passages =
+    (await safeReadJSON<Record<string, string>>(DRAWER_PASSAGES_PATH)) || {};
+  return cards
+    .filter((c) => c?.question && c?.optionA && c?.optionB && c?.choice)
+    .map((c) => {
+      const passage = passages[c.questionId]?.trim();
+      return passage ? { ...c, passage } : c;
+    });
+}
+
 export async function loadStreamEntries(limit = 50): Promise<MurmurEntry[]> {
   const stripHtml = (value?: string) => {
     if (!value) return "";

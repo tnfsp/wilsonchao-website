@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  抽屜看門狗 — 每日獨立排程（launchd, 跑在 Wilson 的 Mac）。
+
+  為什麼要獨立跑：串在 sync:vault 後面的 watchdog 只能抓到「sync 跑了但資料沒變新鮮」；
+  「sync 根本沒跑」這種沉默失敗，只有靠這個每日獨立排程才抓得到。
+
+  安裝：
+    1. 把 PLACEHOLDER 路徑換成真實 repo 路徑（不是 .claude/worktrees 那個）。
+    2. cp 這支到 ~/Library/LaunchAgents/com.wilson.drawer-watchdog.plist （去掉 .example）
+    3. launchctl load ~/Library/LaunchAgents/com.wilson.drawer-watchdog.plist
+    4. 手動測一次：launchctl start com.wilson.drawer-watchdog
+
+  用 zsh -lc：login shell 會 source ~/.zshrc → 載入 ~/Project/.env.master，
+  watchdog 才拿得到 TELEGRAM_BOT_TOKEN_ALT / TELEGRAM_CHAT_ID / WILSON_PREFS_PUBLIC。
+
+  這裡的指令先 sync:drawer 再 watchdog:drawer：先試著拉最新公開檔，再檢查新鮮度。
+  若你的每日 sync 已經在別處跑，可改成只跑 `npm run watchdog:drawer`。
+-->
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.wilson.drawer-watchdog</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/zsh</string>
+        <string>-lc</string>
+        <string>cd /Users/zhaoyixiang/Project/_brand/new_website/apps/main &amp;&amp; npm run sync:drawer &amp;&amp; npm run watchdog:drawer</string>
+    </array>
+
+    <!-- 每天 09:00 跑一次 -->
+    <key>StartCalendarInterval</key>
+    <dict>
+        <key>Hour</key>
+        <integer>9</integer>
+        <key>Minute</key>
+        <integer>0</integer>
+    </dict>
+
+    <key>StandardOutPath</key>
+    <string>/tmp/drawer-watchdog.log</string>
+    <key>StandardErrorPath</key>
+    <string>/tmp/drawer-watchdog.err.log</string>
+</dict>
+</plist>

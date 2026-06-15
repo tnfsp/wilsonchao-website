@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { SubscribeForm } from "@/components/ui/SubscribeForm";
+import { DrawerDeck } from "@/components/drawer/DrawerDeck";
+import { DrawerNote } from "@/components/drawer/DrawerNote";
+import { loadDrawerCards } from "@/lib/content";
 import { BASE_URL } from "@/lib/constants";
 
 export const metadata = {
@@ -66,7 +69,10 @@ const personJsonLd = {
   },
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  // 抽屜：直接嵌在 About 頁的互動式「認識我」區塊。
+  const drawerCards = await loadDrawerCards();
+
   return (
     <>
       <script
@@ -126,6 +132,14 @@ export default function AboutPage() {
             </p>
           </div>
         </section>
+
+        {/* 樂章Ⅱ：怎麼走到這（此刻 + 心外 + 寫） */}
+        <div className="space-y-4">
+        <div className="flex items-center gap-3 pt-2">
+          <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" aria-hidden="true" />
+          <span className="text-sm font-medium tracking-wider text-[var(--accent-strong)]">怎麼走到這</span>
+          <span className="h-px flex-1 bg-[var(--border)]" aria-hidden="true" />
+        </div>
 
         {/* 1. 此刻的我 — 小卡，連結 /now */}
         <section className="surface-card px-6 py-5 space-y-3">
@@ -187,6 +201,15 @@ export default function AboutPage() {
             </p>
           </div>
         </section>
+        </div>
+
+        {/* 樂章Ⅲ：我這個人（怎樣的人 + 在乎 + 弱點） */}
+        <div className="space-y-4">
+        <div className="flex items-center gap-3 pt-2">
+          <span className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]" aria-hidden="true" />
+          <span className="text-sm font-medium tracking-wider text-[var(--accent-strong)]">我這個人</span>
+          <span className="h-px flex-1 bg-[var(--border)]" aria-hidden="true" />
+        </div>
 
         {/* 3. 我是個怎樣的人 — 小卡 */}
         <section className="surface-card px-6 py-5 space-y-3">
@@ -197,22 +220,6 @@ export default function AboutPage() {
           <p className="text-[var(--muted)] leading-relaxed text-sm">
             行動派——想到就做，底層的動力應該是好奇心，雖然有一陣子迷失自我，以為自己是想要「變強」，但其實最底層應該只是對人事物感到好奇。
           </p>
-        </section>
-
-        {/* 4. 我的弱點 */}
-        <section className="surface-card px-6 py-5 space-y-3">
-          <h2 className="text-lg font-semibold text-[var(--foreground)]">我的弱點</h2>
-          <div className="prose max-w-none">
-            <p>
-              我用忙碌來麻痺自己，以為只要夠忙，就可以不用面對某些問題。我也會害怕寫不好——完美主義一作祟，這件事就不好玩了，然後我就拖著不寫。
-            </p>
-            <p>
-              我發現我也討厭自己，討厭自己的出身背景，討厭自己有時表現得那麼不合時宜，討厭自己像個鄉巴佬一樣，不會玩有錢人的遊戲。
-            </p>
-            <p>
-              把這些寫出來不太舒服，但我想，一個只給你看光亮面的人，你大概也不會真的相信他。
-            </p>
-          </div>
         </section>
 
         {/* 5. 我在乎的事 — 小卡 */}
@@ -228,9 +235,40 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* 6a. 我的品味 — 音樂 / 吉他 / DJ */}
+        {/* 4. 我的弱點 — 自剖的最低點，接著用品味換氣 */}
         <section className="surface-card px-6 py-5 space-y-3">
-          <h2 className="text-lg font-semibold text-[var(--foreground)]">音樂 / 吉他 / DJ</h2>
+          <h2 className="text-lg font-semibold text-[var(--foreground)]">我的弱點</h2>
+          <div className="prose max-w-none">
+            <p>
+              我用忙碌來麻痺自己，以為只要夠忙，就可以不用面對某些問題。我也會害怕寫不好——完美主義一作祟，這件事就不好玩了，然後我就拖著不寫。
+            </p>
+            <p>
+              我發現我也討厭自己，討厭自己的出身背景，討厭自己有時表現得那麼不合時宜，討厭自己像個鄉巴佬一樣，不會玩有錢人的遊戲。
+            </p>
+            <p>
+              把這些寫出來不太舒服，但我想，一個只給你看光亮面的人，你大概也不會真的相信他。
+            </p>
+          </div>
+        </section>
+        </div>
+
+        {/* 6. 品味（群組）— 音樂/閱讀/電影 + 抽屜，收成一組 */}
+        <div className="space-y-4">
+          {/* 品味 群組細標 */}
+          <div className="flex items-center gap-3 pt-2">
+            <span
+              className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]"
+              aria-hidden="true"
+            />
+            <span className="text-sm font-medium tracking-wider text-[var(--accent-strong)]">
+              品味
+            </span>
+            <span className="h-px flex-1 bg-[var(--border)]" aria-hidden="true" />
+          </div>
+
+          {/* 6a. 音樂 / 吉他 / DJ */}
+          <section className="surface-card px-6 py-5 space-y-3">
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">音樂 / 吉他 / DJ</h2>
           <div className="prose max-w-none space-y-0">
             <p>
               那個會快樂的自己住在這裡。喜歡聽Lofi / Hiphop / R&amp;B，偶爾串串華語經典老歌。
@@ -289,6 +327,10 @@ export default function AboutPage() {
             我喜歡的東西，都收在這裡 →
           </Link>
         </section>
+
+          {/* 抽屜 — 品味裡更小、更日常的喜好 */}
+          {drawerCards.length > 0 ? <DrawerDeck cards={drawerCards} /> : null}
+        </div>
 
         {/* 7. 我相信的事 — 小卡 */}
         <section className="surface-card px-6 py-5 space-y-4">
@@ -361,6 +403,9 @@ export default function AboutPage() {
             </li>
           </ul>
         </section>
+
+        {/* 9b. 留個話（私密簽到本）— 靠近結尾、接著訂閱 */}
+        {drawerCards.length > 0 ? <DrawerNote /> : null}
 
         {/* 10. 邀請＋訂閱 — 小卡，結尾 */}
         <section id="subscribe" className="surface-strong px-6 py-7 space-y-5">
