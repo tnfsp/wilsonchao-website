@@ -37,7 +37,6 @@ const links = [
   { href: "/stream", label: "Stream" },
   { href: "/now", label: "Now" },
   { href: "/clinic", label: "Clinic" },
-  { href: "/blogroll", label: "Blogroll" },
   { href: "/about", label: "About" },
 ];
 

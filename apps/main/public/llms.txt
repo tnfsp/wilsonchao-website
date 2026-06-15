@@ -15,7 +15,6 @@
 - [Now](https://wilsonchao.com/now): 最近在做什麼
 - [Stream](https://wilsonchao.com/stream): 每日腦內碎片與短想法
 - [教學](https://wilsonchao.com/teaching): 心臟外科教學模組與 ICU Simulator
-- [Blogroll](https://wilsonchao.com/blogroll): 推薦閱讀的部落格
 
 ## 代表文章
 

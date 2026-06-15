@@ -188,3 +188,16 @@ RESEND_API_KEY
 
 ### 待辦
 - [ ] 週報 #16 創刊號週末寄出（OWL deadline 6/15，非本 session 範圍）
+
+## Session: 2026-06-15 17:46
+**Project**: wilsonchao.com (apps/main — 移除 BLOGROLL)
+
+### 完成
+- 全站完整移除 BLOGROLL：SiteHeader 導覽連結、placeholders.ts links 項目、sitemap.ts 條目、public/llms.txt 列舉，並刪除 apps/main/app/blogroll/ 整個頁面
+- 驗證：preview dev server 無編譯錯誤，fetch('/blogroll') 回傳 404
+
+### 決策
+- IMPROVEMENT-PLAN.md 內兩處把 blogroll 當「現有基建」的敘述屬規劃文件，未動（已告知 Wilson，待指示再清）
+
+### 待辦
+- [ ] （無新增）
