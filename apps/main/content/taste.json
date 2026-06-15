@@ -1,0 +1,114 @@
+[
+  {
+    "id": "nujabes",
+    "type": "music",
+    "title": "Nujabes",
+    "subtitle": "日本 Lo-fi / Hip-hop 製作人",
+    "tags": ["lofi", "hiphop"],
+    "why": "那個會快樂的自己，住在他的音樂裡。"
+  },
+  {
+    "id": "dj-shota",
+    "type": "music",
+    "title": "DJ Shota",
+    "subtitle": "日本 Turntablist",
+    "tags": ["dj", "turntable"],
+    "why": "最喜歡的 DJ，turntable 真的超強，他也放我最愛的 Nujabes。"
+  },
+  {
+    "id": "soft-lipa",
+    "type": "music",
+    "title": "蛋堡 Soft Lipa",
+    "subtitle": "饒舌歌手",
+    "tags": ["hiphop", "華語"],
+    "why": "最喜歡的饒舌歌手，字裡的生活感。"
+  },
+  {
+    "id": "wubai",
+    "type": "music",
+    "title": "伍佰",
+    "subtitle": "搖滾歌手",
+    "tags": ["rock", "華語"],
+    "why": "最喜歡的搖滾歌手。"
+  },
+  {
+    "id": "superband-gei-ziji-de-ge",
+    "type": "music",
+    "title": "縱貫線〈給自己的歌〉",
+    "subtitle": "Super Band",
+    "tags": ["華語", "經典"],
+    "why": "最喜歡的一首歌。每段時間總有一首一直反覆聽的歌，好像各代表一個時期。"
+  },
+  {
+    "id": "zhi-pai-de-mimi",
+    "type": "book",
+    "title": "紙牌的秘密",
+    "subtitle": "Jostein Gaarder",
+    "tags": ["哲學", "傳家寶"],
+    "why": "我們家的傳家寶書，媽媽推薦給我的——後來一路看下去，才走進哲學。"
+  },
+  {
+    "id": "sophies-world",
+    "type": "book",
+    "title": "蘇菲的世界",
+    "subtitle": "Jostein Gaarder",
+    "tags": ["哲學", "入門"],
+    "why": "接觸哲學概念的起點，從這裡開始看越來越多。"
+  },
+  {
+    "id": "myth-of-sisyphus",
+    "type": "book",
+    "title": "薛西弗斯的神話",
+    "subtitle": "Albert Camus",
+    "tags": ["哲學", "荒謬"],
+    "why": "「唯一的哲學問題，就是人是否要自殺」——一開始覺得這人好瘋，後來覺得他不只瘋還很聰明，再後來懂了那叫『荒謬』。"
+  },
+  {
+    "id": "la-distinction",
+    "type": "book",
+    "title": "區判 La Distinction",
+    "subtitle": "Pierre Bourdieu",
+    "tags": ["社會學", "品味與階級"],
+    "why": "從品味入手想活得更有品味，卻發現品味可能跟階級綁在一起。我真的喜歡這東西，還是喜歡它能帶來的階級快感？"
+  },
+  {
+    "id": "if-cats-disappeared",
+    "type": "movie",
+    "title": "如果這世界貓消失了",
+    "year": 2016,
+    "tags": ["存在", "愛"],
+    "why": "最愛的電影。關於存在與愛，看書跟電影總共哭了三次，把作為人的孤單詮釋到至少九分。"
+  },
+  {
+    "id": "yokomichi-yonosuke",
+    "type": "movie",
+    "title": "橫道世之介",
+    "year": 2013,
+    "tags": ["人生", "溫柔"],
+    "why": "跟《貓消失了》很像的那種餘味，我也很愛。"
+  },
+  {
+    "id": "ocean-waves",
+    "type": "movie",
+    "title": "海潮之聲",
+    "year": 1993,
+    "tags": ["吉卜力", "人際"],
+    "why": "關於人際關係的困擾，想喘口氣時推薦看。"
+  },
+  {
+    "id": "mr-nobody",
+    "type": "movie",
+    "title": "倒帶人生 Mr. Nobody",
+    "year": 2009,
+    "tags": ["命運", "選擇"],
+    "why": "關於選擇困難與命運感——每個沒選的岔路，都活成了另一個版本。"
+  },
+  {
+    "id": "perfect-days",
+    "type": "movie",
+    "title": "我的完美日常 Perfect Days",
+    "year": 2023,
+    "tags": ["日常", "意義"],
+    "why": "關於工作與人生的意義。把日子過好，本身就是一種答案。"
+  }
+]

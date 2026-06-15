@@ -282,6 +282,12 @@ export default function AboutPage() {
               關於人際關係的困擾，推薦看海潮之聲。關於選擇困難與命運感，我推薦看倒帶人生。關於工作/人生的意義，我推薦看我的完美日常。
             </p>
           </div>
+          <Link
+            href="/taste"
+            className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-strong)]"
+          >
+            我喜歡的東西，都收在這裡 →
+          </Link>
         </section>
 
         {/* 7. 我相信的事 — 小卡 */}
