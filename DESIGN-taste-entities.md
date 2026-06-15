@@ -289,6 +289,31 @@ type TasteEntity = {
 
 ---
 
+## 6.7 實證：rating 不能當策展軸（2026-06-15 worktree 實驗）
+
+做了一個可運行原型（`app/taste/page.tsx` + seed `content/taste.json`），並**安全串真實 vault 驗證**（frontmatter only、不碰正文、不碰 People、rating≥8 自動精選、撈出資料不 commit、實驗後復原 seed）。
+
+**資料覆蓋率（真實 6-Entities/）：**
+- 音樂 14：**rating 完全沒有**（只有 artist/songs_in_library）→ 評分排序/篩選對音樂直接失效。
+- 書 170：96 筆有 rating（2–10），但混大量 Google Keep 匯入雜訊（`owl-transcribed`/`google-keep-import`）。
+- 電影 83：~60 筆有 rating（2–10），同樣混匯入雜訊。
+- 原始 tags = 系統垃圾（`books`/`entity`/`archive`/`owl-transcribed`），**不可直接顯示**。
+
+**裸串 rating≥8 = 113 筆，而且「做出一個不是 Wilson 的書架」：**
+- 置頂全是生產力/知識管理書（品味四講、成為自由人、創造力的修行、1Q84、卡片盒筆記術…）——**正是 About 親口說「嘗試減少 FOMO」的那一類**。
+- About 情感點名的 **紙牌的秘密 / 卡繆（薛西弗斯）/ 區判，全部沒進 rating≥8**（沒評分或評分 <8）。
+- **結論：rating 高 ≠ 對 Wilson 意義深。** 用評分當策展軸，會把「看起來愛學習」頂上來、把「形塑他的」埋掉。
+
+**三條被實證確認的設計規則：**
+1. **rating 不當公開篩選/策展軸**（音樂沒分 + 高分失真 + 公開評分位子問題）。最多當 OWL 內部排序訊號——原型已做成**隱形排序鍵（不顯示數字）**。
+2. **沒有 `why`，卡片就垮成冷清目錄**——`why` 是這頁的靈魂（不讀正文版的卡片只剩書名+年份，明顯沒命）。
+3. **原始 vault tag 不顯示**；v1 讓 why 當主角，要 tag 就等 OWL 策展過的公開 tag。
+4. **裸接 vault 否決**：必經 OWL `public:true` + `public_why` 手挑投影。這個實驗用真實資料**反向證明了 opt-in 契約是對的——品味要手挑，不能靠分數自動化。**
+
+> 原型分支：`claude/ecstatic-sammet-ffb440`（`/taste` 路由 + TasteShelf 篩選 + rating 隱形排序 + seed 資料）。資料源正式版仍走 OWL 投影。
+
+---
+
 ## 7. 一句話收尾
 
 > entity 系統已經在那了，誘人；但**品味的靈魂在散文，不在 schema**。
