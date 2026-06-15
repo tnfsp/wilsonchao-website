@@ -1,5 +1,8 @@
 import Link from "next/link";
 import { SubscribeForm } from "@/components/ui/SubscribeForm";
+import { DrawerDeck } from "@/components/drawer/DrawerDeck";
+import { DrawerNote } from "@/components/drawer/DrawerNote";
+import { loadDrawerCards } from "@/lib/content";
 import { BASE_URL } from "@/lib/constants";
 
 export const metadata = {
@@ -66,7 +69,10 @@ const personJsonLd = {
   },
 };
 
-export default function AboutPage() {
+export default async function AboutPage() {
+  // 抽屜：直接嵌在 About 頁的互動式「認識我」區塊。
+  const drawerCards = await loadDrawerCards();
+
   return (
     <>
       <script
@@ -228,9 +234,23 @@ export default function AboutPage() {
           </div>
         </section>
 
-        {/* 6a. 我的品味 — 音樂 / 吉他 / DJ */}
-        <section className="surface-card px-6 py-5 space-y-3">
-          <h2 className="text-lg font-semibold text-[var(--foreground)]">音樂 / 吉他 / DJ</h2>
+        {/* 6. 品味（群組）— 音樂/閱讀/電影 + 抽屜，收成一組 */}
+        <div className="space-y-4">
+          {/* 品味 群組細標 */}
+          <div className="flex items-center gap-3 pt-2">
+            <span
+              className="h-1.5 w-1.5 flex-shrink-0 rounded-full bg-[var(--accent)]"
+              aria-hidden="true"
+            />
+            <span className="text-sm font-medium tracking-wider text-[var(--accent-strong)]">
+              品味
+            </span>
+            <span className="h-px flex-1 bg-[var(--border)]" aria-hidden="true" />
+          </div>
+
+          {/* 6a. 音樂 / 吉他 / DJ */}
+          <section className="surface-card px-6 py-5 space-y-3">
+            <h2 className="text-lg font-semibold text-[var(--foreground)]">音樂 / 吉他 / DJ</h2>
           <div className="prose max-w-none space-y-0">
             <p>
               那個會快樂的自己住在這裡。喜歡聽Lofi / Hiphop / R&amp;B，偶爾串串華語經典老歌。
@@ -283,6 +303,10 @@ export default function AboutPage() {
             </p>
           </div>
         </section>
+
+          {/* 抽屜 — 品味裡更小、更日常的喜好 */}
+          {drawerCards.length > 0 ? <DrawerDeck cards={drawerCards} /> : null}
+        </div>
 
         {/* 7. 我相信的事 — 小卡 */}
         <section className="surface-card px-6 py-5 space-y-4">
@@ -355,6 +379,9 @@ export default function AboutPage() {
             </li>
           </ul>
         </section>
+
+        {/* 9b. 留個話（私密簽到本）— 靠近結尾、接著訂閱 */}
+        {drawerCards.length > 0 ? <DrawerNote /> : null}
 
         {/* 10. 邀請＋訂閱 — 小卡，結尾 */}
         <section id="subscribe" className="surface-strong px-6 py-7 space-y-5">

@@ -1,0 +1,10 @@
+.git
+.claude
+node_modules
+**/node_modules
+.next
+**/.next
+.turbo
+**/.turbo
+*.log
+.DS_Store
