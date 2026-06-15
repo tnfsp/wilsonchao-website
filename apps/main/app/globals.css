@@ -1023,12 +1023,16 @@ body.simulator-fullscreen > header.page-shell {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1.25rem 1.5rem;
+  /* Only animate transform and box-shadow — per spec */
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  /* No shadow at rest */
+  box-shadow: none;
 }
 
 .owl-index-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(0, 18, 25, 0.09);
+  /* Subtle lift — spec: 0 2px 8px rgba(0,0,0,0.04) */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .owl-index-card-title {
@@ -1071,4 +1075,45 @@ body.simulator-fullscreen > header.page-shell {
   font-weight: 600;
   color: var(--owl-ink);
   margin-bottom: 0.2em;
+}
+
+/* ─── .owl-reveal ─────────────────────────────────────────────────────────────
+   Scroll-reveal entrance animation for /owl page blocks and cards.
+   Used by app/owl/_components/Reveal.tsx (client component).
+
+   Hidden state: opacity 0, shifted 12px down.
+   Revealed state (.owl-reveal-visible): opacity 1, no shift.
+   Duration: 600ms, easing: cubic-bezier(0.16, 1, 0.3, 1) — "spring out".
+
+   Stagger: cards carry a --index CSS custom property set via inline style
+   from the Reveal component; delay is calc(var(--index, 0) * 80ms).
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.owl-page .owl-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 600ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--index, 0) * 80ms);
+  /* Promote to its own layer to avoid layout thrash during animation */
+  will-change: opacity, transform;
+}
+
+.owl-page .owl-reveal.owl-reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Reduced-motion: skip transition entirely; element is already marked
+   owl-reveal-visible synchronously (via JS in Reveal.tsx), but the global
+   reduced-motion guard at line 605-613 also collapses the transition to
+   0.01ms — double-coverage for safety. */
+@media (prefers-reduced-motion: reduce) {
+  .owl-page .owl-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    transition-delay: 0ms;
+  }
 }
