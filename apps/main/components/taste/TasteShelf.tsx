@@ -82,10 +82,11 @@ export function TasteShelf({ entities }: { entities: TasteEntity[] }) {
     return TYPE_ORDER.filter((t) => set.has(t));
   }, [entities]);
 
-  const filtered = useMemo(
-    () => (activeType ? entities.filter((e) => e.type === activeType) : entities),
-    [entities, activeType]
-  );
+  const filtered = useMemo(() => {
+    const base = activeType ? entities.filter((e) => e.type === activeType) : entities;
+    // rating 當隱形排序鍵：最愛浮上來，沒評分的沉底（不顯示數字）
+    return [...base].sort((a, b) => (b.rating ?? -1) - (a.rating ?? -1));
+  }, [entities, activeType]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};

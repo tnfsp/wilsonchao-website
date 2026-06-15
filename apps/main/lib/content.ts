@@ -280,6 +280,7 @@ export type TasteEntity = {
   title: string;
   subtitle?: string;
   year?: number;
+  rating?: number; // 內部排序訊號（最愛浮上來），預設不在卡片顯示數字
   tags?: string[];
   why?: string;
   links?: { label: string; url: string }[];
