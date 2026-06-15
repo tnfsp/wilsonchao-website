@@ -36,6 +36,7 @@ export function DrawerDeck({ cards }: { cards: DrawerCard[] }) {
   const [face, setFace] = useState<"front" | "back">("front");
   const [turning, setTurning] = useState(false);
   const [drawing, setDrawing] = useState(false);
+  const [qOpen, setQOpen] = useState(false); // 「丟一張紙條」表單開合
 
   const drawRandom = useCallback(() => {
     setIndex((cur) => {
@@ -116,7 +117,7 @@ export function DrawerDeck({ cards }: { cards: DrawerCard[] }) {
       >
         <div className="overflow-hidden">
           <p className="pt-3 text-[var(--foreground)] leading-relaxed">
-            我還不太確定自己是個怎麼樣的人。在認識自己的路上，我每天問自己一些問題——抽屜裡放的，就是這些我個人小小的喜好。
+            這個抽屜放了我的喜好小紙條，好奇你的答案：）
           </p>
           {card ? (
             <button
@@ -237,24 +238,34 @@ export function DrawerDeck({ cards }: { cards: DrawerCard[] }) {
                 </div>
               </div>
 
-              {/* 把手：再抽一張 + 計數 + 丟一張紙條 */}
+              {/* 把手：計數 + 丟一張紙條 / 再抽一張（並排） */}
               <div className="mt-5 space-y-3 border-t border-[var(--border)] pt-4">
-                <div className="flex items-center justify-between">
+                <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="text-sm text-[var(--muted)]">
                     抽屜裡有 {cards.length} 張紙條
                   </span>
-                  {cards.length > 1 ? (
+                  <div className="flex items-center gap-2">
                     <button
                       type="button"
-                      onClick={drawRandom}
-                      className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-2 text-sm font-medium text-[var(--foreground)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent-strong)]"
+                      onClick={() => setQOpen((o) => !o)}
+                      aria-expanded={qOpen}
+                      className="rounded-full border border-[var(--border)] px-4 py-2 text-sm font-medium text-[var(--muted)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent-strong)]"
                     >
-                      再抽一張
-                      <span aria-hidden="true">↻</span>
+                      丟一張紙條
                     </button>
-                  ) : null}
+                    {cards.length > 1 ? (
+                      <button
+                        type="button"
+                        onClick={drawRandom}
+                        className="inline-flex items-center gap-1.5 rounded-full border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-2 text-sm font-medium text-[var(--foreground)] transition-colors hover:border-[var(--accent)] hover:text-[var(--accent-strong)]"
+                      >
+                        再抽一張
+                        <span aria-hidden="true">↻</span>
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
-                <DrawerQuestion />
+                {qOpen ? <DrawerQuestion onCancel={() => setQOpen(false)} /> : null}
               </div>
             </div>
           ) : null}

@@ -3,11 +3,10 @@
 import { useState } from "react";
 
 /**
- * 「丟一張紙條」——訪客出題。寫下想問 Wilson 的一題，進題庫排隊；
- * Owl 之後可能撈來問他。放在抽屜「再抽一張」旁邊。
+ * 「丟一張紙條」的表單——訪客出題（開合由抽屜控制，這裡只管表單）。
+ * 寫下想問 Wilson 的一題，進題庫排隊；Owl 之後可能撈來問他。
  */
-export function DrawerQuestion() {
-  const [open, setOpen] = useState(false);
+export function DrawerQuestion({ onCancel }: { onCancel: () => void }) {
   const [question, setQuestion] = useState("");
   const [from, setFrom] = useState("");
   const [honeypot, setHoneypot] = useState("");
@@ -44,21 +43,9 @@ export function DrawerQuestion() {
 
   if (status === "done") {
     return (
-      <p className="text-sm text-[var(--muted)]">
+      <p className="rounded-lg bg-[var(--surface-strong)] px-4 py-3 text-sm text-[var(--muted)]">
         紙條收到了，謝謝你出題！我或 Owl 之後可能會抽來回答。
       </p>
-    );
-  }
-
-  if (!open) {
-    return (
-      <button
-        type="button"
-        onClick={() => setOpen(true)}
-        className="text-sm text-[var(--muted)] underline underline-offset-2 transition-colors hover:text-[var(--accent-strong)]"
-      >
-        ＋ 丟一張紙條給我
-      </button>
     );
   }
 
@@ -108,7 +95,7 @@ export function DrawerQuestion() {
         </button>
         <button
           type="button"
-          onClick={() => setOpen(false)}
+          onClick={onCancel}
           className="text-xs text-[var(--muted)] hover:text-[var(--foreground)]"
         >
           取消
