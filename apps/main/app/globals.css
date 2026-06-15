@@ -259,6 +259,13 @@ a:focus-visible {
   margin-top: 1.25em;
 }
 
+/* blog 文章內文專屬：略大字級提升中文長文閱讀舒適度。
+   只掛在 /blog/[slug] 的內文，不影響首頁、about、owl（owl 用 .owl-prose）。
+   所有子元素間距/字級用 em，會隨此 font-size 等比縮放。 */
+.prose-blog {
+  font-size: 1.0625rem; /* 17px — 介於站內 16px 與 owl 18px 之間 */
+}
+
 /* Headings */
 .prose h2 {
   margin-top: 2.5em;
