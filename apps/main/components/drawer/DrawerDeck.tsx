@@ -188,10 +188,15 @@ export function DrawerDeck({ cards }: { cards: DrawerCard[] }) {
                     /* 背面：一小段關於我的話 */
                     <div className="space-y-3">
                       {card.passage ? (
-                        /* 成稿：About 口吻的一小段（content/drawer-passages.json） */
-                        <p className="leading-relaxed text-[var(--foreground)]">
-                          {card.passage}
-                        </p>
+                        /* 成稿：About 口吻的一小段（content/drawer-passages.json）；空行分段 */
+                        card.passage.split(/\n{2,}/).map((para, i) => (
+                          <p
+                            key={i}
+                            className="leading-relaxed text-[var(--foreground)]"
+                          >
+                            {para}
+                          </p>
+                        ))
                       ) : (
                         /* 回退：templated 開頭 + reason 原文 */
                         <>
