@@ -259,7 +259,24 @@ a:focus-visible {
   margin-top: 1.25em;
 }
 
+/* blog 文章內文專屬：略大字級提升中文長文閱讀舒適度。
+   只掛在 /blog/[slug] 的內文，不影響首頁、about、owl（owl 用 .owl-prose）。
+   所有子元素間距/字級用 em，會隨此 font-size 等比縮放。 */
+.prose-blog {
+  font-size: 1.0625rem; /* 17px — 介於站內 16px 與 owl 18px 之間 */
+}
+
 /* Headings */
+/* h1 在內文罕見（文章標題另由 article header 擔任），但 Notion heading_1
+   會在內文產出 <h1>；補一條對齊階層，避免 fall back 到 plugin 預設與 h2/h3 不一致。 */
+.prose h1 {
+  margin-top: 2.5em;
+  margin-bottom: 1em;
+  font-size: 1.7em;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
 .prose h2 {
   margin-top: 2.5em;
   margin-bottom: 1em;
@@ -1023,12 +1040,16 @@ body.simulator-fullscreen > header.page-shell {
   border: 1px solid var(--border);
   border-radius: 12px;
   padding: 1.25rem 1.5rem;
+  /* Only animate transform and box-shadow — per spec */
   transition: transform 0.2s ease, box-shadow 0.2s ease;
+  /* No shadow at rest */
+  box-shadow: none;
 }
 
 .owl-index-card:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 28px rgba(0, 18, 25, 0.09);
+  /* Subtle lift — spec: 0 2px 8px rgba(0,0,0,0.04) */
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
 .owl-index-card-title {
@@ -1071,4 +1092,45 @@ body.simulator-fullscreen > header.page-shell {
   font-weight: 600;
   color: var(--owl-ink);
   margin-bottom: 0.2em;
+}
+
+/* ─── .owl-reveal ─────────────────────────────────────────────────────────────
+   Scroll-reveal entrance animation for /owl page blocks and cards.
+   Used by app/owl/_components/Reveal.tsx (client component).
+
+   Hidden state: opacity 0, shifted 12px down.
+   Revealed state (.owl-reveal-visible): opacity 1, no shift.
+   Duration: 600ms, easing: cubic-bezier(0.16, 1, 0.3, 1) — "spring out".
+
+   Stagger: cards carry a --index CSS custom property set via inline style
+   from the Reveal component; delay is calc(var(--index, 0) * 80ms).
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.owl-page .owl-reveal {
+  opacity: 0;
+  transform: translateY(12px);
+  transition:
+    opacity 600ms cubic-bezier(0.16, 1, 0.3, 1),
+    transform 600ms cubic-bezier(0.16, 1, 0.3, 1);
+  transition-delay: calc(var(--index, 0) * 80ms);
+  /* Promote to its own layer to avoid layout thrash during animation */
+  will-change: opacity, transform;
+}
+
+.owl-page .owl-reveal.owl-reveal-visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Reduced-motion: skip transition entirely; element is already marked
+   owl-reveal-visible synchronously (via JS in Reveal.tsx), but the global
+   reduced-motion guard at line 605-613 also collapses the transition to
+   0.01ms — double-coverage for safety. */
+@media (prefers-reduced-motion: reduce) {
+  .owl-page .owl-reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+    transition-delay: 0ms;
+  }
 }

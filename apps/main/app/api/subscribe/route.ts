@@ -121,6 +121,48 @@ async function addToResend(email: string) {
   }
 }
 
+// 新訂閱進來時通知 Wilson 本人（寄到 NOTIFY_EMAIL，預設用站方 reply-to）。
+// 失敗不影響訂閱本身——訂閱者該收的歡迎信已經寄了，這只是給站長的旁路通知。
+async function notifyNewSubscriber(
+  email: string,
+  source: string,
+  total: number | null
+) {
+  const apiKey = process.env.RESEND_API_KEY;
+  const notifyTo = process.env.NOTIFY_EMAIL || process.env.RESEND_REPLY_TO;
+  if (!apiKey || !notifyTo) {
+    console.warn("NOTIFY_EMAIL/RESEND_API_KEY not set — skipping owner notification.");
+    return;
+  }
+
+  const resend = new Resend(apiKey);
+  const totalLine =
+    typeof total === "number" ? `<p style="color:#00505f;font-size:13px;">目前共 ${total} 位訂閱者。</p>` : "";
+
+  const sent = await resend.emails.send({
+    from: process.env.RESEND_FROM || "Wilson Chao <hi@wilsonchao.com>",
+    to: notifyTo,
+    // email 已過 isValidEmail（不含空白/CR/LF），subject 無 header injection 風險；
+    // 若日後放寬 isValidEmail，這裡要改成跳脫
+    subject: `📬 新訂閱：${email}`,
+    html: `
+      <div style="font-family:-apple-system,sans-serif;max-width:480px;line-height:1.8;color:#001219;">
+        <p>有人剛訂閱了週報 🎉</p>
+        <p>
+          <strong>Email：</strong>${escapeHtml(email)}<br/>
+          <strong>來源：</strong>${escapeHtml(source)}<br/>
+          <strong>時間：</strong>${new Date().toISOString()}
+        </p>
+        ${totalLine}
+      </div>
+    `,
+  });
+  // Resend SDK 不 throw，錯誤在回傳值裡
+  if (sent.error) {
+    console.error("Owner notification email failed:", sent.error);
+  }
+}
+
 export async function POST(request: NextRequest) {
   try {
     // single opt-in：任何人都能拿任意 email 觸發歡迎信（寄件人是 hi@wilsonchao.com），
@@ -141,7 +183,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, source } = body;
+    const { email } = body;
+    // source 由 client 控制，可能非字串；收斂成字串，
+    // 否則 escapeHtml(source) 對非字串會 throw（通知靜默失敗、髒值還進 KV meta）
+    const source = typeof body.source === "string" ? body.source : "unknown";
 
     if (!email || typeof email !== "string") {
       return NextResponse.json(
@@ -193,6 +238,14 @@ export async function POST(request: NextRequest) {
         { error: "訂閱失敗了，請再試一次" },
         { status: 500 }
       );
+    }
+
+    // 訂閱已成立——通知站長（await 但失敗不影響回應，跟歡迎信同樣處理）
+    try {
+      const total = await kv.scard(SUBSCRIBERS_KEY);
+      await notifyNewSubscriber(normalizedEmail, source || "unknown", total);
+    } catch (err) {
+      console.error("Owner notification failed for", normalizedEmail, err);
     }
 
     return NextResponse.json(

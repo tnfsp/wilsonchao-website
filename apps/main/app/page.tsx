@@ -112,7 +112,7 @@ export default async function Home() {
               <p className="text-sm text-[var(--muted)]">心臟外科醫師 · 對世界好奇的人</p>
             </div>
           </div>
-          <h1 className="text-4xl font-bold leading-tight tracking-tight text-[var(--foreground)] sm:text-5xl">
+          <h1 className="text-4xl font-bold leading-[1.15] text-[var(--foreground)] sm:text-5xl">
             <span className="block">白天打開心臟</span>
             <span className="block">晚上把心事寫下來</span>
           </h1>
@@ -136,11 +136,13 @@ export default async function Home() {
             所以答案竟藏在問題中，至少我目前是這麼認為的，在這個角落持續敲打拍出聲響，也許總會遇到一些奇怪的同類吧！
           </p>
           <p>
-            PS：如果你也有所共鳴，請寄信給我！
+            PS：如果你也有所共鳴，請
+            <a href="mailto:hi@wilsonchao.com">寄信給我</a>
+            ！
           </p>
         </section>
 
-        {/* C. 如何逛這個地方 */}
+        {/* 如何逛這個地方 — wayfinding，放在前面當入口 */}
         <section className="space-y-5">
           <h2 className="text-xl font-semibold text-[var(--foreground)]">如何逛這個地方？</h2>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -162,23 +164,6 @@ export default async function Home() {
               </Link>
             ))}
           </div>
-        </section>
-
-        {/* D. 結尾邀請 */}
-        <section id="subscribe" className="surface-strong px-6 py-7 space-y-5">
-          <p className="text-lg font-medium text-[var(--foreground)] leading-relaxed">
-            如果你也是奇怪的人，來聊聊！
-          </p>
-          <div className="space-y-2">
-            <p className="text-sm text-[var(--muted)]">訂閱每週一封信，直接寄到你信箱：</p>
-            <SubscribeForm source="home" />
-          </div>
-          <p className="text-sm text-[var(--muted)]">
-            或直接寫信：{" "}
-            <a href="mailto:hi@wilsonchao.com" className="inline-link">
-              hi@wilsonchao.com
-            </a>
-          </p>
         </section>
 
         {/* 精選 — hand-picked articles grid */}
@@ -253,6 +238,23 @@ export default async function Home() {
             </ul>
           </section>
         )}
+
+        {/* 結尾邀請 — subscribe CTA，收束在頁尾（讀完內容才開口邀請） */}
+        <section id="subscribe" className="surface-strong px-6 py-7 space-y-5">
+          <p className="text-lg font-medium text-[var(--foreground)] leading-relaxed">
+            如果你也是奇怪的人，來聊聊！
+          </p>
+          <div className="space-y-2">
+            <p className="text-sm text-[var(--muted)]">訂閱每週一封信，直接寄到你信箱：</p>
+            <SubscribeForm source="home" />
+          </div>
+          <p className="text-sm text-[var(--muted)]">
+            或直接寫信：{" "}
+            <a href="mailto:hi@wilsonchao.com" className="inline-link">
+              hi@wilsonchao.com
+            </a>
+          </p>
+        </section>
 
         {/* Footer */}
         <footer className="border-t border-[var(--border)] pt-6 text-sm text-[var(--muted)]">

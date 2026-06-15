@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { loadOwlEntries } from "@/lib/content";
 import { BASE_URL } from "@/lib/constants";
+import Reveal from "./_components/Reveal";
 
 export const metadata: Metadata = {
   title: "Owl | wilsonchao.com",
@@ -52,7 +53,8 @@ export default async function OwlIndexPage() {
 
   return (
     <main className="page-shell space-y-8">
-      <header className="space-y-4">
+      {/* Header block — reveals as one unit */}
+      <Reveal as="header" className="space-y-4">
         {/* Section badge with owl icon — uses existing .owl-section-badge from globals */}
         <div className="owl-section-badge">
           <OwlIcon className="h-4 w-4" />
@@ -101,48 +103,52 @@ export default async function OwlIndexPage() {
             </p>
           </div>
         </div>
-      </header>
+      </Reveal>
 
-      {/* Essay listing */}
+      {/* Essay listing — each card staggered */}
       <div className="space-y-5">
         {essays.length === 0 ? (
-          <div className="owl-index-card text-center">
-            <OwlIcon className="mx-auto mb-4 h-12 w-12 opacity-30 text-[var(--owl-accent,#7c5cbf)]" />
-            <p className="text-lg owl-index-card-title" style={{ textAlign: "center" }}>
-              第一篇文章即將出現
-            </p>
-            <p className="mt-1 text-sm owl-intro" style={{ textAlign: "center" }}>
-              Owl 正在思考中。
-            </p>
-          </div>
+          <Reveal>
+            <div className="owl-index-card text-center">
+              <OwlIcon className="mx-auto mb-4 h-12 w-12 opacity-30 text-[var(--owl-accent,#7c5cbf)]" />
+              <p className="text-lg owl-index-card-title" style={{ textAlign: "center" }}>
+                第一篇文章即將出現
+              </p>
+              <p className="mt-1 text-sm owl-intro" style={{ textAlign: "center" }}>
+                Owl 正在思考中。
+              </p>
+            </div>
+          </Reveal>
         ) : (
-          essays.map((essay) => (
-            <article key={essay.slug} className="owl-index-card">
-              <div className="flex items-center justify-between text-sm owl-meta not-italic mb-1">
-                <span className="flex items-center gap-1.5 not-italic font-medium text-[var(--owl-accent,#7c5cbf)]">
-                  <OwlIcon className="h-3.5 w-3.5" />
-                  Written by Owl
-                </span>
-                <span className="owl-meta">{essay.publishedAt}</span>
-              </div>
+          essays.map((essay, i) => (
+            <Reveal key={essay.slug} delayIndex={i}>
+              <article className="owl-index-card">
+                <div className="flex items-center justify-between text-sm owl-meta not-italic mb-1">
+                  <span className="flex items-center gap-1.5 not-italic font-medium text-[var(--owl-accent,#7c5cbf)]">
+                    <OwlIcon className="h-3.5 w-3.5" />
+                    Written by Owl
+                  </span>
+                  <span className="owl-meta">{essay.publishedAt}</span>
+                </div>
 
-              <h2 className="pt-1">
-                <Link
-                  href={`/owl/${essay.slug}`}
-                  className="owl-index-card-title hover:text-[var(--owl-accent,#7c5cbf)]"
-                >
-                  {essay.title}
-                </Link>
-              </h2>
+                <h2 className="pt-1">
+                  <Link
+                    href={`/owl/${essay.slug}`}
+                    className="owl-index-card-title hover:text-[var(--owl-accent,#7c5cbf)]"
+                  >
+                    {essay.title}
+                  </Link>
+                </h2>
 
-              {essay.excerpt ? (
-                <p className="owl-index-card-excerpt">{essay.excerpt}</p>
-              ) : null}
+                {essay.excerpt ? (
+                  <p className="owl-index-card-excerpt">{essay.excerpt}</p>
+                ) : null}
 
-              <div className="pt-2 owl-meta not-italic text-xs">
-                {essay.readingTime ? `${essay.readingTime} read` : ""}
-              </div>
-            </article>
+                <div className="pt-2 owl-meta not-italic text-xs">
+                  {essay.readingTime ? `${essay.readingTime} read` : ""}
+                </div>
+              </article>
+            </Reveal>
           ))
         )}
       </div>

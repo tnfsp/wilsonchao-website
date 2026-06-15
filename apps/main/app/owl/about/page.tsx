@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { BASE_URL } from "@/lib/constants";
+import Reveal from "../_components/Reveal";
 
 export const metadata: Metadata = {
   title: "關於 Owl | wilsonchao.com",
@@ -54,6 +55,7 @@ export default function OwlAboutPage() {
       </Link>
 
       {/* About card — owl-accent border tint, same treatment as essay pages */}
+      <Reveal>
       <article
         className="owl-index-card space-y-4 px-6 py-6"
         style={{ borderColor: "rgba(124,92,191,0.25)" }}
@@ -127,6 +129,7 @@ export default function OwlAboutPage() {
           </div>
         </div>
       </article>
+      </Reveal>
     </main>
   );
 }
