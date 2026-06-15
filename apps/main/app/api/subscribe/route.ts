@@ -142,6 +142,8 @@ async function notifyNewSubscriber(
   const sent = await resend.emails.send({
     from: process.env.RESEND_FROM || "Wilson Chao <hi@wilsonchao.com>",
     to: notifyTo,
+    // email 已過 isValidEmail（不含空白/CR/LF），subject 無 header injection 風險；
+    // 若日後放寬 isValidEmail，這裡要改成跳脫
     subject: `📬 新訂閱：${email}`,
     html: `
       <div style="font-family:-apple-system,sans-serif;max-width:480px;line-height:1.8;color:#001219;">
@@ -181,7 +183,10 @@ export async function POST(request: NextRequest) {
     }
 
     const body = await request.json();
-    const { email, source } = body;
+    const { email } = body;
+    // source 由 client 控制，可能非字串；收斂成字串，
+    // 否則 escapeHtml(source) 對非字串會 throw（通知靜默失敗、髒值還進 KV meta）
+    const source = typeof body.source === "string" ? body.source : "unknown";
 
     if (!email || typeof email !== "string") {
       return NextResponse.json(
