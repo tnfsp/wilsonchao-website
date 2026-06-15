@@ -264,6 +264,31 @@ type TasteEntity = {
 
 ---
 
+## 6.6 STREAM / NOW / TASTE 分工（跨頁 IA 定案 2026-06-15，Wilson 拍板）
+
+起因：`/stream` 有音樂/影片/閱讀 tag、`/now` 有「最近在聽/看/讀」、`/taste` 又要做書·影·樂——**音樂出現在三個入口**，感覺冗餘。
+
+**診斷**：真正的冗餘是「兩個都是流的入口」（stream 媒體 archive + now 最近），不是「流 vs 庫」。而且 **stream 的媒體分類根本對不上 taste**：
+- stream 🎵音樂 = 這週分享的一支 MV ≠ taste 最愛製作人
+- stream ▶️影片 = YouTube clip（podcast）≠ taste 電影
+- stream 📚摘要 = readwise 文章 ≠ taste 書
+
+所以「把 stream 媒體倒進 taste」是分類錯置 + 稀釋「最愛」語意（流項目沒 `public_why`、不符 entity 契約）。**否決。**
+
+**定案——三個面、三句話、零重疊**：
+
+| 面 | 定位 | 媒體角色 | 資料源 | 動到的 code |
+|---|---|---|---|---|
+| **/stream** | 💭 我的碎念 | 拿掉，只留純文字碎念 | stream.json（filter murmur） | 小：/stream 過濾掉非 murmur tag |
+| **/now** | 🌊 最近在聽/看/讀 + 近況 | 流（近期、自動） | stream.json → now.json | **不動** |
+| **/taste** | 🏆 我的最愛 書·影·樂 | 庫（策展、evergreen、有 why） | vault entity → taste.json | 新：Phase 1 |
+
+**關鍵**：因為 /now 保留「最近」（流），**`/taste` 就只做「最愛」（庫）、不設「最近」格**，否則 now↔taste 再度重複。taste 只吃單一源（vault entity），完全吻合 OWL 契約，不用碰兩個資料源。
+
+**實作備忘**：媒體資料仍留在 `stream.json`（餵 /now），只是 `/stream` 頁面不顯示——display-layer filter，非刪資料。此改動獨立於 OWL／taste，可單獨先做。
+
+---
+
 ## 7. 一句話收尾
 
 > entity 系統已經在那了，誘人；但**品味的靈魂在散文，不在 schema**。
