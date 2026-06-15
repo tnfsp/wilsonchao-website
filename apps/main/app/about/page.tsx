@@ -264,6 +264,12 @@ export default async function AboutPage() {
               品味
             </span>
             <span className="h-px flex-1 bg-[var(--border)]" aria-hidden="true" />
+            <Link
+              href="/taste"
+              className="inline-flex flex-shrink-0 items-center gap-1 whitespace-nowrap text-sm font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-strong)]"
+            >
+              我喜歡的東西，都收在這裡 →
+            </Link>
           </div>
 
           {/* 6a. 音樂 / 吉他 / DJ */}
@@ -314,18 +320,12 @@ export default async function AboutPage() {
               人生比電影還扯，是我一直以來的信念，畢竟我的人生比Drama還要Drama！但說真的，看電影有時候還真的幫我解決不少人生的難題。
             </p>
             <p>
-              我最愛的電影：如果這世界貓消失了，關於存在與愛，看書跟電影，總共哭了三次，有把作為人的孤單感詮釋的至少九分。另一部類似的電影是橫道是之介，我也很愛
+              我最愛的電影：如果這世界貓消失了，關於存在與愛，看書跟電影，總共哭了三次，有把作為人的孤單感詮釋的至少九分。另一部類似的電影是橫道世之介，我也很愛
             </p>
             <p>
               關於人際關係的困擾，推薦看海潮之聲。關於選擇困難與命運感，我推薦看倒帶人生。關於工作/人生的意義，我推薦看我的完美日常。
             </p>
           </div>
-          <Link
-            href="/taste"
-            className="inline-flex items-center gap-1.5 text-sm font-medium text-[var(--accent)] transition-colors hover:text-[var(--accent-strong)]"
-          >
-            我喜歡的東西，都收在這裡 →
-          </Link>
         </section>
 
           {/* 抽屜 — 品味裡更小、更日常的喜好 */}
