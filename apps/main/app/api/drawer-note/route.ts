@@ -86,7 +86,7 @@ export async function POST(request: NextRequest) {
     // note.* 都已 escapeHtml，可安全嵌進 email HTML。
     const emailHtml = `
       <div style="font-family:-apple-system,'Noto Sans TC',sans-serif;max-width:560px;margin:0 auto;padding:24px 16px;background-color:#f8f4ea;color:#001219;line-height:1.8;">
-        <p style="margin:0 0 4px;font-weight:600;">抽屜有人留言</p>
+        <p style="margin:0 0 4px;font-weight:600;">有人留了話給你</p>
         <p style="margin:0 0 16px;color:#00505f;font-size:13px;">
           來自：${note.name || "（匿名）"}${
             note.question ? `<br/>在這張碎片旁：${note.question}` : ""
@@ -94,7 +94,7 @@ export async function POST(request: NextRequest) {
         </p>
         <div style="white-space:pre-wrap;border-left:2px solid #ca6702;padding-left:12px;">${note.message}</div>
       </div>`;
-    const notified = await notifyOwnerEmail("抽屜有人留言", emailHtml);
+    const notified = await notifyOwnerEmail("有人留了話給你", emailHtml);
 
     // 兩條路都失敗才算真的失敗（留言會遺失）。
     if (!stored && !notified) {

@@ -88,12 +88,12 @@ export async function POST(request: NextRequest) {
     // Email 通知 Wilson（即時可見性；Owl 撈題是另一條）。
     const html = `
       <div style="font-family:-apple-system,'Noto Sans TC',sans-serif;max-width:560px;margin:0 auto;padding:24px 16px;background-color:#f8f4ea;color:#001219;line-height:1.8;">
-        <p style="margin:0 0 4px;font-weight:600;">抽屜有人出題</p>
+        <p style="margin:0 0 4px;font-weight:600;">有人丟了一張紙條給你</p>
         <p style="margin:0 0 16px;color:#00505f;font-size:13px;">來自：${item.from || "（匿名）"}</p>
         <div style="white-space:pre-wrap;border-left:2px solid #ca6702;padding-left:12px;">${item.question}</div>
         <p style="margin:16px 0 0;color:#00505f;font-size:12px;">Owl 之後會從抽屜題庫撈這題來問你。</p>
       </div>`;
-    const notified = await notifyOwnerEmail("抽屜有人出題", html);
+    const notified = await notifyOwnerEmail("有人丟了一張紙條給你", html);
 
     if (!stored && !notified) {
       return NextResponse.json(
