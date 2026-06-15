@@ -12,7 +12,7 @@
 
 **不要把 About 的品味散文改寫成 entity-backed 清單。** 散文本身就是品味——「喜歡威士忌，是真的喜歡還是假裝喜歡可以得到上一階級的快感？」這種反身的文字，正是這頁的靈魂；把它換成「威士忌・評分 7・tags: 烈酒」會殺掉它。這也違反站點目前「閱讀優先 / 散文敘事」的設計收斂方向。
 
-**要做的是另一件事：在散文之外，分階段疊加一個 entity-backed 的「補充層」**，價值在**聚合**與**交叉連結**（之後做「我喜歡的東西」頁、blog ↔ 作品互連），而不是取代敘事。
+**要做的是另一件事：在散文之外，開一個獨立的 entity-backed 頁面 `/taste`**，價值在**聚合**與**交叉連結**（「我喜歡的東西」櫃子、blog ↔ 作品互連），而不是取代敘事。**About 不塞架子、只引流去 `/taste`**（IA 決定見 §4.1）——否則本就 15 段的 About 會爆。
 
 三個關鍵判斷：
 
@@ -162,8 +162,15 @@ OWL prefs.public ──sync-drawer.ts─┘
 apps/main/content/taste.json
    │  lib/content.ts: loadTasteEntries()
    ▼
-About 品味段下方的「書架/架子」元件，或獨立 /taste 頁（散文仍是主角）
+獨立 /taste 頁（櫃子本體）；About 三段散文不變，只多一條引流連結
 ```
+
+**IA 決定（2026-06-15，Wilson 拍板）：架子不嵌 About，獨立成 `/taste` 頁。**
+About 已 15 段、偏長，再塞書架/片單/歌單會爆，而且架子的本質是「可逛、可篩、可互連」——那是一個頁面該做的事，不是頁尾附錄。所以：
+- **About**：三段品味散文**原樣保留、不加卡片**，只在結尾多一條連結（傾向三段後共用一條「→ 我喜歡的東西都收在這 `/taste`」，最乾淨）。About 反而比舊提案更短。
+- **`/taste`**：entity-backed 櫃子本體——書架/片單/歌單，可按 書·影·樂·人 + tag 篩。它會長大（標一個 `public:true` 就多一張），About 不會因此變長。
+- 與現有站一致：跟 `/now`、`/owl`、`/stream` 同級的獨立頁。
+- 副作用：**Phase 1 更單純**——不用做「嵌在 About 段落下的 shelf 元件」，直接開 `/taste` 路由吃 `taste.json`，About 只加連結。
 
 **為什麼用 `.public.json` 投影、而不是擴充 sync-vault 直讀 `6-Entities/`：**
 - CC 永遠不碰私人 entity 正文 → 隱私邊界乾淨（與抽屜一致）。
@@ -212,7 +219,7 @@ type TasteEntity = {
 
 ### Phase 1 — entity 補充層 MVP（需求成立後）
 - **OWL**：產出 `wilson-taste.public.json`，先**策展一小撮**（About 已點名的那些 + 幾個），標 `public:true`，帶公開欄位 + 一句 `why`。
-- **CC**：`sync-taste.ts`（仿 `sync-drawer.ts` graceful）+ `loadTasteEntries()` + `TasteEntity` 型別 + 一個「書架/架子」元件（沿用 `.surface-card`），**接在品味散文下方**或開 `/taste`。散文仍是主角，entity 是「延伸閱讀的架子」。
+- **CC**：`sync-taste.ts`（仿 `sync-drawer.ts` graceful）+ `loadTasteEntries()` + `TasteEntity` 型別 + **開 `/taste` 路由**（書架/片單/歌單，沿用 `.surface-card`，可按 type/tag 篩）。**About 不嵌元件，只加一條引流連結**（見 §4.1 IA 決定）。散文仍是主角，`/taste` 是延伸的櫃子。
 - （可選）watchdog 仿 `watchdog-drawer.ts`。
 
 ### Phase 2 — 交叉連結 + 聚合（內容量起來後）
