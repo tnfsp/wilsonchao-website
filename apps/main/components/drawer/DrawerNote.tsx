@@ -45,7 +45,7 @@ export function DrawerNote() {
   if (status === "success") {
     return (
       <div className="surface-card px-6 py-5">
-        <p className="text-[var(--foreground)]">收到了，謝謝你來抽屜坐坐。</p>
+        <p className="text-[var(--foreground)]">收到了，謝謝你來我的網站坐坐。</p>
         <p className="mt-1 text-sm text-[var(--muted)]">
           這則話只會進到我這裡，不會出現在站上。
         </p>
