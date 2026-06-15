@@ -271,6 +271,33 @@ export async function loadStreamEntries(limit = 50): Promise<MurmurEntry[]> {
   }
 }
 
+// ─── Taste (品味) — entity-backed favorites ──────────────────────────
+// NOTE: 預覽階段為手刻 seed 資料。正式版由 OWL 投影 wilson-taste.public.json
+//       → sync-taste.ts → content/taste.json（見 DESIGN-taste-entities.md）。
+export type TasteEntity = {
+  id: string;
+  type: "music" | "book" | "movie";
+  title: string;
+  subtitle?: string;
+  year?: number;
+  tags?: string[];
+  why?: string;
+  links?: { label: string; url: string }[];
+  relatedPosts?: string[];
+};
+
+export async function loadTasteEntries(): Promise<TasteEntity[]> {
+  try {
+    const tastePath = path.join(process.cwd(), "content", "taste.json");
+    const raw = await fs.readFile(tastePath, "utf-8");
+    const items = JSON.parse(raw) as TasteEntity[];
+    return items.filter((e) => e && e.id && e.type && e.title);
+  } catch (error) {
+    console.warn("[content] Failed to load taste.json:", (error as Error).message);
+    return [];
+  }
+}
+
 const buttondownLink = process.env.NEXT_PUBLIC_BUTTONDOWN_URL;
 
 const linkItems = [
