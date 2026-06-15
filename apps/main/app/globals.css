@@ -611,3 +611,464 @@ body.simulator-fullscreen > header.page-shell {
     transition-duration: 0.01ms !important;
   }
 }
+
+/* ============================================
+   /owl section — "文學・沉靜" visual identity
+   All rules are scoped under .owl-page so they
+   cannot bleed into blog, homepage, or any other
+   route. Prefix: owl-
+   ============================================ */
+
+/* Design tokens — only override inside .owl-page */
+.owl-page {
+  /* Paper-feel warm off-white; distinct from site --background (#f8f4ea) */
+  --owl-bg: #f5f0e8;
+  --owl-surface: #faf7f2;
+  /* Warm deep ink, slightly less black than site --foreground (#001219) */
+  --owl-ink: #1a1510;
+  --owl-ink-muted: #5a5248;
+  /* Serif font stack — CJK body, Latin headings */
+  --owl-font-body: var(--font-owl-serif-zh, "Noto Serif TC"), "Georgia", "Times New Roman", serif;
+  --owl-font-heading: var(--font-owl-serif-en, "Newsreader"), var(--font-owl-serif-zh, "Noto Serif TC"), "Georgia", serif;
+  /* Prose geometry */
+  --owl-prose-width: 38rem; /* ~608px — tighter than site 720px for CJK density */
+  --owl-prose-size: 1.125rem; /* 18px */
+  --owl-prose-lh: 1.9;
+  --owl-prose-ls: 0.01em;
+
+  background-color: var(--owl-bg);
+  color: var(--owl-ink);
+  font-family: var(--owl-font-body);
+}
+
+/* Dark mode overrides — keep warmth */
+@media (prefers-color-scheme: dark) {
+  .owl-page {
+    --owl-bg: #1e1a14;
+    --owl-surface: #28231b;
+    --owl-ink: #ede7db;
+    --owl-ink-muted: #9a9085;
+  }
+}
+
+/* Re-skin shared surface-card when inside .owl-page */
+.owl-page .surface-card {
+  background: var(--owl-surface);
+}
+
+/* ─── .owl-prose ────────────────────────────────────────────────────────────
+   Typography system for Owl essay bodies.
+   Applied as a single class on the content wrapper div in [slug]/page.tsx and
+   about/page.tsx — no dependency on the Tailwind typography plugin's .prose.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.owl-prose {
+  max-width: var(--owl-prose-width);
+  font-family: var(--owl-font-body);
+  font-size: var(--owl-prose-size);
+  line-height: var(--owl-prose-lh);
+  letter-spacing: var(--owl-prose-ls);
+  color: var(--owl-ink);
+}
+
+/* Paragraphs — generous breathing room between CJK paragraphs */
+.owl-prose p {
+  margin-top: 1.6em;
+  margin-bottom: 1.6em;
+  line-height: var(--owl-prose-lh);
+  letter-spacing: var(--owl-prose-ls);
+}
+
+.owl-prose p:first-child {
+  margin-top: 0;
+}
+
+.owl-prose p:last-child {
+  margin-bottom: 0;
+}
+
+/* Headings — Newsreader + Noto Serif TC; clear hierarchy */
+.owl-prose h1 {
+  font-family: var(--owl-font-heading);
+  font-size: 2em;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--owl-ink);
+  margin-top: 0;
+  margin-bottom: 0.75em;
+}
+
+.owl-prose h2 {
+  font-family: var(--owl-font-heading);
+  font-size: 1.45em;
+  font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.005em;
+  color: var(--owl-ink);
+  margin-top: 2.75em;
+  margin-bottom: 0.9em;
+  /* Subtle top rule to separate sections */
+  padding-top: 1.5em;
+  border-top: 1px solid var(--border);
+}
+
+/* First h2 doesn't need a top rule — it follows the title */
+.owl-prose h2:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+
+.owl-prose h3 {
+  font-family: var(--owl-font-heading);
+  font-size: 1.2em;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0;
+  color: var(--owl-ink);
+  margin-top: 2em;
+  margin-bottom: 0.6em;
+}
+
+.owl-prose h4 {
+  font-family: var(--owl-font-heading);
+  font-size: 1em;
+  font-weight: 600;
+  line-height: 1.5;
+  color: var(--owl-ink);
+  margin-top: 1.5em;
+  margin-bottom: 0.5em;
+}
+
+/* Emphasis & strong */
+.owl-prose em {
+  /* Newsreader italic for Latin; graceful fallback for CJK */
+  font-family: var(--owl-font-heading);
+  font-style: italic;
+  color: var(--owl-ink);
+}
+
+.owl-prose strong {
+  font-weight: 700;
+  color: var(--owl-ink);
+}
+
+/* Blockquote — pull-quote style with Newsreader italic */
+.owl-prose blockquote {
+  position: relative;
+  margin-top: 2em;
+  margin-bottom: 2em;
+  padding: 1.1em 1.4em;
+  border-left: 3px solid var(--owl-accent, #7c5cbf);
+  background: color-mix(in srgb, var(--owl-surface) 80%, var(--owl-bg));
+  border-radius: 0 6px 6px 0;
+  color: var(--owl-ink-muted);
+}
+
+.owl-prose blockquote p {
+  font-family: var(--owl-font-heading);
+  font-style: italic;
+  font-size: 1.05em;
+  line-height: 1.75;
+  letter-spacing: 0;
+  margin-top: 0;
+  margin-bottom: 0;
+}
+
+.owl-prose blockquote p + p {
+  margin-top: 0.75em;
+}
+
+/* Horizontal rule — minimal divider */
+.owl-prose hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin-top: 2.5em;
+  margin-bottom: 2.5em;
+}
+
+/* Lists */
+.owl-prose ul,
+.owl-prose ol {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  padding-left: 1.6em;
+}
+
+.owl-prose ul {
+  list-style-type: disc;
+}
+
+.owl-prose ol {
+  list-style-type: decimal;
+}
+
+.owl-prose li {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+  line-height: 1.8;
+  letter-spacing: var(--owl-prose-ls);
+}
+
+.owl-prose li > ul,
+.owl-prose li > ol {
+  margin-top: 0.4em;
+  margin-bottom: 0.4em;
+}
+
+/* Inline code */
+.owl-prose code {
+  font-size: 0.875em;
+  font-family: var(--font-mono, monospace);
+  background: color-mix(in srgb, var(--highlight, #e9d8a6) 35%, transparent);
+  padding: 0.15em 0.4em;
+  border-radius: 4px;
+}
+
+/* Code block */
+.owl-prose pre {
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  padding: 1.25em;
+  background: #1e1e1e;
+  border-radius: 8px;
+  overflow-x: auto;
+}
+
+.owl-prose pre code {
+  background: transparent;
+  padding: 0;
+  border-radius: 0;
+  color: #d4d4d4;
+  line-height: 1.6;
+  font-size: 0.9em;
+}
+
+/* Images */
+.owl-prose figure {
+  margin-top: 2em;
+  margin-bottom: 2em;
+}
+
+.owl-prose img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 6px;
+  box-shadow: 0 4px 16px rgba(0, 18, 25, 0.08);
+}
+
+.owl-prose figcaption {
+  margin-top: 0.75em;
+  font-size: 0.875em;
+  color: var(--owl-ink-muted);
+  text-align: center;
+  font-style: italic;
+  font-family: var(--owl-font-heading);
+}
+
+/* Links — use owl-accent palette */
+.owl-prose a {
+  color: var(--owl-accent, #7c5cbf);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+  text-decoration-thickness: 1px;
+  overflow-wrap: break-word;
+  word-break: break-all;
+}
+
+.owl-prose a:hover {
+  color: var(--accent-contrast, #9b2226);
+}
+
+/* Table */
+.owl-prose table {
+  width: 100%;
+  margin-top: 1.5em;
+  margin-bottom: 1.5em;
+  border-collapse: collapse;
+  font-size: 0.9em;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+}
+
+.owl-prose th,
+.owl-prose td {
+  padding: 0.75em 1em;
+  border: 1px solid var(--border);
+  text-align: left;
+}
+
+.owl-prose th {
+  background: color-mix(in srgb, var(--highlight, #e9d8a6) 25%, transparent);
+  font-weight: 600;
+  font-family: var(--owl-font-heading);
+  color: var(--owl-ink);
+}
+
+.owl-prose tbody tr:hover {
+  background: color-mix(in srgb, var(--highlight, #e9d8a6) 10%, transparent);
+}
+
+/* Details / toggle blocks */
+.owl-prose details {
+  margin-top: 1.25em;
+  margin-bottom: 1.25em;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+  background: var(--owl-surface);
+}
+
+.owl-prose summary {
+  padding: 0.875em 1em;
+  background: color-mix(in srgb, var(--highlight, #e9d8a6) 15%, transparent);
+  cursor: pointer;
+  font-weight: 500;
+  list-style: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5em;
+}
+
+.owl-prose summary::-webkit-details-marker {
+  display: none;
+}
+
+.owl-prose summary::before {
+  content: "▸";
+  font-size: 0.875em;
+  color: var(--owl-accent, #7c5cbf);
+  transition: transform 0.2s ease;
+}
+
+.owl-prose details[open] summary::before {
+  transform: rotate(90deg);
+}
+
+.owl-prose summary:hover {
+  background: color-mix(in srgb, var(--highlight, #e9d8a6) 28%, transparent);
+}
+
+.owl-prose details[open] summary {
+  border-bottom: 1px solid var(--border);
+}
+
+.owl-prose details > *:not(summary) {
+  padding-left: 1em;
+  padding-right: 1em;
+}
+
+.owl-prose details > *:last-child {
+  padding-bottom: 1em;
+}
+
+/* Notion todo blocks */
+.owl-prose .notion-todo {
+  margin-top: 0.5em;
+  margin-bottom: 0.5em;
+}
+
+.owl-prose .notion-todo label {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.6em;
+  cursor: default;
+}
+
+.owl-prose .notion-todo input[type="checkbox"] {
+  margin-top: 0.4em;
+  width: 1em;
+  height: 1em;
+  accent-color: var(--owl-accent, #7c5cbf);
+}
+
+.owl-prose .notion-todo input[type="checkbox"]:checked + span {
+  color: var(--owl-ink-muted);
+  text-decoration: line-through;
+}
+
+/* ─── .owl-title ────────────────────────────────────────────────────────────
+   Essay & page title typography — uses Newsreader heading serif.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.owl-title {
+  font-family: var(--owl-font-heading);
+  font-size: 2rem;
+  font-weight: 600;
+  line-height: 1.25;
+  letter-spacing: -0.01em;
+  color: var(--owl-ink);
+}
+
+/* ─── .owl-meta ────────────────────────────────────────────────────────────
+   Date / reading-time / byline line below essay title.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.owl-meta {
+  font-family: var(--owl-font-heading);
+  font-style: italic;
+  font-size: 0.875rem;
+  color: var(--owl-ink-muted);
+  letter-spacing: 0.01em;
+}
+
+/* ─── .owl-index-card ────────────────────────────────────────────────────────
+   Essay card on the index listing page.
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.owl-index-card {
+  background: var(--owl-surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1.25rem 1.5rem;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.owl-index-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 28px rgba(0, 18, 25, 0.09);
+}
+
+.owl-index-card-title {
+  font-family: var(--owl-font-heading);
+  font-size: 1.35rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--owl-ink);
+  transition: color 0.15s ease;
+}
+
+.owl-index-card-title:hover {
+  color: var(--owl-accent, #7c5cbf);
+}
+
+.owl-index-card-excerpt {
+  font-family: var(--owl-font-body);
+  font-size: 0.9375rem; /* 15px */
+  line-height: 1.75;
+  letter-spacing: var(--owl-prose-ls);
+  color: var(--owl-ink-muted);
+  margin-top: 0.5em;
+}
+
+/* ─── .owl-intro ────────────────────────────────────────────────────────────
+   Index page intro copy (the paragraph block that describes the section).
+   ─────────────────────────────────────────────────────────────────────────── */
+
+.owl-intro {
+  font-family: var(--owl-font-body);
+  font-size: 1rem;
+  line-height: 1.85;
+  letter-spacing: var(--owl-prose-ls);
+  color: var(--owl-ink-muted);
+}
+
+.owl-intro-heading {
+  font-family: var(--owl-font-heading);
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--owl-ink);
+  margin-bottom: 0.2em;
+}

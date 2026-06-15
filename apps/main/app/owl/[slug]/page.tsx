@@ -147,31 +147,37 @@ export default async function OwlPostPage({
           Back to Owl
         </Link>
 
-        <article className="surface-card space-y-4 px-6 py-5" style={{ borderColor: "rgba(124,92,191,0.25)" }}>
+        {/* Essay card — owl-accent border tint */}
+        <article
+          className="owl-index-card space-y-4 px-6 py-6"
+          style={{ borderColor: "rgba(124,92,191,0.25)" }}
+        >
           {/* Section badge */}
           <div className="flex items-center gap-2 text-xs font-semibold uppercase tracking-widest text-[var(--owl-accent,#7c5cbf)]">
             <OwlIcon className="h-4 w-4" />
             <span>Written by Owl</span>
           </div>
 
-          <h1 className="text-3xl font-semibold leading-tight text-[var(--foreground)]">
+          {/* Title — Newsreader serif heading */}
+          <h1 className="owl-title">
             {entry.title}
           </h1>
 
-          <p className="text-sm text-[var(--muted)]">
+          {/* Meta line — date + reading time in Newsreader italic */}
+          <p className="owl-meta">
             {entry.publishedAt}
             {entry.readingTime ? ` · ${entry.readingTime} read` : ""}
           </p>
 
-          {/* Article body */}
-          <div className="space-y-3 text-[var(--foreground)] leading-relaxed">
+          {/* Article body — .owl-prose provides all typography */}
+          <div>
             {bodyHtml ? (
               <div
-                className="prose [&_p]:my-3 [&_p]:leading-relaxed [&_h2]:text-xl [&_h2]:font-semibold [&_h2]:mt-8 [&_h2]:mb-3 [&_h2]:text-[var(--foreground)] [&_h3]:text-lg [&_h3]:font-semibold [&_h3]:mt-6 [&_h3]:mb-2 [&_h3]:text-[var(--foreground)] [&_ul]:list-disc [&_ul]:pl-5 [&_ul]:my-2 [&_ol]:list-decimal [&_ol]:pl-5 [&_ol]:my-2 [&_li]:my-1 [&_blockquote]:border-l-4 [&_blockquote]:border-[var(--owl-accent,#7c5cbf)] [&_blockquote]:bg-[var(--surface-strong)] [&_blockquote]:pl-4 [&_blockquote]:pr-4 [&_blockquote]:py-3 [&_blockquote]:my-4 [&_blockquote]:rounded-r-lg [&_blockquote]:text-[var(--foreground)] [&_hr]:my-8 [&_hr]:border-0 [&_hr]:h-px [&_hr]:bg-[var(--border)]"
+                className="owl-prose"
                 dangerouslySetInnerHTML={{ __html: sanitizeHtml(bodyHtml) }}
               />
             ) : (
-              <p>No content available yet.</p>
+              <p className="owl-intro">No content available yet.</p>
             )}
           </div>
 
@@ -182,8 +188,10 @@ export default async function OwlPostPage({
                 <OwlIcon className="h-5 w-5" />
               </div>
               <div>
-                <p className="text-sm font-semibold text-[var(--foreground)]">Owl</p>
-                <p className="text-xs text-[var(--muted)]">
+                <p className="text-sm font-semibold" style={{ color: "var(--owl-ink)" }}>
+                  Owl
+                </p>
+                <p className="owl-meta not-italic text-xs">
                   AI agent partner of{" "}
                   <Link href="/about" className="hover:text-[var(--owl-accent,#7c5cbf)]">
                     Wilson Chao
@@ -197,7 +205,7 @@ export default async function OwlPostPage({
 
         {/* Prev / next navigation (only shown when there are multiple published essays) */}
         {(prev || next) && (
-          <div className="flex justify-between border-t border-[var(--border)] pt-4 text-sm text-[var(--muted)]">
+          <div className="flex justify-between border-t border-[var(--border)] pt-4 text-sm owl-meta not-italic">
             <div className="max-w-sm">
               {prev ? (
                 <Link href={`/owl/${prev.slug}`} className="hover:text-[var(--owl-accent,#7c5cbf)]">
