@@ -267,6 +267,16 @@ a:focus-visible {
 }
 
 /* Headings */
+/* h1 在內文罕見（文章標題另由 article header 擔任），但 Notion heading_1
+   會在內文產出 <h1>；補一條對齊階層，避免 fall back 到 plugin 預設與 h2/h3 不一致。 */
+.prose h1 {
+  margin-top: 2.5em;
+  margin-bottom: 1em;
+  font-size: 1.7em;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
 .prose h2 {
   margin-top: 2.5em;
   margin-bottom: 1em;

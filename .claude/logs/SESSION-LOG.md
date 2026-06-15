@@ -221,3 +221,30 @@ RESEND_API_KEY
 - [ ] push → PR → 部署後通知才生效（目前在 worktree branch，未 push/merge）
 - [ ] 未來訂閱量大時，考慮改「每日彙整一封」避免灌爆收件匣
 
+
+## Session: 2026-06-15 19:30
+**Project**: wilsonchao.com (new_website)
+**Branch**: claude/focused-jang-38e86a
+
+### 完成
+- 評估 Leonxlnx/taste-skill：判斷其高 variance+motion 預設適合作品集/landing，閱讀型部落格要「反過來調」（克制 > 驚艷）
+- 關鍵發現並修復：blog 文章頁巨型 inline className 蓋掉 globals.css 的 .prose 規則 → 還原中文閱讀節奏（段距 12→24px、行高 26→30.4px）
+- blog 正文字級 16→17px（新增 scoped .prose-blog，grep 確認不波及首頁/about/owl）
+- blog 文章 header 改 kicker(橘)→大標→meta 階層
+- 首頁重排漏斗：Hero→intro→如何逛(入口)→精選→最近寫的→訂閱CTA(頁尾)→footer
+- hero 對句 h1 去 tracking-tight（負字距不適合大號中文）+ leading 1.25→1.15 收成塊
+- intro「寄信給我」加 mailto 連結
+- 新增 apps/main/DESIGN.md 設計守則
+- rebase 上 origin/main 最新 → 本機 build 通過 → push origin HEAD:main（468c1a7..cceac78）→ Vercel 部署
+- （session-end review 跟進）補 `.prose h1` 規則：移除 inline override 後 globals 只剩 h2/h3，Notion heading_1 內文會 fall back 到 plugin 預設；補一條對齊階層，守單一真相來源
+
+### 決策
+- taste-skill 只借「方法論」不借「預設值」：閱讀站要低 variance / 極低 motion / 寬鬆 density
+- 排版規則單一真相來源放 globals.css；元件不放 inline override 與之打架
+- 不靠 utility 贏 cascade，要覆蓋就加自己的 scoped class（.prose-blog）
+- 訂閱/邀請 CTA 收頁尾（證據先於要求）
+- 直接 push main：符合 Wilson commit→main→Vercel 工作流，且每步截圖核准過；push 前跑 build 當關卡
+
+### 待辦
+- [ ] 線上實機確認 blog 閱讀節奏 + 首頁新順序
+- [ ] (可選) blog 列表頁 + 上下篇導覽視覺對齊 owl 工藝水準
