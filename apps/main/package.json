@@ -12,6 +12,7 @@
     "sync:notion": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/sync-notion.ts",
     "sync:vault": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/sync-vault.ts && node scripts/gen-writing-calendar.cjs && npm run sync:drawer && npm run watchdog:drawer",
     "sync:drawer": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/sync-drawer.ts",
+    "sync:taste": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/sync-taste.ts",
     "watchdog:drawer": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/watchdog-drawer.ts",
     "newsletter": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/send-newsletter.ts",
     "prebuild": "node scripts/gen-writing-calendar.cjs",
