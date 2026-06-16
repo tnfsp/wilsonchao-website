@@ -244,6 +244,8 @@ export async function getOwlPlaceholder(): Promise<OwlEntry | null> {
  * fabricate one (see HANDOFF-drawer-from-owl.md §3 紅線).
  */
 export type DrawerCard = {
+  /** Discriminant — allows the UI to render different layouts per card kind. */
+  type?: "preference";
   date: string;
   questionId: string;
   question: string;
@@ -262,24 +264,48 @@ export type DrawerCard = {
   dimension?: string;
 };
 
+/**
+ * DrawerQACard — an anonymous visitor question answered by Wilson.
+ * Sourced from OWL workspace data/drawer-answers.jsonl (answered items only).
+ * Only `question` and `answer` text are published; all internal fields are stripped.
+ */
+export type DrawerQACard = {
+  type: "qa";
+  question: string;
+  answer: string;
+};
+
+/** Union of all card types that can appear in the drawer. */
+export type AnyDrawerCard = DrawerCard | DrawerQACard;
+
 const DRAWER_PATH = path.join(process.cwd(), "content", "drawer.json");
 const DRAWER_PASSAGES_PATH = path.join(process.cwd(), "content", "drawer-passages.json");
 
 /**
  * Loads all drawer cards (chronological order as written by sync-drawer),
  * merging in hand-written passages from content/drawer-passages.json (by questionId).
+ * QA cards (type "qa") are passed through as-is.
  * Returns [] if the file is missing — the UI shows an empty state.
  */
-export async function loadDrawerCards(): Promise<DrawerCard[]> {
-  const cards = await safeReadJSON<DrawerCard[]>(DRAWER_PATH);
+export async function loadDrawerCards(): Promise<AnyDrawerCard[]> {
+  const cards = await safeReadJSON<AnyDrawerCard[]>(DRAWER_PATH);
   if (!Array.isArray(cards)) return [];
   const passages =
     (await safeReadJSON<Record<string, string>>(DRAWER_PASSAGES_PATH)) || {};
   return cards
-    .filter((c) => c?.question && c?.optionA && c?.optionB && c?.choice)
+    .filter((c): c is AnyDrawerCard => {
+      if (!c || typeof c !== "object") return false;
+      if ((c as DrawerQACard).type === "qa") {
+        return Boolean((c as DrawerQACard).question && (c as DrawerQACard).answer);
+      }
+      const pref = c as DrawerCard;
+      return Boolean(pref?.question && pref?.optionA && pref?.optionB && pref?.choice);
+    })
     .map((c) => {
-      const passage = passages[c.questionId]?.trim();
-      return passage ? { ...c, passage } : c;
+      if ((c as DrawerQACard).type === "qa") return c;
+      const pref = c as DrawerCard;
+      const passage = passages[pref.questionId]?.trim();
+      return passage ? { ...pref, passage } : pref;
     });
 }
 

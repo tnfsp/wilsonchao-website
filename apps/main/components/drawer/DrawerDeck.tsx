@@ -1,8 +1,9 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
-import type { DrawerCard } from "@/lib/content";
+import type { AnyDrawerCard, DrawerCard, DrawerQACard } from "@/lib/content";
 import { DrawerQuestion } from "./DrawerQuestion";
+import { DrawerQACardView } from "./DrawerQACardView";
 
 /**
  * 抽屜：一張會「長開」的卡（不是抽屜面＋底下再一張）。
@@ -11,6 +12,16 @@ import { DrawerQuestion } from "./DrawerQuestion";
  *  - 紙條正面是問題＋左右兩顆選項（左 A、右 B）；按下去「翻頁」→ 背面是一小段關於我的話。
  * 內容先、互動是包裝；私密為主（不顯示大家的比例，投票仍記到後端）。
  */
+
+/** Narrows an AnyDrawerCard to a preference card. */
+function isPreferenceCard(card: AnyDrawerCard): card is DrawerCard {
+  return (card as DrawerQACard).type !== "qa";
+}
+
+/** Narrows an AnyDrawerCard to a Q&A card. */
+function isQACard(card: AnyDrawerCard): card is DrawerQACard {
+  return (card as DrawerQACard).type === "qa";
+}
 
 /** 把 choice + 選項，組成第一人稱的「我選…」開頭（不改 reason 的字）。 */
 function myAnswerLead(card: DrawerCard): { prefix: string; option: string | null } {
@@ -28,7 +39,7 @@ function myAnswerLead(card: DrawerCard): { prefix: string; option: string | null
   }
 }
 
-export function DrawerDeck({ cards }: { cards: DrawerCard[] }) {
+export function DrawerDeck({ cards }: { cards: AnyDrawerCard[] }) {
   const [open, setOpen] = useState(false);
   const [index, setIndex] = useState(cards.length > 0 ? cards.length - 1 : 0);
   // 翻頁用「單一元件轉到側面→換內容→轉回來」，不靠 3D preserve-3d
@@ -85,8 +96,10 @@ export function DrawerDeck({ cards }: { cards: DrawerCard[] }) {
   );
 
   const card = cards.length > 0 ? cards[index] : null;
-  const hasReason = Boolean(card?.reason && card.reason.trim());
-  const lead = card ? myAnswerLead(card) : null;
+  const prefCard = card && isPreferenceCard(card) ? card : null;
+  const qaCard = card && isQACard(card) ? card : null;
+  const hasReason = Boolean(prefCard?.reason && prefCard.reason.trim());
+  const lead = prefCard ? myAnswerLead(prefCard) : null;
 
   return (
     <div className="surface-card px-6 py-5">
@@ -148,7 +161,7 @@ export function DrawerDeck({ cards }: { cards: DrawerCard[] }) {
         }
       >
         <div className="overflow-hidden">
-          {card && lead ? (
+          {card ? (
             <div className="pt-4">
               {/* 紙條：翻頁（單一元件轉側→換內容→轉回） */}
               <div className="[perspective:1000px]">
@@ -159,82 +172,88 @@ export function DrawerDeck({ cards }: { cards: DrawerCard[] }) {
                   }
                   style={{ transform: turning ? "rotateY(90deg)" : "rotateY(0deg)" }}
                 >
-                  {face === "front" ? (
-                    /* 正面：問題 + 左右兩顆選項 */
-                    <div className="space-y-4">
-                      <p className="text-xs text-[var(--muted)]">{card.date}</p>
-                      <p className="text-lg font-semibold leading-relaxed text-[var(--foreground)]">
-                        {card.question}
-                      </p>
-                      <div className="grid grid-cols-2 gap-3">
+                  {/* ── QA card: no flip needed, shows question + answer directly ── */}
+                  {qaCard ? (
+                    <DrawerQACardView card={qaCard} />
+                  ) : prefCard && lead ? (
+                    /* ── Preference card: two-sided flip ── */
+                    face === "front" ? (
+                      /* 正面：問題 + 左右兩顆選項 */
+                      <div className="space-y-4">
+                        <p className="text-xs text-[var(--muted)]">{prefCard.date}</p>
+                        <p className="text-lg font-semibold leading-relaxed text-[var(--foreground)]">
+                          {prefCard.question}
+                        </p>
+                        <div className="grid grid-cols-2 gap-3">
+                          <button
+                            type="button"
+                            onClick={() => pick("A", prefCard.questionId)}
+                            className="rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-3 text-left text-sm leading-relaxed text-[var(--foreground)] transition-colors hover:border-[var(--accent)]"
+                          >
+                            {prefCard.optionA}
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => pick("B", prefCard.questionId)}
+                            className="rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-3 text-left text-sm leading-relaxed text-[var(--foreground)] transition-colors hover:border-[var(--accent)]"
+                          >
+                            {prefCard.optionB}
+                          </button>
+                        </div>
+                        <p className="text-center text-xs text-[var(--muted)]">
+                          你會選哪邊？按一下，翻過去看我。
+                        </p>
+                      </div>
+                    ) : (
+                      /* 背面：一小段關於我的話 */
+                      <div className="space-y-3">
+                        {prefCard.passage ? (
+                          /* 成稿：About 口吻的一小段（content/drawer-passages.json）；空行分段 */
+                          prefCard.passage.split(/\n{2,}/).map((para, i) => (
+                            <p
+                              key={i}
+                              className="leading-relaxed text-[var(--foreground)]"
+                            >
+                              {para}
+                            </p>
+                          ))
+                        ) : (
+                          /* 回退：templated 開頭 + reason 原文 */
+                          <>
+                            <p className="text-base font-medium leading-relaxed text-[var(--foreground)]">
+                              {lead.option ? (
+                                <>
+                                  {lead.prefix}{" "}
+                                  <span className="text-[var(--accent-strong)]">
+                                    {lead.option}
+                                  </span>
+                                  。
+                                </>
+                              ) : (
+                                <>{lead.prefix}。</>
+                              )}
+                            </p>
+                            {hasReason ? (
+                              <p className="leading-relaxed text-[var(--foreground)]">
+                                {prefCard.reason}
+                              </p>
+                            ) : (
+                              <p className="text-sm text-[var(--muted)]">
+                                （這題我還沒多想，就是這樣。）
+                              </p>
+                            )}
+                          </>
+                        )}
                         <button
                           type="button"
-                          onClick={() => pick("A", card.questionId)}
-                          className="rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-3 text-left text-sm leading-relaxed text-[var(--foreground)] transition-colors hover:border-[var(--accent)]"
+                          onClick={() => turnTo("front")}
+                          className="text-xs text-[var(--muted)] underline underline-offset-2 hover:text-[var(--accent-strong)]"
                         >
-                          {card.optionA}
-                        </button>
-                        <button
-                          type="button"
-                          onClick={() => pick("B", card.questionId)}
-                          className="rounded-xl border border-[var(--border)] bg-[var(--surface-strong)] px-4 py-3 text-left text-sm leading-relaxed text-[var(--foreground)] transition-colors hover:border-[var(--accent)]"
-                        >
-                          {card.optionB}
+                          ← 再想一次
                         </button>
                       </div>
-                      <p className="text-center text-xs text-[var(--muted)]">
-                        你會選哪邊？按一下，翻過去看我。
-                      </p>
-                    </div>
-                  ) : (
-                    /* 背面：一小段關於我的話 */
-                    <div className="space-y-3">
-                      {card.passage ? (
-                        /* 成稿：About 口吻的一小段（content/drawer-passages.json）；空行分段 */
-                        card.passage.split(/\n{2,}/).map((para, i) => (
-                          <p
-                            key={i}
-                            className="leading-relaxed text-[var(--foreground)]"
-                          >
-                            {para}
-                          </p>
-                        ))
-                      ) : (
-                        /* 回退：templated 開頭 + reason 原文 */
-                        <>
-                          <p className="text-base font-medium leading-relaxed text-[var(--foreground)]">
-                            {lead.option ? (
-                              <>
-                                {lead.prefix}{" "}
-                                <span className="text-[var(--accent-strong)]">
-                                  {lead.option}
-                                </span>
-                                。
-                              </>
-                            ) : (
-                              <>{lead.prefix}。</>
-                            )}
-                          </p>
-                          {hasReason ? (
-                            <p className="leading-relaxed text-[var(--foreground)]">
-                              {card.reason}
-                            </p>
-                          ) : (
-                            <p className="text-sm text-[var(--muted)]">
-                              （這題我還沒多想，就是這樣。）
-                            </p>
-                          )}
-                        </>
-                      )}
-                      <button
-                        type="button"
-                        onClick={() => turnTo("front")}
-                        className="text-xs text-[var(--muted)] underline underline-offset-2 hover:text-[var(--accent-strong)]"
-                      >
-                        ← 再想一次
-                      </button>
-                    </div>
-                  )}
+                    )
+                  ) : null}
                 </div>
               </div>
 
