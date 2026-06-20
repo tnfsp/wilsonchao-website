@@ -15,6 +15,7 @@
     "sync:notion": "npm run sync:notion -w @wilson/main",
     "sync:vault": "npm run sync:vault -w @wilson/main",
     "sync:drawer": "npm run sync:drawer -w @wilson/main",
+    "sync:taste": "npm run sync:taste -w @wilson/main",
     "watchdog:drawer": "npm run watchdog:drawer -w @wilson/main"
   }
 }
