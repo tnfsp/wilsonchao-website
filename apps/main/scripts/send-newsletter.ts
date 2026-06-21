@@ -79,11 +79,15 @@ function newsletterHtml(entry: BlogEntry, intro?: string): string {
       <div style="line-height:1.9;">
         ${body}
       </div>
+      <div style="line-height:1.9;margin-top:32px;">
+        <p style="margin:0 0 0.4em;">下週見，</p>
+        <p style="margin:0;">Wilson</p>
+      </div>
       <hr style="border:none;border-top:1px solid rgba(0,18,25,0.14);margin:32px 0 16px;" />
       <p style="color:#00505f;font-size:13px;line-height:1.8;">
-        在網頁上讀這篇：<a href="${postUrl}" style="color:#ca6702;">${postUrl}</a><br/>
-        有想說的話，直接回信就好。<br/>
-        不想再收到週報：<a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:#00505f;">取消訂閱</a>
+        有想說的話，直接回這封信就好，我會看到。<br/>
+        也可以<a href="${postUrl}" style="color:#ca6702;">在網頁上讀</a>。<br/>
+        不想再收到：<a href="{{{RESEND_UNSUBSCRIBE_URL}}}" style="color:#00505f;">取消訂閱</a>
       </p>
     </div>
   `;
