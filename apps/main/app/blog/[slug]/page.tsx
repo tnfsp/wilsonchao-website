@@ -29,8 +29,9 @@ export async function generateMetadata({
   const title = `${entry.title} | wilsonchao.com`;
   const description = entry.excerpt || entry.description || "";
   const url = `${BASE_URL}/blog/${slug}`;
-  // Fall back to the default OG image (1200x630) instead of the square avatar
-  const image = entry.image || `${BASE_URL}/opengraph-image`;
+  // Per-post OG card (next/og dynamic route). A custom `image` still wins if set;
+  // otherwise the per-post card beats the generic site-wide /opengraph-image.
+  const image = entry.image || `${BASE_URL}/blog/${slug}/opengraph-image`;
 
   return {
     title,
