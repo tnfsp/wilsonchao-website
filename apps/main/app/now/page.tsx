@@ -125,12 +125,18 @@ export default async function NowPage() {
             {blocks.length > 0 && (
               <div className="grid gap-4 sm:grid-cols-2">
                 {blocks.map((s) => (
-                  <section key={s.id} className="surface-card px-6 py-5 space-y-1.5">
+                  <section key={s.id} className="surface-card px-6 py-5 space-y-2">
                     <h2 className="text-lg font-semibold text-[var(--foreground)]">
                       {s.emoji ? `${s.emoji} ` : ""}
                       {s.title}
                     </h2>
-                    <p className="leading-relaxed text-[var(--foreground)]">{renderLinkedText(s.body)}</p>
+                    <div className="space-y-3">
+                      {s.body.split(/\n\n+/).map((para, i) => (
+                        <p key={i} className="leading-relaxed text-[var(--foreground)]">
+                          {renderLinkedText(para)}
+                        </p>
+                      ))}
+                    </div>
                   </section>
                 ))}
               </div>
@@ -162,11 +168,17 @@ export default async function NowPage() {
             )}
             <div className="grid gap-4 sm:grid-cols-2">
               {sections.map((s) => (
-                <section key={s.id} className="surface-card px-6 py-5 space-y-1.5">
+                <section key={s.id} className="surface-card px-6 py-5 space-y-2">
                   <h2 className="text-lg font-semibold text-[var(--foreground)]">
                     {s.emoji} {s.title}
                   </h2>
-                  <p className="leading-relaxed text-[var(--foreground)]">{renderLinkedText(s.body)}</p>
+                  <div className="space-y-3">
+                    {s.body.split(/\n\n+/).map((para, i) => (
+                      <p key={i} className="leading-relaxed text-[var(--foreground)]">
+                        {renderLinkedText(para)}
+                      </p>
+                    ))}
+                  </div>
                 </section>
               ))}
             </div>
