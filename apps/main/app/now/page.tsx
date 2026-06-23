@@ -123,7 +123,7 @@ export default async function NowPage() {
 
             {/* Themed blocks — card grid (nownownow / Sivers style) */}
             {blocks.length > 0 && (
-              <div className="grid gap-4 sm:grid-cols-2">
+              <div className="grid gap-4">
                 {blocks.map((s) => (
                   <section key={s.id} className="surface-card px-6 py-5 space-y-2">
                     <h2 className="text-lg font-semibold text-[var(--foreground)]">
@@ -166,7 +166,7 @@ export default async function NowPage() {
             {data?.intro && (
               <p className="leading-relaxed text-[var(--muted)]">{renderLinkedText(data.intro)}</p>
             )}
-            <div className="grid gap-4 sm:grid-cols-2">
+            <div className="grid gap-4">
               {sections.map((s) => (
                 <section key={s.id} className="surface-card px-6 py-5 space-y-2">
                   <h2 className="text-lg font-semibold text-[var(--foreground)]">
