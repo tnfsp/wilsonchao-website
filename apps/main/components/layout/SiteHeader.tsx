@@ -35,8 +35,8 @@ function RssIcon() {
 const links = [
   { href: "/blog", label: "Blog" },
   { href: "/stream", label: "Stream" },
-  { href: "/now", label: "Now" },
   { href: "/clinic", label: "Clinic" },
+  { href: "/now", label: "Now" },
   { href: "/about", label: "About" },
 ];
 
