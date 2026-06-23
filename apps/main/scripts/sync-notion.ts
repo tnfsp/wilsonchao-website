@@ -597,6 +597,12 @@ async function fetchBlogEntries(): Promise<BlogEntry[]> {
     const readingTime = estimateReadingTime(plainText);
     const excerpt = buildExcerpt(plainText);
 
+    if (!description) {
+      console.warn(
+        `⚠️  [sync-notion] "${title}" (${slug}) 缺 Notion Description — 卡片摘要將 fallback 截取正文，請到 Notion 補上短描述`
+      );
+    }
+
     entries.push({
       id: typedPage.id,
       slug,
