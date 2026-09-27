@@ -70,6 +70,12 @@ type BlogEntry = {
 
 type SiteConfig = Record<string, string>;
 
+type VaultMarkdownSource = {
+  file: string;
+  raw: string;
+  parsed: matter.GrayMatterFile<string>;
+};
+
 // ─── helpers ─────────────────────────────────────────────────────────
 function estimateReadingTime(text: string): string {
   const plain = text.replace(/\s+/g, " ").trim();
@@ -102,6 +108,54 @@ async function listMdFiles(dir: string): Promise<string[]> {
   if (!(await dirExists(dir))) return [];
   const files = await readdir(dir);
   return files.filter((f) => f.endsWith(".md")).map((f) => path.join(dir, f));
+}
+
+async function readMarkdownSources(dir: string): Promise<VaultMarkdownSource[]> {
+  const files = await listMdFiles(dir);
+  return Promise.all(
+    files.map(async (file) => {
+      const raw = await readFile(file, "utf8");
+      return { file, raw, parsed: matter(raw) };
+    })
+  );
+}
+
+const UNRESOLVED_WRITING_HINTS = ["%%", "【待你補"] as const;
+
+/**
+ * Fail closed before any public output or asset is written.
+ *
+ * Blog, Daily, and Weekly treat every Markdown file except `published: false`
+ * as publishable, including files that omit the field. Mapped Config files are
+ * always public. Obsidian writing hints are private drafting aids, so a single
+ * remaining marker must stop the whole sync rather than being stripped or
+ * partially published.
+ */
+function assertNoUnresolvedWritingHints(
+  sources: VaultMarkdownSource[]
+): void {
+  const violations: string[] = [];
+
+  for (const source of sources) {
+    for (const [lineIndex, line] of source.raw.split(/\r?\n/).entries()) {
+      for (const marker of UNRESOLVED_WRITING_HINTS) {
+        if (line.includes(marker)) {
+          violations.push(
+            `${path.relative(VAULT_BASE, source.file)}:${lineIndex + 1}: contains ${JSON.stringify(marker)}`
+          );
+        }
+      }
+    }
+  }
+
+  if (violations.length > 0) {
+    throw new Error(
+      [
+        "Unresolved writing hints found in publishable Vault files; sync aborted:",
+        ...violations.map((violation) => `- ${violation}`),
+      ].join("\n")
+    );
+  }
 }
 
 /** Strip plain text from markdown (rough) */
@@ -381,13 +435,14 @@ function normalizeTags(rawTags: unknown): string[] {
 }
 
 // ─── Blog sync ───────────────────────────────────────────────────────
-async function syncBlog(): Promise<BlogEntry[]> {
-  const files = await listMdFiles(VAULT_BLOG);
+async function syncBlog(
+  sources: VaultMarkdownSource[]
+): Promise<BlogEntry[]> {
   const entries: BlogEntry[] = [];
 
-  for (const file of files) {
-    const raw = await readFile(file, "utf-8");
-    const { data: fm, content: body } = matter(raw);
+  for (const source of sources) {
+    const { file, parsed } = source;
+    const { data: fm, content: body } = parsed;
 
     if (fm.published === false) continue;
 
@@ -482,14 +537,15 @@ async function syncBlog(): Promise<BlogEntry[]> {
 }
 
 // ─── Daily / 週報 sync ──────────────────────────────────────────────
-async function syncProjects(): Promise<BlogEntry[]> {
-  const dailyFiles = await listMdFiles(VAULT_DAILY);
-  const weeklyFiles = await listMdFiles(VAULT_WEEKLY);
+async function syncProjects(
+  dailySources: VaultMarkdownSource[],
+  weeklySources: VaultMarkdownSource[]
+): Promise<BlogEntry[]> {
   const entries: BlogEntry[] = [];
 
-  for (const file of [...dailyFiles, ...weeklyFiles]) {
-    const raw = await readFile(file, "utf-8");
-    const { data: fm, content: body } = matter(raw);
+  for (const source of [...dailySources, ...weeklySources]) {
+    const { file, parsed } = source;
+    const { data: fm, content: body } = parsed;
 
     if (fm.published === false) continue;
 
@@ -611,7 +667,9 @@ const CONFIG_MAP: Record<string, Record<string, string>> = {
   },
 };
 
-async function syncConfig(): Promise<SiteConfig> {
+async function syncConfig(
+  sources: VaultMarkdownSource[]
+): Promise<SiteConfig> {
   // Start with existing config to preserve values not yet in vault
   let existing: SiteConfig = {};
   try {
@@ -628,11 +686,9 @@ async function syncConfig(): Promise<SiteConfig> {
     return config;
   }
 
-  const files = await readdir(VAULT_CONFIG);
-  for (const file of files) {
-    if (!file.endsWith(".md")) continue;
-    const raw = await readFile(path.join(VAULT_CONFIG, file), "utf-8");
-    const { data: fm, content: body } = matter(raw);
+  for (const source of sources) {
+    const file = path.basename(source.file);
+    const { data: fm, content: body } = source.parsed;
     const mapping = CONFIG_MAP[file];
     if (!mapping) {
       console.warn(`[sync-vault] No config mapping for ${file}, skipping`);
@@ -693,10 +749,34 @@ async function main() {
   console.log("[sync-vault] Starting sync...");
   console.log(`[sync-vault] Vault: ${VAULT_BASE}`);
 
+  // Read each public source exactly once. The safety check and renderer must
+  // consume the same snapshot so an edit between preflight and rendering
+  // cannot bypass the gate.
+  const [blogSources, dailySources, weeklySources, configSources] =
+    await Promise.all([
+      readMarkdownSources(VAULT_BLOG),
+      readMarkdownSources(VAULT_DAILY),
+      readMarkdownSources(VAULT_WEEKLY),
+      readMarkdownSources(VAULT_CONFIG),
+    ]);
+
+  const publishableContentSources = [
+    ...blogSources,
+    ...dailySources,
+    ...weeklySources,
+  ].filter((source) => source.parsed.data.published !== false);
+  const mappedConfigSources = configSources.filter(
+    (source) => CONFIG_MAP[path.basename(source.file)] !== undefined
+  );
+  assertNoUnresolvedWritingHints([
+    ...publishableContentSources,
+    ...mappedConfigSources,
+  ]);
+
   const [blogEntries, projects, siteConfig] = await Promise.all([
-    syncBlog(),
-    syncProjects(),
-    syncConfig(),
+    syncBlog(blogSources),
+    syncProjects(dailySources, weeklySources),
+    syncConfig(configSources),
   ]);
 
   // Write all blog entries (blog posts + daily + weekly) to content/blog/

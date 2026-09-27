@@ -14,6 +14,7 @@
     "sync:drawer": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/sync-drawer.ts",
     "sync:taste": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/sync-taste.ts",
     "watchdog:drawer": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/watchdog-drawer.ts",
+    "test:sync-vault-gate": "node --test scripts/tests/sync-vault-publication-gate.test.mjs",
     "newsletter": "node --no-deprecation --import ./scripts/register-ts-node.mjs scripts/send-newsletter.ts",
     "prebuild": "node scripts/gen-writing-calendar.cjs",
     "predev": "node scripts/gen-writing-calendar.cjs"
