@@ -42,7 +42,18 @@ export type MurmurEntry = {
   pubDate?: string;
   tags?: string[];
   contentHtml?: string;
+  /** 已下載到 public/stream-media/ 的貼文照片（只收本站路徑；Telegram CDN 網址會過期） */
+  images?: string[];
 };
+
+/** 只接受 sync 下載到本站的照片路徑，擋掉會過期的 Telegram CDN 網址與奇怪字元 */
+export function localStreamImages(images?: unknown): string[] {
+  if (!Array.isArray(images)) return [];
+  return images.filter(
+    (src): src is string =>
+      typeof src === "string" && /^\/stream-media\/[A-Za-z0-9_-]+\.(jpg|png|webp|gif)$/.test(src)
+  );
+}
 
 async function safeReadJSON<T>(filePath: string): Promise<T | null> {
   try {
@@ -344,6 +355,7 @@ export async function loadStreamEntries(limit = 50): Promise<MurmurEntry[]> {
       pubDate: item.pubDate,
       tags: item.tags,
       contentHtml: item.contentHtml,
+      images: localStreamImages(item.images),
     }));
   } catch (error) {
     console.warn("[content] Failed to load stream.json:", (error as Error).message);

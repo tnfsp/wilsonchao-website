@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import DOMPurify from "isomorphic-dompurify";
 
 type Props = {
@@ -10,6 +10,8 @@ type Props = {
   description?: string;
   pubDate?: string;
   tags?: string[];
+  /** 本站照片路徑（/stream-media/…），由 loadStreamEntries 過濾過 */
+  images?: string[];
 };
 
 function extractYouTubeId(html: string): string | null {
@@ -133,8 +135,11 @@ function formatFullDate(dateStr: string): string {
   });
 }
 
-export function StreamEntry({ title, contentHtml, description, pubDate, tags }: Props) {
+export function StreamEntry({ title, link, contentHtml, description, pubDate, tags, images }: Props) {
   const isBlog = tags?.includes("blog");
+  // 載入失敗（檔案不見）的照片直接收起來，不留破圖
+  const [failed, setFailed] = useState<Record<string, boolean>>({});
+  const photos = (images ?? []).filter((src) => !failed[src]);
 
   const youtubeId = useMemo(() => {
     if (!contentHtml) return null;
@@ -171,11 +176,39 @@ export function StreamEntry({ title, contentHtml, description, pubDate, tags }: 
           className="text-sm text-[var(--foreground)] leading-relaxed break-words [&_a]:text-[var(--accent)] [&_a]:underline [&_a]:underline-offset-4 [&_b]:font-semibold [&_i.emoji]:not-italic"
           dangerouslySetInnerHTML={{ __html: cleanedHtml }}
         />
-      ) : (
+      ) : description || title ? (
         <p className="text-sm text-[var(--foreground)] leading-relaxed break-words">
           {description || title}
         </p>
-      )}
+      ) : null}
+
+      {/* Photos */}
+      {photos.length > 0 ? (
+        <div className={`grid gap-2 ${photos.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
+          {photos.map((src) => (
+            <img
+              key={src}
+              src={src}
+              alt=""
+              loading="lazy"
+              className="w-full rounded-md border border-[var(--border)] object-cover"
+              onError={() => setFailed((prev) => ({ ...prev, [src]: true }))}
+            />
+          ))}
+        </div>
+      ) : null}
+
+      {/* 沒文字也沒照片可顯示（例如照片還沒下載）：給一個去 Telegram 看的入口，不留空卡 */}
+      {!cleanedHtml && !description && !title && photos.length === 0 && link ? (
+        <a
+          href={link}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="inline-flex items-center text-sm text-[var(--accent)] underline underline-offset-4"
+        >
+          📷 圖片貼文，在 Telegram 查看 →
+        </a>
+      ) : null}
 
       {/* YouTube embed */}
       {youtubeId ? (
