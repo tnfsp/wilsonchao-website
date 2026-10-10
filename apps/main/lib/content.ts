@@ -7,6 +7,7 @@ import {
   placeholderBlogs,
 } from "./placeholders";
 import { todayInTaipei } from "./date";
+import { isBlogAnnouncement } from "./stream-filters";
 
 const BLOG_DIR = path.join(process.cwd(), "content", "blog");
 const OWL_DIR = path.join(process.cwd(), "content", "owl");
@@ -347,7 +348,8 @@ export async function loadStreamEntries(limit = 50): Promise<MurmurEntry[]> {
       images?: string[];
     }[];
 
-    return items.slice(0, limit).map((item) => ({
+    // 新文章發佈通知不進腦內記事（見 stream-filters.ts）；先濾再取 limit
+    return items.filter((item) => !isBlogAnnouncement(item)).slice(0, limit).map((item) => ({
       id: item.id,
       title: item.title,
       link: item.link || "",
