@@ -5,14 +5,14 @@ import { jsonLdString } from "@/lib/json-ld";
 const BASE_URL = "https://wilsonchao.com";
 
 export const metadata: Metadata = {
-  title: "趙玴祥醫師｜心臟血管外科｜高雄醫學大學附設中和紀念醫院",
+  title: "趙玴祥醫師｜心臟血管外科主治醫師｜高雄市立小港醫院",
   description:
-    "趙玴祥醫師，高雄醫學大學附設中和紀念醫院心臟血管外科醫師。專長冠狀動脈繞道手術（CABG）、心臟瓣膜修補及置換手術、主動脈手術。門診時間與預約資訊。",
+    "趙玴祥醫師，高雄市立小港醫院心臟血管外科主治醫師，心臟血管外科、血管外科專科醫師。專長冠狀動脈繞道手術（CABG）、心臟瓣膜修補及置換手術、主動脈手術。門診時間與預約資訊。",
   alternates: { canonical: `${BASE_URL}/clinic` },
   openGraph: {
     title: "趙玴祥醫師｜心臟血管外科門診",
     description:
-      "高雄醫學大學附設中和紀念醫院心臟血管外科醫師。專長冠狀動脈繞道手術、心臟瓣膜手術、主動脈手術。",
+      "高雄市立小港醫院心臟血管外科主治醫師。專長冠狀動脈繞道手術、心臟瓣膜手術、主動脈手術。",
     url: `${BASE_URL}/clinic`,
     type: "website",
     images: [{ url: "/opengraph-image", width: 1200, height: 630 }],
@@ -28,27 +28,44 @@ const physicianJsonLd = {
   url: `${BASE_URL}/clinic`,
   // image: `${BASE_URL}/images/dr-chao-portrait.jpg`, // TODO: 放上專業照片後啟用
   description:
-    "高雄醫學大學附設中和紀念醫院心臟血管外科醫師，專長冠狀動脈繞道手術、心臟瓣膜手術、主動脈手術。", // TODO: 八月後加「主治」
+    "高雄市立小港醫院、高雄醫學大學附設中和紀念醫院心臟血管外科主治醫師，專長冠狀動脈繞道手術、心臟瓣膜手術、主動脈手術。",
   medicalSpecialty: {
     "@type": "MedicalSpecialty",
     name: "Cardiovascular Surgery",
   },
-  jobTitle: "心臟血管外科醫師", // TODO: 八月升主治後改為「主治醫師」
-  affiliation: {
-    "@type": "Hospital",
-    "@id": "https://www.kmuh.org.tw",
-    name: "高雄醫學大學附設中和紀念醫院",
-    alternateName: "Kaohsiung Medical University Chung-Ho Memorial Hospital",
-    address: {
-      "@type": "PostalAddress",
-      streetAddress: "自由一路100號",
-      addressLocality: "高雄市",
-      addressRegion: "三民區",
-      postalCode: "807",
-      addressCountry: "TW",
+  jobTitle: "心臟血管外科主治醫師",
+  affiliation: [
+    {
+      "@type": "Hospital",
+      "@id": "https://www.kmsh.org.tw",
+      name: "高雄市立小港醫院",
+      alternateName: "Kaohsiung Municipal Siaogang Hospital",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "山明路482號",
+        addressLocality: "高雄市",
+        addressRegion: "小港區",
+        postalCode: "812",
+        addressCountry: "TW",
+      },
+      telephone: "+886-7-8036783",
     },
-    telephone: "+886-7-3121101",
-  },
+    {
+      "@type": "Hospital",
+      "@id": "https://www.kmuh.org.tw",
+      name: "高雄醫學大學附設中和紀念醫院",
+      alternateName: "Kaohsiung Medical University Chung-Ho Memorial Hospital",
+      address: {
+        "@type": "PostalAddress",
+        streetAddress: "自由一路100號",
+        addressLocality: "高雄市",
+        addressRegion: "三民區",
+        postalCode: "807",
+        addressCountry: "TW",
+      },
+      telephone: "+886-7-3121101",
+    },
+  ],
   alumniOf: {
     "@type": "CollegeOrUniversity",
     name: "高雄醫學大學",
@@ -86,7 +103,7 @@ const medicalWebPageJsonLd = {
   url: `${BASE_URL}/clinic`,
   about: { "@id": `${BASE_URL}/#person` },
   specialty: "Cardiovascular Surgery",
-  lastReviewed: "2026-03-08",
+  lastReviewed: "2026-10-10",
 };
 
 const faqJsonLd = {
@@ -106,7 +123,7 @@ const faqJsonLd = {
       name: "趙玴祥醫師在哪裡看診？",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "趙玴祥醫師任職於高雄醫學大學附設中和紀念醫院心臟血管外科，地址為高雄市三民區自由一路100號，總機電話 (07) 312-1101。門診時間將於 2026 年八月主治醫師到任後公布。",
+        text: "趙玴祥醫師為高雄市立小港醫院心臟血管外科主治醫師。門診時間：小港醫院每週二下午（高雄市小港區山明路482號，總機 (07) 803-6783）；高雄醫學大學附設中和紀念醫院每週三下午（高雄市三民區自由一路100號，總機 (07) 312-1101）。可透過兩院網路掛號系統預約。",
       },
     },
     {
@@ -122,7 +139,7 @@ const faqJsonLd = {
       name: "趙玴祥醫師的學經歷？",
       acceptedAnswer: {
         "@type": "Answer",
-        text: "趙玴祥醫師畢業於高雄醫學大學醫學系，現為高雄醫學大學附設中和紀念醫院心臟血管外科總醫師，具外科專科醫師資格。",
+        text: "趙玴祥醫師畢業於高雄醫學大學醫學系，在高雄醫學大學附設中和紀念醫院完成心臟血管外科住院醫師與總醫師訓練，2026 年起任高雄市立小港醫院心臟血管外科主治醫師，具外科、心臟血管外科、血管外科專科醫師資格。",
       },
     },
   ],
@@ -152,8 +169,28 @@ const credentials = [
   "高雄醫學大學 醫學系",
   "高雄醫學大學附設中和紀念醫院 心臟血管外科 住院醫師",
   "高雄醫學大學附設中和紀念醫院 心臟血管外科 總醫師",
+  "高雄市立小港醫院 心臟血管外科 主治醫師",
   "外科專科醫師",
-  // TODO: 升主治後更新
+  "心臟血管外科專科醫師",
+  "血管外科專科醫師",
+];
+
+// 門診時間（2026-10-10 Wilson 確認）
+const clinics = [
+  {
+    hospital: "高雄市立小港醫院",
+    time: "每週二 下午",
+    phone: "(07) 803-6783",
+    address: "812 高雄市小港區山明路 482 號",
+    registrationUrl: "https://www.kmsh.org.tw/Web/WebRegistration/Registration/Index",
+  },
+  {
+    hospital: "高雄醫學大學附設中和紀念醫院",
+    time: "每週三 下午",
+    phone: "(07) 312-1101",
+    address: "807 高雄市三民區自由一路 100 號",
+    registrationUrl: "https://www.kmuh.org.tw/Web/WebRegistration/Registration/Index",
+  },
 ];
 
 export default function ClinicPage() {
@@ -188,10 +225,10 @@ export default function ClinicPage() {
                 趙玴祥<span className="text-lg font-normal text-[var(--muted)] ml-2">醫師</span>
               </h1>
               <p className="text-lg text-[var(--muted)]">
-                心臟血管外科
+                心臟血管外科 主治醫師
               </p>
               <p className="text-base text-[var(--muted)]">
-                高雄醫學大學附設中和紀念醫院
+                高雄市立小港醫院・高雄醫學大學附設中和紀念醫院
               </p>
             </div>
           </div>
@@ -230,15 +267,28 @@ export default function ClinicPage() {
         {/* 門診時間 */}
         <section className="py-8 space-y-4 border-b border-[var(--border)]">
           <h2 className="text-xl font-semibold text-[var(--foreground)]">門診時間</h2>
-          <div className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5 space-y-3">
-            <p className="text-[var(--muted)]">
-              門診時間將於 2026 年八月主治醫師到任後公布，敬請期待。
-            </p>
-            <div className="text-sm text-[var(--muted)] space-y-1">
-              <p>📍 高雄醫學大學附設中和紀念醫院</p>
-              <p>📞 總機：(07) 312-1101</p>
-              <p>🏠 807 高雄市三民區自由一路 100 號</p>
-            </div>
+          <div className="grid gap-4 sm:grid-cols-2">
+            {clinics.map((c) => (
+              <div
+                key={c.hospital}
+                className="rounded-lg border border-[var(--border)] bg-[var(--surface)] p-5 space-y-3"
+              >
+                <h3 className="font-semibold text-[var(--foreground)]">{c.hospital}</h3>
+                <p className="text-[var(--foreground)]">{c.time}</p>
+                <div className="text-sm text-[var(--muted)] space-y-1">
+                  <p>總機：{c.phone}</p>
+                  <p>{c.address}</p>
+                </div>
+                <a
+                  href={c.registrationUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="inline-block text-sm font-medium text-[var(--accent)] underline underline-offset-4"
+                >
+                  網路掛號
+                </a>
+              </div>
+            ))}
           </div>
         </section>
 
