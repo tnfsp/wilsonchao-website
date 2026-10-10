@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-10T09:57:48.252607+00:00",
+  "lastUpdated": "2026-10-10T20:30:08.561664+00:00",
   "subtitle": "2026 年 10 月 · 高雄",
   "opening": "我是趙玴祥，在高雄當心臟外科醫師。下了刀就放 DJ、跟 AI 蓋自己的系統、亂寫東西。",
   "sections": [
@@ -27,6 +27,26 @@
   "footer": "這頁每週從我的日記蒸餾、過目後更新。",
   "dynamic": {
     "music": [
+      {
+        "streamId": "446",
+        "title": "Gummy B - LIGHTS IN YOUR EYES (Official Music Video)",
+        "date": "2026-10-10T16:31:24+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=b8R-3QfLEdY",
+        "youtubeId": "b8R-3QfLEdY",
+        "image": "https://img.youtube.com/vi/b8R-3QfLEdY/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/446"
+      },
+      {
+        "streamId": "445",
+        "title": "Common - I Used to Love H.E.R. (Official Video)",
+        "date": "2026-10-10T10:46:27+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=TrUERC2Zk64",
+        "youtubeId": "TrUERC2Zk64",
+        "image": "https://img.youtube.com/vi/TrUERC2Zk64/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/445"
+      },
       {
         "streamId": "444",
         "title": "Freak - 桃子 Đào Tử A1J & ZZ (Official Music Video)",
