@@ -8,8 +8,15 @@ Tag mapping:
   #video → 🎬 最近在看
   #digest, #readwise → 📖 最近在讀
   (all recent) → 🌊 最近的碎片
-"""
 
+Must run on /usr/bin/python3 (3.9, what launchd's stream-sync uses): keep the
+__future__ import so `str | None` annotations are not evaluated at def time.
+
+Usage: sync-now-dynamic.py [--stream PATH] [--now PATH]   (defaults: content/)
+"""
+from __future__ import annotations
+
+import argparse
 import json
 import re
 from datetime import datetime, timedelta, timezone
@@ -110,7 +117,8 @@ def stream_to_item(entry: dict, category: str | None = None) -> dict:
     return item
 
 
-def run():
+def run(stream_path: Path = STREAM_PATH, now_path: Path = NOW_PATH):
+    STREAM_PATH, NOW_PATH = Path(stream_path), Path(now_path)
     if not STREAM_PATH.exists():
         print("[now-sync] stream.json not found, skip")
         return
@@ -192,4 +200,8 @@ def run():
 
 
 if __name__ == "__main__":
-    run()
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--stream", default=str(STREAM_PATH))
+    ap.add_argument("--now", default=str(NOW_PATH))
+    a = ap.parse_args()
+    run(Path(a.stream), Path(a.now))

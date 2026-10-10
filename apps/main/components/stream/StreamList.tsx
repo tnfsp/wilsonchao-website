@@ -10,6 +10,7 @@ type Entry = {
   pubDate?: string;
   tags?: string[];
   contentHtml?: string;
+  images?: string[];
 };
 
 const TAG_CONFIG: Record<string, { emoji: string; label: string }> = {
@@ -152,6 +153,7 @@ export function StreamList({ entries }: { entries: Entry[] }) {
                   description={item.description}
                   pubDate={item.pubDate}
                   tags={item.tags}
+                  images={item.images}
                 />
               </div>
             );
