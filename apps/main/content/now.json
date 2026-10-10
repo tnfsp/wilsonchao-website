@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-10T09:11:05.233495+00:00",
+  "lastUpdated": "2026-10-10T09:57:48.252607+00:00",
   "subtitle": "2026 年 10 月 · 高雄",
   "opening": "我是趙玴祥，在高雄當心臟外科醫師。下了刀就放 DJ、跟 AI 蓋自己的系統、亂寫東西。",
   "sections": [
@@ -28,6 +28,23 @@
   "dynamic": {
     "music": [
       {
+        "streamId": "444",
+        "title": "Freak - 桃子 Đào Tử A1J & ZZ (Official Music Video)",
+        "date": "2026-10-08T04:46:24+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=eraOV3BzNX8",
+        "youtubeId": "eraOV3BzNX8",
+        "image": "https://img.youtube.com/vi/eraOV3BzNX8/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/444"
+      }
+    ],
+    "video": [],
+    "reading": [],
+    "fragments": []
+  },
+  "_archive": {
+    "music": [
+      {
         "streamId": "264",
         "title": "袁語笙YUAN - 懶手指（Official Music Video)",
         "date": "2026-05-25T17:59:30+00:00",
@@ -36,88 +53,7 @@
         "youtubeId": "R07sQzWhc-E",
         "image": "https://img.youtube.com/vi/R07sQzWhc-E/hqdefault.jpg",
         "sourceLink": "https://t.me/doctormomo/264"
-      }
-    ],
-    "video": [
-      {
-        "streamId": "257",
-        "title": "【全長完整版】栗子的XXX呼吸法是變強的秘密？從小混混變成嘻哈街頭詩人！Ft. Lizi 栗子@liziiwu 【這又沒有很ㄉEP124】",
-        "date": "2026-05-05T13:15:45+00:00",
-        "tag": "video",
-        "url": "https://www.youtube.com/watch?v=NcHNPqbDxJo",
-        "youtubeId": "NcHNPqbDxJo",
-        "image": "https://img.youtube.com/vi/NcHNPqbDxJo/hqdefault.jpg",
-        "sourceLink": "https://t.me/doctormomo/257"
       },
-      {
-        "streamId": "255",
-        "title": "回顧2020年｜五個月的我被舅舅養大，現在我要再跟親生姊姊哥哥見一面 (No Eng Sub)｜誰來晚餐",
-        "date": "2026-05-01T04:45:43+00:00",
-        "tag": "video",
-        "url": "https://www.youtube.com/watch?v=DX_QmAsbhoY",
-        "youtubeId": "DX_QmAsbhoY",
-        "image": "https://img.youtube.com/vi/DX_QmAsbhoY/hqdefault.jpg",
-        "sourceLink": "https://t.me/doctormomo/255"
-      },
-      {
-        "streamId": "247",
-        "title": "让 AI 代替我思考7天，这是我大脑发生的变化",
-        "date": "2026-04-24T15:54:01+00:00",
-        "tag": "video",
-        "url": "https://www.youtube.com/watch?v=_EmMwEIqAwo",
-        "youtubeId": "_EmMwEIqAwo",
-        "image": "https://img.youtube.com/vi/_EmMwEIqAwo/hqdefault.jpg",
-        "sourceLink": "https://t.me/doctormomo/247"
-      },
-      {
-        "streamId": "248",
-        "title": "重置大腦30天，徹底告別“多巴胺”，會發生什麼！",
-        "date": "2026-04-24T15:54:01+00:00",
-        "tag": "video",
-        "url": "https://www.youtube.com/watch?v=1izKJcM6BL0",
-        "youtubeId": "1izKJcM6BL0",
-        "image": "https://img.youtube.com/vi/1izKJcM6BL0/hqdefault.jpg",
-        "sourceLink": "https://t.me/doctormomo/248"
-      }
-    ],
-    "reading": [
-      {
-        "streamId": "243",
-        "title": "善良与边界感",
-        "date": "2026-04-24T15:53:54+00:00",
-        "tag": "readwise",
-        "url": "https://blog.solazy.me/20260413/",
-        "youtubeId": null,
-        "image": null,
-        "sourceLink": "https://t.me/doctormomo/243",
-        "description": "有窗户也有锁的房子。窗户代表善良，它让阳光照进来，让你能看到外面的世界并传递温暖。而锁"
-      }
-    ],
-    "fragments": [
-      {
-        "streamId": "270",
-        "title": "可是今天我發現，竟然被換掉了！真是有點小傷心",
-        "date": "2026-06-01T15:32:53+00:00",
-        "tag": "murmur",
-        "url": null,
-        "youtubeId": null,
-        "image": null,
-        "sourceLink": "https://t.me/doctormomo/270"
-      },
-      {
-        "streamId": "268",
-        "title": "這部電梯是我最喜歡的電梯不知道為什麼，人遇到死亡好像會特別害怕，所以儘管等電梯的人很多，這部電梯總是沒人在排隊對於很忙的我們，搭這台電梯是ㄧ種小確幸，可以享受短暫的貴賓尊榮待遇",
-        "date": "2026-06-01T15:29:57+00:00",
-        "tag": "murmur",
-        "url": null,
-        "youtubeId": null,
-        "image": null,
-        "sourceLink": "https://t.me/doctormomo/268"
-      }
-    ]
-  },
-  "_archive": {
-    "music": [
       {
         "streamId": "252",
         "title": "old songs but it's lofi remix",
@@ -281,6 +217,46 @@
         "sourceLink": "https://t.me/doctormomo/248"
       },
       {
+        "streamId": "257",
+        "title": "【全長完整版】栗子的XXX呼吸法是變強的秘密？從小混混變成嘻哈街頭詩人！Ft. Lizi 栗子@liziiwu 【這又沒有很ㄉEP124】",
+        "date": "2026-05-05T13:15:45+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=NcHNPqbDxJo",
+        "youtubeId": "NcHNPqbDxJo",
+        "image": "https://img.youtube.com/vi/NcHNPqbDxJo/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/257"
+      },
+      {
+        "streamId": "255",
+        "title": "回顧2020年｜五個月的我被舅舅養大，現在我要再跟親生姊姊哥哥見一面 (No Eng Sub)｜誰來晚餐",
+        "date": "2026-05-01T04:45:43+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=DX_QmAsbhoY",
+        "youtubeId": "DX_QmAsbhoY",
+        "image": "https://img.youtube.com/vi/DX_QmAsbhoY/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/255"
+      },
+      {
+        "streamId": "247",
+        "title": "让 AI 代替我思考7天，这是我大脑发生的变化",
+        "date": "2026-04-24T15:54:01+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=_EmMwEIqAwo",
+        "youtubeId": "_EmMwEIqAwo",
+        "image": "https://img.youtube.com/vi/_EmMwEIqAwo/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/247"
+      },
+      {
+        "streamId": "248",
+        "title": "重置大腦30天，徹底告別“多巴胺”，會發生什麼！",
+        "date": "2026-04-24T15:54:01+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=1izKJcM6BL0",
+        "youtubeId": "1izKJcM6BL0",
+        "image": "https://img.youtube.com/vi/1izKJcM6BL0/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/248"
+      },
+      {
         "streamId": "191",
         "title": "오타니 쇼헤이 (大谷翔平) 'Ditto'",
         "date": "2026-03-12T15:23:10+00:00",
@@ -364,6 +340,17 @@
         "description": "有窗户也有锁的房子。窗户代表善良，它让阳光照进来，让你能看到外面的世界并传递温暖。而锁"
       },
       {
+        "streamId": "243",
+        "title": "善良与边界感",
+        "date": "2026-04-24T15:53:54+00:00",
+        "tag": "readwise",
+        "url": "https://blog.solazy.me/20260413/",
+        "youtubeId": null,
+        "image": null,
+        "sourceLink": "https://t.me/doctormomo/243",
+        "description": "有窗户也有锁的房子。窗户代表善良，它让阳光照进来，让你能看到外面的世界并传递温暖。而锁"
+      },
+      {
         "streamId": "198",
         "title": "究竟存不存在理想中的日常",
         "date": "2026-03-17T15:23:13+00:00",
@@ -398,6 +385,26 @@
       }
     ],
     "fragments": [
+      {
+        "streamId": "270",
+        "title": "可是今天我發現，竟然被換掉了！真是有點小傷心",
+        "date": "2026-06-01T15:32:53+00:00",
+        "tag": "murmur",
+        "url": null,
+        "youtubeId": null,
+        "image": null,
+        "sourceLink": "https://t.me/doctormomo/270"
+      },
+      {
+        "streamId": "268",
+        "title": "這部電梯是我最喜歡的電梯不知道為什麼，人遇到死亡好像會特別害怕，所以儘管等電梯的人很多，這部電梯總是沒人在排隊對於很忙的我們，搭這台電梯是ㄧ種小確幸，可以享受短暫的貴賓尊榮待遇",
+        "date": "2026-06-01T15:29:57+00:00",
+        "tag": "murmur",
+        "url": null,
+        "youtubeId": null,
+        "image": null,
+        "sourceLink": "https://t.me/doctormomo/268"
+      },
       {
         "streamId": "213",
         "title": "30 歲多歲了，還在被朋友用吹不熄蠟燭整，雖然早就知道，但還是配合演出。看著大家笑成一團的樣子，讓我夢回高中的時候，希望不管幾歲，我都還會是那個幼稚的人",
