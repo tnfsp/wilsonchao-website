@@ -163,19 +163,33 @@ function decodeEntities(text: string): string {
     .replace(/&amp;/g, "&");
 }
 
-/** Reader-visible text blocks of a Markdown body, without code. */
+/**
+ * Reader-visible text blocks of a Markdown body, without code, plus link
+ * titles and image alt text. Obsidian embeds (![[...]]) become their own line
+ * so a placeholder written right under an image is still its own line.
+ */
 function visibleTextBlocks(markdown: string): {
   blocks: string[];
   html: string;
 } {
-  const html = (marked.parse(markdown, { async: false }) as string)
+  const attributes: string[] = [];
+  const html = (
+    marked.parse(markdown.replace(/!\[\[[^\]]*\]\]/g, "\n"), {
+      async: false,
+    }) as string
+  )
     .replace(/<pre[\s\S]*?<\/pre>/g, "\n\n")
     .replace(/<code[\s\S]*?<\/code>/g, " ")
-    // A bare URL shown as its own link text is an address, not prose.
-    .replace(/<a\b[^>]*>(?:https?:\/\/|mailto:)[^<]*<\/a>/g, " ");
-  const titles = [...html.matchAll(/\stitle="([^"]*)"/g)].map((m) =>
-    decodeEntities(m[1])
-  );
+    .replace(/\s(?:title|alt)="([^"]*)"/g, (_, value: string) => {
+      attributes.push(decodeEntities(value));
+      return "";
+    })
+    // A link whose text is exactly its address shows only the address.
+    .replace(
+      /<a\b[^>]*\bhref="([^"]*)"[^>]*>([^<]*)<\/a>/g,
+      (whole, href: string, label: string) =>
+        decodeEntities(label).trim() === decodeEntities(href) ? " " : whole
+    );
   const text = decodeEntities(
     html
       .replace(/<\/?(?:p|li|ul|ol|h[1-6]|blockquote|table|tr|td|th|hr|figure|figcaption|div)\b[^>]*>/g, "\n\n")
@@ -186,7 +200,17 @@ function visibleTextBlocks(markdown: string): {
     .split(/\n\s*\n/)
     .map((block) => block.trim())
     .filter(Boolean);
-  return { blocks: [...blocks, ...titles], html };
+  return { blocks: [...blocks, ...attributes], html };
+}
+
+/** Every string value in frontmatter, nested ones included. */
+function frontmatterStrings(value: unknown): string[] {
+  if (typeof value === "string") return [value];
+  if (Array.isArray(value)) return value.flatMap(frontmatterStrings);
+  if (value && typeof value === "object") {
+    return Object.values(value).flatMap(frontmatterStrings);
+  }
+  return [];
 }
 
 /** First source line that contains the start of a rendered snippet. */
@@ -235,8 +259,7 @@ function findDraftingLeftovers(source: VaultMarkdownSource): string[] {
   };
   const found: string[] = [];
   const { data, content } = source.parsed;
-  const frontmatterText = [data.title, data.description]
-    .filter((value): value is string => typeof value === "string");
+  const frontmatterText = frontmatterStrings(data);
   const { blocks, html } = visibleTextBlocks(content);
 
   for (const block of [...frontmatterText, ...blocks]) {
@@ -249,16 +272,21 @@ function findDraftingLeftovers(source: VaultMarkdownSource): string[] {
       const context = block.slice(match.index, match.index + 20);
       found.push(`${at(context)}: looks like a TODO marker: ${JSON.stringify(context)}`);
     }
-    if (IMAGE_PLACEHOLDER.test(block)) {
-      found.push(`${at(block)}: looks like an image placeholder: ${JSON.stringify(block)}`);
+    for (const line of block.split("\n").map((part) => part.trim())) {
+      if (IMAGE_PLACEHOLDER.test(line)) {
+        found.push(`${at(line)}: looks like an image placeholder: ${JSON.stringify(line)}`);
+      }
     }
   }
 
   const brokenList = html.match(new RegExp(`${BROKEN_LIST_ITEM.source}[\\s\\S]{0,120}`));
   if (brokenList) {
-    const itemText = decodeEntities(brokenList[0].replace(/<[^>]+>/g, " ")).trim();
+    const itemText = decodeEntities(brokenList[0].replace(/<[^>]+>/g, " "))
+      .replace(/\s+/g, " ")
+      .trim();
+    const shown = itemText ? itemText.slice(0, 40) : brokenList[0].slice(0, 40);
     found.push(
-      `${at(itemText)}: looks like a broken list marker ("- - item"): ${JSON.stringify(itemText.slice(0, 40).trim())}`
+      `${at(itemText)}: looks like a broken list marker ("- - item"): ${JSON.stringify(shown)}`
     );
   }
 

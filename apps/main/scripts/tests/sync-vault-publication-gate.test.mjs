@@ -296,6 +296,31 @@ const REJECTED_LEFTOVERS = [
     /note-to-self in parentheses/,
   ],
   [
+    "TODO in the title of a link labelled with its URL (Astra round 3)",
+    '[https://example.com](https://example.com "TODO: 補標題")',
+    /looks like a TODO marker/,
+  ],
+  [
+    "TODO in a link label that only starts with a URL (Astra round 3)",
+    "[https://example.com TODO: 補標題](./report.md)",
+    /looks like a TODO marker/,
+  ],
+  [
+    "TODO in image alt text (Astra round 3)",
+    "![TODO: 補圖說](./image.png)",
+    /looks like a TODO marker/,
+  ],
+  [
+    "placeholder line inside a paragraph (Astra round 3)",
+    "正文。\n（TBE示意圖）\n下一段。",
+    /looks like an image placeholder/,
+  ],
+  [
+    "placeholder right under an Obsidian embed (Fable round 3)",
+    "![[x.jpg]]\n（示意圖）",
+    /looks like an image placeholder/,
+  ],
+  [
     "TODO after mismatched backtick runs (Astra re-review)",
     "正文 ``a`b`` TODO: 補結尾 `c`",
     /looks like a TODO marker/,
@@ -334,6 +359,15 @@ for (const [name, body, expected] of REJECTED_LEFTOVERS) {
     await assertLeftoverRejected(body, expected);
   });
 }
+
+test("frontmatter of a public Config file is checked (Astra round 3)", async () => {
+  const fixture = await makeFixture([
+    { dir: "Config", name: "About.md", slug: "about", title: "TODO 補頁尾", body: "公開介紹。" },
+  ]);
+  const result = runSync(fixture);
+  assert.notEqual(result.status, 0, combinedOutput(result));
+  assert.match(combinedOutput(result), /looks like a TODO marker/);
+});
 
 test("ordinary prose, credits, lists, breaks and closed fences pass", async () => {
   const fixture = await makeFixture([
