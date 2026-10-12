@@ -126,20 +126,29 @@ const UNRESOLVED_WRITING_HINTS = ["%%", "【待你補"] as const;
  * Drafting leftovers that are not Obsidian hints, so the marker check above
  * cannot see them. Weekly #028 (2026-10-12) went live with a note-to-self
  * "（我記得有一個法國的名言 我有記在vault想引用）" after its hints were
- * stripped, and with a "- - " list broken by the stripping. Lines inside fenced
- * code blocks are skipped; an unclosed fence is itself a violation so it cannot
- * hide the rest of the file.
+ * stripped, and with a "- - " list broken by the stripping.
+ *
+ * Checked on a masked copy of the source: fenced code blocks, inline code,
+ * link destinations and bare URLs are blanked out first, so code samples and
+ * links such as ".../TODO.md" are not mistaken for notes. An unclosed fence is
+ * itself a violation so it cannot hide the rest of the file. The keyword list
+ * is kept to explicit editing instructions; plain words such as 再查 or 待補
+ * also occur in ordinary prose (「兩週後再查」「等待補助」).
  */
-const SELF_NOTE_PATTERNS: ReadonlyArray<{ label: string; pattern: RegExp }> = [
-  {
-    label: "note-to-self in parentheses",
-    pattern:
-      /[（(][^）)\n]{0,80}(?:想引用|我有記在|記在\s*[Vv]ault|[Vv]ault\s*(?:裡|有記)|待補|待確認|待查|之後補|稍後補|晚點補|再查|記得改|補一下|TODO|TBD|附上[^）)\n]{0,20}(?:圖|照片|截圖|影片))[^）)\n]{0,80}[）)]/,
-  },
+const SELF_NOTE_KEYWORDS =
+  "想引用|我有記在|記在\\s*[Vv]ault|[Vv]ault\\s*(?:裡|有記)|之後補|稍後補|晚點補|記得改|補一下|TODO|TBD|附上[^（()）]{0,20}(?:圖|照片|截圖|影片)";
+
+// May span a line break inside the parentheses; nested parentheses end it.
+const NOTE_IN_PARENTHESES = new RegExp(
+  `[（(][^（()）]{0,80}(?:${SELF_NOTE_KEYWORDS})[^（()）]{0,80}[）)]`,
+  "g"
+);
+
+const SELF_NOTE_LINE_PATTERNS: ReadonlyArray<{ label: string; pattern: RegExp }> = [
   {
     // A credit such as "（圖：Wikimedia）" has a colon and is allowed.
     label: "image placeholder line",
-    pattern: /^\s*[（(][^）)：:\n]{0,40}(?:圖|照片|截圖|影片)[）)]\s*$/,
+    pattern: /^\s*[（(][^（()）：:]{0,40}(?:圖|照片|截圖|影片)[）)]\s*$/,
   },
   {
     // "- - item" renders as a stray nested bullet; "- - -" is a thematic break.
@@ -151,6 +160,54 @@ const SELF_NOTE_PATTERNS: ReadonlyArray<{ label: string; pattern: RegExp }> = [
     pattern: /\b(?:TODO|FIXME)\b/,
   },
 ];
+
+const blank = (text: string) => text.replace(/[^\n]/g, " ");
+
+/**
+ * Blank out code and link targets, keeping line and column positions.
+ * Fences follow CommonMark: up to three spaces of indentation, a backtick
+ * opener has no backtick in its info string, and the closer uses the same
+ * character, is at least as long, and has nothing after it.
+ */
+function maskForSelfNoteCheck(lines: string[]): {
+  masked: string[];
+  unclosedFence: { marker: string; line: number } | null;
+} {
+  const masked: string[] = [];
+  let fence: { marker: string; line: number } | null = null;
+
+  for (const [lineIndex, line] of lines.entries()) {
+    if (fence) {
+      const closer = line.match(/^ {0,3}(`{3,}|~{3,})\s*$/);
+      if (
+        closer &&
+        closer[1][0] === fence.marker[0] &&
+        closer[1].length >= fence.marker.length
+      ) {
+        fence = null;
+      }
+      masked.push(blank(line));
+      continue;
+    }
+
+    const opener =
+      line.match(/^ {0,3}(`{3,})[^`]*$/) ?? line.match(/^ {0,3}(~{3,})/);
+    if (opener) {
+      fence = { marker: opener[1], line: lineIndex + 1 };
+      masked.push(blank(line));
+      continue;
+    }
+
+    masked.push(
+      line
+        .replace(/(`+)[^`]*?\1/g, blank)
+        .replace(/\]\([^)\s]*(?:\s+"[^"]*")?\)/g, (m) => `](${blank(m.slice(2, -1))})`)
+        .replace(/<?https?:\/\/[^\s<>）)]+>?/g, blank)
+    );
+  }
+
+  return { masked, unclosedFence: fence };
+}
 
 /**
  * Fail closed before any public output or asset is written.
@@ -167,44 +224,42 @@ function assertNoUnresolvedWritingHints(
   const violations: string[] = [];
 
   for (const source of sources) {
-    // Opening fence marker ("```", "~~~~", ...) while inside a code block.
-    let fence: string | null = null;
-    let fenceLine = 0;
-    for (const [lineIndex, line] of source.raw.split(/\r?\n/).entries()) {
-      const location = `${path.relative(VAULT_BASE, source.file)}:${lineIndex + 1}`;
+    const file = path.relative(VAULT_BASE, source.file);
+    const lines = source.raw.split(/\r?\n/);
+
+    for (const [lineIndex, line] of lines.entries()) {
       for (const marker of UNRESOLVED_WRITING_HINTS) {
         if (line.includes(marker)) {
-          violations.push(`${location}: contains ${JSON.stringify(marker)}`);
-        }
-      }
-
-      const fenceMatch = line.match(/^\s*(`{3,}|~{3,})/);
-      if (fenceMatch) {
-        const marker = fenceMatch[1];
-        if (fence === null) {
-          fence = marker;
-          fenceLine = lineIndex + 1;
-          continue;
-        }
-        // CommonMark: the closer uses the same character and is at least as long.
-        if (marker[0] === fence[0] && marker.length >= fence.length) {
-          fence = null;
-          continue;
-        }
-      }
-      if (fence !== null) continue;
-      for (const { label, pattern } of SELF_NOTE_PATTERNS) {
-        const match = line.match(pattern);
-        if (match) {
           violations.push(
-            `${location}: looks like a ${label}: ${JSON.stringify(match[0])}`
+            `${file}:${lineIndex + 1}: contains ${JSON.stringify(marker)}`
           );
         }
       }
     }
-    if (fence !== null) {
+
+    const { masked, unclosedFence } = maskForSelfNoteCheck(lines);
+    for (const [lineIndex, line] of masked.entries()) {
+      for (const { label, pattern } of SELF_NOTE_LINE_PATTERNS) {
+        const match = line.match(pattern);
+        if (match) {
+          violations.push(
+            `${file}:${lineIndex + 1}: looks like a ${label}: ${JSON.stringify(match[0])}`
+          );
+        }
+      }
+    }
+
+    const text = masked.join("\n");
+    for (const match of text.matchAll(NOTE_IN_PARENTHESES)) {
+      const line = text.slice(0, match.index).split("\n").length;
       violations.push(
-        `${path.relative(VAULT_BASE, source.file)}:${fenceLine}: code fence ${JSON.stringify(fence)} is never closed`
+        `${file}:${line}: looks like a note-to-self in parentheses: ${JSON.stringify(match[0])}`
+      );
+    }
+
+    if (unclosedFence) {
+      violations.push(
+        `${file}:${unclosedFence.line}: code fence ${JSON.stringify(unclosedFence.marker)} is never closed`
       );
     }
   }
