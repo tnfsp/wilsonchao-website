@@ -246,69 +246,93 @@ test("published false files are outside the gate and clean files sync", async ()
 });
 
 // Weekly #028 (2026-10-12) shipped drafting leftovers that are not %% hints.
-async function assertSelfNoteRejected(body, expectedLabel) {
-  const file = {
+function weekly(name, body) {
+  return {
     dir: "週報",
-    name: "self-note.md",
-    slug: "self-note",
+    name: `${name}.md`,
+    slug: name,
     type: "weekly",
     published: true,
     body,
   };
-  const fixture = await makeFixture([file]);
+}
+
+async function assertLeftoverRejected(body, expected) {
+  const fixture = await makeFixture([weekly("self-note", body)]);
   const result = runSync(fixture);
   const output = combinedOutput(result);
   assert.notEqual(result.status, 0, output);
-  assert.match(output, new RegExp(`looks like a ${expectedLabel}`));
+  assert.match(output, expected);
   await assertPathMissing(
     path.join(fixture.siteRoot, "content", "blog", "self-note.json")
   );
 }
 
-test("note-to-self in parentheses rejects the sync (#028)", async () => {
-  await assertSelfNoteRejected(
+const REJECTED_LEFTOVERS = [
+  [
+    "note-to-self quoting the Vault (#028)",
     "每個外科醫師內心都有一個墓園（我記得有一個法國的名言 我有記在vault想引用）我想這個病人的墓碑會在那裡很久。",
-    "note-to-self in parentheses"
-  );
-});
-
-test("attach-image placeholder rejects the sync (#028)", async () => {
-  await assertSelfNoteRejected(
+    /looks like a note-to-self in parentheses/,
+  ],
+  [
+    "attach-image placeholder (#028)",
     "（附上clamshell的圖片）",
-    "note-to-self in parentheses"
-  );
-});
-
-test("standalone diagram placeholder rejects the sync (#028)", async () => {
-  await assertSelfNoteRejected("正文。\n\n（TBE示意圖）\n", "image placeholder line");
-});
-
-test("broken nested list marker rejects the sync (#028)", async () => {
-  await assertSelfNoteRejected(
+    /looks like a note-to-self in parentheses/,
+  ],
+  [
+    "standalone diagram placeholder (#028)",
+    "正文。\n\n（TBE示意圖）\n",
+    /looks like a image placeholder line/,
+  ],
+  [
+    "broken nested list marker (#028)",
     "- **Cộng cà phê**\n\t- - **Stress mama**（District 2）",
-    "broken list marker"
-  );
-});
+    /looks like a broken list marker/,
+  ],
+  ["ASCII parentheses", "數字還沒對 (待確認)", /note-to-self in parentheses/],
+  ["fill-in-later note", "他恢復得不錯（之後補）。", /note-to-self in parentheses/],
+  ["TODO outside code", "TODO: 補結尾", /looks like a TODO marker/],
+  [
+    "unclosed fence hiding a later note",
+    "```\ncode\n```\n正文。\n```\n（附上clamshell的圖片）",
+    /code fence "```" is never closed/,
+  ],
+  [
+    "a tilde line does not close a backtick fence",
+    "```\ncode\n~~~\n正文。",
+    /code fence "```" is never closed/,
+  ],
+];
 
-test("ordinary prose, explanations, thematic breaks and code fences pass", async () => {
+for (const [name, body, expected] of REJECTED_LEFTOVERS) {
+  test(`drafting leftover rejects the sync: ${name}`, async () => {
+    await assertLeftoverRejected(body, expected);
+  });
+}
+
+test("ordinary prose, credits, lists, breaks and closed fences pass", async () => {
   const fixture = await makeFixture([
-    {
-      dir: "週報",
-      name: "clean-prose.md",
-      slug: "clean-prose",
-      type: "weekly",
-      published: true,
-      body: [
+    weekly(
+      "clean-prose",
+      [
         "我記得那天下雨（其實是陰天）。",
         "（第三支指的是左鎖骨下動脈。）",
+        "（圖：Wikimedia Commons）",
         "*Clamshell 切口示意。圖：Stockholm，Wikimedia Commons*",
+        "引用自（Jiri Vault, 1998）。",
+        "手術時間 TBD。",
+        "- [ ] 待辦清單項目",
         "- - -",
         "* * *",
         "```",
         "- - TODO inside code",
         "```",
-      ].join("\n"),
-    },
+        "~~~~",
+        "（附上圖片）inside a tilde fence",
+        "```",
+        "~~~~",
+      ].join("\n")
+    ),
   ]);
   const result = runSync(fixture);
   assert.equal(result.status, 0, combinedOutput(result));

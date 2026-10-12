@@ -127,17 +127,19 @@ const UNRESOLVED_WRITING_HINTS = ["%%", "【待你補"] as const;
  * cannot see them. Weekly #028 (2026-10-12) went live with a note-to-self
  * "（我記得有一個法國的名言 我有記在vault想引用）" after its hints were
  * stripped, and with a "- - " list broken by the stripping. Lines inside fenced
- * code blocks are skipped.
+ * code blocks are skipped; an unclosed fence is itself a violation so it cannot
+ * hide the rest of the file.
  */
 const SELF_NOTE_PATTERNS: ReadonlyArray<{ label: string; pattern: RegExp }> = [
   {
     label: "note-to-self in parentheses",
     pattern:
-      /[（(][^）)\n]{0,80}(?:想引用|我有記在|[Vv]ault|待補|待確認|待查|TODO|TBD|附上[^）)\n]{0,20}(?:圖|照片|截圖|影片))[^）)\n]{0,80}[）)]/,
+      /[（(][^）)\n]{0,80}(?:想引用|我有記在|記在\s*[Vv]ault|[Vv]ault\s*(?:裡|有記)|待補|待確認|待查|之後補|稍後補|晚點補|再查|記得改|補一下|TODO|TBD|附上[^）)\n]{0,20}(?:圖|照片|截圖|影片))[^）)\n]{0,80}[）)]/,
   },
   {
+    // A credit such as "（圖：Wikimedia）" has a colon and is allowed.
     label: "image placeholder line",
-    pattern: /^\s*[（(][^）)\n]{0,40}(?:圖|照片|截圖|影片)[）)]\s*$/,
+    pattern: /^\s*[（(][^）)：:\n]{0,40}(?:圖|照片|截圖|影片)[）)]\s*$/,
   },
   {
     // "- - item" renders as a stray nested bullet; "- - -" is a thematic break.
@@ -146,7 +148,7 @@ const SELF_NOTE_PATTERNS: ReadonlyArray<{ label: string; pattern: RegExp }> = [
   },
   {
     label: "TODO marker",
-    pattern: /\b(?:TODO|TBD|FIXME)\b/,
+    pattern: /\b(?:TODO|FIXME)\b/,
   },
 ];
 
@@ -165,7 +167,9 @@ function assertNoUnresolvedWritingHints(
   const violations: string[] = [];
 
   for (const source of sources) {
-    let inFence = false;
+    // Opening fence marker ("```", "~~~~", ...) while inside a code block.
+    let fence: string | null = null;
+    let fenceLine = 0;
     for (const [lineIndex, line] of source.raw.split(/\r?\n/).entries()) {
       const location = `${path.relative(VAULT_BASE, source.file)}:${lineIndex + 1}`;
       for (const marker of UNRESOLVED_WRITING_HINTS) {
@@ -174,11 +178,21 @@ function assertNoUnresolvedWritingHints(
         }
       }
 
-      if (/^\s*(?:```|~~~)/.test(line)) {
-        inFence = !inFence;
-        continue;
+      const fenceMatch = line.match(/^\s*(`{3,}|~{3,})/);
+      if (fenceMatch) {
+        const marker = fenceMatch[1];
+        if (fence === null) {
+          fence = marker;
+          fenceLine = lineIndex + 1;
+          continue;
+        }
+        // CommonMark: the closer uses the same character and is at least as long.
+        if (marker[0] === fence[0] && marker.length >= fence.length) {
+          fence = null;
+          continue;
+        }
       }
-      if (inFence) continue;
+      if (fence !== null) continue;
       for (const { label, pattern } of SELF_NOTE_PATTERNS) {
         const match = line.match(pattern);
         if (match) {
@@ -187,6 +201,11 @@ function assertNoUnresolvedWritingHints(
           );
         }
       }
+    }
+    if (fence !== null) {
+      violations.push(
+        `${path.relative(VAULT_BASE, source.file)}:${fenceLine}: code fence ${JSON.stringify(fence)} is never closed`
+      );
     }
   }
 
