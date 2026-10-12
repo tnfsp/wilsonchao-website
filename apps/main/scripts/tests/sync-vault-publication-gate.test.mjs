@@ -282,7 +282,7 @@ const REJECTED_LEFTOVERS = [
   [
     "standalone diagram placeholder (#028)",
     "正文。\n\n（TBE示意圖）\n",
-    /looks like a image placeholder line/,
+    /looks like an image placeholder/,
   ],
   [
     "broken nested list marker (#028)",
@@ -294,6 +294,21 @@ const REJECTED_LEFTOVERS = [
     "note-to-self split across a line break (Astra review)",
     "每個外科醫師內心都有一個墓園（我記得有一個法國的名言\n我有記在vault想引用）我想這個病人的墓碑會在那裡很久。",
     /note-to-self in parentheses/,
+  ],
+  [
+    "TODO after mismatched backtick runs (Astra re-review)",
+    "正文 ``a`b`` TODO: 補結尾 `c`",
+    /looks like a TODO marker/,
+  ],
+  [
+    "note with nested parentheses (Astra re-review)",
+    "引言（之後補引用（法國名言））",
+    /note-to-self in parentheses/,
+  ],
+  [
+    "TODO in a public link title (Astra re-review)",
+    '[查看](./report.md "TODO: 補標題")',
+    /looks like a TODO marker/,
   ],
   [
     "one-line triple-backtick code is not a fence (Astra review)",

@@ -120,6 +120,9 @@ async function readMarkdownSources(dir: string): Promise<VaultMarkdownSource[]> 
   );
 }
 
+// Shared by the publication gate and mdToHtml so both read Markdown the same way.
+const marked = new Marked();
+
 const UNRESOLVED_WRITING_HINTS = ["%%", "【待你補"] as const;
 
 /**
@@ -128,85 +131,141 @@ const UNRESOLVED_WRITING_HINTS = ["%%", "【待你補"] as const;
  * "（我記得有一個法國的名言 我有記在vault想引用）" after its hints were
  * stripped, and with a "- - " list broken by the stripping.
  *
- * Checked on a masked copy of the source: fenced code blocks, inline code,
- * link destinations and bare URLs are blanked out first, so code samples and
- * links such as ".../TODO.md" are not mistaken for notes. An unclosed fence is
- * itself a violation so it cannot hide the rest of the file. The keyword list
- * is kept to explicit editing instructions; plain words such as 再查 or 待補
- * also occur in ordinary prose (「兩週後再查」「等待補助」).
+ * These checks run on what readers will see: the body is rendered with the
+ * same marked instance as the page, code (<pre>, <code>) is dropped, and the
+ * remaining text plus link titles are checked block by block. Hand-written
+ * masking of code and links kept hiding notes in edge cases (review of
+ * 8df8c17 and 51fbe4e). An unclosed code fence is reported because marked
+ * would render the rest of the file as code. Keywords are explicit editing
+ * instructions only; 再查 or 待補 also occur in prose (「兩週後再查」「等待補助」).
  */
 const SELF_NOTE_KEYWORDS =
   "想引用|我有記在|記在\\s*[Vv]ault|[Vv]ault\\s*(?:裡|有記)|之後補|稍後補|晚點補|記得改|補一下|TODO|TBD|附上[^（()）]{0,20}(?:圖|照片|截圖|影片)";
 
-// May span a line break inside the parentheses; nested parentheses end it.
+// One level of nested parentheses is allowed inside the note.
+const PAREN_CHUNK = "(?:[^（()）]|[（(][^（()）]{0,40}[）)])";
 const NOTE_IN_PARENTHESES = new RegExp(
-  `[（(][^（()）]{0,80}(?:${SELF_NOTE_KEYWORDS})[^（()）]{0,80}[）)]`,
+  `[（(]${PAREN_CHUNK}{0,80}(?:${SELF_NOTE_KEYWORDS})${PAREN_CHUNK}{0,80}[）)]`,
   "g"
 );
+const TODO_MARKER = /\b(?:TODO|FIXME)\b/g;
+// A whole paragraph that is only "（…圖）"; credits such as "（圖：…）" have a colon.
+const IMAGE_PLACEHOLDER = /^[（(][^（()）：:]{0,40}(?:圖|照片|截圖|影片)[）)]$/;
+// "- - item" renders as a list item that opens with another list.
+const BROKEN_LIST_ITEM = /<li>\s*(?:<p>\s*)?<(?:ul|ol)\b/;
 
-const SELF_NOTE_LINE_PATTERNS: ReadonlyArray<{ label: string; pattern: RegExp }> = [
-  {
-    // A credit such as "（圖：Wikimedia）" has a colon and is allowed.
-    label: "image placeholder line",
-    pattern: /^\s*[（(][^（()）：:]{0,40}(?:圖|照片|截圖|影片)[）)]\s*$/,
-  },
-  {
-    // "- - item" renders as a stray nested bullet; "- - -" is a thematic break.
-    label: "broken list marker",
-    pattern: /^\s*[-*+]\s+[-*+]\s+(?![-*+\s]*$)\S/,
-  },
-  {
-    label: "TODO marker",
-    pattern: /\b(?:TODO|FIXME)\b/,
-  },
-];
+function decodeEntities(text: string): string {
+  return text
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&");
+}
 
-const blank = (text: string) => text.replace(/[^\n]/g, " ");
-
-/**
- * Blank out code and link targets, keeping line and column positions.
- * Fences follow CommonMark: up to three spaces of indentation, a backtick
- * opener has no backtick in its info string, and the closer uses the same
- * character, is at least as long, and has nothing after it.
- */
-function maskForSelfNoteCheck(lines: string[]): {
-  masked: string[];
-  unclosedFence: { marker: string; line: number } | null;
+/** Reader-visible text blocks of a Markdown body, without code. */
+function visibleTextBlocks(markdown: string): {
+  blocks: string[];
+  html: string;
 } {
-  const masked: string[] = [];
-  let fence: { marker: string; line: number } | null = null;
+  const html = (marked.parse(markdown, { async: false }) as string)
+    .replace(/<pre[\s\S]*?<\/pre>/g, "\n\n")
+    .replace(/<code[\s\S]*?<\/code>/g, " ")
+    // A bare URL shown as its own link text is an address, not prose.
+    .replace(/<a\b[^>]*>(?:https?:\/\/|mailto:)[^<]*<\/a>/g, " ");
+  const titles = [...html.matchAll(/\stitle="([^"]*)"/g)].map((m) =>
+    decodeEntities(m[1])
+  );
+  const text = decodeEntities(
+    html
+      .replace(/<\/?(?:p|li|ul|ol|h[1-6]|blockquote|table|tr|td|th|hr|figure|figcaption|div)\b[^>]*>/g, "\n\n")
+      .replace(/<br\s*\/?>/g, "\n")
+      .replace(/<[^>]+>/g, "")
+  );
+  const blocks = text
+    .split(/\n\s*\n/)
+    .map((block) => block.trim())
+    .filter(Boolean);
+  return { blocks: [...blocks, ...titles], html };
+}
 
-  for (const [lineIndex, line] of lines.entries()) {
-    if (fence) {
-      const closer = line.match(/^ {0,3}(`{3,}|~{3,})\s*$/);
-      if (
-        closer &&
-        closer[1][0] === fence.marker[0] &&
-        closer[1].length >= fence.marker.length
-      ) {
-        fence = null;
+/** First source line that contains the start of a rendered snippet. */
+function locateInSource(raw: string, snippet: string): number | null {
+  const needle = snippet.replace(/\s+/g, "").slice(0, 8);
+  if (!needle) return null;
+  const lines = raw.split(/\r?\n/);
+  const index = lines.findIndex((line) => line.replace(/\s+/g, "").includes(needle));
+  return index === -1 ? null : index + 1;
+}
+
+/** Fenced code blocks that run to the end of the input because they never close. */
+function unclosedFences(markdown: string): string[] {
+  const found: string[] = [];
+  const walk = (tokens: Array<Record<string, unknown>>) => {
+    for (const token of tokens) {
+      if (token.type === "code" && typeof token.raw === "string") {
+        const opener = token.raw.match(/^ {0,3}(`{3,}|~{3,})/);
+        if (opener) {
+          const lines = token.raw.replace(/\n+$/, "").split("\n");
+          const last = lines[lines.length - 1];
+          const closer = last.match(/^ {0,3}(`{3,}|~{3,})\s*$/);
+          const closed =
+            lines.length > 1 &&
+            closer !== null &&
+            closer[1][0] === opener[1][0] &&
+            closer[1].length >= opener[1].length;
+          if (!closed) found.push(lines[0].trim());
+        }
       }
-      masked.push(blank(line));
-      continue;
+      for (const key of ["tokens", "items"] as const) {
+        const children = token[key];
+        if (Array.isArray(children)) walk(children as Array<Record<string, unknown>>);
+      }
     }
+  };
+  walk(marked.lexer(markdown) as unknown as Array<Record<string, unknown>>);
+  return found;
+}
 
-    const opener =
-      line.match(/^ {0,3}(`{3,})[^`]*$/) ?? line.match(/^ {0,3}(~{3,})/);
-    if (opener) {
-      fence = { marker: opener[1], line: lineIndex + 1 };
-      masked.push(blank(line));
-      continue;
+function findDraftingLeftovers(source: VaultMarkdownSource): string[] {
+  const file = path.relative(VAULT_BASE, source.file);
+  const at = (snippet: string) => {
+    const line = locateInSource(source.raw, snippet);
+    return line === null ? file : `${file}:${line}`;
+  };
+  const found: string[] = [];
+  const { data, content } = source.parsed;
+  const frontmatterText = [data.title, data.description]
+    .filter((value): value is string => typeof value === "string");
+  const { blocks, html } = visibleTextBlocks(content);
+
+  for (const block of [...frontmatterText, ...blocks]) {
+    for (const match of block.matchAll(NOTE_IN_PARENTHESES)) {
+      found.push(
+        `${at(match[0])}: looks like a note-to-self in parentheses: ${JSON.stringify(match[0])}`
+      );
     }
+    for (const match of block.matchAll(TODO_MARKER)) {
+      const context = block.slice(match.index, match.index + 20);
+      found.push(`${at(context)}: looks like a TODO marker: ${JSON.stringify(context)}`);
+    }
+    if (IMAGE_PLACEHOLDER.test(block)) {
+      found.push(`${at(block)}: looks like an image placeholder: ${JSON.stringify(block)}`);
+    }
+  }
 
-    masked.push(
-      line
-        .replace(/(`+)[^`]*?\1/g, blank)
-        .replace(/\]\([^)\s]*(?:\s+"[^"]*")?\)/g, (m) => `](${blank(m.slice(2, -1))})`)
-        .replace(/<?https?:\/\/[^\s<>）)]+>?/g, blank)
+  const brokenList = html.match(new RegExp(`${BROKEN_LIST_ITEM.source}[\\s\\S]{0,120}`));
+  if (brokenList) {
+    const itemText = decodeEntities(brokenList[0].replace(/<[^>]+>/g, " ")).trim();
+    found.push(
+      `${at(itemText)}: looks like a broken list marker ("- - item"): ${JSON.stringify(itemText.slice(0, 40).trim())}`
     );
   }
 
-  return { masked, unclosedFence: fence };
+  for (const fence of unclosedFences(content)) {
+    found.push(`${at(fence)}: code fence ${JSON.stringify(fence)} is never closed`);
+  }
+  return found;
 }
 
 /**
@@ -225,9 +284,7 @@ function assertNoUnresolvedWritingHints(
 
   for (const source of sources) {
     const file = path.relative(VAULT_BASE, source.file);
-    const lines = source.raw.split(/\r?\n/);
-
-    for (const [lineIndex, line] of lines.entries()) {
+    for (const [lineIndex, line] of source.raw.split(/\r?\n/).entries()) {
       for (const marker of UNRESOLVED_WRITING_HINTS) {
         if (line.includes(marker)) {
           violations.push(
@@ -236,32 +293,7 @@ function assertNoUnresolvedWritingHints(
         }
       }
     }
-
-    const { masked, unclosedFence } = maskForSelfNoteCheck(lines);
-    for (const [lineIndex, line] of masked.entries()) {
-      for (const { label, pattern } of SELF_NOTE_LINE_PATTERNS) {
-        const match = line.match(pattern);
-        if (match) {
-          violations.push(
-            `${file}:${lineIndex + 1}: looks like a ${label}: ${JSON.stringify(match[0])}`
-          );
-        }
-      }
-    }
-
-    const text = masked.join("\n");
-    for (const match of text.matchAll(NOTE_IN_PARENTHESES)) {
-      const line = text.slice(0, match.index).split("\n").length;
-      violations.push(
-        `${file}:${line}: looks like a note-to-self in parentheses: ${JSON.stringify(match[0])}`
-      );
-    }
-
-    if (unclosedFence) {
-      violations.push(
-        `${file}:${unclosedFence.line}: code fence ${JSON.stringify(unclosedFence.marker)} is never closed`
-      );
-    }
+    violations.push(...findDraftingLeftovers(source));
   }
 
   if (violations.length > 0) {
@@ -502,7 +534,6 @@ async function processImages(
 }
 
 // ─── markdown → HTML renderer (Notion-style) ────────────────────────
-const marked = new Marked();
 
 function mdToHtml(md: string): string {
   // marked.parse can return string | Promise<string>; we force sync
