@@ -271,3 +271,19 @@ RESEND_API_KEY
 ### 待辦
 - [ ] （可選）審查清單本來未列的更大重構：CodeHighlight 移到 build time、表單抽共用 hook、loadBlogEntries 包 React cache()
 - [ ] （提醒）電子報之後用 --send-existing <id> 寄，勿重跑 --send 產生第二份 broadcast
+
+## 2026-10-13 00:30 — 週報 #028〈心臟破裂〉發布＋發布閘防呆（CC session e780f3）
+
+### 完成
+- 週報 #028（9/27–10/11，合併舊 #028/#029）：Wilson 親改稿 → CC 補圖（Wikimedia clamshell／TAA 示意 CC BY-SA 4.0；自繪 Dor／TBE 示意，svg 原檔在 Vault _attachments）、IG 帳號與人臉打碼、新封面（gpt-image-1，MomoBear 坐 ICU 門外）→ 上線 /blog/weekly-028（main 3509494、1c7f429、871497d、047e1a0）→ 電子報 Resend broadcast 5a05e555 已寄（2026-10-12 12:57 UTC）
+- 首版上線漏 Leriche 名言、私人括號備註外露、「- -」壞清單（CC 用 regex 批次刪 %% 造成）→ 補引言、17 個術語白話註解（Wilson 後刪 4 個）、錯字修正
+- sync-vault 發布閘：改用 marked 渲染後的可見文字擋自我備註／佔位／壞清單／TODO／未閉合 fence（含 frontmatter、alt、title）；main 047e1a0..c3ba928（6 commits）；Astra 5 輪（末輪 GO c3ba928）、Fable GO（f6b6682）；測試 29/29、Vault 79 篇零誤擋
+- 查證：#027 電子報 9/27 已寄出
+
+### 決策
+- Wilson 選 B：閘門以 renderer 可見文字判斷，不再手寫遮罩
+- 術語註解規則：太簡單的不加（灌流、撤機、二尖瓣逆流、心室輔助器）；外專寫全名
+
+### 待辦
+- [ ] （可選）Fable 建議：括號開頭「（待確認）（待補）」錨定擋下；空「- -」條列訊息補行號
+- [ ] canonical checkout 停在 3493df6、落後 origin/main，下次 OWL sync 前 pull（隊長已記）
