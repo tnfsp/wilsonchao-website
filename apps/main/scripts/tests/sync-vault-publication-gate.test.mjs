@@ -244,3 +244,72 @@ test("published false files are outside the gate and clean files sync", async ()
   assert.equal(newsletter.status, 0, combinedOutput(newsletter));
   assert.match(combinedOutput(newsletter), /subject: Fixture/);
 });
+
+// Weekly #028 (2026-10-12) shipped drafting leftovers that are not %% hints.
+async function assertSelfNoteRejected(body, expectedLabel) {
+  const file = {
+    dir: "週報",
+    name: "self-note.md",
+    slug: "self-note",
+    type: "weekly",
+    published: true,
+    body,
+  };
+  const fixture = await makeFixture([file]);
+  const result = runSync(fixture);
+  const output = combinedOutput(result);
+  assert.notEqual(result.status, 0, output);
+  assert.match(output, new RegExp(`looks like a ${expectedLabel}`));
+  await assertPathMissing(
+    path.join(fixture.siteRoot, "content", "blog", "self-note.json")
+  );
+}
+
+test("note-to-self in parentheses rejects the sync (#028)", async () => {
+  await assertSelfNoteRejected(
+    "每個外科醫師內心都有一個墓園（我記得有一個法國的名言 我有記在vault想引用）我想這個病人的墓碑會在那裡很久。",
+    "note-to-self in parentheses"
+  );
+});
+
+test("attach-image placeholder rejects the sync (#028)", async () => {
+  await assertSelfNoteRejected(
+    "（附上clamshell的圖片）",
+    "note-to-self in parentheses"
+  );
+});
+
+test("standalone diagram placeholder rejects the sync (#028)", async () => {
+  await assertSelfNoteRejected("正文。\n\n（TBE示意圖）\n", "image placeholder line");
+});
+
+test("broken nested list marker rejects the sync (#028)", async () => {
+  await assertSelfNoteRejected(
+    "- **Cộng cà phê**\n\t- - **Stress mama**（District 2）",
+    "broken list marker"
+  );
+});
+
+test("ordinary prose, explanations, thematic breaks and code fences pass", async () => {
+  const fixture = await makeFixture([
+    {
+      dir: "週報",
+      name: "clean-prose.md",
+      slug: "clean-prose",
+      type: "weekly",
+      published: true,
+      body: [
+        "我記得那天下雨（其實是陰天）。",
+        "（第三支指的是左鎖骨下動脈。）",
+        "*Clamshell 切口示意。圖：Stockholm，Wikimedia Commons*",
+        "- - -",
+        "* * *",
+        "```",
+        "- - TODO inside code",
+        "```",
+      ].join("\n"),
+    },
+  ]);
+  const result = runSync(fixture);
+  assert.equal(result.status, 0, combinedOutput(result));
+});

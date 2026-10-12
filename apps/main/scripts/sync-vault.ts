@@ -123,6 +123,34 @@ async function readMarkdownSources(dir: string): Promise<VaultMarkdownSource[]> 
 const UNRESOLVED_WRITING_HINTS = ["%%", "【待你補"] as const;
 
 /**
+ * Drafting leftovers that are not Obsidian hints, so the marker check above
+ * cannot see them. Weekly #028 (2026-10-12) went live with a note-to-self
+ * "（我記得有一個法國的名言 我有記在vault想引用）" after its hints were
+ * stripped, and with a "- - " list broken by the stripping. Lines inside fenced
+ * code blocks are skipped.
+ */
+const SELF_NOTE_PATTERNS: ReadonlyArray<{ label: string; pattern: RegExp }> = [
+  {
+    label: "note-to-self in parentheses",
+    pattern:
+      /[（(][^）)\n]{0,80}(?:想引用|我有記在|[Vv]ault|待補|待確認|待查|TODO|TBD|附上[^）)\n]{0,20}(?:圖|照片|截圖|影片))[^）)\n]{0,80}[）)]/,
+  },
+  {
+    label: "image placeholder line",
+    pattern: /^\s*[（(][^）)\n]{0,40}(?:圖|照片|截圖|影片)[）)]\s*$/,
+  },
+  {
+    // "- - item" renders as a stray nested bullet; "- - -" is a thematic break.
+    label: "broken list marker",
+    pattern: /^\s*[-*+]\s+[-*+]\s+(?![-*+\s]*$)\S/,
+  },
+  {
+    label: "TODO marker",
+    pattern: /\b(?:TODO|TBD|FIXME)\b/,
+  },
+];
+
+/**
  * Fail closed before any public output or asset is written.
  *
  * Blog, Daily, and Weekly treat every Markdown file except `published: false`
@@ -137,11 +165,25 @@ function assertNoUnresolvedWritingHints(
   const violations: string[] = [];
 
   for (const source of sources) {
+    let inFence = false;
     for (const [lineIndex, line] of source.raw.split(/\r?\n/).entries()) {
+      const location = `${path.relative(VAULT_BASE, source.file)}:${lineIndex + 1}`;
       for (const marker of UNRESOLVED_WRITING_HINTS) {
         if (line.includes(marker)) {
+          violations.push(`${location}: contains ${JSON.stringify(marker)}`);
+        }
+      }
+
+      if (/^\s*(?:```|~~~)/.test(line)) {
+        inFence = !inFence;
+        continue;
+      }
+      if (inFence) continue;
+      for (const { label, pattern } of SELF_NOTE_PATTERNS) {
+        const match = line.match(pattern);
+        if (match) {
           violations.push(
-            `${path.relative(VAULT_BASE, source.file)}:${lineIndex + 1}: contains ${JSON.stringify(marker)}`
+            `${location}: looks like a ${label}: ${JSON.stringify(match[0])}`
           );
         }
       }
@@ -151,7 +193,7 @@ function assertNoUnresolvedWritingHints(
   if (violations.length > 0) {
     throw new Error(
       [
-        "Unresolved writing hints found in publishable Vault files; sync aborted:",
+        "Unresolved writing hints or drafting leftovers found in publishable Vault files; sync aborted:",
         ...violations.map((violation) => `- ${violation}`),
       ].join("\n")
     );
