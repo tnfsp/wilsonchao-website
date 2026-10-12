@@ -316,6 +316,11 @@ const REJECTED_LEFTOVERS = [
     /looks like an image placeholder/,
   ],
   [
+    "indented TODO right under an Obsidian embed (Astra round 4)",
+    "![[x.jpg]]\n    TODO: 補圖說",
+    /looks like a TODO marker/,
+  ],
+  [
     "placeholder right under an Obsidian embed (Fable round 3)",
     "![[x.jpg]]\n（示意圖）",
     /looks like an image placeholder/,

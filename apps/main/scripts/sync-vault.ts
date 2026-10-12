@@ -165,8 +165,9 @@ function decodeEntities(text: string): string {
 
 /**
  * Reader-visible text blocks of a Markdown body, without code, plus link
- * titles and image alt text. Obsidian embeds (![[...]]) become their own line
- * so a placeholder written right under an image is still its own line.
+ * titles and image alt text. Obsidian embeds (![[...]]) are read as ordinary
+ * images, as the page renders them, so the lines around them keep their
+ * meaning; placeholders are then checked line by line.
  */
 function visibleTextBlocks(markdown: string): {
   blocks: string[];
@@ -174,7 +175,7 @@ function visibleTextBlocks(markdown: string): {
 } {
   const attributes: string[] = [];
   const html = (
-    marked.parse(markdown.replace(/!\[\[[^\]]*\]\]/g, "\n"), {
+    marked.parse(markdown.replace(/!\[\[[^\]]*\]\]/g, "![](embed)"), {
       async: false,
     }) as string
   )
