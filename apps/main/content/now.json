@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-18T06:30:00.000000+00:00",
+  "lastUpdated": "2026-10-22T20:30:08.424492+00:00",
   "subtitle": "2026 年 10 月 · 高雄",
   "opening": "我是趙玴祥，在高雄當心臟外科醫師。下了刀就放 DJ、跟 AI 蓋自己的系統、亂寫東西。",
   "sections": [
@@ -27,6 +27,16 @@
   "footer": "這頁每週從我的日記蒸餾、過目後更新。",
   "dynamic": {
     "music": [
+      {
+        "streamId": "448",
+        "title": "City Pop DJ Set at a Japanese High School",
+        "date": "2026-10-22T11:05:58+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=_jlLI7z2WHg",
+        "youtubeId": "_jlLI7z2WHg",
+        "image": "https://img.youtube.com/vi/_jlLI7z2WHg/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/448"
+      },
       {
         "streamId": "446",
         "title": "Gummy B - LIGHTS IN YOUR EYES (Official Music Video)",
@@ -58,7 +68,18 @@
         "sourceLink": "https://t.me/doctormomo/444"
       }
     ],
-    "video": [],
+    "video": [
+      {
+        "streamId": "449",
+        "title": "尋找最嗨的台菜！馬世芳走訪高雄「金葉摸油湯」，看見總鋪師的傳承與熱情！feat.林生祥、金葉摸油湯",
+        "date": "2026-10-22T11:35:58+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=VDvO6hGjnTI",
+        "youtubeId": "VDvO6hGjnTI",
+        "image": "https://img.youtube.com/vi/VDvO6hGjnTI/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/449"
+      }
+    ],
     "reading": [],
     "fragments": []
   },
