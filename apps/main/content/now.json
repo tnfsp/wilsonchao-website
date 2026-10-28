@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-22T20:30:08.424492+00:00",
+  "lastUpdated": "2026-10-28T20:30:08.935042+00:00",
   "subtitle": "2026 年 10 月 · 高雄",
   "opening": "我是趙玴祥，在高雄當心臟外科醫師。下了刀就放 DJ、跟 AI 蓋自己的系統、亂寫東西。",
   "sections": [
@@ -27,6 +27,16 @@
   "footer": "這頁每週從我的日記蒸餾、過目後更新。",
   "dynamic": {
     "music": [
+      {
+        "streamId": "450",
+        "title": "修齊 Hsiu Liu feat.狗柏－深夜的胡思亂想 Ｗondering【Official Music Video】",
+        "date": "2026-10-28T12:50:29+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=ipYApYeTLgQ",
+        "youtubeId": "ipYApYeTLgQ",
+        "image": "https://img.youtube.com/vi/ipYApYeTLgQ/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/450"
+      },
       {
         "streamId": "448",
         "title": "City Pop DJ Set at a Japanese High School",
