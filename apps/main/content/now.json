@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-10-28T20:30:08.935042+00:00",
+  "lastUpdated": "2026-11-07T20:30:08.180355+00:00",
   "subtitle": "2026 年 10 月 · 高雄",
   "opening": "我是趙玴祥，在高雄當心臟外科醫師。下了刀就放 DJ、跟 AI 蓋自己的系統、亂寫東西。",
   "sections": [
@@ -27,6 +27,16 @@
   "footer": "這頁每週從我的日記蒸餾、過目後更新。",
   "dynamic": {
     "music": [
+      {
+        "streamId": "452",
+        "title": "感覺像是一個被嚼過的口香糖飄在大海上pt.2",
+        "date": "2026-11-07T10:08:42+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=SwZ64QdJ3kE",
+        "youtubeId": "SwZ64QdJ3kE",
+        "image": "https://img.youtube.com/vi/SwZ64QdJ3kE/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/452"
+      },
       {
         "streamId": "450",
         "title": "修齊 Hsiu Liu feat.狗柏－深夜的胡思亂想 Ｗondering【Official Music Video】",
@@ -66,16 +76,6 @@
         "youtubeId": "TrUERC2Zk64",
         "image": "https://img.youtube.com/vi/TrUERC2Zk64/hqdefault.jpg",
         "sourceLink": "https://t.me/doctormomo/445"
-      },
-      {
-        "streamId": "444",
-        "title": "Freak - 桃子 Đào Tử A1J & ZZ (Official Music Video)",
-        "date": "2026-10-08T04:46:24+00:00",
-        "tag": "music",
-        "url": "https://www.youtube.com/watch?v=eraOV3BzNX8",
-        "youtubeId": "eraOV3BzNX8",
-        "image": "https://img.youtube.com/vi/eraOV3BzNX8/hqdefault.jpg",
-        "sourceLink": "https://t.me/doctormomo/444"
       }
     ],
     "video": [
@@ -95,6 +95,16 @@
   },
   "_archive": {
     "music": [
+      {
+        "streamId": "444",
+        "title": "Freak - 桃子 Đào Tử A1J & ZZ (Official Music Video)",
+        "date": "2026-10-08T04:46:24+00:00",
+        "tag": "music",
+        "url": "https://www.youtube.com/watch?v=eraOV3BzNX8",
+        "youtubeId": "eraOV3BzNX8",
+        "image": "https://img.youtube.com/vi/eraOV3BzNX8/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/444"
+      },
       {
         "streamId": "264",
         "title": "袁語笙YUAN - 懶手指（Official Music Video)",
