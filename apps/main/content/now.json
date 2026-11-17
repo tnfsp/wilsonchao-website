@@ -1,5 +1,5 @@
 {
-  "lastUpdated": "2026-11-11T20:30:08.021196+00:00",
+  "lastUpdated": "2026-11-17T20:30:07.962452+00:00",
   "subtitle": "2026 年 10 月 · 高雄",
   "opening": "我是趙玴祥，在高雄當心臟外科醫師。下了刀就放 DJ、跟 AI 蓋自己的系統、亂寫東西。",
   "sections": [
@@ -69,6 +69,16 @@
       }
     ],
     "video": [
+      {
+        "streamId": "454",
+        "title": "35歲第一次跟朋友去歐洲玩",
+        "date": "2026-11-17T11:32:52+00:00",
+        "tag": "video",
+        "url": "https://www.youtube.com/watch?v=WCzyZ9G_yhw",
+        "youtubeId": "WCzyZ9G_yhw",
+        "image": "https://img.youtube.com/vi/WCzyZ9G_yhw/hqdefault.jpg",
+        "sourceLink": "https://t.me/doctormomo/454"
+      },
       {
         "streamId": "449",
         "title": "尋找最嗨的台菜！馬世芳走訪高雄「金葉摸油湯」，看見總鋪師的傳承與熱情！feat.林生祥、金葉摸油湯",
